@@ -13,77 +13,81 @@ const Courses = () => {
       id: "n5-foundations",
       title: "N5 Foundations",
       level: "JLPT N5",
-      description: "Start your Japanese journey with basic grammar, hiragana, katakana, and essential vocabulary.",
+      description:
+        "Start your Japanese journey with basic grammar, hiragana, katakana, and essential vocabulary.",
       lessons: 45,
       hours: 20,
       skills: ["Vocab", "Grammar", "Kanji"],
-      progress: 0
+      progress: 0,
     },
     {
       id: "n4-conversations",
       title: "N4 Daily Conversations",
       level: "JLPT N4",
-      description: "Master everyday situations with expanded vocabulary and intermediate grammar patterns.",
+      description:
+        "Master everyday situations with expanded vocabulary and intermediate grammar patterns.",
       lessons: 60,
       hours: 28,
       skills: ["Vocab", "Grammar", "Listening"],
-      progress: 62
+      progress: 62,
     },
     {
       id: "n3-fluency",
       title: "N3 Building Fluency",
       level: "JLPT N3",
-      description: "Develop natural expression with complex grammar and authentic Japanese materials.",
+      description:
+        "Develop natural expression with complex grammar and authentic Japanese materials.",
       lessons: 75,
       hours: 35,
       skills: ["Grammar", "Reading", "Listening"],
-      progress: 0
+      progress: 0,
     },
     {
       id: "n2-professional",
       title: "N2 Professional Japanese",
       level: "JLPT N2",
-      description: "Business Japanese, news comprehension, and advanced kanji for professional contexts.",
+      description:
+        "Business Japanese, news comprehension, and advanced kanji for professional contexts.",
       lessons: 90,
       hours: 42,
       skills: ["Reading", "Listening", "Kanji"],
-      progress: 0
+      progress: 0,
     },
     {
       id: "n1-mastery",
       title: "N1 Complete Mastery",
       level: "JLPT N1",
-      description: "Near-native proficiency with literature, academic texts, and nuanced expression.",
+      description:
+        "Near-native proficiency with literature, academic texts, and nuanced expression.",
       lessons: 120,
       hours: 60,
       skills: ["All skills"],
-      progress: 0
+      progress: 0,
     },
     {
       id: "business-japanese",
       title: "Business Japanese",
       level: "N3-N2",
-      description: "Specialized course for workplace communication, emails, and meetings.",
+      description:
+        "Specialized course for workplace communication, emails, and meetings.",
       lessons: 40,
       hours: 18,
       skills: ["Vocab", "Grammar"],
-      progress: 0
+      progress: 0,
     },
   ];
 
   const levels = ["all", "JLPT N5", "JLPT N4", "JLPT N3", "JLPT N2", "JLPT N1"];
 
-  const filteredCourses = selectedLevel === "all" 
-    ? courses 
-    : courses.filter(c => c.level === selectedLevel);
+  const filteredCourses =
+    selectedLevel === "all" ? courses : courses.filter((c) => c.level === selectedLevel);
 
   return (
     <div className="min-h-screen bg-background relative">
-      <WinterNightBackground snowCount={40} sparkleCount={15} intensity="light" />
+      <WinterNightBackground snowCount={70} sparkleCount={26} intensity="normal" />
       <Navigation />
 
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
-        {/* Header with Kaoruko */}
         <div className="mb-8 animate-fade-in">
           <div className="flex items-start gap-4">
             <KaorukoMascot
@@ -103,9 +107,13 @@ const Courses = () => {
         {/* Filters */}
         <div className="mb-8 animate-slide-up">
           <Tabs value={selectedLevel} onValueChange={setSelectedLevel}>
-            <TabsList className="w-full md:w-auto flex-wrap h-auto gap-2">
+            <TabsList className="w-full md:w-auto flex-wrap h-auto gap-2 bg-card/70 backdrop-blur-md border border-border/60 rounded-full px-1 py-1">
               {levels.map((level) => (
-                <TabsTrigger key={level} value={level} className="capitalize">
+                <TabsTrigger
+                  key={level}
+                  value={level}
+                  className="capitalize rounded-full px-4 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md"
+                >
                   {level === "all" ? "All levels" : level}
                 </TabsTrigger>
               ))}
@@ -116,8 +124,8 @@ const Courses = () => {
         {/* Course Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredCourses.map((course, i) => (
-            <div 
-              key={course.id} 
+            <div
+              key={course.id}
               className="animate-scale-in"
               style={{ animationDelay: `${i * 0.1}s` }}
             >
