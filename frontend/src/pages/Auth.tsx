@@ -16,18 +16,32 @@ const Auth = () => {
   const [jlptTarget, setJlptTarget] = useState("N4");
 
   const features = [
-    { icon: "📚", title: "Smart Japanese dictionary", desc: "Vocab, kanji, grammar with examples" },
-    { icon: "📝", title: "JLPT-style practice tests", desc: "From N5 to N1 levels" },
-    { icon: "🎯", title: "Vocabulary quiz mode", desc: "Interactive flashcard system" },
-    { icon: "🎧", title: "Reading & listening stories", desc: "Immersive mini stories" },
+    {
+      icon: "📚",
+      title: "Smart Japanese dictionary",
+      desc: "Vocab, kanji, grammar with examples",
+    },
+    {
+      icon: "📝",
+      title: "JLPT-style practice tests",
+      desc: "From N5 to N1 levels",
+    },
+    {
+      icon: "🎯",
+      title: "Vocabulary quiz mode",
+      desc: "Interactive flashcard system",
+    },
+    {
+      icon: "🎧",
+      title: "Reading & listening stories",
+      desc: "Immersive mini stories",
+    },
   ];
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      {/* Winter Night Background */}
-      <WinterNightBackground snowCount={50} sparkleCount={20} intensity="light" />
+    <div className="min-h-screen relative overflow-hidden bg-background">
+      <WinterNightBackground snowCount={100} sparkleCount={60} intensity="light" />
 
-      {/* Background with Kaoruko */}
       <div className="absolute inset-0 z-[1]">
         <img
           src={kaorukoWelcome}
@@ -39,7 +53,6 @@ const Auth = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/80" />
       </div>
 
-      {/* Nav */}
       <motion.nav
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -52,40 +65,11 @@ const Auth = () => {
             </div>
             <span className="font-semibold text-foreground">Kaoruko Lab</span>
           </Link>
-
-          <div className="hidden md:flex items-center gap-1 glass-card px-2 py-1.5">
-            {["Home", "JLPT Roadmap", "Modules", "Support"].map((link) => (
-              <Link
-                key={link}
-                to="/"
-                className="px-4 py-2 rounded-full text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-white/5 transition-all"
-              >
-                {link}
-              </Link>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={() => setMode("login")}
-              className="gradient-btn-outline text-sm"
-            >
-              Sign in
-            </button>
-            <button 
-              onClick={() => setMode("register")}
-              className="gradient-btn text-sm py-2"
-            >
-              Get started
-            </button>
-          </div>
         </div>
       </motion.nav>
 
-      {/* Main content */}
       <div className="relative z-10 max-w-6xl mx-auto px-6 pt-12 pb-24">
         <div className="grid lg:grid-cols-2 gap-16 items-center min-h-[calc(100vh-200px)]">
-          {/* Left - Copy */}
           <motion.div
             initial={{ opacity: 0, x: -40 }}
             animate={{ opacity: 1, x: 0 }}
@@ -102,12 +86,12 @@ const Auth = () => {
                 </span>
               </h1>
               <p className="text-lg text-muted-foreground max-w-lg leading-relaxed">
-                Your personal guide to Japanese fluency. Comprehensive dictionary, JLPT practice tests, 
-                vocabulary quizzes, and immersive reading & listening exercises — all in one place.
+                Your personal guide to Japanese fluency. Comprehensive dictionary, JLPT practice
+                tests, vocabulary quizzes, and immersive reading & listening exercises — all in one
+                place.
               </p>
             </div>
 
-            {/* Feature chips */}
             <div className="grid grid-cols-2 gap-4">
               {features.map((feature, i) => (
                 <motion.div
@@ -130,34 +114,27 @@ const Auth = () => {
             </div>
           </motion.div>
 
-          {/* Right - Auth Card */}
           <motion.div
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
             className="relative"
           >
-            {/* Kaoruko peeking */}
             <motion.div
               className="absolute -top-8 -left-8 z-10"
               animate={{ y: [0, -5, 0] }}
               transition={{ duration: 3, repeat: Infinity }}
             >
-              <KaorukoAvatar 
-                mood={mode === "register" ? "bigSmile" : "gentle"} 
-                size="xl" 
-                glow 
-              />
+              <KaorukoAvatar mood={mode === "register" ? "bigSmile" : "gentle"} size="xl" glow />
             </motion.div>
 
             <GlassCard className="p-8 pt-16 max-w-md ml-auto" glow="primary">
-              {/* Tab switcher */}
               <div className="flex p-1 glass-card-light rounded-full mb-8">
                 <button
                   onClick={() => setMode("login")}
                   className={`flex-1 py-2.5 rounded-full text-sm font-medium transition-all ${
                     mode === "login"
-                      ? "bg-gradient-to-r from-primary to-secondary text-background"
+                      ? "bg-gradient-to-r from-primary to-secondary text-background shadow-md"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
@@ -167,7 +144,7 @@ const Auth = () => {
                   onClick={() => setMode("register")}
                   className={`flex-1 py-2.5 rounded-full text-sm font-medium transition-all ${
                     mode === "register"
-                      ? "bg-gradient-to-r from-primary to-secondary text-background"
+                      ? "bg-gradient-to-r from-primary to-secondary text-background shadow-md"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
@@ -175,7 +152,6 @@ const Auth = () => {
                 </button>
               </div>
 
-              {/* Form */}
               <AnimatePresence mode="wait">
                 <motion.form
                   key={mode}
@@ -187,7 +163,9 @@ const Auth = () => {
                 >
                   {mode === "register" && (
                     <div className="space-y-2">
-                      <Label htmlFor="name" className="text-foreground text-sm">Display name</Label>
+                      <Label htmlFor="name" className="text-foreground text-sm">
+                        Display name
+                      </Label>
                       <div className="relative">
                         <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <Input
@@ -200,7 +178,9 @@ const Auth = () => {
                   )}
 
                   <div className="space-y-2">
-                    <Label htmlFor="email" className="text-foreground text-sm">Email</Label>
+                    <Label htmlFor="email" className="text-foreground text-sm">
+                      Email
+                    </Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input
@@ -214,9 +194,14 @@ const Auth = () => {
 
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <Label htmlFor="password" className="text-foreground text-sm">Password</Label>
+                      <Label htmlFor="password" className="text-foreground text-sm">
+                        Password
+                      </Label>
                       {mode === "login" && (
-                        <Link to="/forgot-password" className="text-xs text-primary hover:underline">
+                        <Link
+                          to="/forgot-password"
+                          className="text-xs text-primary hover:underline"
+                        >
                           Forgot password?
                         </Link>
                       )}
@@ -242,7 +227,9 @@ const Auth = () => {
                   {mode === "register" && (
                     <>
                       <div className="space-y-2">
-                        <Label htmlFor="confirm" className="text-foreground text-sm">Confirm password</Label>
+                        <Label htmlFor="confirm" className="text-foreground text-sm">
+                          Confirm password
+                        </Label>
                         <div className="relative">
                           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                           <Input
@@ -267,7 +254,7 @@ const Auth = () => {
                               onClick={() => setJlptTarget(level)}
                               className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
                                 jlptTarget === level
-                                  ? "bg-gradient-to-r from-primary to-secondary text-background"
+                                  ? "bg-gradient-to-r from-primary to-secondary text-background shadow-md"
                                   : "bg-white/5 border border-white/20 text-muted-foreground hover:text-foreground hover:border-white/40"
                               }`}
                             >
@@ -296,18 +283,18 @@ const Auth = () => {
                     {mode === "login" ? (
                       <>
                         New here?{" "}
-                        <button 
+                        <button
                           type="button"
                           onClick={() => setMode("register")}
                           className="text-primary hover:underline font-medium"
                         >
-                          Join Kaoruko's class
+                          Join Kaoruko&apos;s class
                         </button>
                       </>
                     ) : (
                       <>
                         Already have an account?{" "}
-                        <button 
+                        <button
                           type="button"
                           onClick={() => setMode("login")}
                           className="text-primary hover:underline font-medium"

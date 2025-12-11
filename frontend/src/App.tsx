@@ -24,8 +24,6 @@ const App = () => (
           <Route path="/courses/:courseId" element={<CourseDetail />} />
           <Route path="/kanji-library" element={<KanjiLibrary />} />
           <Route path="/profile" element={<Profile />} />
-          <Route path="/login" element={<Auth />} />
-          <Route path="/signup" element={<Auth />} />
           <Route path="/auth" element={<Auth />} />
         </Routes>
       </BrowserRouter>
