@@ -8,6 +8,12 @@ export interface AuthUser {
   roles: string[];
 }
 
+interface AuthResponse {
+  accessToken: string;
+  refreshToken?: string;
+  user: AuthUser;
+}
+
 interface AuthContextType {
   user: AuthUser | null;
   isAuthenticated: boolean;
@@ -29,21 +35,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const refreshUser = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const response = await apiClient.auth.getCurrentUser() as AuthUser;
+      setUser(response);
+      apiClient.setAuthData(
+        localStorage.getItem("yukihon_token") || "",
+        response
+      );
+    } catch (err) {
+      // Silent fail, just logout
+      apiClient.clearAuthData();
+      setUser(null);
+      setIsAuthenticated(false);
+      setError(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   // Refresh user on mount
   useEffect(() => {
     if (isAuthenticated) {
       refreshUser();
     }
-  }, []);
+  }, [isAuthenticated, refreshUser]);
 
   const login = useCallback(async (email: string, password: string) => {
     setIsLoading(true);
     setError(null);
     try {
-      const response: any = await apiClient.auth.login({
+      const response = await apiClient.auth.login({
         email,
         password,
-      });
+      }) as AuthResponse;
       apiClient.setAuthData(response.accessToken, response.user);
       setUser(response.user);
       setIsAuthenticated(true);
@@ -61,11 +87,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(true);
       setError(null);
       try {
-        const response: any = await apiClient.auth.register({
+        const response = await apiClient.auth.register({
           email,
           password,
           displayName,
-        });
+        }) as AuthResponse;
         apiClient.setAuthData(response.accessToken, response.user);
         setUser(response.user);
         setIsAuthenticated(true);
@@ -87,22 +113,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setError(null);
   }, []);
 
-  const refreshUser = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const response: any = await apiClient.auth.getCurrentUser();
-      setUser(response);
-      apiClient.setAuthData(
-        localStorage.getItem("yukihon_token") || "",
-        response
-      );
-    } catch (err) {
-      // Silent fail, just logout
-      logout();
-    } finally {
-      setIsLoading(false);
-    }
-  }, [logout]);
+
 
   const value: AuthContextType = {
     user,
@@ -122,10 +133,5 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within AuthProvider");
-  }
-  return context;
-};
+// Export context for custom hooks
+export { AuthContext };

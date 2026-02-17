@@ -1,6 +1,13 @@
 // API Configuration and utilities
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
+interface AuthUser {
+  id: number;
+  email: string;
+  displayName: string;
+  roles: string[];
+}
+
 export const apiClient = {
   baseURL: API_BASE_URL,
 
@@ -76,7 +83,7 @@ export const apiClient = {
   },
 
   // Helper to store auth data
-  setAuthData(token: string, user: any) {
+  setAuthData(token: string, user: AuthUser) {
     localStorage.setItem("yukihon_token", token);
     localStorage.setItem("yukihon_user", JSON.stringify(user));
   },
