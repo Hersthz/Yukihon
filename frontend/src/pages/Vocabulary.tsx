@@ -2,9 +2,21 @@
 
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 import { BookOpen, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
+interface VocabularyItem {
+  id: number;
+  kanji: string;
+  hiragana: string;
+  meaning: string;
+  romaji: string;
+  jlptLevel: string;
+  exampleSentenceJP?: string;
+  exampleSentenceEN?: string;
+  wordType?: string;
+}
 import {
   Select,
   SelectContent,
@@ -28,7 +40,7 @@ const Vocabulary = () => {
   const { data: levels = [] } = useVocabularyLevels();
 
   const filteredVocabulary = useMemo(() => {
-    return vocabulary.filter((item: any) => {
+    return vocabulary.filter((item: VocabularyItem) => {
       const levelMatch =
         selectedLevel === "all" || item.jlptLevel === selectedLevel;
       const searchMatch =
@@ -42,7 +54,11 @@ const Vocabulary = () => {
   const handleMarkLearned = (id: number) => {
     setLearnedItems((prev) => {
       const newSet = new Set(prev);
-      newSet.has(id) ? newSet.delete(id) : newSet.add(id);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
       return newSet;
     });
   };
@@ -53,7 +69,7 @@ const Vocabulary = () => {
     progress: vocabulary.length > 0 ? Math.round((learnedItems.size / vocabulary.length) * 100) : 0,
   };
 
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -64,13 +80,13 @@ const Vocabulary = () => {
     },
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { opacity: 0, y: 20 },
     visible: {
       opacity: 1,
       y: 0,
       transition: {
-        type: "spring",
+        type: "spring" as const,
         stiffness: 100,
         damping: 15,
       },
@@ -190,7 +206,7 @@ const Vocabulary = () => {
             variants={containerVariants}
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
-            {filteredVocabulary.map((item: any, idx: number) => (
+            {filteredVocabulary.map((item: VocabularyItem, idx: number) => (
               <motion.div
                 key={item.id}
                 variants={itemVariants}
