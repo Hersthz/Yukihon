@@ -104,6 +104,66 @@ export const apiClient = {
   isAuthenticated(): boolean {
     return !!localStorage.getItem("yukihon_token");
   },
+
+  // Admin endpoints
+  admin: {
+    // Get all users with pagination
+    getUsers(page = 0, size = 20) {
+      return apiClient.request(`/api/admin/users?page=${page}&size=${size}`);
+    },
+
+    // Get user by ID
+    getUserById(userId: number) {
+      return apiClient.request(`/api/admin/users/${userId}`);
+    },
+
+    // Search users
+    searchUsers(query: string) {
+      return apiClient.request(`/api/admin/users/search?query=${encodeURIComponent(query)}`);
+    },
+
+    // Update user roles
+    updateUserRoles(userId: number, roles: string[]) {
+      return apiClient.request(`/api/admin/users/${userId}/roles`, {
+        method: "PUT",
+        body: JSON.stringify({ roles }),
+      });
+    },
+
+    // Update user status (enable/disable)
+    updateUserStatus(userId: number, enabled: boolean) {
+      return apiClient.request(`/api/admin/users/${userId}/status`, {
+        method: "PUT",
+        body: JSON.stringify({ enabled }),
+      });
+    },
+
+    // Promote user to admin
+    promoteToAdmin(userId: number) {
+      return apiClient.request(`/api/admin/users/${userId}/promote`, {
+        method: "POST",
+      });
+    },
+
+    // Demote admin to user
+    demoteFromAdmin(userId: number) {
+      return apiClient.request(`/api/admin/users/${userId}/demote`, {
+        method: "POST",
+      });
+    },
+
+    // Delete user
+    deleteUser(userId: number) {
+      return apiClient.request(`/api/admin/users/${userId}`, {
+        method: "DELETE",
+      });
+    },
+
+    // Get system statistics
+    getSystemStats() {
+      return apiClient.request("/api/admin/stats");
+    },
+  },
 };
 
 export default apiClient;

@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { 
   Flame, Trophy, BookOpen, Brain, ArrowRight,
-  GraduationCap, Zap, Settings
+  GraduationCap, Zap, Settings, Shield
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import KaorukoMascot from "@/components/KaorukoMascot";
 import GlassCard from "@/components/genshin/GlassCard";
+import { useAuth } from "@/hooks/use-auth";
 
 interface AuthUser {
   id: number;
@@ -31,6 +32,7 @@ const API_BASE_URL = "http://localhost:8080";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
 
   const [user, setUser] = useState<AuthUser | null>(() => {
     const stored = localStorage.getItem("yukihon_user");
@@ -437,6 +439,21 @@ const Dashboard = () => {
                 Settings & Profile
               </Button>
             </Link>
+          
+          {/* Admin Dashboard Link - Only visible to admins */}
+          {isAdmin() && (
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Link to="/admin">
+                <Button className="border border-purple-500/50 bg-purple-900/30 text-purple-300 hover:bg-purple-800/50 hover:text-purple-200 transition-all">
+                  <Shield className="w-4 h-4 mr-2" />
+                  Admin Dashboard
+                </Button>
+              </Link>
+            </motion.div>
+          )}
           </motion.div>
         </motion.div>
       </div>
