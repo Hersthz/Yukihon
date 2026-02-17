@@ -1,3 +1,4 @@
+// src/pages/Index.tsx
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,7 +29,10 @@ const Index = () => {
       <WinterNightBackground snowCount={100} sparkleCount={60} intensity="light" />
 
       {/* Hero */}
-      <section id="hero" className="container mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-20 md:pt-20 md:pb-24 relative">
+      <section
+        id="hero"
+        className="container mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-20 md:pt-20 md:pb-24 relative"
+      >
         <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
         <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
@@ -157,7 +161,10 @@ const Index = () => {
       </section>
 
       {/* How it works */}
-      <section  id="how-it-works" className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 relative">
+      <section
+        id="how-it-works"
+        className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 relative"
+      >
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
         <div className="text-center mb-12 relative z-10">
           <Badge variant="outline" className="mb-4">

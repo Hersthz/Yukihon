@@ -1,4 +1,7 @@
-import { Link } from "react-router-dom";
+// src/pages/Dashboard.tsx
+import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Flame, Trophy, BookOpen, Brain, ArrowRight, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,31 +10,119 @@ import StatsCard from "@/components/StatsCard";
 import CourseCard from "@/components/CourseCard";
 import ProgressRing from "@/components/ProgressRing";
 import KaorukoMascot from "@/components/KaorukoMascot";
-import { Flame, Trophy, BookOpen, Brain, ArrowRight, Calendar } from "lucide-react";
+
+interface AuthUser {
+  id: number;
+  email: string;
+  displayName: string;
+  roles: string[];
+}
+
+interface MeResponse {
+  id: number;
+  email: string;
+  displayName: string;
+  roles: string[];
+  createdAt?: string;
+}
+
+const API_BASE_URL = "http://localhost:8080";
 
 const Dashboard = () => {
-  // Mock data
-  const user = { name: "Alex", streak: 12, xp: 2450, dailyGoal: 15 };
+  const navigate = useNavigate();
+
+  const [user, setUser] = useState<AuthUser | null>(() => {
+    const stored = localStorage.getItem("yukihon_user");
+    if (!stored) return null;
+    try {
+      const parsed = JSON.parse(stored) as AuthUser;
+      return parsed;
+    } catch {
+      return null;
+    }
+  });
+
+  const [isLoadingUser, setIsLoadingUser] = useState(false);
+  const [userError, setUserError] = useState<string | null>(null);
+
+  // Mock learning stats (frontend-only, not from backend)
+  const [streak] = useState(12);
+  const [xp] = useState(2450);
+  const [dailyGoal] = useState(15);
+
   const nextLesson = {
     id: "n4-vocab-01",
     title: "Daily Conversations: Greetings",
     level: "N4",
     progress: 60,
-    timeEstimate: 12
+    timeEstimate: 12,
   };
 
-  // Determine Kaoruko's mood based on streak
-  const getKaorukoMood = () => {
-    if (user.streak >= 10) return "excited";
-    if (user.streak >= 5) return "happy";
+  const getKaorukoMood = useMemo(() => {
+    const value = streak;
+    if (value >= 10) return "excited";
+    if (value >= 5) return "happy";
     return "guide";
-  };
+  }, [streak]) as "excited" | "happy" | "guide";
 
-  const getKaorukoMessage = () => {
-    if (user.streak >= 10) return `${user.streak} ngày streak! すごい！ 🔥`;
-    if (user.streak >= 5) return "Bạn đang học rất chăm! 📚";
+  const getKaorukoMessage = useMemo(() => {
+    const value = streak;
+    if (value >= 10) return `${value} ngày streak! すごい！ 🔥`;
+    if (value >= 5) return "Bạn đang học rất chăm! 📚";
     return "Cùng học tiếng Nhật nào! 頑張って！";
-  };
+  }, [streak]);
+
+  useEffect(() => {
+    const token = localStorage.getItem("yukihon_token");
+    if (!token) {
+      navigate("/auth");
+      return;
+    }
+
+    const fetchMe = async () => {
+      setIsLoadingUser(true);
+      setUserError(null);
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/auth/me`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (res.status === 401 || res.status === 403) {
+          localStorage.removeItem("yukihon_token");
+          localStorage.removeItem("yukihon_user");
+          navigate("/auth");
+          return;
+        }
+
+        if (!res.ok) {
+          const text = await res.text();
+          setUserError(text || "Failed to load user profile.");
+          setIsLoadingUser(false);
+          return;
+        }
+
+        const data = (await res.json()) as MeResponse;
+        const mapped: AuthUser = {
+          id: data.id,
+          email: data.email,
+          displayName: data.displayName,
+          roles: data.roles,
+        };
+        setUser(mapped);
+        localStorage.setItem("yukihon_user", JSON.stringify(mapped));
+        setIsLoadingUser(false);
+      } catch {
+        setUserError("Network error while loading profile.");
+        setIsLoadingUser(false);
+      }
+    };
+
+    fetchMe();
+  }, [navigate]);
+
+  const greetingName = user?.displayName || "Learner";
 
   return (
     <div className="min-h-screen bg-background">
@@ -42,17 +133,25 @@ const Dashboard = () => {
         <div className="mb-8 animate-fade-in">
           <div className="flex items-start gap-4 mb-4">
             <KaorukoMascot
-              mood={getKaorukoMood()}
+              mood={getKaorukoMood}
               size="lg"
               showBubble
-              message={getKaorukoMessage()}
+              message={getKaorukoMessage}
               bubblePosition="right"
             />
             <div className="flex-1 pt-4">
               <h1 className="text-3xl md:text-4xl font-bold mb-2">
-                Good evening, {user.name}
+                Good evening, {greetingName}
               </h1>
-              <p className="text-muted-foreground">Keep up the great work on your learning journey!</p>
+              <p className="text-muted-foreground">
+                Keep up the great work on your learning journey!
+              </p>
+              {isLoadingUser && (
+                <p className="mt-2 text-xs text-muted-foreground">Loading profile...</p>
+              )}
+              {userError && (
+                <p className="mt-2 text-xs text-destructive">Profile error: {userError}</p>
+              )}
             </div>
           </div>
         </div>
@@ -61,27 +160,18 @@ const Dashboard = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 animate-slide-up">
           <StatsCard
             title="Current Streak"
-            value={`${user.streak} days`}
+            value={`${streak} days`}
             icon={Flame}
             trend={{ value: 8, isPositive: true }}
           />
-          <StatsCard
-            title="Total XP"
-            value={user.xp.toLocaleString()}
-            icon={Trophy}
-          />
+          <StatsCard title="Total XP" value={xp.toLocaleString()} icon={Trophy} />
           <StatsCard
             title="Today's Progress"
-            value={`${user.dailyGoal}/15 min`}
+            value={`${dailyGoal}/15 min`}
             subtitle="Daily goal"
             icon={Calendar}
           />
-          <StatsCard
-            title="Vocabulary"
-            value="1,240"
-            subtitle="words learned"
-            icon={BookOpen}
-          />
+          <StatsCard title="Vocabulary" value="1,240" subtitle="words learned" icon={BookOpen} />
         </div>
 
         {/* Main Content Grid */}
@@ -97,9 +187,13 @@ const Dashboard = () => {
                 <ProgressRing progress={nextLesson.progress} size={100} strokeWidth={8} />
                 <div className="flex-1 space-y-3">
                   <div>
-                    <Badge variant="secondary" className="mb-2">{nextLesson.level}</Badge>
+                    <Badge variant="secondary" className="mb-2">
+                      {nextLesson.level}
+                    </Badge>
                     <h3 className="text-xl font-semibold mb-1">{nextLesson.title}</h3>
-                    <p className="text-sm text-muted-foreground">~{nextLesson.timeEstimate} minutes remaining</p>
+                    <p className="text-sm text-muted-foreground">
+                      ~{nextLesson.timeEstimate} minutes remaining
+                    </p>
                   </div>
                   <Link to={`/lessons/${nextLesson.id}`}>
                     <Button className="gap-2">
@@ -113,7 +207,7 @@ const Dashboard = () => {
           </Card>
 
           {/* Daily Review */}
-          <Card className="card-premium animate-scale-in" style={{ animationDelay: '0.1s' }}>
+          <Card className="card-premium animate-scale-in" style={{ animationDelay: "0.1s" }}>
             <CardHeader>
               <CardTitle>Daily review</CardTitle>
               <CardDescription>Flashcards due today</CardDescription>
@@ -135,7 +229,11 @@ const Dashboard = () => {
                   </div>
                   <div className="h-20 flex items-end justify-between gap-1">
                     {[40, 65, 55, 80, 70, 85, 75].map((height, i) => (
-                      <div key={i} className="flex-1 bg-primary/20 rounded-t" style={{ height: `${height}%` }} />
+                      <div
+                        key={i}
+                        className="flex-1 bg-primary/20 rounded-t"
+                        style={{ height: `${height}%` }}
+                      />
                     ))}
                   </div>
                 </div>
@@ -158,7 +256,7 @@ const Dashboard = () => {
                     <span className="font-medium">62%</span>
                   </div>
                   <div className="h-2 bg-muted rounded-full overflow-hidden">
-                    <div className="h-full bg-primary" style={{ width: '62%' }} />
+                    <div className="h-full bg-primary" style={{ width: "62%" }} />
                   </div>
                 </div>
                 <div className="space-y-2 text-sm">
@@ -190,12 +288,19 @@ const Dashboard = () => {
                   { title: "Listening Practice: At the Restaurant", lessons: 1, type: "Listening" },
                   { title: "Reading: Short Story", lessons: 1, type: "Reading" },
                 ].map((item, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+                  <div
+                    key={i}
+                    className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                  >
                     <div>
                       <p className="font-medium text-sm">{item.title}</p>
-                      <p className="text-xs text-muted-foreground">{item.lessons} lessons • {item.type}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {item.lessons} lessons • {item.type}
+                      </p>
                     </div>
-                    <Button variant="ghost" size="sm">Start</Button>
+                    <Button variant="ghost" size="sm">
+                      Start
+                    </Button>
                   </div>
                 ))}
               </div>

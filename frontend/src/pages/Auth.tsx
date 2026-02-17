@@ -1,19 +1,54 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+// src/pages/Auth.tsx
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Eye, EyeOff, Mail, Lock, User, Target } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, Target, AlertCircle, CheckCircle2, Chrome } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import GlassCard from "@/components/genshin/GlassCard";
 import KaorukoAvatar from "@/components/genshin/KaorukoAvatar";
 import WinterNightBackground from "@/components/WinterNightBackground";
 import kaorukoWelcome from "@/assets/kaoruko-welcome.png";
 
+type AuthMode = "login" | "register";
+
+interface AuthUser {
+  id: number;
+  email: string;
+  displayName: string;
+  roles: string[];
+}
+
+interface AuthResponse {
+  accessToken: string;
+  refreshToken?: string;
+  tokenType?: string;
+  user: AuthUser;
+}
+
+const API_BASE_URL = "http://localhost:8080";
+// Replace with your Google Client ID from Google Cloud Console
+const GOOGLE_CLIENT_ID = "your_google_client_id.apps.googleusercontent.com";
+const GOOGLE_REDIRECT_URI = `${window.location.origin}/auth`;
+
 const Auth = () => {
-  const [mode, setMode] = useState<"login" | "register">("login");
+  const [mode, setMode] = useState<AuthMode>("login");
   const [showPassword, setShowPassword] = useState(false);
   const [jlptTarget, setJlptTarget] = useState("N4");
+
+  const [displayName, setDisplayName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  const navigate = useNavigate();
 
   const features = [
     {
@@ -37,6 +72,129 @@ const Auth = () => {
       desc: "Immersive mini stories",
     },
   ];
+
+  const resetMessages = () => {
+    setErrorMsg(null);
+    setSuccessMsg(null);
+  };
+
+  const storeAuth = (resp: AuthResponse) => {
+    localStorage.setItem("yukihon_token", resp.accessToken);
+    localStorage.setItem("yukihon_user", JSON.stringify(resp.user));
+  };
+
+  const handleGoogleLogin = () => {
+    // This will redirect to Google's OAuth consent screen
+    const scope = encodeURIComponent("https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile");
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(GOOGLE_REDIRECT_URI)}&response_type=code&scope=${scope}`;
+    window.location.href = authUrl;
+  };
+
+  // Handle Google OAuth callback - check if there's an auth code in URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+    
+    if (code) {
+      authenticateWithGoogle(code);
+    }
+  }, []);
+
+  const authenticateWithGoogle = async (code: string) => {
+    setIsSubmitting(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/google`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ code, redirectUri: GOOGLE_REDIRECT_URI }),
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        setErrorMsg(text || "Google authentication failed.");
+        // Clean up URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+        setIsSubmitting(false);
+        return;
+      }
+
+      const data = (await res.json()) as AuthResponse;
+      storeAuth(data);
+      setSuccessMsg("Signed in with Google successfully!");
+      setIsSubmitting(false);
+
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 500);
+    } catch (err) {
+      setErrorMsg("Network error. Please try again.");
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    resetMessages();
+
+    if (mode === "register" && password !== confirm) {
+      setErrorMsg("Passwords do not match.");
+      return;
+    }
+
+    if (!email || !password || (mode === "register" && !displayName)) {
+      setErrorMsg("Please fill in all required fields.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const endpoint = mode === "login" ? "/api/auth/login" : "/api/auth/register";
+      const body =
+        mode === "login"
+          ? { email, password }
+          : {
+              displayName,
+              email,
+              password,
+              jlptTargetLevel: jlptTarget,
+            };
+
+      const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        setErrorMsg(text || "Authentication failed.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      const data = (await res.json()) as AuthResponse;
+      storeAuth(data);
+      setSuccessMsg(mode === "login" ? "Signed in successfully." : "Account created successfully.");
+      setIsSubmitting(false);
+
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 500);
+    } catch (err) {
+      setErrorMsg("Network error. Please try again.");
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleModeChange = (next: AuthMode) => {
+    if (next === mode) return;
+    resetMessages();
+    setMode(next);
+  };
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-background">
@@ -129,9 +287,10 @@ const Auth = () => {
             </motion.div>
 
             <GlassCard className="p-8 pt-16 max-w-md ml-auto" glow="primary">
-              <div className="flex p-1 glass-card-light rounded-full mb-8">
+              <div className="flex p-1 glass-card-light rounded-full mb-6">
                 <button
-                  onClick={() => setMode("login")}
+                  type="button"
+                  onClick={() => handleModeChange("login")}
                   className={`flex-1 py-2.5 rounded-full text-sm font-medium transition-all ${
                     mode === "login"
                       ? "bg-gradient-to-r from-primary to-secondary text-background shadow-md"
@@ -141,7 +300,8 @@ const Auth = () => {
                   Sign in
                 </button>
                 <button
-                  onClick={() => setMode("register")}
+                  type="button"
+                  onClick={() => handleModeChange("register")}
                   className={`flex-1 py-2.5 rounded-full text-sm font-medium transition-all ${
                     mode === "register"
                       ? "bg-gradient-to-r from-primary to-secondary text-background shadow-md"
@@ -152,9 +312,24 @@ const Auth = () => {
                 </button>
               </div>
 
+              {errorMsg && (
+                <div className="mb-4 flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs">
+                  <AlertCircle className="mt-0.5 h-4 w-4 text-destructive" />
+                  <p className="text-destructive">{errorMsg}</p>
+                </div>
+              )}
+
+              {successMsg && (
+                <div className="mb-4 flex items-start gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-xs">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-500" />
+                  <p className="text-emerald-500">{successMsg}</p>
+                </div>
+              )}
+
               <AnimatePresence mode="wait">
                 <motion.form
                   key={mode}
+                  onSubmit={handleSubmit}
                   initial={{ opacity: 0, x: mode === "register" ? 20 : -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: mode === "register" ? -20 : 20 }}
@@ -171,7 +346,10 @@ const Auth = () => {
                         <Input
                           id="name"
                           placeholder="Your name"
+                          value={displayName}
+                          onChange={(e) => setDisplayName(e.target.value)}
                           className="pl-10 h-12 bg-white/5 border-white/20 rounded-xl focus:border-primary"
+                          autoComplete="name"
                         />
                       </div>
                     </div>
@@ -187,7 +365,10 @@ const Auth = () => {
                         id="email"
                         type="email"
                         placeholder="you@example.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
                         className="pl-10 h-12 bg-white/5 border-white/20 rounded-xl focus:border-primary"
+                        autoComplete="email"
                       />
                     </div>
                   </div>
@@ -212,14 +393,22 @@ const Auth = () => {
                         id="password"
                         type={showPassword ? "text" : "password"}
                         placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
                         className="pl-10 pr-10 h-12 bg-white/5 border-white/20 rounded-xl focus:border-primary"
+                        autoComplete={mode === "login" ? "current-password" : "new-password"}
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        tabIndex={-1}
                       >
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        {showPassword ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
                       </button>
                     </div>
                   </div>
@@ -236,7 +425,10 @@ const Auth = () => {
                             id="confirm"
                             type="password"
                             placeholder="••••••••"
+                            value={confirm}
+                            onChange={(e) => setConfirm(e.target.value)}
                             className="pl-10 h-12 bg-white/5 border-white/20 rounded-xl focus:border-primary"
+                            autoComplete="new-password"
                           />
                         </div>
                       </div>
@@ -275,9 +467,36 @@ const Auth = () => {
                     </div>
                   )}
 
-                  <button type="submit" className="gradient-btn w-full text-base py-4">
-                    {mode === "login" ? "Sign in" : "Start learning"}
-                  </button>
+                  <Button
+                    type="submit"
+                    className="gradient-btn w-full text-base py-4"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting
+                      ? mode === "login"
+                        ? "Signing in..."
+                        : "Creating account..."
+                      : mode === "login"
+                      ? "Sign in"
+                      : "Start learning"}
+                  </Button>
+
+                  <div className="relative my-4">
+                    <Separator className="bg-white/20" />
+                    <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-center">
+                      <span className="bg-card-foreground/10 px-3 text-xs text-muted-foreground font-medium">Or</span>
+                    </div>
+                  </div>
+
+                  <Button
+                    type="button"
+                    onClick={handleGoogleLogin}
+                    disabled={isSubmitting}
+                    className="w-full bg-white/10 hover:bg-white/20 border border-white/20 text-foreground py-4 rounded-xl transition-all"
+                  >
+                    <Chrome className="w-4 h-4 mr-2" />
+                    Continue with Google
+                  </Button>
 
                   <p className="text-center text-sm text-muted-foreground">
                     {mode === "login" ? (
@@ -285,7 +504,7 @@ const Auth = () => {
                         New here?{" "}
                         <button
                           type="button"
-                          onClick={() => setMode("register")}
+                          onClick={() => handleModeChange("register")}
                           className="text-primary hover:underline font-medium"
                         >
                           Join Kaoruko&apos;s class
@@ -296,7 +515,7 @@ const Auth = () => {
                         Already have an account?{" "}
                         <button
                           type="button"
-                          onClick={() => setMode("login")}
+                          onClick={() => handleModeChange("login")}
                           className="text-primary hover:underline font-medium"
                         >
                           Sign in
