@@ -1,0 +1,29 @@
+package com.hoang.basis.yukihon.dto.lesson;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class LessonRequest {
+    
+    @NotBlank(message = "Title is required")
+    @Size(min = 1, max = 200)
+    private String title;
+    
+    private String description;
+    private String content;
+    private String jlptLevel;
+    private String category;
+    private String status;
+    private Integer orderIndex;
+    private String audioUrl;
+    private String videoUrl;
+    private String imageUrl;
+}

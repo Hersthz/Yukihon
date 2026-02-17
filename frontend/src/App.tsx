@@ -4,11 +4,16 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
+import Dashboard from "./pages/Dashboard";
 import Courses from "./pages/Courses";
 import CourseDetail from "./pages/CourseDetail";
 import KanjiLibrary from "./pages/KanjiLibrary";
 import Profile from "./pages/Profile";
 import Auth from "./pages/Auth";
+import Vocabulary from "./pages/Vocabulary";
+import Grammar from "./pages/Grammar";
+import Quiz from "./pages/Quiz";
+import JLPTLessons from "./pages/JLPTLessons";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
 const queryClient = new QueryClient();
@@ -22,6 +27,46 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/vocabulary"
+            element={
+              <ProtectedRoute>
+                <Vocabulary />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/grammar"
+            element={
+              <ProtectedRoute>
+                <Grammar />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/quiz"
+            element={
+              <ProtectedRoute>
+                <Quiz />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/jlpt-lessons"
+            element={
+              <ProtectedRoute>
+                <JLPTLessons />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/courses"
             element={
