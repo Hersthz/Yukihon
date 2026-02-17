@@ -2,8 +2,9 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Sparkles, LogIn } from "lucide-react";
+import { Menu, X, Sparkles } from "lucide-react";
 import { DynamicNavigation } from "../components/DynamicNavigation";
+import ThemeToggle from "@/components/ThemeToggle";
 
 type SectionId = "hero" | "how-it-works" | "jlpt" | "features" | "testimonials";
 
@@ -137,7 +138,8 @@ const Navigation = () => {
         </div>
 
         {/* Right actions (desktop) */}
-        <div className="hidden md:flex items-center gap-4">
+        <div className="hidden md:flex items-center gap-3">
+          <ThemeToggle />
           <Link
             to="/courses"
             className="text-xs lg:text-sm font-medium text-sky-100/80 hover:text-white transition-colors"
@@ -161,7 +163,8 @@ const Navigation = () => {
         </div>
 
         {/* Mobile: compact actions + menu toggle */}
-        <div className="flex md:hidden items-center gap-2">
+        <diThemeToggle />
+          <v className="flex md:hidden items-center gap-2">
           <Link to="/auth">
             <Button
               size="sm"

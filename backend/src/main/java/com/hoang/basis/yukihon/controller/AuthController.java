@@ -1,10 +1,12 @@
 package com.hoang.basis.yukihon.controller;
 
 import com.hoang.basis.yukihon.dto.auth.AuthResponse;
+import com.hoang.basis.yukihon.dto.auth.GoogleTokenRequest;
 import com.hoang.basis.yukihon.dto.auth.LoginRequest;
 import com.hoang.basis.yukihon.dto.auth.RegisterRequest;
 import com.hoang.basis.yukihon.dto.user.UserDto;
 import com.hoang.basis.yukihon.service.AuthService;
+import com.hoang.basis.yukihon.service.GoogleOAuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final GoogleOAuthService googleOAuthService;
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(
@@ -45,5 +48,13 @@ public class AuthController {
         }
         UserDto dto = authService.getCurrentUser(userDetails.getUsername());
         return ResponseEntity.ok(dto);
+    }
+
+    @PostMapping("/google")
+    public ResponseEntity<AuthResponse> authenticateWithGoogle(
+            @Valid @RequestBody GoogleTokenRequest request
+    ) {
+        AuthResponse response = googleOAuthService.authenticateWithGoogle(request.getCode());
+        return ResponseEntity.ok(response);
     }
 }

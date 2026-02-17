@@ -9,6 +9,7 @@ import CourseDetail from "./pages/CourseDetail";
 import KanjiLibrary from "./pages/KanjiLibrary";
 import Profile from "./pages/Profile";
 import Auth from "./pages/Auth";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -20,11 +21,39 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/courses" element={<Courses />} />
-          <Route path="/courses/:courseId" element={<CourseDetail />} />
-          <Route path="/kanji-library" element={<KanjiLibrary />} />
-          <Route path="/profile" element={<Profile />} />
           <Route path="/auth" element={<Auth />} />
+          <Route
+            path="/courses"
+            element={
+              <ProtectedRoute>
+                <Courses />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/courses/:courseId"
+            element={
+              <ProtectedRoute>
+                <CourseDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/kanji-library"
+            element={
+              <ProtectedRoute>
+                <KanjiLibrary />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
@@ -32,3 +61,4 @@ const App = () => (
 );
 
 export default App;
+
