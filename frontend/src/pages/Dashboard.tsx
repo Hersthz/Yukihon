@@ -1,15 +1,16 @@
 // src/pages/Dashboard.tsx
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Flame, Trophy, BookOpen, Brain, ArrowRight, Calendar } from "lucide-react";
+import { 
+  Flame, Trophy, BookOpen, Brain, ArrowRight,
+  GraduationCap, Zap, Settings
+} from "lucide-react";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import Navigation from "@/components/Navigation";
-import StatsCard from "@/components/StatsCard";
-import CourseCard from "@/components/CourseCard";
-import ProgressRing from "@/components/ProgressRing";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 import KaorukoMascot from "@/components/KaorukoMascot";
+import GlassCard from "@/components/genshin/GlassCard";
 
 interface AuthUser {
   id: number;
@@ -48,7 +49,6 @@ const Dashboard = () => {
   // Mock learning stats (frontend-only, not from backend)
   const [streak] = useState(12);
   const [xp] = useState(2450);
-  const [dailyGoal] = useState(15);
 
   const nextLesson = {
     id: "n4-vocab-01",
@@ -124,222 +124,323 @@ const Dashboard = () => {
 
   const greetingName = user?.displayName || "Learner";
 
-  return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.1,
+      },
+    },
+  };
 
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Greeting with Kaoruko */}
-        <div className="mb-8 animate-fade-in">
-          <div className="flex items-start gap-4 mb-4">
-            <KaorukoMascot
-              mood={getKaorukoMood}
-              size="lg"
-              showBubble
-              message={getKaorukoMessage}
-              bubblePosition="right"
-            />
-            <div className="flex-1 pt-4">
-              <h1 className="text-3xl md:text-4xl font-bold mb-2">
-                Good evening, {greetingName}
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        type: "spring",
+        stiffness: 100,
+        damping: 15,
+      },
+    },
+  };
+
+  return (
+    <DashboardLayout>
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Greeting Section */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="mb-12"
+        >
+          <div className="flex items-start justify-between gap-8">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text mb-2">
+                Welcome back, {greetingName}! 🌸
               </h1>
-              <p className="text-muted-foreground">
-                Keep up the great work on your learning journey!
+              <p className="text-gray-400 text-lg">
+                Keep up the momentum with your Japanese learning journey
               </p>
               {isLoadingUser && (
-                <p className="mt-2 text-xs text-muted-foreground">Loading profile...</p>
+                <p className="mt-2 text-sm text-gray-500">Loading profile...</p>
               )}
               {userError && (
-                <p className="mt-2 text-xs text-destructive">Profile error: {userError}</p>
+                <p className="mt-2 text-sm text-red-400">Error: {userError}</p>
               )}
-            </div>
+            </motion.div>
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
+            >
+              <KaorukoMascot
+                mood={getKaorukoMood}
+                size="lg"
+                message={getKaorukoMessage}
+              />
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 animate-slide-up">
-          <StatsCard
-            title="Current Streak"
-            value={`${streak} days`}
-            icon={Flame}
-            trend={{ value: 8, isPositive: true }}
-          />
-          <StatsCard title="Total XP" value={xp.toLocaleString()} icon={Trophy} />
-          <StatsCard
-            title="Today's Progress"
-            value={`${dailyGoal}/15 min`}
-            subtitle="Daily goal"
-            icon={Calendar}
-          />
-          <StatsCard title="Vocabulary" value="1,240" subtitle="words learned" icon={BookOpen} />
-        </div>
-
-        {/* Main Content Grid */}
-        <div className="grid lg:grid-cols-3 gap-6 mb-8">
-          {/* Continue Learning */}
-          <Card className="lg:col-span-2 card-premium animate-scale-in">
-            <CardHeader>
-              <CardTitle>Continue learning</CardTitle>
-              <CardDescription>Pick up where you left off</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
-                <ProgressRing progress={nextLesson.progress} size={100} strokeWidth={8} />
-                <div className="flex-1 space-y-3">
-                  <div>
-                    <Badge variant="secondary" className="mb-2">
-                      {nextLesson.level}
-                    </Badge>
-                    <h3 className="text-xl font-semibold mb-1">{nextLesson.title}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      ~{nextLesson.timeEstimate} minutes remaining
-                    </p>
-                  </div>
-                  <Link to={`/lessons/${nextLesson.id}`}>
-                    <Button className="gap-2">
-                      Resume lesson
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </Link>
+        {/* Stats Row */}
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={containerVariants}
+          className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-12"
+        >
+          {[
+            { icon: Flame, label: "Current Streak", value: `${streak} days`, color: "from-orange-500 to-red-500" },
+            { icon: Trophy, label: "Total XP", value: `${xp} XP`, color: "from-yellow-500 to-orange-500" },
+            { icon: BookOpen, label: "Lessons Done", value: "24", color: "from-blue-500 to-cyan-500" },
+            { icon: Brain, label: "Words Learned", value: "156", color: "from-purple-500 to-pink-500" },
+          ].map((stat, idx) => (
+            <motion.div
+              key={idx}
+              variants={itemVariants}
+              whileHover={{ scale: 1.05, y: -4 }}
+            >
+              <GlassCard className={`p-6 bg-gradient-to-br ${stat.color}/10 border border-white/10 hover:border-${stat.color.split()[1]}/50 transition-all`}>
+                <div className="flex items-start justify-between mb-3">
+                  <stat.icon className="w-6 h-6 text-white opacity-80" />
+                  <span className="text-xs text-gray-400 font-medium uppercase tracking-wider">{stat.label}</span>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+                <motion.p 
+                  className="text-3xl font-bold text-white"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5 + idx * 0.1 }}
+                >
+                  {stat.value}
+                </motion.p>
+              </GlassCard>
+            </motion.div>
+          ))}
+        </motion.div>
 
-          {/* Daily Review */}
-          <Card className="card-premium animate-scale-in" style={{ animationDelay: "0.1s" }}>
-            <CardHeader>
-              <CardTitle>Daily review</CardTitle>
-              <CardDescription>Flashcards due today</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center space-y-4">
-                <div className="text-5xl font-bold text-primary">25</div>
-                <p className="text-sm text-muted-foreground">cards to review</p>
-                <Link to="/flashcards">
-                  <Button className="w-full gap-2">
-                    Start review
-                    <Brain className="h-4 w-4" />
-                  </Button>
-                </Link>
-                <div className="pt-4 border-t border-border">
-                  <div className="flex justify-between text-xs text-muted-foreground mb-2">
-                    <span>This week</span>
-                    <span>75% accuracy</span>
-                  </div>
-                  <div className="h-20 flex items-end justify-between gap-1">
-                    {[40, 65, 55, 80, 70, 85, 75].map((height, i) => (
-                      <div
-                        key={i}
-                        className="flex-1 bg-primary/20 rounded-t"
-                        style={{ height: `${height}%` }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Progress Overview */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <Card className="card-premium">
-            <CardHeader>
-              <CardTitle className="text-lg">JLPT N4 Progress</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-muted-foreground">Overall</span>
-                    <span className="font-medium">62%</span>
-                  </div>
-                  <div className="h-2 bg-muted rounded-full overflow-hidden">
-                    <div className="h-full bg-primary" style={{ width: "62%" }} />
-                  </div>
-                </div>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Vocabulary</span>
-                    <span className="font-medium">840/1,500</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Grammar</span>
-                    <span className="font-medium">55/95</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Kanji</span>
-                    <span className="font-medium">180/300</span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="card-premium md:col-span-2">
-            <CardHeader>
-              <CardTitle className="text-lg">Upcoming this week</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {[
-                  { title: "Unit 5: Daily Routines", lessons: 8, type: "Vocabulary & Grammar" },
-                  { title: "Listening Practice: At the Restaurant", lessons: 1, type: "Listening" },
-                  { title: "Reading: Short Story", lessons: 1, type: "Reading" },
-                ].map((item, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
-                  >
-                    <div>
-                      <p className="font-medium text-sm">{item.title}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {item.lessons} lessons • {item.type}
-                      </p>
+        {/* Learning Modules */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="mb-12"
+        >
+          <motion.h2 
+            className="text-3xl font-bold text-white mb-6"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            Learning Modules
+          </motion.h2>
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={containerVariants}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+          >
+            {[
+              {
+                icon: BookOpen,
+                title: "Vocabulary",
+                description: "Build your word list",
+                path: "/vocabulary",
+                color: "from-blue-500 to-cyan-500",
+                count: "2,340 words",
+              },
+              {
+                icon: Brain,
+                title: "Grammar",
+                description: "Master language patterns",
+                path: "/grammar",
+                color: "from-purple-500 to-pink-500",
+                count: "450+ patterns",
+              },
+              {
+                icon: Zap,
+                title: "Quiz",
+                description: "Test your knowledge",
+                path: "/quiz",
+                color: "from-yellow-500 to-orange-500",
+                count: "180 quizzes",
+              },
+              {
+                icon: GraduationCap,
+                title: "JLPT Lessons",
+                description: "Structured by level",
+                path: "/jlpt-lessons",
+                color: "from-green-500 to-emerald-500",
+                count: "N5 - N1",
+              },
+            ].map((module, idx) => (
+              <motion.div
+                key={idx}
+                variants={itemVariants}
+                whileHover={{ scale: 1.05, y: -8 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Link to={module.path}>
+                  <GlassCard className={`p-6 h-full bg-gradient-to-br ${module.color}/10 hover:border-${module.color.split()[1]}/50 hover:shadow-lg transition-all group cursor-pointer`}>
+                    <div className="flex flex-col h-full justify-between">
+                      <div>
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: 0.5 + idx * 0.05 }}
+                        >
+                          <module.icon className="w-8 h-8 text-white mb-3 group-hover:scale-110 transition-transform" />
+                        </motion.div>
+                        <motion.h3 
+                          className="text-xl font-bold text-white mb-1"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.55 + idx * 0.05 }}
+                        >
+                          {module.title}
+                        </motion.h3>
+                        <motion.p 
+                          className="text-sm text-gray-400 mb-4"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.6 + idx * 0.05 }}
+                        >
+                          {module.description}
+                        </motion.p>
+                      </div>
+                      <motion.div 
+                        className="flex items-end justify-between"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.65 + idx * 0.05 }}
+                      >
+                        <span className="text-xs text-gray-500 font-medium">{module.count}</span>
+                        <motion.div
+                          animate={{ x: [0, 4, 0] }}
+                          transition={{ duration: 1.5, repeat: Infinity }}
+                        >
+                          <ArrowRight className="w-4 h-4 text-cyan-400" />
+                        </motion.div>
+                      </motion.div>
                     </div>
-                    <Button variant="ghost" size="sm">
-                      Start
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                  </GlassCard>
+                </Link>
+              </motion.div>
+            ))}
+          </motion.div>
+        </motion.div>
 
-        {/* Quick Actions */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold mb-4">Quick access</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Link to="/courses">
-              <Card className="card-premium hover-lift text-center p-6 cursor-pointer">
-                <BookOpen className="h-8 w-8 mx-auto mb-2 text-primary" />
-                <p className="font-medium text-sm">Browse Courses</p>
-              </Card>
-            </Link>
-            <Link to="/kanji-library">
-              <Card className="card-premium hover-lift text-center p-6 cursor-pointer">
-                <span className="text-3xl mb-2 block">漢</span>
-                <p className="font-medium text-sm">Kanji Library</p>
-              </Card>
-            </Link>
+        {/* Daily Goal Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="mb-12"
+        >
+          <motion.h2 
+            className="text-3xl font-bold text-white mb-6"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            Today's Task
+          </motion.h2>
+          <GlassCard className="p-8 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 hover:border-cyan-500/50 transition-colors group">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+              className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6"
+            >
+              <div className="flex-1">
+                <motion.h3 
+                  className="text-2xl font-bold text-white mb-3"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.65 }}
+                >
+                  {nextLesson.title}
+                </motion.h3>
+                <motion.div 
+                  className="flex items-center gap-4 mb-4"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.7 }}
+                >
+                  <Badge className="bg-gradient-to-r from-cyan-500 to-blue-500">{nextLesson.level}</Badge>
+                  <span className="text-gray-400 text-sm">{nextLesson.timeEstimate} minutes</span>
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.75 }}
+                >
+                  <div className="flex justify-between text-sm mb-3">
+                    <span className="text-gray-400">Progress</span>
+                    <motion.span 
+                      className="text-white font-semibold text-transparent bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.8 }}
+                    >
+                      {nextLesson.progress}%
+                    </motion.span>
+                  </div>
+                  <div className="w-full bg-slate-700/50 rounded-full h-3 overflow-hidden">
+                    <motion.div
+                      className="h-3 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${nextLesson.progress}%` }}
+                      transition={{ delay: 0.8, duration: 1 }}
+                    />
+                  </div>
+                </motion.div>
+              </div>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.85 }}
+              >
+                <Button className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 font-semibold px-8 shadow-lg shadow-cyan-500/30 transition-all">
+                  <ArrowRight className="w-4 h-4 mr-2" />
+                  Continue Lesson
+                </Button>
+              </motion.div>
+            </motion.div>
+          </GlassCard>
+        </motion.div>
+
+        {/* Quick Links */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+          className="flex gap-4"
+        >
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
             <Link to="/profile">
-              <Card className="card-premium hover-lift text-center p-6 cursor-pointer">
-                <Trophy className="h-8 w-8 mx-auto mb-2 text-primary" />
-                <p className="font-medium text-sm">Achievements</p>
-              </Card>
+              <Button className="border border-slate-700 bg-slate-800/50 text-white hover:bg-slate-700/50 transition-all">
+                <Settings className="w-4 h-4 mr-2" />
+                Settings & Profile
+              </Button>
             </Link>
-            <Link to="/profile">
-              <Card className="card-premium hover-lift text-center p-6 cursor-pointer">
-                <Calendar className="h-8 w-8 mx-auto mb-2 text-primary" />
-                <p className="font-medium text-sm">Settings</p>
-              </Card>
-            </Link>
-          </div>
-        </div>
-      </main>
-    </div>
+          </motion.div>
+        </motion.div>
+      </div>
+    </DashboardLayout>
   );
 };
 

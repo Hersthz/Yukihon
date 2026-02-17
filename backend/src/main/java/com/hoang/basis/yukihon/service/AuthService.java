@@ -29,6 +29,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final UserLearningStatsService userLearningStatsService;
 
     private static final Pattern EMAIL_PATTERN = 
             Pattern.compile("^[A-Za-z0-9+_.-]+@(.+)$");
@@ -71,6 +72,15 @@ public class AuthService {
 
         User saved = userRepository.save(user);
         log.info("User registered: {}", email);
+        
+        // Initialize learning stats for new user
+        try {
+            userLearningStatsService.initializeStatsForNewUser(saved.getId());
+            log.info("Initialized learning stats for new user: {}", email);
+        } catch (Exception e) {
+            log.warn("Failed to initialize learning stats for user: {}", email, e);
+        }
+        
         return buildAuthResponse(saved);
     }
 
