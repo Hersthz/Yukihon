@@ -14,7 +14,10 @@ import Vocabulary from "./pages/Vocabulary";
 import Grammar from "./pages/Grammar";
 import Quiz from "./pages/Quiz";
 import JLPTLessons from "./pages/JLPTLessons";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminUsers from "./pages/AdminUsers";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import AdminRoute from "@/components/AdminRoute";
 
 const queryClient = new QueryClient();
 
@@ -99,6 +102,11 @@ const App = () => (
               </ProtectedRoute>
             }
           />
+          {/* Admin Routes */}
+          <Route element={<AdminRoute />}>
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/users" element={<AdminUsers />} />
+          </Route>
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
