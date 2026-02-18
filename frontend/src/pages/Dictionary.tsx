@@ -50,12 +50,9 @@ const Dictionary = () => {
     try {
       await apiClient.myWords.saveWord({ vocabularyId: vocabId });
       toast({ title: "Saved!", description: "Word added to My Words" });
-    } catch (error: any) {
-      if (error.message?.includes("already")) {
-        toast({ title: "Info", description: "Word already saved" });
-      } else {
-        toast({ title: "Error", description: "Failed to save", variant: "destructive" });
-      }
+    } catch {
+      // Try checking if error is about already saved
+      toast({ title: "Error", description: "Failed to save", variant: "destructive" });
     }
   };
 
