@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   Users,
@@ -59,7 +59,7 @@ const AdminUsers = () => {
   const [selectedUser, setSelectedUser] = useState<UserManagement | null>(null);
   const [actionType, setActionType] = useState<"promote" | "demote" | "disable" | "enable" | null>(null);
 
-  const fetchUsers = async (pageNum = 0) => {
+  const fetchUsers = useCallback(async (pageNum = 0) => {
     try {
       setLoading(true);
       const data = await apiClient.admin.getUsers(pageNum, 20) as PagedResponse;
@@ -76,11 +76,11 @@ const AdminUsers = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [fetchUsers]);
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
