@@ -16,6 +16,12 @@ import Quiz from "./pages/Quiz";
 import JLPTLessons from "./pages/JLPTLessons";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminUsers from "./pages/AdminUsers";
+import AdminContent from "./pages/AdminContent";
+import Dictionary from "./pages/Dictionary";
+import Translation from "./pages/Translation";
+import Community from "./pages/Community";
+import MyWords from "./pages/MyWords";
+import Settings from "./pages/Settings";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AdminRoute from "@/components/AdminRoute";
 
@@ -102,10 +108,51 @@ const App = () => (
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/dictionary"
+            element={
+              <ProtectedRoute>
+                <Dictionary />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/translation"
+            element={
+              <ProtectedRoute>
+                <Translation />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/community"
+            element={
+              <ProtectedRoute>
+                <Community />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/my-words"
+            element={
+              <ProtectedRoute>
+                <MyWords />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <Settings />
+              </ProtectedRoute>
+            }
+          />
           {/* Admin Routes */}
           <Route element={<AdminRoute />}>
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/users" element={<AdminUsers />} />
+            <Route path="/admin/content" element={<AdminContent />} />
           </Route>
         </Routes>
       </BrowserRouter>

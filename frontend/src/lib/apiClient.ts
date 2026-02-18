@@ -164,6 +164,184 @@ export const apiClient = {
       return apiClient.request("/api/admin/stats");
     },
   },
+
+  // Dictionary endpoints
+  dictionary: {
+    search(query: string) {
+      return apiClient.request(`/api/dictionary/search?q=${encodeURIComponent(query)}`);
+    },
+    getDetail(id: number) {
+      return apiClient.request(`/api/dictionary/${id}`);
+    },
+  },
+
+  // Community endpoints
+  community: {
+    getPosts(page = 0, size = 20, category?: string) {
+      const params = `page=${page}&size=${size}${category ? `&category=${category}` : ""}`;
+      return apiClient.request(`/api/community/posts?${params}`);
+    },
+    getPost(postId: number) {
+      return apiClient.request(`/api/community/posts/${postId}`);
+    },
+    getUserPosts(userId: number, page = 0) {
+      return apiClient.request(`/api/community/posts/user/${userId}?page=${page}`);
+    },
+    createPost(data: { content: string; category?: string; jlptLevel?: string; imageUrl?: string }) {
+      return apiClient.request("/api/community/posts", {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+    },
+    deletePost(postId: number) {
+      return apiClient.request(`/api/community/posts/${postId}`, { method: "DELETE" });
+    },
+    toggleLike(postId: number) {
+      return apiClient.request(`/api/community/posts/${postId}/like`, { method: "POST" });
+    },
+    getComments(postId: number, page = 0) {
+      return apiClient.request(`/api/community/posts/${postId}/comments?page=${page}`);
+    },
+    addComment(postId: number, content: string) {
+      return apiClient.request(`/api/community/posts/${postId}/comments`, {
+        method: "POST",
+        body: JSON.stringify({ content }),
+      });
+    },
+    deleteComment(commentId: number) {
+      return apiClient.request(`/api/community/comments/${commentId}`, { method: "DELETE" });
+    },
+  },
+
+  // My Words (Saved Vocabulary) endpoints
+  myWords: {
+    getAll(folder?: string) {
+      const params = folder ? `?folder=${encodeURIComponent(folder)}` : "";
+      return apiClient.request(`/api/my-words${params}`);
+    },
+    getMastered(mastered = true) {
+      return apiClient.request(`/api/my-words/mastered?mastered=${mastered}`);
+    },
+    saveWord(data: { vocabularyId: number; folderName?: string; personalNote?: string }) {
+      return apiClient.request("/api/my-words", {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+    },
+    toggleMastered(id: number) {
+      return apiClient.request(`/api/my-words/${id}/toggle-mastered`, { method: "POST" });
+    },
+    updateNote(id: number, note: string) {
+      return apiClient.request(`/api/my-words/${id}/note`, {
+        method: "PUT",
+        body: JSON.stringify({ note }),
+      });
+    },
+    removeWord(id: number) {
+      return apiClient.request(`/api/my-words/${id}`, { method: "DELETE" });
+    },
+    isWordSaved(vocabularyId: number) {
+      return apiClient.request(`/api/my-words/check/${vocabularyId}`);
+    },
+    getStats() {
+      return apiClient.request("/api/my-words/stats");
+    },
+  },
+
+  // Settings endpoints
+  settings: {
+    get() {
+      return apiClient.request("/api/settings");
+    },
+    update(data: Record<string, unknown>) {
+      return apiClient.request("/api/settings", {
+        method: "PUT",
+        body: JSON.stringify(data),
+      });
+    },
+  },
+
+  // Vocabulary endpoints (for admin CRUD)
+  vocabulary: {
+    getAll() {
+      return apiClient.request("/api/vocabulary");
+    },
+    getByLevel(level: string) {
+      return apiClient.request(`/api/vocabulary/level/${level}`);
+    },
+    getLevels() {
+      return apiClient.request("/api/vocabulary/levels");
+    },
+    create(data: Record<string, unknown>) {
+      return apiClient.request("/api/vocabulary", { method: "POST", body: JSON.stringify(data) });
+    },
+    update(id: number, data: Record<string, unknown>) {
+      return apiClient.request(`/api/vocabulary/${id}`, { method: "PUT", body: JSON.stringify(data) });
+    },
+    delete(id: number) {
+      return apiClient.request(`/api/vocabulary/${id}`, { method: "DELETE" });
+    },
+  },
+
+  // Lessons endpoints (for admin CRUD)
+  lessons: {
+    getAll() {
+      return apiClient.request("/api/lessons");
+    },
+    getPublished() {
+      return apiClient.request("/api/lessons/published");
+    },
+    getPublishedByLevel(level: string) {
+      return apiClient.request(`/api/lessons/published/level/${level}`);
+    },
+    create(data: Record<string, unknown>) {
+      return apiClient.request("/api/lessons", { method: "POST", body: JSON.stringify(data) });
+    },
+    update(id: number, data: Record<string, unknown>) {
+      return apiClient.request(`/api/lessons/${id}`, { method: "PUT", body: JSON.stringify(data) });
+    },
+    delete(id: number) {
+      return apiClient.request(`/api/lessons/${id}`, { method: "DELETE" });
+    },
+  },
+
+  // Grammar endpoints (for admin CRUD)
+  grammar: {
+    getAll() {
+      return apiClient.request("/api/grammar");
+    },
+    getByLevel(level: string) {
+      return apiClient.request(`/api/grammar/level/${level}`);
+    },
+    create(data: Record<string, unknown>) {
+      return apiClient.request("/api/grammar", { method: "POST", body: JSON.stringify(data) });
+    },
+    update(id: number, data: Record<string, unknown>) {
+      return apiClient.request(`/api/grammar/${id}`, { method: "PUT", body: JSON.stringify(data) });
+    },
+    delete(id: number) {
+      return apiClient.request(`/api/grammar/${id}`, { method: "DELETE" });
+    },
+  },
+
+  // Quiz endpoints (for admin CRUD)
+  quizzes: {
+    getAll() {
+      return apiClient.request("/api/quizzes");
+    },
+    getByLevel(level: string) {
+      return apiClient.request(`/api/quizzes/level/${level}`);
+    },
+    create(data: Record<string, unknown>) {
+      return apiClient.request("/api/quizzes", { method: "POST", body: JSON.stringify(data) });
+    },
+    update(id: number, data: Record<string, unknown>) {
+      return apiClient.request(`/api/quizzes/${id}`, { method: "PUT", body: JSON.stringify(data) });
+    },
+    delete(id: number) {
+      return apiClient.request(`/api/quizzes/${id}`, { method: "DELETE" });
+    },
+  },
 };
 
 export default apiClient;

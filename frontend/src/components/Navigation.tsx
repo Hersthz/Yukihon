@@ -163,8 +163,8 @@ const Navigation = () => {
         </div>
 
         {/* Mobile: compact actions + menu toggle */}
-        <diThemeToggle />
-          <v className="flex md:hidden items-center gap-2">
+        <div className="flex md:hidden items-center gap-2">
+          <ThemeToggle />
           <Link to="/auth">
             <Button
               size="sm"
@@ -220,18 +220,32 @@ const Navigation = () => {
               Courses
             </Link>
             <Link
-              to="/statistics"
+              to="/dictionary"
               className="block py-2 text-sm font-medium text-sky-100/90 hover:text-white"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Statistics
+              Tra cứu
             </Link>
             <Link
-              to="/flashcards"
+              to="/translation"
               className="block py-2 text-sm font-medium text-sky-100/90 hover:text-white"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Flashcards
+              Dịch
+            </Link>
+            <Link
+              to="/community"
+              className="block py-2 text-sm font-medium text-sky-100/90 hover:text-white"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Cộng đồng
+            </Link>
+            <Link
+              to="/my-words"
+              className="block py-2 text-sm font-medium text-sky-100/90 hover:text-white"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              My Words
             </Link>
 
             <div className="pt-4 space-y-2">

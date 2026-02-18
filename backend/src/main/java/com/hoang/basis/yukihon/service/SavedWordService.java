@@ -1,0 +1,118 @@
+package com.hoang.basis.yukihon.service;
+
+import com.hoang.basis.yukihon.dto.savedword.SaveWordRequest;
+import com.hoang.basis.yukihon.dto.savedword.SavedWordDto;
+import com.hoang.basis.yukihon.exception.ResourceNotFoundException;
+import com.hoang.basis.yukihon.model.*;
+import com.hoang.basis.yukihon.repository.*;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class SavedWordService {
+
+    private final SavedWordRepository savedWordRepository;
+    private final UserRepository userRepository;
+    private final VocabularyRepository vocabularyRepository;
+
+    public List<SavedWordDto> getUserSavedWords(Long userId) {
+        return savedWordRepository.findByUserIdOrderByCreatedAtDesc(userId).stream()
+                .map(SavedWordDto::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    public List<SavedWordDto> getUserSavedWordsByFolder(Long userId, String folder) {
+        return savedWordRepository.findByUserIdAndFolderNameOrderByCreatedAtDesc(userId, folder).stream()
+                .map(SavedWordDto::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    public List<SavedWordDto> getMasteredWords(Long userId, boolean mastered) {
+        return savedWordRepository.findByUserIdAndMasteredOrderByCreatedAtDesc(userId, mastered).stream()
+                .map(SavedWordDto::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public SavedWordDto saveWord(Long userId, SaveWordRequest request) {
+        if (savedWordRepository.existsByUserIdAndVocabularyId(userId, request.getVocabularyId())) {
+            throw new IllegalArgumentException("Word already saved");
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        Vocabulary vocab = vocabularyRepository.findById(request.getVocabularyId())
+                .orElseThrow(() -> new ResourceNotFoundException("Vocabulary not found"));
+
+        SavedWord savedWord = SavedWord.builder()
+                .user(user)
+                .vocabulary(vocab)
+                .folderName(request.getFolderName() != null ? request.getFolderName() : "Default")
+                .personalNote(request.getPersonalNote())
+                .build();
+
+        SavedWord saved = savedWordRepository.save(savedWord);
+        log.info("User {} saved word {}", userId, vocab.getKanji());
+        return SavedWordDto.fromEntity(saved);
+    }
+
+    @Transactional
+    public SavedWordDto toggleMastered(Long savedWordId, Long userId) {
+        SavedWord saved = savedWordRepository.findById(savedWordId)
+                .orElseThrow(() -> new ResourceNotFoundException("Saved word not found"));
+
+        if (!saved.getUser().getId().equals(userId)) {
+            throw new IllegalArgumentException("Not your saved word");
+        }
+
+        saved.setMastered(!saved.isMastered());
+        SavedWord updated = savedWordRepository.save(saved);
+        return SavedWordDto.fromEntity(updated);
+    }
+
+    @Transactional
+    public SavedWordDto updateNote(Long savedWordId, Long userId, String note) {
+        SavedWord saved = savedWordRepository.findById(savedWordId)
+                .orElseThrow(() -> new ResourceNotFoundException("Saved word not found"));
+
+        if (!saved.getUser().getId().equals(userId)) {
+            throw new IllegalArgumentException("Not your saved word");
+        }
+
+        saved.setPersonalNote(note);
+        SavedWord updated = savedWordRepository.save(saved);
+        return SavedWordDto.fromEntity(updated);
+    }
+
+    @Transactional
+    public void removeSavedWord(Long savedWordId, Long userId) {
+        SavedWord saved = savedWordRepository.findById(savedWordId)
+                .orElseThrow(() -> new ResourceNotFoundException("Saved word not found"));
+
+        if (!saved.getUser().getId().equals(userId)) {
+            throw new IllegalArgumentException("Not your saved word");
+        }
+
+        savedWordRepository.delete(saved);
+        log.info("User {} removed saved word {}", userId, savedWordId);
+    }
+
+    public boolean isWordSaved(Long userId, Long vocabularyId) {
+        return savedWordRepository.existsByUserIdAndVocabularyId(userId, vocabularyId);
+    }
+
+    public long getCount(Long userId) {
+        return savedWordRepository.countByUserId(userId);
+    }
+
+    public long getMasteredCount(Long userId) {
+        return savedWordRepository.countByUserIdAndMastered(userId, true);
+    }
+}
