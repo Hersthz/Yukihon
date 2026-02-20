@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
+import { useTheme } from "@/hooks/use-theme";
 
 interface Snowflake {
   id: number;
@@ -37,6 +38,8 @@ const WinterNightBackground = ({
   className = "",
 }: WinterNightBackgroundProps) => {
   const [mounted, setMounted] = useState(false);
+  const { theme } = useTheme();
+  const isLight = theme === "light";
 
   useEffect(() => {
     setMounted(true);
@@ -79,12 +82,16 @@ const WinterNightBackground = ({
 
   return (
     <div className={`fixed inset-0 pointer-events-none overflow-hidden ${className}`} style={{ zIndex: 0 }}>
-      {/* Deep space background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-background" />
+      {/* Background gradient — adapts to theme */}
+      <div className={`absolute inset-0 transition-colors duration-500 ${
+        isLight
+          ? "bg-gradient-to-b from-sky-50/80 via-slate-100/40 to-background"
+          : "bg-gradient-to-b from-slate-950 via-slate-900 to-background"
+      }`} />
 
       {/* Aurora Borealis Effect */}
       {showAurora && !prefersReducedMotion && (
-        <div className="absolute inset-0">
+        <div className={`absolute inset-0 transition-opacity duration-500 ${isLight ? "opacity-20" : "opacity-100"}`}>
           {/* Primary aurora wave */}
           <motion.div
             className="absolute inset-0"
@@ -164,6 +171,7 @@ const WinterNightBackground = ({
 
       {/* Sparkle / Star field */}
       {sparkles.map((sparkle) => (
+        /* Sparkle opacity reduced in light mode */
         <motion.div
           key={`sparkle-${sparkle.id}`}
           className="absolute rounded-full"
@@ -172,8 +180,13 @@ const WinterNightBackground = ({
             top: `${sparkle.top}%`,
             width: sparkle.size,
             height: sparkle.size,
-            background: "radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 70%)",
-            boxShadow: `0 0 ${sparkle.size * 2}px rgba(255,255,255,0.5), 0 0 ${sparkle.size * 4}px rgba(186, 230, 253, 0.3)`,
+            opacity: isLight ? 0.15 : 1,
+            background: isLight
+              ? "radial-gradient(circle, rgba(100,160,220,0.7) 0%, rgba(100,160,220,0) 70%)"
+              : "radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 70%)",
+            boxShadow: isLight
+              ? `0 0 ${sparkle.size * 2}px rgba(100,160,220,0.3)`
+              : `0 0 ${sparkle.size * 2}px rgba(255,255,255,0.5), 0 0 ${sparkle.size * 4}px rgba(186, 230, 253, 0.3)`,
           }}
           animate={
             prefersReducedMotion
@@ -224,15 +237,19 @@ const WinterNightBackground = ({
           <div
             className="w-full h-full rounded-full"
             style={{
-              background: `radial-gradient(circle, rgba(255,255,255,${flake.opacity}) 0%, rgba(255,255,255,${flake.opacity * 0.3}) 50%, transparent 70%)`,
-              boxShadow: `0 0 ${flake.size}px rgba(255,255,255,${flake.opacity * 0.5})`,
+              background: isLight
+                ? `radial-gradient(circle, rgba(120,170,220,${flake.opacity * 0.5}) 0%, rgba(120,170,220,${flake.opacity * 0.15}) 50%, transparent 70%)`
+                : `radial-gradient(circle, rgba(255,255,255,${flake.opacity}) 0%, rgba(255,255,255,${flake.opacity * 0.3}) 50%, transparent 70%)`,
+              boxShadow: isLight
+                ? `0 0 ${flake.size}px rgba(120,170,220,${flake.opacity * 0.25})`
+                : `0 0 ${flake.size}px rgba(255,255,255,${flake.opacity * 0.5})`,
             }}
           />
         </motion.div>
       ))}
 
-      {/* Distant stars (static, small) */}
-      {Array.from({ length: 50 }).map((_, i) => (
+      {/* Distant stars (static, small) — hidden in light mode */}
+      {!isLight && Array.from({ length: 50 }).map((_, i) => (
         <div
           key={`star-${i}`}
           className="absolute w-px h-px bg-white/40 rounded-full"
@@ -247,11 +264,13 @@ const WinterNightBackground = ({
       <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-60" />
       <div className="absolute inset-0 bg-gradient-to-r from-background/30 via-transparent to-background/30" />
 
-      {/* Vignette effect */}
+      {/* Vignette effect — adapts to theme */}
       <div 
         className="absolute inset-0"
         style={{
-          background: "radial-gradient(ellipse at center, transparent 40%, rgba(2, 6, 23, 0.4) 100%)",
+          background: isLight
+            ? "radial-gradient(ellipse at center, transparent 50%, rgba(200, 210, 230, 0.25) 100%)"
+            : "radial-gradient(ellipse at center, transparent 40%, rgba(2, 6, 23, 0.4) 100%)",
         }}
       />
     </div>
