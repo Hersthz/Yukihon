@@ -54,7 +54,7 @@ public class AuthController {
     public ResponseEntity<AuthResponse> authenticateWithGoogle(
             @Valid @RequestBody GoogleTokenRequest request
     ) {
-        AuthResponse response = googleOAuthService.authenticateWithGoogle(request.getCode());
+        AuthResponse response = googleOAuthService.authenticateWithGoogle(request.getCode(), request.getRedirectUri());
         return ResponseEntity.ok(response);
     }
 }

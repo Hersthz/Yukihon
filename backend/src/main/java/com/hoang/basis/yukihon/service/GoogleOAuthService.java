@@ -10,13 +10,11 @@ import com.hoang.basis.yukihon.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
@@ -45,10 +43,10 @@ public class GoogleOAuthService {
     private static final String GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
     private static final String GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo";
 
-    public AuthResponse authenticateWithGoogle(String code) {
+    public AuthResponse authenticateWithGoogle(String code, String redirectUri) {
         try {
             // 1. Exchange code for tokens
-            GoogleTokenResponse tokenResponse = exchangeCodeForToken(code);
+            GoogleTokenResponse tokenResponse = exchangeCodeForToken(code, redirectUri);
             
             if (tokenResponse.getError() != null) {
                 throw new IllegalArgumentException("Google OAuth Error: " + tokenResponse.getErrorDescription());
@@ -69,16 +67,20 @@ public class GoogleOAuthService {
         }
     }
 
-    private GoogleTokenResponse exchangeCodeForToken(String code) {
+        private GoogleTokenResponse exchangeCodeForToken(String code, String redirectUri) {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+            String effectiveRedirectUri = StringUtils.hasText(redirectUri)
+                ? redirectUri
+                : googleRedirectUri;
 
             MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
             body.add("code", code);
             body.add("client_id", googleClientId);
             body.add("client_secret", googleClientSecret);
-            body.add("redirect_uri", googleRedirectUri);
+            body.add("redirect_uri", effectiveRedirectUri);
             body.add("grant_type", "authorization_code");
 
             HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
@@ -101,10 +103,11 @@ public class GoogleOAuthService {
             headers.setBearerAuth(accessToken);
 
             HttpEntity<?> request = new HttpEntity<>(headers);
-            ResponseEntity<GoogleUserInfo> response = restTemplate.getForEntity(
+            ResponseEntity<GoogleUserInfo> response = restTemplate.exchange(
                     GOOGLE_USERINFO_URL,
-                    GoogleUserInfo.class,
-                    request
+                    HttpMethod.GET,
+                    request,
+                    GoogleUserInfo.class
             );
 
             return response.getBody();
@@ -115,10 +118,15 @@ public class GoogleOAuthService {
     }
 
     private User createUserFromGoogleInfo(GoogleUserInfo googleUserInfo) {
+        // Generate an unusable BCrypt hash so the password column is never empty
+        // and nobody can login with a raw password for this account
+        String unusablePassword = new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder()
+                .encode(java.util.UUID.randomUUID().toString());
+
         User user = User.builder()
                 .email(googleUserInfo.getEmail().toLowerCase())
                 .displayName(googleUserInfo.getName())
-                .password("") // Google OAuth users don't have password
+                .password(unusablePassword)
                 .enabled(true)
                 .build();
         
