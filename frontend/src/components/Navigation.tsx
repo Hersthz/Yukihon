@@ -1,286 +1,258 @@
 // src/components/Navigation.tsx
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Sparkles } from "lucide-react";
-import { DynamicNavigation } from "../components/DynamicNavigation";
+import { Menu, X } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
+import { cn } from "@/lib/utils";
 
 type SectionId = "hero" | "how-it-works" | "jlpt" | "features" | "testimonials";
 
+const NAV_SECTIONS: { id: SectionId; label: string }[] = [
+  { id: "hero", label: "Home" },
+  { id: "how-it-works", label: "How" },
+  { id: "jlpt", label: "JLPT" },
+  { id: "features", label: "Features" },
+  { id: "testimonials", label: "Stories" },
+];
+
 const Navigation = () => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<SectionId>("hero");
+  const [scrolled, setScrolled] = useState(false);
+  const [pillStyle, setPillStyle] = useState({ left: 4, width: 0 });
+  const navContainerRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const navigate = useNavigate();
 
   const isHome = location.pathname === "/";
 
-  const sectionLinks = useMemo(
-    () =>
-      [
-        { id: "hero", label: "Home", href: "#hero" },
-        { id: "how-it-works", label: "How", href: "#how-it-works" },
-        { id: "jlpt", label: "JLPT", href: "#jlpt" },
-        { id: "features", label: "Features", href: "#features" },
-        { id: "testimonials", label: "Stories", href: "#testimonials" },
-      ] as { id: SectionId; label: string; href: string }[],
-    []
+  const scrollToSection = useCallback(
+    (id: SectionId) => {
+      const doScroll = () => {
+        const el = document.getElementById(id);
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      };
+      if (!isHome) {
+        navigate("/", { replace: false });
+        setTimeout(doScroll, 80);
+      } else {
+        doScroll();
+      }
+    },
+    [isHome, navigate]
   );
 
-  // Scroll to section on current page (if home). If not on home, navigate first then scroll.
-  const scrollToSection = (id: SectionId) => {
-    const doScroll = () => {
-      const el = document.getElementById(id);
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-    };
-
-    if (!isHome) {
-      navigate("/", { replace: false });
-      // dùng setTimeout nhỏ để đợi DOM home render xong
-      setTimeout(doScroll, 50);
-    } else {
-      doScroll();
-    }
-  };
-
-  // IntersectionObserver để highlight mục khi cuộn trên trang home
+  /* ── Scroll spy ─────────────────────────────────────────────── */
   useEffect(() => {
     if (!isHome) return;
-
-    const ids: SectionId[] = ["hero", "how-it-works", "jlpt", "features", "testimonials"];
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => Math.abs(a.boundingClientRect.top) - Math.abs(b.boundingClientRect.top));
-
-        if (visible[0]) {
-          const id = visible[0].target.id as SectionId;
+    const handleScroll = () => {
+      const y = window.scrollY;
+      setScrolled(y > 30);
+      const ids = [...NAV_SECTIONS].reverse().map((s) => s.id);
+      for (const id of ids) {
+        const el = document.getElementById(id);
+        if (el && y >= el.offsetTop - 160) {
           setActiveSection(id);
+          break;
         }
-      },
-      {
-        rootMargin: "-40% 0px -50% 0px",
-        threshold: 0.15,
       }
-    );
-
-    ids.forEach((id) => {
-      const el = document.getElementById(id);
-      if (el) observer.observe(el);
-    });
-
-    return () => observer.disconnect();
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
   }, [isHome]);
 
+  /* ── Pill indicator position ────────────────────────────────── */
+  const updatePill = useCallback(() => {
+    if (!navContainerRef.current) return;
+    const btn = navContainerRef.current.querySelector(
+      `[data-section="${activeSection}"]`
+    ) as HTMLElement | null;
+    if (btn) {
+      setPillStyle({ left: btn.offsetLeft, width: btn.offsetWidth });
+    }
+  }, [activeSection]);
+
+  useEffect(updatePill, [updatePill]);
+
+  useEffect(() => {
+    window.addEventListener("resize", updatePill);
+    return () => window.removeEventListener("resize", updatePill);
+  }, [updatePill]);
+
+  /* ── Render ─────────────────────────────────────────────────── */
   return (
     <header
-      className="
-        fixed top-0 inset-x-0 z-50
-        border-b border-white/10
-        bg-[radial-gradient(1200px_220px_at_30%_-80px,rgba(56,189,248,.25),rgba(37,99,235,.18)_35%,transparent_70%)]
-        bg-slate-950/70
-        backdrop-blur-2xl
-        supports-[backdrop-filter]:bg-slate-950/60
-        shadow-[0_16px_60px_rgba(0,0,0,0.6)]
-      "
+      className={cn(
+        "fixed top-0 inset-x-0 z-50 transition-all duration-500",
+        scrolled ? "py-2" : "py-3"
+      )}
     >
-      <div className="pointer-events-none absolute inset-x-6 -bottom-px h-px bg-gradient-to-r from-cyan-300/70 via-white/80 to-emerald-300/70 blur-[1px]" />
+      {/* Glassmorphic background — adapts to light / dark via CSS vars */}
+      <div
+        className={cn(
+          "absolute inset-0 transition-all duration-500",
+          scrolled
+            ? "bg-background/80 backdrop-blur-2xl shadow-[0_4px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_30px_rgba(0,0,0,0.25)] border-b border-border/40"
+            : "bg-transparent"
+        )}
+      />
 
-      <nav className="container mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
-        {/* Logo */}
-        <Link to="/" className="flex items-center gap-3 group">
-          <div className="relative">
-            <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-sky-400 to-cyan-500 grid place-items-center text-2xl font-bold text-white shadow-[0_10px_30px_rgba(56,189,248,0.7)] ring-1 ring-white/60">
-              日
-            </div>
-            <Sparkles className="absolute -bottom-1 -right-1 h-3.5 w-3.5 text-emerald-300 opacity-95" />
+      {/* Accent line */}
+      <div
+        className={cn(
+          "pointer-events-none absolute inset-x-8 -bottom-px h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent transition-opacity duration-500",
+          scrolled ? "opacity-100" : "opacity-0"
+        )}
+      />
+
+      <nav className="container relative mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-4">
+        {/* ── Logo ── */}
+        <Link to="/" className="flex items-center gap-3 group shrink-0">
+          <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-primary to-secondary grid place-items-center text-xl font-bold text-primary-foreground shadow-lg shadow-primary/25 group-hover:shadow-primary/40 transition-shadow">
+            日
           </div>
           <div className="hidden md:block leading-tight">
-            <div className="text-[1.2rem] font-extrabold tracking-tight text-white drop-shadow-[0_2px_10px_rgba(0,0,0,.7)]">
-              Yukihon
-            </div>
-            <div className="text-[0.7rem] text-sky-100/80">
+            <div className="text-[1.1rem] font-extrabold tracking-tight">Yukihon</div>
+            <div className="text-[0.65rem] text-muted-foreground">
               JLPT N5 → N1 • 15 min / day
             </div>
           </div>
         </Link>
 
-        {/* Center segmented nav (desktop) */}
+        {/* ── Center pill nav (desktop) ── */}
         <div className="hidden md:flex flex-1 justify-center">
           <div
-            className="
-              relative rounded-full p-[2px]
-              bg-[conic-gradient(from_180deg_at_50%_50%,rgba(255,255,255,.75),rgba(96,165,250,.9),rgba(52,211,153,.95),rgba(255,255,255,.75))]
-              shadow-[0_12px_35px_rgba(56,189,248,.45)]
-            "
+            ref={navContainerRef}
+            className="relative flex items-center gap-0.5 rounded-full p-1 border border-border/40 bg-muted/50 backdrop-blur-sm"
           >
-            <div className="absolute inset-0 -z-10 rounded-full blur-md bg-cyan-300/35" />
-            <span className="pointer-events-none absolute inset-0 rounded-full overflow-hidden">
-              <span className="absolute -left-1/3 top-0 h-full w-1/3 rotate-12 bg-[linear-gradient(90deg,transparent,rgba(255,255,255,.9),transparent)] animate-navShine" />
-            </span>
-
-            <DynamicNavigation
-              links={sectionLinks}
-              activeLink={activeSection}
-              backgroundColor="rgba(15,23,42,0.85)"
-              textColor="#e5f0ff"
-              highlightColor="rgba(15,23,42,1)"
-              glowIntensity={10}
-              showLabelsOnMobile={true}
-              className="!border-white/15 !shadow-[inset_0_1px_0_rgba(255,255,255,.45),0_18px_40px_rgba(15,23,42,.9)] !px-2"
-              onLinkClick={(id) => scrollToSection(id as SectionId)}
+            {/* Animated indicator pill */}
+            <div
+              className="absolute top-1 h-[calc(100%-8px)] rounded-full bg-background shadow-sm border border-border/50 transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)]"
+              style={{ left: `${pillStyle.left}px`, width: `${pillStyle.width}px` }}
             />
+            {NAV_SECTIONS.map((s) => (
+              <button
+                key={s.id}
+                data-section={s.id}
+                onClick={() => scrollToSection(s.id)}
+                className={cn(
+                  "relative z-10 px-4 lg:px-5 py-1.5 rounded-full text-sm font-medium transition-colors duration-200",
+                  activeSection === s.id
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground/80"
+                )}
+              >
+                {s.label}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Right actions (desktop) */}
-        <div className="hidden md:flex items-center gap-3">
+        {/* ── Right actions (desktop) ── */}
+        <div className="hidden md:flex items-center gap-3 shrink-0">
           <ThemeToggle />
           <Link
             to="/courses"
-            className="text-xs lg:text-sm font-medium text-sky-100/80 hover:text-white transition-colors"
+            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
             Courses
           </Link>
           <Link to="/auth">
             <Button
               size="sm"
-              className="
-                rounded-full px-4
-                bg-gradient-to-r from-sky-400 via-cyan-400 to-emerald-400
-                text-slate-950 font-semibold
-                shadow-[0_10px_30px_rgba(56,189,248,.7)]
-                hover:brightness-110
-              "
+              className="rounded-full px-5 bg-gradient-to-r from-primary to-secondary text-primary-foreground font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:brightness-110 transition-all"
             >
               Start free trial
             </Button>
           </Link>
         </div>
 
-        {/* Mobile: compact actions + menu toggle */}
+        {/* ── Mobile compact actions ── */}
         <div className="flex md:hidden items-center gap-2">
           <ThemeToggle />
           <Link to="/auth">
             <Button
               size="sm"
-              className="rounded-full px-3 bg-sky-400/90 text-slate-950 font-semibold shadow-md"
+              className="rounded-full px-3 bg-primary text-primary-foreground font-semibold shadow-md"
             >
               Free trial
             </Button>
           </Link>
           <button
-            className="p-2 rounded-full border border-white/30 text-white hover:bg-white/10 transition-colors"
-            onClick={() => setMobileMenuOpen((v) => !v)}
+            className="p-2 rounded-full border border-border/50 text-foreground hover:bg-muted transition-colors"
+            onClick={() => setMobileOpen((v) => !v)}
             aria-label="Toggle menu"
           >
-            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
       </nav>
 
-      {/* Mobile slide-down nav */}
-      {mobileMenuOpen && (
-        <div className="md:hidden border-t border-white/10 bg-slate-950/95 backdrop-blur-xl">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 space-y-3">
-            {/* On-page sections (home) */}
-            <div className="flex gap-2 pb-3 border-b border-white/10 overflow-x-auto">
-              {sectionLinks.map((l) => (
+      {/* ── Mobile slide-down menu ── */}
+      <div
+        className={cn(
+          "md:hidden overflow-hidden transition-all duration-300 ease-out",
+          mobileOpen ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0"
+        )}
+      >
+        <div className="border-t border-border/40 bg-background/95 backdrop-blur-xl">
+          <div className="container mx-auto px-4 sm:px-6 py-4 space-y-3">
+            {/* Section pills */}
+            <div className="flex gap-2 pb-3 border-b border-border/30 overflow-x-auto">
+              {NAV_SECTIONS.map((s) => (
                 <button
-                  key={l.id}
+                  key={s.id}
                   onClick={() => {
-                    scrollToSection(l.id);
-                    setMobileMenuOpen(false);
+                    scrollToSection(s.id);
+                    setMobileOpen(false);
                   }}
-                  className={`
-                    px-3 py-1.5 rounded-full text-xs font-medium
-                    border transition-colors
-                    ${
-                      activeSection === l.id
-                        ? "bg-sky-500 text-slate-950 border-sky-300"
-                        : "border-white/25 text-sky-100/85 bg-slate-900/60"
-                    }
-                  `}
+                  className={cn(
+                    "px-3 py-1.5 rounded-full text-xs font-medium border transition-colors whitespace-nowrap",
+                    activeSection === s.id
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "border-border/40 text-muted-foreground bg-muted/30"
+                  )}
                 >
-                  {l.label}
+                  {s.label}
                 </button>
               ))}
             </div>
 
             {/* Route links */}
-            <Link
-              to="/courses"
-              className="block py-2 text-sm font-medium text-sky-100/90 hover:text-white"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Courses
-            </Link>
-            <Link
-              to="/dictionary"
-              className="block py-2 text-sm font-medium text-sky-100/90 hover:text-white"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Tra cứu
-            </Link>
-            <Link
-              to="/translation"
-              className="block py-2 text-sm font-medium text-sky-100/90 hover:text-white"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Dịch
-            </Link>
-            <Link
-              to="/community"
-              className="block py-2 text-sm font-medium text-sky-100/90 hover:text-white"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Cộng đồng
-            </Link>
-            <Link
-              to="/my-words"
-              className="block py-2 text-sm font-medium text-sky-100/90 hover:text-white"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              My Words
-            </Link>
+            {[
+              { to: "/courses", label: "Courses" },
+              { to: "/dictionary", label: "Tra cứu" },
+              { to: "/translation", label: "Dịch" },
+              { to: "/community", label: "Cộng đồng" },
+              { to: "/my-words", label: "My Words" },
+            ].map((link) => (
+              <Link
+                key={link.to}
+                to={link.to}
+                className="block py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                onClick={() => setMobileOpen(false)}
+              >
+                {link.label}
+              </Link>
+            ))}
 
             <div className="pt-4 space-y-2">
-              <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
-                <Button
-                  variant="outline"
-                  className="w-full rounded-full border-white/40 text-sky-50 hover:bg-white/10"
-                >
+              <Link to="/auth" onClick={() => setMobileOpen(false)}>
+                <Button variant="outline" className="w-full rounded-full border-border/50">
                   Log in
                 </Button>
               </Link>
-              <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
-                <Button className="w-full rounded-full bg-gradient-to-r from-sky-400 via-cyan-400 to-emerald-400 text-slate-950">
+              <Link to="/auth" onClick={() => setMobileOpen(false)}>
+                <Button className="w-full rounded-full bg-gradient-to-r from-primary to-secondary text-primary-foreground">
                   Start free trial
                 </Button>
               </Link>
             </div>
           </div>
         </div>
-      )}
-
-      <style>{`
-        @keyframes navShine {
-          0% { transform: translateX(-120%) rotate(12deg); opacity: 0; }
-          30% { opacity: .55; }
-          70% { opacity: .55; }
-          100% { transform: translateX(260%) rotate(12deg); opacity: 0; }
-        }
-        .animate-navShine {
-          animation: navShine 3.5s ease-in-out infinite;
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .animate-navShine { animation: none !important; }
-        }
-      `}</style>
+      </div>
     </header>
   );
 };

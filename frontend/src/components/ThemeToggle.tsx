@@ -1,28 +1,44 @@
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 export const ThemeToggle = () => {
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={toggleTheme}
-        className="rounded-full border border-border/50 hover:bg-muted"
-        title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-      >
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={toggleTheme}
+      className="relative rounded-full w-9 h-9 border border-border/40 hover:bg-muted/60 transition-colors"
+      title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+    >
+      <AnimatePresence mode="wait" initial={false}>
         {theme === "dark" ? (
-          <Sun className="h-4 w-4" />
+          <motion.div
+            key="sun"
+            initial={{ scale: 0, rotate: -90, opacity: 0 }}
+            animate={{ scale: 1, rotate: 0, opacity: 1 }}
+            exit={{ scale: 0, rotate: 90, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Sun className="h-4 w-4" />
+          </motion.div>
         ) : (
-          <Moon className="h-4 w-4" />
+          <motion.div
+            key="moon"
+            initial={{ scale: 0, rotate: 90, opacity: 0 }}
+            animate={{ scale: 1, rotate: 0, opacity: 1 }}
+            exit={{ scale: 0, rotate: -90, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Moon className="h-4 w-4" />
+          </motion.div>
         )}
-        <span className="sr-only">Toggle theme</span>
-      </Button>
-    </motion.div>
+      </AnimatePresence>
+      <span className="sr-only">Toggle theme</span>
+    </Button>
   );
 };
 
