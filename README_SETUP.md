@@ -46,7 +46,7 @@ JWT_REFRESH_EXPIRATION_MS=604800000
 # Google OAuth
 GOOGLE_CLIENT_ID=your_google_client_id.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=your_google_client_secret
-GOOGLE_REDIRECT_URI=http://localhost:8080/api/auth/google/callback
+GOOGLE_REDIRECT_URI=http://localhost:5173/auth
 
 # Application
 FRONTEND_URL=http://localhost:5173
@@ -82,6 +82,7 @@ npm install
 3. **Configure environment** (create `.env.local`):
 ```env
 VITE_API_URL=http://localhost:8080
+VITE_GOOGLE_CLIENT_ID=your_google_client_id.apps.googleusercontent.com
 ```
 
 4. **Start development server**
@@ -107,7 +108,7 @@ Frontend will be available at `http://localhost:5173`
 1. Go to [Google Cloud Console](https://console.cloud.google.com/)
 2. Create OAuth 2.0 credentials (Web application)
 3. Add authorized redirect URIs:
-   - `http://localhost:8080/api/auth/google/callback` (development)
+  - `http://localhost:5173/auth` (development)
    - Your production URL
 4. Copy Client ID and Client Secret to `.env`
 

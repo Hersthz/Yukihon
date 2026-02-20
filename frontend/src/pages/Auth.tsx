@@ -29,9 +29,8 @@ interface AuthResponse {
   user: AuthUser;
 }
 
-const API_BASE_URL = "http://localhost:8080";
-// Replace with your Google Client ID from Google Cloud Console
-const GOOGLE_CLIENT_ID = "your_google_client_id.apps.googleusercontent.com";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
 const GOOGLE_REDIRECT_URI = `${window.location.origin}/auth`;
 
 const Auth = () => {
@@ -83,19 +82,31 @@ const Auth = () => {
     localStorage.setItem("yukihon_user", JSON.stringify(resp.user));
   };
 
+  const isGoogleConfigured = GOOGLE_CLIENT_ID && !GOOGLE_CLIENT_ID.includes("your_google");
+
   const handleGoogleLogin = () => {
+    if (!isGoogleConfigured) {
+      setErrorMsg("Google Client ID chưa được cấu hình. Vui lòng tạo OAuth credentials tại Google Cloud Console rồi điền vào VITE_GOOGLE_CLIENT_ID trong frontend/.env.local");
+      return;
+    }
+
     // This will redirect to Google's OAuth consent screen
     const scope = encodeURIComponent("https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile");
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(GOOGLE_REDIRECT_URI)}&response_type=code&scope=${scope}`;
     window.location.href = authUrl;
   };
 
-  // Handle Google OAuth callback - check if there's an auth code in URL
+  // Handle Google OAuth callback - check if there's an auth code or error in URL
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code");
-    
-    if (code) {
+    const error = params.get("error");
+
+    if (error) {
+      const desc = params.get("error_description");
+      setErrorMsg(desc || `Google login failed: ${error}`);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (code) {
       authenticateWithGoogle(code);
     }
   }, []);
@@ -481,22 +492,26 @@ const Auth = () => {
                       : "Start learning"}
                   </Button>
 
-                  <div className="relative my-4">
-                    <Separator className="bg-white/20" />
-                    <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-center">
-                      <span className="bg-card-foreground/10 px-3 text-xs text-muted-foreground font-medium">Or</span>
-                    </div>
-                  </div>
+                  {isGoogleConfigured && (
+                    <>
+                      <div className="relative my-4">
+                        <Separator className="bg-white/20" />
+                        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-center">
+                          <span className="bg-card-foreground/10 px-3 text-xs text-muted-foreground font-medium">Or</span>
+                        </div>
+                      </div>
 
-                  <Button
-                    type="button"
-                    onClick={handleGoogleLogin}
-                    disabled={isSubmitting}
-                    className="w-full bg-white/10 hover:bg-white/20 border border-white/20 text-foreground py-4 rounded-xl transition-all"
-                  >
-                    <Chrome className="w-4 h-4 mr-2" />
-                    Continue with Google
-                  </Button>
+                      <Button
+                        type="button"
+                        onClick={handleGoogleLogin}
+                        disabled={isSubmitting}
+                        className="w-full bg-white/10 hover:bg-white/20 border border-white/20 text-foreground py-4 rounded-xl transition-all"
+                      >
+                        <Chrome className="w-4 h-4 mr-2" />
+                        Continue with Google
+                      </Button>
+                    </>
+                  )}
 
                   <p className="text-center text-sm text-muted-foreground">
                     {mode === "login" ? (
