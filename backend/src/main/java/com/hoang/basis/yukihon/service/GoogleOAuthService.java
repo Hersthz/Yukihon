@@ -1,6 +1,5 @@
 package com.hoang.basis.yukihon.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hoang.basis.yukihon.dto.auth.AuthResponse;
 import com.hoang.basis.yukihon.dto.auth.GoogleTokenResponse;
 import com.hoang.basis.yukihon.dto.auth.GoogleUserInfo;
@@ -33,7 +32,6 @@ public class GoogleOAuthService {
     private final UserRepository userRepository;
     private final JwtService jwtService;
     private final RestTemplate restTemplate;
-    private final ObjectMapper objectMapper;
 
     @Value("${google.client-id}")
     private String googleClientId;
