@@ -2,19 +2,11 @@
 
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Brain, Search } from "lucide-react";
+import { Brain, Search, ChevronRight, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import PageHeader from "@/components/shared/PageHeader";
-import GlassCard from "@/components/genshin/GlassCard";
 import { useQuery } from "@tanstack/react-query";
 import { grammarAPI } from "@/lib/api/learningClient";
 
@@ -29,6 +21,14 @@ interface GrammarItem {
   jlptLevel: string;
   relatedPatterns?: string;
 }
+
+const levelColors: Record<string, string> = {
+  N5: "bg-emerald-500/15 text-emerald-400 border-emerald-500/25",
+  N4: "bg-cyan-500/15 text-cyan-400 border-cyan-500/25",
+  N3: "bg-amber-500/15 text-amber-400 border-amber-500/25",
+  N2: "bg-orange-500/15 text-orange-400 border-orange-500/25",
+  N1: "bg-rose-500/15 text-rose-400 border-rose-500/25",
+};
 
 const Grammar = () => {
   const [selectedLevel, setSelectedLevel] = useState("all");
@@ -49,88 +49,55 @@ const Grammar = () => {
     });
   }, [grammarList, selectedLevel, searchQuery]);
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.08,
-        delayChildren: 0.1,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, x: -20 },
-    visible: {
-      opacity: 1,
-      x: 0,
-      transition: {
-        type: "spring",
-        stiffness: 100,
-        damping: 15,
-      },
-    },
-  };
-
   return (
     <DashboardLayout>
       <div className="container mx-auto px-4 py-12">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <PageHeader
-            title="Grammar Patterns"
-            subtitle="Master Japanese grammar patterns for different JLPT levels"
-            icon={<Brain />}
-          />
+        {/* Header */}
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="mb-10">
+          <div className="flex items-center gap-4 mb-3">
+            <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/20">
+              <Brain className="w-7 h-7 text-purple-400" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-white">Grammar Patterns</h1>
+              <p className="text-sm text-slate-400">Master Japanese grammar patterns for different JLPT levels</p>
+            </div>
+          </div>
         </motion.div>
 
         {/* Filters */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.6 }}
-          className="flex flex-col md:flex-row gap-4 mb-8"
-        >
-          <motion.div
-            className="flex-1"
-            whileFocus={{ scale: 1.02 }}
-          >
-            <Input
-              placeholder="🔍 Search grammar patterns..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-800/50 border-slate-700 focus:border-purple-500/50 focus:ring-purple-500/20 transition-colors"
-            />
-          </motion.div>
-
-          <motion.div whileHover={{ scale: 1.02 }}>
-            <Select value={selectedLevel} onValueChange={setSelectedLevel}>
-              <SelectTrigger className="w-40 bg-slate-800/50 border-slate-700 focus:border-purple-500/50 focus:ring-purple-500/20">
-                <SelectValue placeholder="All Levels" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Levels</SelectItem>
-                {["N5", "N4", "N3", "N2", "N1"].map((level) => (
-                  <SelectItem key={level} value={level}>
-                    {level}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </motion.div>
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.5 }} className="mb-8">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+              <Input
+                placeholder="Search grammar patterns..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 bg-white/[0.03] border-white/[0.06] focus:border-purple-500/40 focus:ring-purple-500/10 text-white placeholder:text-slate-500"
+              />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {["all", "N5", "N4", "N3", "N2", "N1"].map((level) => (
+                <button
+                  key={level}
+                  onClick={() => setSelectedLevel(level)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 border ${
+                    selectedLevel === level
+                      ? "bg-white/10 border-white/20 text-white"
+                      : "bg-white/[0.03] border-white/[0.06] text-slate-400 hover:bg-white/[0.06] hover:text-slate-300"
+                  }`}
+                >
+                  {level === "all" ? "All" : level}
+                </button>
+              ))}
+            </div>
+          </div>
         </motion.div>
 
-        {/* Grammar List */}
+        {/* Loading */}
         {isLoading ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex justify-center py-20"
-          >
+          <div className="flex justify-center py-20">
             <div className="relative w-12 h-12">
               <motion.div
                 className="absolute inset-0 rounded-full border-2 border-purple-500/20"
@@ -138,114 +105,86 @@ const Grammar = () => {
                 transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
               />
               <motion.div
-                className="absolute inset-0 rounded-full border-2 border-transparent border-t-purple-500"
+                className="absolute inset-0 rounded-full border-2 border-transparent border-t-purple-400"
                 animate={{ rotate: -360 }}
                 transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
               />
             </div>
-          </motion.div>
+          </div>
         ) : (
           <motion.div
             initial="hidden"
             animate="visible"
-            variants={containerVariants}
+            variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.06 } } }}
             className="space-y-4"
           >
-            {filteredGrammar.map((item: GrammarItem, idx: number) => (
+            {filteredGrammar.map((item: GrammarItem) => (
               <motion.div
                 key={item.id}
-                variants={itemVariants}
+                variants={{ hidden: { opacity: 0, y: 15 }, visible: { opacity: 1, y: 0 } }}
+                className="rounded-2xl border border-white/[0.06] bg-white/[0.03] overflow-hidden group hover:border-purple-500/20 hover:shadow-lg hover:shadow-purple-500/5 transition-all"
               >
-                <GlassCard className="p-6 hover:border-purple-500/70 hover:shadow-lg hover:shadow-purple-500/20 transition-all group">
+                {/* Accent line */}
+                <div className="h-0.5 bg-gradient-to-r from-purple-500/40 to-pink-500/40" />
+
+                <div className="p-6">
                   <div className="flex items-start justify-between mb-4">
                     <div>
-                      <motion.h3 
-                        className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-2"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.1 }}
-                      >
-                        {item.pattern}
-                      </motion.h3>
-                      <motion.p 
-                        className="text-lg text-gray-300"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.15 }}
-                      >
-                        {item.title}
-                      </motion.p>
+                      <h3 className="text-xl font-bold text-white mb-1">{item.pattern}</h3>
+                      <p className="text-slate-400">{item.title}</p>
                     </div>
-                    <motion.span 
-                      className="px-3 py-1 bg-gradient-to-r from-purple-500/30 to-pink-500/30 text-purple-300 rounded-full text-sm border border-purple-500/50 font-semibold whitespace-nowrap"
-                      whileHover={{ scale: 1.1 }}
-                    >
+                    <Badge className={`text-xs border shrink-0 ml-4 ${levelColors[item.jlptLevel] || "bg-slate-500/15 text-slate-400"}`}>
                       {item.jlptLevel}
-                    </motion.span>
+                    </Badge>
                   </div>
 
-                  <motion.div 
-                    className="space-y-4"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.2 }}
-                  >
+                  <div className="space-y-4">
                     <div>
-                      <p className="text-sm text-purple-400 font-semibold mb-2">Explanation</p>
-                      <p className="text-gray-300 leading-relaxed">{item.explanation}</p>
+                      <p className="text-xs uppercase tracking-wider text-purple-400/80 font-semibold mb-1.5">Explanation</p>
+                      <p className="text-sm text-slate-300 leading-relaxed">{item.explanation}</p>
                     </div>
 
                     {item.usage && (
                       <div>
-                        <p className="text-sm text-purple-400 font-semibold mb-2">Usage</p>
-                        <p className="text-gray-300">{item.usage}</p>
+                        <p className="text-xs uppercase tracking-wider text-purple-400/80 font-semibold mb-1.5">Usage</p>
+                        <p className="text-sm text-slate-300">{item.usage}</p>
                       </div>
                     )}
 
                     {item.exampleJP && (
-                      <motion.div 
-                        className="bg-gradient-to-br from-slate-900/50 to-purple-900/30 p-4 rounded-lg border border-purple-500/20"
-                        whileHover={{ borderColor: "rgb(168 85 247 / 0.4)" }}
-                      >
-                        <p className="text-sm text-purple-400 font-semibold mb-2">Example</p>
-                        <p className="text-white mb-2 font-medium">{item.exampleJP}</p>
+                      <div className="rounded-xl bg-white/[0.03] border border-white/[0.05] p-4">
+                        <p className="text-xs uppercase tracking-wider text-purple-400/80 font-semibold mb-2">Example</p>
+                        <p className="text-white font-medium mb-1">{item.exampleJP}</p>
                         {item.exampleEN && (
-                          <p className="text-sm text-gray-400 italic">{item.exampleEN}</p>
+                          <p className="text-sm text-slate-500 italic">{item.exampleEN}</p>
                         )}
-                      </motion.div>
+                      </div>
                     )}
 
                     {item.relatedPatterns && (
                       <div>
-                        <p className="text-sm text-purple-400 font-semibold mb-2">Related Patterns</p>
-                        <p className="text-gray-300 text-sm">{item.relatedPatterns}</p>
+                        <p className="text-xs uppercase tracking-wider text-purple-400/80 font-semibold mb-1.5">Related Patterns</p>
+                        <p className="text-sm text-slate-400">{item.relatedPatterns}</p>
                       </div>
                     )}
 
-                    <motion.div
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <Button className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 font-semibold transition-all group-hover:shadow-lg group-hover:shadow-purple-500/50">
-                        Study This Pattern
-                      </Button>
-                    </motion.div>
-                  </motion.div>
-                </GlassCard>
+                    <Button className="w-full bg-white/[0.05] hover:bg-purple-500/15 text-white border border-white/[0.08] hover:border-purple-500/30 transition-all group/btn">
+                      <BookOpen className="w-4 h-4 mr-2" />
+                      Study This Pattern
+                      <ChevronRight className="w-4 h-4 ml-auto group-hover/btn:translate-x-1 transition-transform" />
+                    </Button>
+                  </div>
+                </div>
               </motion.div>
             ))}
           </motion.div>
         )}
 
         {!isLoading && filteredGrammar.length === 0 && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2 }}
-            className="text-center py-20"
-          >
-            <Brain className="w-16 h-16 mx-auto text-gray-600 mb-4" />
-            <p className="text-gray-400 text-lg">No grammar patterns found matching your search</p>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20">
+            <Brain className="w-14 h-14 mx-auto text-slate-600 mb-4" />
+            <p className="text-slate-400 text-lg">No grammar patterns found</p>
+            <p className="text-sm text-slate-500 mt-1">Try adjusting your search or filter</p>
           </motion.div>
         )}
       </div>

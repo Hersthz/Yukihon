@@ -3,10 +3,8 @@ import { motion } from "framer-motion";
 import { Languages, ArrowRightLeft, Copy, Check, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import WinterNightBackground from "@/components/WinterNightBackground";
 import { useToast } from "@/hooks/use-toast";
 
 const LANGUAGES = [
@@ -83,32 +81,29 @@ const Translation = () => {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen relative">
-        <WinterNightBackground snowCount={30} sparkleCount={15} intensity="light" />
-        <div className="relative z-10 container mx-auto px-4 py-8 max-w-5xl">
+      <div className="container mx-auto px-4 py-12 max-w-5xl">
           {/* Header */}
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30">
-                <Languages className="w-8 h-8 text-purple-400" />
+            <div className="flex items-center gap-4 mb-3">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/20">
+                <Languages className="w-7 h-7 text-purple-400" />
               </div>
               <div>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
-                  Dịch thuật 翻訳
-                </h1>
-                <p className="text-muted-foreground">Dịch Việt ↔ Nhật ↔ Anh</p>
+                <h1 className="text-3xl font-bold text-white">Dịch thuật 翻訳</h1>
+                <p className="text-sm text-slate-400">Dịch Việt ↔ Nhật ↔ Anh</p>
               </div>
             </div>
           </motion.div>
 
           {/* Translation Box */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-            <Card className="bg-card/40 backdrop-blur-md border-border/50 mb-8">
-              <CardContent className="pt-6">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] overflow-hidden mb-8">
+              <div className="h-0.5 bg-gradient-to-r from-purple-500/40 to-pink-500/40" />
+              <div className="p-6">
                 {/* Language Selectors */}
-                <div className="flex items-center gap-4 mb-4">
+                <div className="flex items-center gap-4 mb-5">
                   <Select value={sourceLang} onValueChange={setSourceLang}>
-                    <SelectTrigger className="w-[180px] bg-background/50">
+                    <SelectTrigger className="w-[180px] bg-white/[0.03] border-white/[0.06] text-white">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -118,12 +113,12 @@ const Translation = () => {
                     </SelectContent>
                   </Select>
 
-                  <Button variant="ghost" size="icon" onClick={swapLanguages} className="rounded-full">
+                  <Button variant="ghost" size="icon" onClick={swapLanguages} className="rounded-full text-slate-400 hover:text-white hover:bg-white/[0.06]">
                     <ArrowRightLeft className="w-5 h-5" />
                   </Button>
 
                   <Select value={targetLang} onValueChange={setTargetLang}>
-                    <SelectTrigger className="w-[180px] bg-background/50">
+                    <SelectTrigger className="w-[180px] bg-white/[0.03] border-white/[0.06] text-white">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -141,42 +136,34 @@ const Translation = () => {
                       placeholder="Nhập văn bản cần dịch..."
                       value={sourceText}
                       onChange={(e) => setSourceText(e.target.value)}
-                      className="min-h-[200px] bg-background/50 text-lg resize-none"
+                      className="min-h-[200px] bg-white/[0.03] border-white/[0.06] text-lg text-white placeholder:text-slate-500 resize-none focus:border-purple-500/40"
                     />
-                    <div className="flex justify-between mt-2">
-                      <span className="text-xs text-muted-foreground">{sourceText.length} ký tự</span>
-                    </div>
+                    <span className="text-xs text-slate-500 mt-1 block">{sourceText.length} ký tự</span>
                   </div>
-
-                  <div>
-                    <div className="relative">
-                      <Textarea
-                        placeholder="Bản dịch sẽ hiện ở đây..."
-                        value={translatedText}
-                        readOnly
-                        className="min-h-[200px] bg-background/30 text-lg resize-none"
-                      />
-                      {translatedText && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="absolute top-2 right-2"
-                          onClick={copyToClipboard}
-                        >
-                          {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
-                        </Button>
-                      )}
-                    </div>
+                  <div className="relative">
+                    <Textarea
+                      placeholder="Bản dịch sẽ hiện ở đây..."
+                      value={translatedText}
+                      readOnly
+                      className="min-h-[200px] bg-white/[0.02] border-white/[0.04] text-lg text-white placeholder:text-slate-600 resize-none"
+                    />
+                    {translatedText && (
+                      <Button variant="ghost" size="sm" className="absolute top-2 right-2 text-slate-400 hover:text-white" onClick={copyToClipboard}>
+                        {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                      </Button>
+                    )}
                   </div>
                 </div>
 
                 <Button
                   onClick={handleTranslate}
                   disabled={loading || !sourceText.trim()}
-                  className="w-full mt-4 h-12 text-lg"
+                  className="w-full mt-5 h-12 text-lg bg-white/[0.06] hover:bg-purple-500/15 text-white border border-white/[0.08] hover:border-purple-500/30 transition-all"
                 >
                   {loading ? (
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+                    <div className="relative w-5 h-5">
+                      <motion.div className="absolute inset-0 rounded-full border-2 border-transparent border-t-white" animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} />
+                    </div>
                   ) : (
                     <>
                       <Languages className="w-5 h-5 mr-2" />
@@ -184,28 +171,27 @@ const Translation = () => {
                     </>
                   )}
                 </Button>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </motion.div>
 
           {/* Quick Phrases */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-            <Card className="bg-card/40 backdrop-blur-md border-border/50 mb-8">
-              <CardHeader>
-                <CardTitle className="text-xl flex items-center gap-2">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] overflow-hidden mb-8">
+              <div className="h-0.5 bg-gradient-to-r from-cyan-500/40 to-blue-500/40" />
+              <div className="p-6">
+                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                   <Volume2 className="w-5 h-5 text-cyan-400" />
                   Cụm từ thông dụng
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {QUICK_PHRASES.map((phrase, index) => (
                     <motion.div
                       key={index}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.3 + index * 0.05 }}
-                      className="p-3 rounded-lg bg-background/50 border border-border/50 hover:bg-background/70 transition-colors cursor-pointer"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3 + index * 0.04 }}
+                      className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:border-cyan-500/20 hover:bg-white/[0.04] transition-all cursor-pointer"
                       onClick={() => {
                         setSourceText(phrase.ja);
                         setSourceLang("ja");
@@ -213,44 +199,38 @@ const Translation = () => {
                         setTranslatedText(phrase.vi);
                       }}
                     >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="text-lg font-semibold text-white">{phrase.ja}</p>
-                          <p className="text-sm text-cyan-400">{phrase.romaji}</p>
-                          <p className="text-sm text-muted-foreground">{phrase.vi}</p>
-                        </div>
-                      </div>
+                      <p className="text-base font-semibold text-white">{phrase.ja}</p>
+                      <p className="text-sm text-cyan-400 mt-0.5">{phrase.romaji}</p>
+                      <p className="text-sm text-slate-500 mt-0.5">{phrase.vi}</p>
                     </motion.div>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </motion.div>
 
           {/* Grammar Cheat Sheet */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-            <Card className="bg-card/40 backdrop-blur-md border-border/50">
-              <CardHeader>
-                <CardTitle className="text-xl">📝 Mẫu ngữ pháp phổ biến</CardTitle>
-              </CardHeader>
-              <CardContent>
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] overflow-hidden">
+              <div className="h-0.5 bg-gradient-to-r from-amber-500/40 to-yellow-500/40" />
+              <div className="p-6">
+                <h3 className="text-lg font-bold text-white mb-4">Mẫu ngữ pháp phổ biến</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {GRAMMAR_EXAMPLES.map((g, index) => (
-                    <div key={index} className="p-3 rounded-lg bg-background/50 border border-border/50">
+                    <div key={index} className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.04]">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-lg font-bold text-purple-400">{g.pattern}</span>
-                        <span className="text-xs px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400">{g.level}</span>
+                        <span className="text-base font-bold text-purple-400">{g.pattern}</span>
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-400 border border-purple-500/20">{g.level}</span>
                       </div>
                       <p className="text-sm text-white">{g.meaning}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{g.example}</p>
+                      <p className="text-xs text-slate-500 mt-1">{g.example}</p>
                     </div>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </motion.div>
         </div>
-      </div>
     </DashboardLayout>
   );
 };
