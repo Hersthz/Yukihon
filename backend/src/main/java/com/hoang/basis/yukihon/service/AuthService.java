@@ -30,6 +30,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final UserLearningStatsService userLearningStatsService;
+    private final UserSettingsService userSettingsService;
 
     private static final Pattern EMAIL_PATTERN = 
             Pattern.compile("^[A-Za-z0-9+_.-]+@(.+)$");
@@ -79,6 +80,17 @@ public class AuthService {
             log.info("Initialized learning stats for new user: {}", email);
         } catch (Exception e) {
             log.warn("Failed to initialize learning stats for user: {}", email, e);
+        }
+
+        // Initialize user settings with selected JLPT target level
+        try {
+            var settings = userSettingsService.initializeSettings(saved.getId());
+            if (request.getJlptTargetLevel() != null && !request.getJlptTargetLevel().isBlank()) {
+                settings.setTargetJlptLevel(request.getJlptTargetLevel());
+            }
+            log.info("Initialized settings for new user: {}", email);
+        } catch (Exception e) {
+            log.warn("Failed to initialize settings for user: {}", email, e);
         }
         
         return buildAuthResponse(saved);

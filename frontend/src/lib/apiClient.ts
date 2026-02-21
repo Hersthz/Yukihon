@@ -56,7 +56,7 @@ export const apiClient = {
 
   // Auth endpoints
   auth: {
-    register(data: { email: string; password: string; displayName: string }) {
+    register(data: { email: string; password: string; displayName: string; jlptTargetLevel?: string }) {
       return apiClient.request("/api/auth/register", {
         method: "POST",
         body: JSON.stringify(data),

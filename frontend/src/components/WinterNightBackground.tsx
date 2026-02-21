@@ -1,5 +1,4 @@
 import { useEffect, useState, useMemo } from "react";
-import { motion } from "framer-motion";
 import { useTheme } from "@/hooks/use-theme";
 
 interface Snowflake {
@@ -31,8 +30,8 @@ interface WinterNightBackgroundProps {
 }
 
 const WinterNightBackground = ({
-  snowCount = 60,
-  sparkleCount = 25,
+  snowCount = 35,
+  sparkleCount = 15,
   showAurora = true,
   intensity = "normal",
   className = "",
@@ -45,25 +44,27 @@ const WinterNightBackground = ({
     setMounted(true);
   }, []);
 
-  // Generate snowflakes with varied properties
+  // Cap snowflake count for performance
   const snowflakes = useMemo<Snowflake[]>(() => {
-    const count = intensity === "light" ? snowCount * 0.6 : intensity === "intense" ? snowCount * 1.5 : snowCount;
-    return Array.from({ length: Math.floor(count) }, (_, i) => ({
+    const multiplier = intensity === "light" ? 0.6 : intensity === "intense" ? 1.2 : 1;
+    const count = Math.min(Math.floor(snowCount * multiplier), 50); // hard cap at 50
+    return Array.from({ length: count }, (_, i) => ({
       id: i,
       left: Math.random() * 100,
       delay: Math.random() * 15,
-      duration: 10 + Math.random() * 20, // 10-30s for varied speeds
-      size: 2 + Math.random() * 8, // 2-10px for varied sizes
-      opacity: 0.2 + Math.random() * 0.6,
-      sway: 20 + Math.random() * 60, // horizontal movement range
-      blur: Math.random() > 0.7 ? 1 : 0, // some blurred for depth
+      duration: 10 + Math.random() * 20,
+      size: 2 + Math.random() * 6,
+      opacity: 0.2 + Math.random() * 0.5,
+      sway: 20 + Math.random() * 40,
+      blur: Math.random() > 0.7 ? 1 : 0,
     }));
   }, [snowCount, intensity]);
 
-  // Generate sparkles
+  // Cap sparkle count
   const sparkles = useMemo<Sparkle[]>(() => {
-    const count = intensity === "light" ? sparkleCount * 0.5 : intensity === "intense" ? sparkleCount * 1.5 : sparkleCount;
-    return Array.from({ length: Math.floor(count) }, (_, i) => ({
+    const multiplier = intensity === "light" ? 0.5 : intensity === "intense" ? 1.2 : 1;
+    const count = Math.min(Math.floor(sparkleCount * multiplier), 20); // hard cap at 20
+    return Array.from({ length: count }, (_, i) => ({
       id: i,
       left: 5 + Math.random() * 90,
       top: 5 + Math.random() * 90,
@@ -73,108 +74,44 @@ const WinterNightBackground = ({
     }));
   }, [sparkleCount, intensity]);
 
-  // Check for reduced motion preference
-  const prefersReducedMotion = typeof window !== "undefined" 
-    ? window.matchMedia("(prefers-reduced-motion: reduce)").matches 
+  const prefersReducedMotion = typeof window !== "undefined"
+    ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
     : false;
 
   if (!mounted) return null;
 
   return (
     <div className={`fixed inset-0 pointer-events-none overflow-hidden ${className}`} style={{ zIndex: 0 }}>
-      {/* Background gradient — adapts to theme */}
+      {/* Background gradient */}
       <div className={`absolute inset-0 transition-colors duration-500 ${
         isLight
           ? "bg-gradient-to-b from-sky-50/80 via-slate-100/40 to-background"
           : "bg-gradient-to-b from-slate-950 via-slate-900 to-background"
       }`} />
 
-      {/* Aurora Borealis Effect */}
+      {/* Aurora — pure CSS animation, no framer-motion */}
       {showAurora && !prefersReducedMotion && (
         <div className={`absolute inset-0 transition-opacity duration-500 ${isLight ? "opacity-20" : "opacity-100"}`}>
-          {/* Primary aurora wave */}
-          <motion.div
-            className="absolute inset-0"
-            animate={{
-              background: [
-                "radial-gradient(ellipse 150% 80% at 20% 10%, rgba(56, 189, 248, 0.15) 0%, transparent 50%)",
-                "radial-gradient(ellipse 180% 90% at 60% 5%, rgba(34, 211, 238, 0.12) 0%, transparent 55%)",
-                "radial-gradient(ellipse 150% 80% at 80% 15%, rgba(56, 189, 248, 0.15) 0%, transparent 50%)",
-                "radial-gradient(ellipse 160% 85% at 40% 8%, rgba(34, 211, 238, 0.13) 0%, transparent 52%)",
-                "radial-gradient(ellipse 150% 80% at 20% 10%, rgba(56, 189, 248, 0.15) 0%, transparent 50%)",
-              ],
-            }}
-            transition={{
-              duration: 20,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-          />
-
-          {/* Secondary aurora wave - green tint */}
-          <motion.div
-            className="absolute inset-0"
-            animate={{
-              background: [
-                "radial-gradient(ellipse 120% 60% at 70% 5%, rgba(74, 222, 128, 0.1) 0%, transparent 45%)",
-                "radial-gradient(ellipse 140% 70% at 30% 10%, rgba(52, 211, 153, 0.08) 0%, transparent 50%)",
-                "radial-gradient(ellipse 120% 60% at 50% 8%, rgba(74, 222, 128, 0.1) 0%, transparent 45%)",
-                "radial-gradient(ellipse 130% 65% at 80% 5%, rgba(52, 211, 153, 0.09) 0%, transparent 48%)",
-                "radial-gradient(ellipse 120% 60% at 70% 5%, rgba(74, 222, 128, 0.1) 0%, transparent 45%)",
-              ],
-            }}
-            transition={{
-              duration: 25,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: 5,
-            }}
-          />
-
-          {/* Tertiary aurora wave - pink/purple hint */}
-          <motion.div
-            className="absolute inset-0"
-            animate={{
-              background: [
-                "radial-gradient(ellipse 100% 50% at 50% 0%, rgba(192, 132, 252, 0.08) 0%, transparent 40%)",
-                "radial-gradient(ellipse 130% 60% at 25% 5%, rgba(168, 85, 247, 0.06) 0%, transparent 45%)",
-                "radial-gradient(ellipse 110% 55% at 75% 3%, rgba(192, 132, 252, 0.07) 0%, transparent 42%)",
-                "radial-gradient(ellipse 120% 58% at 40% 8%, rgba(168, 85, 247, 0.07) 0%, transparent 43%)",
-                "radial-gradient(ellipse 100% 50% at 50% 0%, rgba(192, 132, 252, 0.08) 0%, transparent 40%)",
-              ],
-            }}
-            transition={{
-              duration: 30,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: 10,
-            }}
-          />
-
-          {/* Aurora shimmer overlay */}
-          <motion.div
-            className="absolute inset-x-0 top-0 h-1/3"
+          <div
+            className="absolute inset-0 animate-aurora-1"
             style={{
-              background: "linear-gradient(180deg, rgba(56, 189, 248, 0.03) 0%, transparent 100%)",
+              background: "radial-gradient(ellipse 150% 80% at 20% 10%, rgba(56, 189, 248, 0.15) 0%, transparent 50%)",
             }}
-            animate={{
-              opacity: [0.5, 1, 0.7, 1, 0.5],
-            }}
-            transition={{
-              duration: 8,
-              repeat: Infinity,
-              ease: "easeInOut",
+          />
+          <div
+            className="absolute inset-0 animate-aurora-2"
+            style={{
+              background: "radial-gradient(ellipse 120% 60% at 70% 5%, rgba(74, 222, 128, 0.1) 0%, transparent 45%)",
             }}
           />
         </div>
       )}
 
-      {/* Sparkle / Star field */}
+      {/* Sparkles — CSS animation */}
       {sparkles.map((sparkle) => (
-        /* Sparkle opacity reduced in light mode */
-        <motion.div
+        <div
           key={`sparkle-${sparkle.id}`}
-          className="absolute rounded-full"
+          className="absolute rounded-full animate-sparkle-pulse"
           style={{
             left: `${sparkle.left}%`,
             top: `${sparkle.top}%`,
@@ -186,52 +123,29 @@ const WinterNightBackground = ({
               : "radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 70%)",
             boxShadow: isLight
               ? `0 0 ${sparkle.size * 2}px rgba(100,160,220,0.3)`
-              : `0 0 ${sparkle.size * 2}px rgba(255,255,255,0.5), 0 0 ${sparkle.size * 4}px rgba(186, 230, 253, 0.3)`,
-          }}
-          animate={
-            prefersReducedMotion
-              ? {}
-              : {
-                  opacity: [0, 1, 0.3, 1, 0],
-                  scale: [0.5, 1.2, 0.8, 1.2, 0.5],
-                }
-          }
-          transition={{
-            duration: sparkle.duration,
-            delay: sparkle.delay,
-            repeat: Infinity,
-            ease: "easeInOut",
+              : `0 0 ${sparkle.size * 2}px rgba(255,255,255,0.5)`,
+            animationDuration: `${sparkle.duration}s`,
+            animationDelay: `${sparkle.delay}s`,
+            willChange: "opacity, transform",
           }}
         />
       ))}
 
-      {/* Enhanced snowflakes */}
+      {/* Snowflakes — pure CSS animation (GPU-composited) */}
       {snowflakes.map((flake) => (
-        <motion.div
+        <div
           key={`snow-${flake.id}`}
-          className="absolute"
+          className="absolute animate-snow-fall"
           style={{
             left: `${flake.left}%`,
             top: "-20px",
             width: flake.size,
             height: flake.size,
             filter: flake.blur > 0 ? `blur(${flake.blur}px)` : "none",
-          }}
-          animate={
-            prefersReducedMotion
-              ? { y: "110vh" }
-              : {
-                  y: ["0vh", "110vh"],
-                  x: [0, flake.sway * (Math.random() > 0.5 ? 1 : -1), 0, flake.sway * 0.5 * (Math.random() > 0.5 ? 1 : -1), 0],
-                  rotate: [0, 360],
-                }
-          }
-          transition={{
-            duration: flake.duration,
-            delay: flake.delay,
-            repeat: Infinity,
-            ease: "linear",
-            times: prefersReducedMotion ? undefined : [0, 0.25, 0.5, 0.75, 1],
+            animationDuration: `${flake.duration}s`,
+            animationDelay: `${flake.delay}s`,
+            ['--snow-sway' as string]: `${flake.sway}px`,
+            willChange: "transform",
           }}
         >
           <div
@@ -240,16 +154,13 @@ const WinterNightBackground = ({
               background: isLight
                 ? `radial-gradient(circle, rgba(120,170,220,${flake.opacity * 0.5}) 0%, rgba(120,170,220,${flake.opacity * 0.15}) 50%, transparent 70%)`
                 : `radial-gradient(circle, rgba(255,255,255,${flake.opacity}) 0%, rgba(255,255,255,${flake.opacity * 0.3}) 50%, transparent 70%)`,
-              boxShadow: isLight
-                ? `0 0 ${flake.size}px rgba(120,170,220,${flake.opacity * 0.25})`
-                : `0 0 ${flake.size}px rgba(255,255,255,${flake.opacity * 0.5})`,
             }}
           />
-        </motion.div>
+        </div>
       ))}
 
-      {/* Distant stars (static, small) — hidden in light mode */}
-      {!isLight && Array.from({ length: 50 }).map((_, i) => (
+      {/* Static stars — only in dark mode */}
+      {!isLight && Array.from({ length: 30 }).map((_, i) => (
         <div
           key={`star-${i}`}
           className="absolute w-px h-px bg-white/40 rounded-full"
@@ -260,12 +171,12 @@ const WinterNightBackground = ({
         />
       ))}
 
-      {/* Subtle gradient overlays for depth */}
+      {/* Depth overlays */}
       <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-60" />
       <div className="absolute inset-0 bg-gradient-to-r from-background/30 via-transparent to-background/30" />
 
-      {/* Vignette effect — adapts to theme */}
-      <div 
+      {/* Vignette */}
+      <div
         className="absolute inset-0"
         style={{
           background: isLight
@@ -273,6 +184,39 @@ const WinterNightBackground = ({
             : "radial-gradient(ellipse at center, transparent 40%, rgba(2, 6, 23, 0.4) 100%)",
         }}
       />
+
+      {/* CSS keyframes injected once */}
+      <style>{`
+        @keyframes snow-fall {
+          0% { transform: translateY(0) translateX(0) rotate(0deg); }
+          25% { transform: translateY(27.5vh) translateX(var(--snow-sway, 30px)) rotate(90deg); }
+          50% { transform: translateY(55vh) translateX(0) rotate(180deg); }
+          75% { transform: translateY(82.5vh) translateX(calc(var(--snow-sway, 30px) * -0.5)) rotate(270deg); }
+          100% { transform: translateY(110vh) translateX(0) rotate(360deg); }
+        }
+        .animate-snow-fall {
+          animation: snow-fall linear infinite;
+        }
+        @keyframes sparkle-pulse {
+          0%, 100% { opacity: 0; transform: scale(0.5); }
+          25% { opacity: 1; transform: scale(1.2); }
+          50% { opacity: 0.3; transform: scale(0.8); }
+          75% { opacity: 1; transform: scale(1.2); }
+        }
+        .animate-sparkle-pulse {
+          animation: sparkle-pulse ease-in-out infinite;
+        }
+        @keyframes aurora-drift-1 {
+          0%, 100% { transform: translateX(0); opacity: 0.8; }
+          50% { transform: translateX(30%); opacity: 1; }
+        }
+        @keyframes aurora-drift-2 {
+          0%, 100% { transform: translateX(0); opacity: 0.7; }
+          50% { transform: translateX(-25%); opacity: 1; }
+        }
+        .animate-aurora-1 { animation: aurora-drift-1 20s ease-in-out infinite; }
+        .animate-aurora-2 { animation: aurora-drift-2 25s ease-in-out infinite 5s; }
+      `}</style>
     </div>
   );
 };

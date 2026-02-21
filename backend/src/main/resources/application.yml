@@ -7,9 +7,9 @@ spring:
     name: Yukihon
 
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: ${DB_URL:jdbc:sqlserver://localhost:1433;databaseName=YukihonDB;encrypt=false}
+    username: ${DB_USERNAME:sa}
+    password: ${DB_PASSWORD:12345}
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
 
   jpa:
@@ -21,7 +21,7 @@ spring:
         format_sql: true
 
 jwt:
-  secret: ${JWT_SECRET}
+  secret: ${JWT_SECRET:ZGV2LWxvY2FsLWp3dC1zZWNyZXQtZm9yLXl1a2lob24tYXBwLTIwMjY=}
   access-token-expiration-ms: ${JWT_ACCESS_EXPIRATION_MS:900000}      # 15 phút
   refresh-token-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000} # 7 ngày
 
@@ -30,6 +30,6 @@ app:
   base-url: ${BASE_URL:http://localhost:8080}
 
 google:
-  client-id: ${GOOGLE_CLIENT_ID}
-  client-secret: ${GOOGLE_CLIENT_SECRET}
+  client-id: ${GOOGLE_CLIENT_ID:}
+  client-secret: ${GOOGLE_CLIENT_SECRET:}
   redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:8080/api/auth/google/callback}
