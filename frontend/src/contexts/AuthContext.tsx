@@ -20,7 +20,7 @@ interface AuthContextType {
   isLoading: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, displayName: string) => Promise<void>;
+  register: (email: string, password: string, displayName: string, jlptTargetLevel?: string) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
   isAdmin: () => boolean;
@@ -85,7 +85,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const register = useCallback(
-    async (email: string, password: string, displayName: string) => {
+    async (email: string, password: string, displayName: string, jlptTargetLevel?: string) => {
       setIsLoading(true);
       setError(null);
       try {
@@ -93,6 +93,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email,
           password,
           displayName,
+          jlptTargetLevel,
         }) as AuthResponse;
         apiClient.setAuthData(response.accessToken, response.user);
         setUser(response.user);

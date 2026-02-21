@@ -19,4 +19,6 @@ public class RegisterRequest {
     @NotBlank
     @Size(min = 2, max = 100)
     private String displayName;
+
+    private String jlptTargetLevel;
 }

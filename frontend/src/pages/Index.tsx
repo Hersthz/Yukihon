@@ -1,10 +1,11 @@
 // src/pages/Index.tsx
 import { Link } from "react-router-dom";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import WinterNightBackground from "@/components/WinterNightBackground";
-import { motion } from "framer-motion";
+import { motion, useMotionValue, useTransform } from "framer-motion";
 import {
   ArrowRight,
   BookOpen,
@@ -15,11 +16,23 @@ import {
   Star,
   MessageCircle,
   CheckCircle,
+  Flame,
 } from "lucide-react";
 import kaorukoWelcome from "@/assets/kaoruko-welcome.png";
 import kaorukoHappy from "@/assets/kaoruko-happy.png";
 import kaorukoGuide from "@/assets/kaoruko-guide.png";
 import kaorukoExcited from "@/assets/kaoruko-excited.png";
+
+/* ─── Floating sakura / orb particles throughout the page ─── */
+const PAGE_PARTICLES = Array.from({ length: 24 }, (_, i) => ({
+  id: i,
+  x: Math.random() * 100,
+  size: 4 + Math.random() * 8,
+  delay: Math.random() * 20,
+  duration: 12 + Math.random() * 15,
+  drift: (Math.random() - 0.5) * 100,
+  type: Math.random() > 0.5 ? "sakura" : "orb" as "sakura" | "orb",
+}));
 
 /* ─── Decorative floating kanji ─── */
 const FLOATING_KANJI = [
@@ -29,6 +42,8 @@ const FLOATING_KANJI = [
   { char: "読", x: "12%", y: "78%", delay: 2, size: "text-6xl" },
   { char: "書", x: "92%", y: "55%", delay: 4, size: "text-7xl" },
   { char: "話", x: "48%", y: "8%", delay: 1, size: "text-8xl" },
+  { char: "雪", x: "35%", y: "45%", delay: 2.5, size: "text-[10rem]" },
+  { char: "本", x: "65%", y: "85%", delay: 3.5, size: "text-6xl" },
 ];
 
 /* ─── How-It-Works steps ─── */
@@ -90,29 +105,92 @@ const stagger = { visible: { transition: { staggerChildren: 0.12 } } };
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
 const Index = () => {
+  /* ── Live learner counter ── */
+  const [liveCount, setLiveCount] = useState(847);
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setLiveCount((c) => c + (Math.random() > 0.5 ? 1 : -1) * Math.floor(Math.random() * 3));
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
+
+  /* ── Mouse parallax for hero decorations ── */
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const parallaxX = useTransform(mouseX, [0, 1], [-15, 15]);
+  const parallaxY = useTransform(mouseY, [0, 1], [-15, 15]);
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    mouseX.set(e.clientX / window.innerWidth);
+    mouseY.set(e.clientY / window.innerHeight);
+  }, [mouseX, mouseY]);
+
   return (
-    <div className="min-h-screen bg-background overflow-hidden relative">
+    <div className="min-h-screen bg-background overflow-hidden relative" onMouseMove={handleMouseMove}>
       <Navigation />
-      <WinterNightBackground snowCount={80} sparkleCount={50} intensity="light" />
+      <WinterNightBackground snowCount={140} sparkleCount={80} intensity="normal" />
+
+      {/* ── Floating particles throughout the page ── */}
+      <div className="fixed inset-0 pointer-events-none z-[1] overflow-hidden">
+        {PAGE_PARTICLES.map((p) => (
+          <motion.div
+            key={`p-${p.id}`}
+            className="absolute"
+            style={{ left: `${p.x}%`, top: "-20px" }}
+            animate={{
+              y: ["0vh", "110vh"],
+              x: [0, p.drift, 0],
+              rotate: p.type === "sakura" ? [0, 360] : [0, 0],
+            }}
+            transition={{
+              duration: p.duration,
+              delay: p.delay,
+              repeat: Infinity,
+              ease: "linear",
+            }}
+          >
+            {p.type === "sakura" ? (
+              <div
+                className="rounded-full"
+                style={{
+                  width: p.size,
+                  height: p.size * 0.65,
+                  background: "radial-gradient(ellipse, rgba(244,163,187,0.35) 0%, rgba(244,163,187,0) 70%)",
+                  boxShadow: `0 0 ${p.size}px rgba(244,163,187,0.15)`,
+                }}
+              />
+            ) : (
+              <div
+                className="rounded-full"
+                style={{
+                  width: p.size,
+                  height: p.size,
+                  background: "radial-gradient(circle, rgba(147,197,253,0.4) 0%, transparent 70%)",
+                  boxShadow: `0 0 ${p.size * 2}px rgba(147,197,253,0.1)`,
+                }}
+              />
+            )}
+          </motion.div>
+        ))}
+      </div>
 
       {/* ══════════════════════════════════════════════════════════════════════
           HERO
       ══════════════════════════════════════════════════════════════════════ */}
       <section id="hero" className="relative pt-28 pb-20 md:pt-36 md:pb-28 overflow-hidden">
-        {/* Floating kanji background */}
-        <div className="absolute inset-0 pointer-events-none select-none overflow-hidden">
+        {/* Floating kanji background with parallax */}
+        <motion.div className="absolute inset-0 pointer-events-none select-none overflow-hidden" style={{ x: parallaxX, y: parallaxY }}>
           {FLOATING_KANJI.map((k) => (
             <motion.span
               key={k.char}
               className={`absolute ${k.size} font-black text-foreground/[0.03]`}
               style={{ left: k.x, top: k.y }}
-              animate={{ y: [0, -30, 0], rotate: [0, 5, -5, 0] }}
+              animate={{ y: [0, -30, 0], rotate: [0, 5, -5, 0], scale: [1, 1.03, 1] }}
               transition={{ duration: 12 + k.delay * 2, repeat: Infinity, ease: "easeInOut" }}
             >
               {k.char}
             </motion.span>
           ))}
-        </div>
+        </motion.div>
 
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
@@ -195,12 +273,15 @@ const Index = () => {
               <motion.div variants={fadeUp} className="flex flex-wrap items-center gap-6 pt-4">
                 <div className="flex -space-x-2">
                   {["🧑‍🎓", "👨‍💼", "👩‍🏫", "🧑‍💻"].map((emoji, i) => (
-                    <div
+                    <motion.div
                       key={i}
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 1.2 + i * 0.1, type: "spring" }}
                       className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 border-2 border-background flex items-center justify-center text-sm"
                     >
                       {emoji}
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
                 <div className="text-sm">
@@ -213,6 +294,21 @@ const Index = () => {
                   ))}
                   <span className="text-sm text-muted-foreground ml-1">4.9</span>
                 </div>
+              </motion.div>
+
+              {/* Live activity indicator */}
+              <motion.div
+                variants={fadeUp}
+                className="flex items-center gap-2 text-xs text-muted-foreground"
+              >
+                <motion.div
+                  className="w-2 h-2 rounded-full bg-emerald-400"
+                  animate={{ scale: [1, 1.4, 1], opacity: [1, 0.6, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                />
+                <span>
+                  <span className="font-semibold text-foreground">{liveCount}</span> learners online now
+                </span>
               </motion.div>
             </motion.div>
 
@@ -279,6 +375,21 @@ const Index = () => {
                   transition={{ delay: 1.2, type: "spring", stiffness: 200 }}
                 >
                   <p className="text-sm font-medium">がんばって！💪</p>
+                </motion.div>
+
+                {/* Streak counter floating card */}
+                <motion.div
+                  className="absolute bottom-1/4 -right-6 lg:-right-14 bg-card/90 backdrop-blur-md px-4 py-3 rounded-2xl border border-border/40 shadow-xl"
+                  animate={{ y: [0, -7, 0] }}
+                  transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 3 }}
+                >
+                  <div className="flex items-center gap-2">
+                    <Flame className="h-5 w-5 text-orange-500" />
+                    <div>
+                      <div className="text-sm font-bold">32 days streak</div>
+                      <div className="text-xs text-muted-foreground">Personal best!</div>
+                    </div>
+                  </div>
                 </motion.div>
               </div>
             </motion.div>
