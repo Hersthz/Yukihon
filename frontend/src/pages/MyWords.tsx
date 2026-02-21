@@ -8,11 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import WinterNightBackground from "@/components/WinterNightBackground";
 import apiClient from "@/lib/apiClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -130,69 +128,59 @@ const MyWords = () => {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen relative">
-        <WinterNightBackground snowCount={25} sparkleCount={12} intensity="light" />
-        <div className="relative z-10 container mx-auto px-4 py-8 max-w-5xl">
+      <div className="container mx-auto px-4 py-12 max-w-5xl">
           {/* Header */}
-          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30">
-                <BookmarkPlus className="w-8 h-8 text-emerald-400" />
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+            <div className="flex items-center gap-4 mb-3">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/20">
+                <BookmarkPlus className="w-7 h-7 text-emerald-400" />
               </div>
               <div>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 bg-clip-text text-transparent">
-                  My Words 私の単語
-                </h1>
-                <p className="text-muted-foreground">Bộ từ vựng cá nhân của bạn</p>
+                <h1 className="text-3xl font-bold text-white">My Words 私の単語</h1>
+                <p className="text-sm text-slate-400">Bộ từ vựng cá nhân của bạn</p>
               </div>
             </div>
           </motion.div>
 
           {/* Stats */}
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }} className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-            <Card className="bg-card/40 backdrop-blur-md border-border/50">
-              <CardContent className="pt-6 flex items-center gap-4">
-                <BookOpen className="w-10 h-10 text-cyan-400" />
-                <div>
-                  <p className="text-2xl font-bold text-white">{stats.totalSaved}</p>
-                  <p className="text-xs text-muted-foreground">Tổng từ đã lưu</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="bg-card/40 backdrop-blur-md border-border/50">
-              <CardContent className="pt-6 flex items-center gap-4">
-                <CheckCircle2 className="w-10 h-10 text-emerald-400" />
-                <div>
-                  <p className="text-2xl font-bold text-white">{stats.masteredCount}</p>
-                  <p className="text-xs text-muted-foreground">Đã thuộc</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="bg-card/40 backdrop-blur-md border-border/50">
-              <CardContent className="pt-6 flex items-center gap-4">
-                <BarChart3 className="w-10 h-10 text-yellow-400" />
-                <div>
-                  <p className="text-2xl font-bold text-white">{masteredPercent}%</p>
-                  <p className="text-xs text-muted-foreground">Tỷ lệ hoàn thành</p>
-                </div>
-              </CardContent>
-            </Card>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }} className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-5 flex items-center gap-4">
+              <div className="p-2.5 rounded-xl bg-cyan-500/10"><BookOpen className="w-6 h-6 text-cyan-400" /></div>
+              <div>
+                <p className="text-2xl font-bold text-white">{stats.totalSaved}</p>
+                <p className="text-xs text-slate-500">Tổng từ đã lưu</p>
+              </div>
+            </div>
+            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-5 flex items-center gap-4">
+              <div className="p-2.5 rounded-xl bg-emerald-500/10"><CheckCircle2 className="w-6 h-6 text-emerald-400" /></div>
+              <div>
+                <p className="text-2xl font-bold text-white">{stats.masteredCount}</p>
+                <p className="text-xs text-slate-500">Đã thuộc</p>
+              </div>
+            </div>
+            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-5 flex items-center gap-4">
+              <div className="p-2.5 rounded-xl bg-amber-500/10"><BarChart3 className="w-6 h-6 text-amber-400" /></div>
+              <div>
+                <p className="text-2xl font-bold text-white">{masteredPercent}%</p>
+                <p className="text-xs text-slate-500">Tỷ lệ hoàn thành</p>
+              </div>
+            </div>
           </motion.div>
 
           {/* Filters */}
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="flex flex-wrap gap-3 mb-6">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="flex flex-wrap gap-3 mb-8">
             <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
               <Input
                 placeholder="Tìm kiếm từ vựng..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-10 bg-card/40 backdrop-blur-md border-border/50"
+                className="pl-10 bg-white/[0.03] border-white/[0.06] text-white placeholder:text-slate-500"
               />
             </div>
             <Select value={filterFolder || "all"} onValueChange={(v) => { setFilterFolder(v === "all" ? "" : v); setFilterMastered(""); }}>
-              <SelectTrigger className="w-[160px] bg-card/40 backdrop-blur-md border-border/50">
-                <Folder className="w-4 h-4 mr-2 text-muted-foreground" />
+              <SelectTrigger className="w-[160px] bg-white/[0.03] border-white/[0.06] text-white">
+                <Folder className="w-4 h-4 mr-2 text-slate-500" />
                 <SelectValue placeholder="Folder" />
               </SelectTrigger>
               <SelectContent>
@@ -201,7 +189,7 @@ const MyWords = () => {
               </SelectContent>
             </Select>
             <Select value={filterMastered || "all"} onValueChange={(v) => { setFilterMastered(v === "all" ? "" : v); setFilterFolder(""); }}>
-              <SelectTrigger className="w-[160px] bg-card/40 backdrop-blur-md border-border/50">
+              <SelectTrigger className="w-[160px] bg-white/[0.03] border-white/[0.06] text-white">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -215,13 +203,16 @@ const MyWords = () => {
           {/* Word List */}
           {loading ? (
             <div className="flex items-center justify-center py-20">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+              <div className="relative w-12 h-12">
+                <motion.div className="absolute inset-0 rounded-full border-2 border-emerald-500/20" animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }} />
+                <motion.div className="absolute inset-0 rounded-full border-2 border-transparent border-t-emerald-400" animate={{ rotate: -360 }} transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }} />
+              </div>
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-20">
-              <BookmarkPlus className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-              <p className="text-xl text-muted-foreground">Chưa có từ nào</p>
-              <p className="text-sm text-muted-foreground">Lưu từ vựng từ trang Tra cứu hoặc bài học</p>
+              <BookmarkPlus className="w-14 h-14 text-slate-600 mx-auto mb-4" />
+              <p className="text-lg text-slate-400">Chưa có từ nào</p>
+              <p className="text-sm text-slate-500">Lưu từ vựng từ trang Tra cứu hoặc bài học</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -234,24 +225,25 @@ const MyWords = () => {
                     exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ delay: i * 0.03 }}
                   >
-                    <Card className={`bg-card/40 backdrop-blur-md border-border/50 transition-all hover:bg-card/50 ${word.mastered ? "border-l-4 border-l-emerald-500" : ""}`}>
-                      <CardContent className="pt-5 pb-4">
+                    <div className={`rounded-2xl border border-white/[0.06] bg-white/[0.03] overflow-hidden transition-all hover:border-white/[0.1] ${word.mastered ? "border-l-4 border-l-emerald-500" : ""}`}>
+                      <div className="h-0.5 bg-gradient-to-r from-emerald-500/30 to-teal-500/30" />
+                      <div className="p-5">
                         <div className="flex items-start justify-between mb-2">
                           <div>
                             <p className="text-2xl font-bold text-white">{word.kanji || word.hiragana}</p>
                             {word.kanji && <p className="text-sm text-cyan-400">{word.hiragana}</p>}
-                            <p className="text-xs text-muted-foreground">{word.romaji}</p>
+                            <p className="text-xs text-slate-500">{word.romaji}</p>
                           </div>
                           <div className="flex items-center gap-1">
-                            {word.jlptLevel && <Badge className="bg-cyan-500/20 text-cyan-400 border-cyan-500/30 text-xs">{word.jlptLevel}</Badge>}
+                            {word.jlptLevel && <Badge className="bg-cyan-500/15 text-cyan-400 border border-cyan-500/20 text-xs">{word.jlptLevel}</Badge>}
                             {word.folderName && (
-                              <Badge variant="outline" className="text-xs">
+                              <Badge variant="outline" className="text-xs border-white/[0.08] text-slate-400">
                                 <Folder className="w-3 h-3 mr-1" />{word.folderName}
                               </Badge>
                             )}
                           </div>
                         </div>
-                        <p className="text-white/80 mb-3">{word.meaning}</p>
+                        <p className="text-slate-300 mb-3">{word.meaning}</p>
 
                         {/* Personal Note */}
                         {editingNote === word.id ? (
@@ -260,17 +252,17 @@ const MyWords = () => {
                               value={noteText}
                               onChange={(e) => setNoteText(e.target.value)}
                               placeholder="Ghi chú..."
-                              className="bg-background/50 text-sm"
+                              className="bg-white/[0.03] border-white/[0.06] text-white text-sm placeholder:text-slate-500"
                               onKeyDown={(e) => e.key === "Enter" && updateNote(word.id)}
                             />
-                            <Button size="sm" onClick={() => updateNote(word.id)}>Save</Button>
-                            <Button size="sm" variant="ghost" onClick={() => setEditingNote(null)}>✕</Button>
+                            <Button size="sm" onClick={() => updateNote(word.id)} className="bg-white/[0.06] hover:bg-emerald-500/15 text-white border border-white/[0.08]">Save</Button>
+                            <Button size="sm" variant="ghost" className="text-slate-400" onClick={() => setEditingNote(null)}>✕</Button>
                           </div>
                         ) : word.personalNote ? (
-                          <div className="flex items-center gap-2 mb-3 p-2 rounded bg-yellow-500/10 border border-yellow-500/20">
-                            <StickyNote className="w-3 h-3 text-yellow-400 shrink-0" />
-                            <p className="text-xs text-yellow-300 flex-1">{word.personalNote}</p>
-                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => { setEditingNote(word.id); setNoteText(word.personalNote); }}>
+                          <div className="flex items-center gap-2 mb-3 p-3 rounded-xl bg-amber-500/[0.06] border border-amber-500/15">
+                            <StickyNote className="w-3 h-3 text-amber-400 shrink-0" />
+                            <p className="text-xs text-amber-300 flex-1">{word.personalNote}</p>
+                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-slate-400 hover:text-white" onClick={() => { setEditingNote(word.id); setNoteText(word.personalNote); }}>
                               <Edit3 className="w-3 h-3" />
                             </Button>
                           </div>
@@ -279,32 +271,31 @@ const MyWords = () => {
                         {/* Actions */}
                         <div className="flex items-center gap-2">
                           <Button
-                            variant={word.mastered ? "default" : "outline"}
+                            variant={word.mastered ? "default" : "ghost"}
                             size="sm"
                             onClick={() => toggleMastered(word.id)}
-                            className={word.mastered ? "bg-emerald-600 hover:bg-emerald-700" : ""}
+                            className={word.mastered ? "bg-emerald-600 hover:bg-emerald-700 text-white" : "bg-white/[0.04] border border-white/[0.08] text-slate-300 hover:text-white"}
                           >
                             {word.mastered ? <StarOff className="w-4 h-4 mr-1" /> : <Star className="w-4 h-4 mr-1" />}
                             {word.mastered ? "Bỏ thuộc" : "Đã thuộc"}
                           </Button>
                           {!word.personalNote && (
-                            <Button variant="ghost" size="sm" onClick={() => { setEditingNote(word.id); setNoteText(""); }}>
+                            <Button variant="ghost" size="sm" className="text-slate-400 hover:text-white" onClick={() => { setEditingNote(word.id); setNoteText(""); }}>
                               <StickyNote className="w-4 h-4 mr-1" /> Ghi chú
                             </Button>
                           )}
-                          <Button variant="ghost" size="sm" className="text-red-400 ml-auto" onClick={() => removeWord(word.id)}>
+                          <Button variant="ghost" size="sm" className="text-red-400/70 hover:text-red-400 ml-auto" onClick={() => removeWord(word.id)}>
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
-                      </CardContent>
-                    </Card>
+                      </div>
+                    </div>
                   </motion.div>
                 ))}
               </AnimatePresence>
             </div>
           )}
         </div>
-      </div>
     </DashboardLayout>
   );
 };

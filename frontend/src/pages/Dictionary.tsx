@@ -4,9 +4,7 @@ import { Search, BookOpen, Volume2, Star, Plus, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import WinterNightBackground from "@/components/WinterNightBackground";
 import apiClient from "@/lib/apiClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -66,57 +64,57 @@ const Dictionary = () => {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen relative">
-        <WinterNightBackground snowCount={30} sparkleCount={15} intensity="light" />
-        <div className="relative z-10 container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-12">
           {/* Header */}
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/30">
-                <BookOpen className="w-8 h-8 text-cyan-400" />
+            <div className="flex items-center gap-4 mb-3">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/20">
+                <BookOpen className="w-7 h-7 text-cyan-400" />
               </div>
               <div>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
+                <h1 className="text-3xl font-bold text-white">
                   Từ điển 辞書
                 </h1>
-                <p className="text-muted-foreground">Tra cứu từ vựng tiếng Nhật</p>
+                <p className="text-sm text-slate-400">Tra cứu từ vựng tiếng Nhật</p>
               </div>
             </div>
           </motion.div>
 
           {/* Search */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mb-8">
-            <Card className="bg-card/40 backdrop-blur-md border-border/50">
-              <CardContent className="pt-6">
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                    <Input
-                      placeholder="Nhập kanji, hiragana, romaji hoặc nghĩa..."
-                      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                      className="pl-12 h-12 text-lg bg-background/50"
-                    />
-                  </div>
-                  <Button onClick={handleSearch} size="lg" className="px-8">
-                    <Search className="w-5 h-5 mr-2" />
-                    Tra cứu
-                  </Button>
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mb-8">
+            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-5">
+              <div className="flex gap-3">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                  <Input
+                    placeholder="Nhập kanji, hiragana, romaji hoặc nghĩa..."
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                    className="pl-12 h-12 text-lg bg-white/[0.03] border-white/[0.06] text-white placeholder:text-slate-500 focus:border-cyan-500/40"
+                  />
                 </div>
-              </CardContent>
-            </Card>
+                <Button onClick={handleSearch} size="lg" className="px-8 bg-white/[0.06] hover:bg-cyan-500/15 text-white border border-white/[0.08] hover:border-cyan-500/30 transition-all">
+                  <Search className="w-5 h-5 mr-2" />
+                  Tra cứu
+                </Button>
+              </div>
+            </div>
           </motion.div>
 
           {/* Results */}
           {loading ? (
             <div className="flex items-center justify-center py-20">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+              <div className="relative w-12 h-12">
+                <motion.div className="absolute inset-0 rounded-full border-2 border-cyan-500/20" animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }} />
+                <motion.div className="absolute inset-0 rounded-full border-2 border-transparent border-t-cyan-400" animate={{ rotate: -360 }} transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }} />
+              </div>
             </div>
           ) : searched && results.length === 0 ? (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20">
-              <p className="text-xl text-muted-foreground">Không tìm thấy kết quả cho "{query}"</p>
-              <p className="text-sm text-muted-foreground mt-2">Thử từ khóa khác hoặc kiểm tra chính tả</p>
+              <Search className="w-14 h-14 mx-auto text-slate-600 mb-4" />
+              <p className="text-lg text-slate-400">Không tìm thấy kết quả cho "{query}"</p>
+              <p className="text-sm text-slate-500 mt-1">Thử từ khóa khác hoặc kiểm tra chính tả</p>
             </motion.div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -124,40 +122,39 @@ const Dictionary = () => {
                 {results.map((word, index) => (
                   <motion.div
                     key={word.id}
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
+                    exit={{ opacity: 0, y: -15 }}
                     transition={{ delay: index * 0.05 }}
                   >
-                    <Card
-                      className="bg-card/40 backdrop-blur-md border-border/50 hover:bg-card/60 transition-all cursor-pointer group"
+                    <div
+                      className="rounded-2xl border border-white/[0.06] bg-white/[0.03] overflow-hidden hover:border-cyan-500/20 hover:shadow-lg hover:shadow-cyan-500/5 transition-all cursor-pointer group"
                       onClick={() => setSelectedWord(word)}
                     >
-                      <CardContent className="pt-6">
+                      <div className="h-0.5 bg-gradient-to-r from-cyan-500/30 to-blue-500/30" />
+                      <div className="p-5">
                         <div className="flex items-start justify-between mb-3">
                           <div>
-                            <h3 className="text-3xl font-bold text-white mb-1">{word.kanji || word.hiragana}</h3>
+                            <h3 className="text-2xl font-bold text-white mb-1">{word.kanji || word.hiragana}</h3>
                             <p className="text-sm text-cyan-400">{word.hiragana} · {word.romaji}</p>
                           </div>
-                          <div className="flex gap-1">
-                            {word.jlptLevel && (
-                              <Badge className={levelColor[word.jlptLevel] || "bg-gray-500/20"}>
-                                {word.jlptLevel}
-                              </Badge>
-                            )}
-                          </div>
+                          {word.jlptLevel && (
+                            <Badge className={`text-xs border shrink-0 ml-2 ${levelColor[word.jlptLevel] || "bg-slate-500/15 text-slate-400"}`}>
+                              {word.jlptLevel}
+                            </Badge>
+                          )}
                         </div>
-                        <p className="text-lg text-white/90 mb-2">{word.meaning}</p>
+                        <p className="text-white/90 mb-2">{word.meaning}</p>
                         {word.wordType && (
-                          <Badge variant="outline" className="text-xs">{word.wordType}</Badge>
+                          <Badge variant="outline" className="text-xs border-white/[0.08] text-slate-400">{word.wordType}</Badge>
                         )}
                         <div className="flex gap-2 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); handleSaveWord(word.id); }}>
+                          <Button size="sm" variant="ghost" className="text-slate-400 hover:text-cyan-400" onClick={(e) => { e.stopPropagation(); handleSaveWord(word.id); }}>
                             <Plus className="w-4 h-4 mr-1" /> Save
                           </Button>
                         </div>
-                      </CardContent>
-                    </Card>
+                      </div>
+                    </div>
                   </motion.div>
                 ))}
               </AnimatePresence>
@@ -175,47 +172,47 @@ const Dictionary = () => {
                 onClick={() => setSelectedWord(null)}
               >
                 <motion.div
-                  initial={{ scale: 0.9, opacity: 0 }}
+                  initial={{ scale: 0.95, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0.9, opacity: 0 }}
-                  className="bg-card border border-border rounded-2xl p-8 max-w-lg w-full shadow-2xl"
+                  exit={{ scale: 0.95, opacity: 0 }}
+                  className="rounded-2xl border border-white/[0.08] bg-slate-950 p-8 max-w-lg w-full shadow-2xl"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div className="flex items-start justify-between mb-6">
                     <div>
-                      <h2 className="text-5xl font-bold text-white mb-2">{selectedWord.kanji || selectedWord.hiragana}</h2>
+                      <h2 className="text-4xl font-bold text-white mb-2">{selectedWord.kanji || selectedWord.hiragana}</h2>
                       <p className="text-lg text-cyan-400">{selectedWord.hiragana} · {selectedWord.romaji}</p>
                     </div>
-                    <Button variant="ghost" size="sm" onClick={() => setSelectedWord(null)}>
+                    <Button variant="ghost" size="sm" className="text-slate-400 hover:text-white" onClick={() => setSelectedWord(null)}>
                       <X className="w-5 h-5" />
                     </Button>
                   </div>
                   <div className="space-y-4">
                     <div>
-                      <h4 className="text-sm font-semibold text-muted-foreground uppercase mb-1">Meaning</h4>
+                      <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Meaning</h4>
                       <p className="text-xl text-white">{selectedWord.meaning}</p>
                     </div>
                     {selectedWord.wordType && (
                       <div>
-                        <h4 className="text-sm font-semibold text-muted-foreground uppercase mb-1">Type</h4>
-                        <Badge variant="outline">{selectedWord.wordType}</Badge>
+                        <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Type</h4>
+                        <Badge variant="outline" className="border-white/[0.08] text-slate-300">{selectedWord.wordType}</Badge>
                       </div>
                     )}
                     {selectedWord.exampleSentenceJP && (
-                      <div>
-                        <h4 className="text-sm font-semibold text-muted-foreground uppercase mb-1">Example</h4>
+                      <div className="rounded-xl bg-white/[0.03] border border-white/[0.05] p-4">
+                        <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Example</h4>
                         <p className="text-white">{selectedWord.exampleSentenceJP}</p>
-                        <p className="text-muted-foreground text-sm mt-1">{selectedWord.exampleSentenceEN}</p>
+                        <p className="text-sm text-slate-500 mt-1">{selectedWord.exampleSentenceEN}</p>
                       </div>
                     )}
                     {selectedWord.additionalNotes && (
                       <div>
-                        <h4 className="text-sm font-semibold text-muted-foreground uppercase mb-1">Notes</h4>
-                        <p className="text-muted-foreground">{selectedWord.additionalNotes}</p>
+                        <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Notes</h4>
+                        <p className="text-sm text-slate-400">{selectedWord.additionalNotes}</p>
                       </div>
                     )}
-                    <div className="flex gap-2 pt-4">
-                      <Button onClick={() => handleSaveWord(selectedWord.id)} className="flex-1">
+                    <div className="pt-4">
+                      <Button onClick={() => handleSaveWord(selectedWord.id)} className="w-full bg-white/[0.06] hover:bg-cyan-500/15 text-white border border-white/[0.08] hover:border-cyan-500/30 transition-all">
                         <Star className="w-4 h-4 mr-2" /> Add to My Words
                       </Button>
                     </div>
@@ -225,7 +222,6 @@ const Dictionary = () => {
             )}
           </AnimatePresence>
         </div>
-      </div>
     </DashboardLayout>
   );
 };
