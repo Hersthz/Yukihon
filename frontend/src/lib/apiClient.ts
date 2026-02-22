@@ -342,6 +342,74 @@ export const apiClient = {
       return apiClient.request(`/api/quizzes/${id}`, { method: "DELETE" });
     },
   },
+
+  // Translation endpoints
+  translation: {
+    /** Dịch văn bản qua backend proxy */
+    translate(data: { sourceLang: string; targetLang: string; text: string }) {
+      return apiClient.request<{
+        sourceLang: string;
+        targetLang: string;
+        sourceText: string;
+        translatedText: string;
+        detectedLang?: string;
+        historyId: number;
+      }>("/api/translation/translate", {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+    },
+
+    /** Lấy lịch sử dịch (phân trang) */
+    getHistory(page = 0, size = 20) {
+      return apiClient.request<{
+        content: TranslationHistoryItem[];
+        totalElements: number;
+        totalPages: number;
+        number: number;
+      }>(`/api/translation/history?page=${page}&size=${size}`);
+    },
+
+    /** Lấy danh sách bookmark */
+    getBookmarks() {
+      return apiClient.request<TranslationHistoryItem[]>("/api/translation/bookmarks");
+    },
+
+    /** Toggle bookmark */
+    toggleBookmark(historyId: number) {
+      return apiClient.request<TranslationHistoryItem>(
+        `/api/translation/history/${historyId}/bookmark`,
+        { method: "POST" }
+      );
+    },
+
+    /** Xoá 1 bản dịch khỏi lịch sử */
+    deleteHistory(historyId: number) {
+      return apiClient.request(`/api/translation/history/${historyId}`, { method: "DELETE" });
+    },
+
+    /** Xoá toàn bộ lịch sử */
+    clearHistory() {
+      return apiClient.request("/api/translation/history", { method: "DELETE" });
+    },
+
+    /** Thống kê dịch */
+    getStats() {
+      return apiClient.request<{ totalTranslations: number; totalBookmarks: number }>(
+        "/api/translation/stats"
+      );
+    },
+  },
 };
+
+export interface TranslationHistoryItem {
+  id: number;
+  sourceLang: string;
+  targetLang: string;
+  sourceText: string;
+  translatedText: string;
+  bookmarked: boolean;
+  createdAt: string;
+}
 
 export default apiClient;
