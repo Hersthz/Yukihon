@@ -221,11 +221,11 @@ const Auth = () => {
   /* ═══════════════════════════════════════════════════════════════════════ */
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-background">
+    <div className="h-screen relative overflow-hidden bg-background">
       <WinterNightBackground
-        snowCount={30}
-        sparkleCount={12}
-        intensity="light"
+        snowCount={60}
+        sparkleCount={20}
+        intensity="normal"
       />
 
       {/* ── Decorative floating kanji (CSS animation, no parallax) ── */}
@@ -279,18 +279,8 @@ const Auth = () => {
         ))}
       </div>
 
-      {/* ── Kaoruko silhouette behind form (static) ── */}
-      <div className="fixed inset-0 z-[1] pointer-events-none">
-        <img
-          src={kaorukoWelcome}
-          alt=""
-          aria-hidden
-          className="absolute right-0 bottom-0 w-[45%] max-h-[88vh] object-contain opacity-[0.04] dark:opacity-[0.1]"
-        />
-        {/* Fade overlay so silhouette doesn't distract */}
-        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/90 to-background/60" />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/70" />
-      </div>
+      {/* Snow effect hero layer */}
+      <div className="fixed inset-0 bg-gradient-to-b from-background/20 via-transparent to-background/20 pointer-events-none z-[1]" />
 
       {/* ── Top bar ── */}
       <motion.nav
@@ -315,9 +305,9 @@ const Auth = () => {
       </motion.nav>
 
       {/* ── Main content ── */}
-      <div className="relative z-10 max-w-6xl mx-auto px-6 pt-6 pb-24">
-        <div className="grid lg:grid-cols-2 gap-12 xl:gap-20 items-center min-h-[calc(100vh-160px)]">
-          {/* ━━━ LEFT — Branding & features ━━━ */}
+      <div className="relative z-10 max-w-6xl mx-auto px-6 h-[calc(100vh-80px)] flex items-center">
+        <div className="grid lg:grid-cols-2 gap-12 xl:gap-24 items-center w-full">
+          {/* ━━━ LEFT — Branding ━━━ */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
@@ -348,10 +338,12 @@ const Auth = () => {
                 initial={{ opacity: 0, scale: 0.9, x: -10 }}
                 animate={{ opacity: 1, scale: 1, x: 0 }}
                 transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
-                className="bg-card/60 backdrop-blur-sm border border-border/40 rounded-2xl rounded-tl-sm px-5 py-3 shadow-sm max-w-sm"
+                className="bg-card/60 backdrop-blur-sm learnhub-edge learnhub-shadow-sm rounded-2xl rounded-tl-sm px-6 py-4 max-w-sm relative"
               >
-                <p className="text-sm leading-relaxed">
-                  <span className="font-semibold text-primary">Kaoruko</span>
+                {/* Visual indicator triangle */}
+                <div className="absolute -left-2 top-4 w-4 h-4 bg-card/60 learnhub-edge rotate-45 border-t-0 border-r-0" />
+                <p className="text-base leading-relaxed relative z-10">
+                  <span className="font-black text-primary uppercase tracking-tighter">Kaoruko</span>
                   <br />
                   <AnimatePresence mode="wait">
                     <motion.span
@@ -359,11 +351,11 @@ const Auth = () => {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="text-muted-foreground inline-block"
+                      className="text-foreground/90 font-medium inline-block"
                     >
                       {mode === "login"
-                        ? "Chào mừng bạn quay lại! Mình nhớ bạn rồi 😊"
-                        : "Rất vui được gặp bạn! Hãy bắt đầu hành trình cùng mình nhé ✨"}
+                        ? "Welcome back! I missed our study sessions together 😊"
+                        : "So happy to meet you! Let's start our journey to mastery ✨"}
                     </motion.span>
                   </AnimatePresence>
                 </p>
@@ -401,57 +393,9 @@ const Auth = () => {
               </p>
             </div>
 
-            {/* Feature chips */}
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { icon: "📚", title: "Smart dictionary", desc: "Vocab, kanji & grammar" },
-                { icon: "📝", title: "JLPT practice", desc: "N5 → N1 mock tests" },
-                { icon: "🎯", title: "Vocabulary quiz", desc: "Interactive flashcards" },
-                { icon: "🎧", title: "Listening stories", desc: "Immersive mini stories" },
-              ].map((f, i) => (
-                <motion.div
-                  key={f.title}
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 + i * 0.1 }}
-                  className="flex items-start gap-3 rounded-2xl border border-border/30 bg-card/30 backdrop-blur-sm p-4 hover:border-primary/20 hover:bg-card/50 transition-all duration-300"
-                >
-                  <span className="text-2xl mt-0.5">{f.icon}</span>
-                  <div>
-                    <p className="text-sm font-semibold">{f.title}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {f.desc}
-                    </p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+            {/* Feature chips & feedback removed for compaction */}
 
-            {/* Live activity feed */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1 }}
-              className="space-y-2"
-            >
-              {[
-                { text: "Minh vừa hoàn thành bài N3 Kanji", time: "2 phút trước", emoji: "🎯" },
-                { text: "Linh đạt streak 30 ngày liên tiếp!", time: "5 phút trước", emoji: "🔥" },
-                { text: "Huy đã pass N2 mock exam", time: "12 phút trước", emoji: "🎉" },
-              ].map((activity, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 1.2 + i * 0.3 }}
-                  className="flex items-center gap-3 text-xs text-muted-foreground"
-                >
-                  <span className="text-base">{activity.emoji}</span>
-                  <span>{activity.text}</span>
-                  <span className="text-muted-foreground/50 ml-auto">{activity.time}</span>
-                </motion.div>
-              ))}
-            </motion.div>
+            {/* Live activity feed removed for compaction */}
 
             {/* Social proof */}
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -483,12 +427,12 @@ const Auth = () => {
             className="flex justify-center lg:justify-end"
           >
             <div className="w-full max-w-[440px] relative">
-              {/* Subtle glow behind card */}
-              <div className="absolute -inset-6 bg-[radial-gradient(circle,hsl(var(--primary)/0.08),transparent_70%)] blur-2xl pointer-events-none" />
+              {/* Lunar Bloom Glow behind card */}
+              <div className="absolute -inset-20 bg-primary/5 rounded-full blur-[100px] pointer-events-none -z-10 animate-pulse" />
 
-              <div className="relative rounded-3xl border border-border/40 bg-card/50 backdrop-blur-xl shadow-2xl shadow-black/5 dark:shadow-black/30 p-7 sm:p-9">
+              <div className="relative learnhub-card p-5 sm:p-7 overflow-visible">
                 {/* ── Header ── */}
-                <div className="text-center mb-7">
+                <div className="text-center mb-4">
                   {/* Mobile-only Kaoruko avatar */}
                   <div className="lg:hidden mb-4 flex justify-center">
                     <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-primary/20 shadow-lg shadow-primary/15">
@@ -500,10 +444,10 @@ const Auth = () => {
                     </div>
                   </div>
 
-                  <h2 className="text-2xl font-bold tracking-tight">
-                    {mode === "login" ? "Welcome back" : "Create your account"}
+                  <h2 className="text-2xl font-black tracking-tight">
+                    {mode === "login" ? "Welcome back" : "Create account"}
                   </h2>
-                  <p className="text-sm text-muted-foreground mt-1.5">
+                  <p className="text-sm text-muted-foreground mt-1 font-medium">
                     {mode === "login"
                       ? "Sign in to continue your journey"
                       : "Start learning Japanese today"}
@@ -511,7 +455,7 @@ const Auth = () => {
                 </div>
 
                 {/* ── Mode toggle ── */}
-                <div className="relative flex p-1 rounded-full bg-muted/50 border border-border/30 mb-6">
+                <div className="relative flex p-1 rounded-full bg-muted/50 learnhub-edge mb-4">
                   {/* Sliding pill */}
                   <motion.div
                     className="absolute top-1 bottom-1 rounded-full bg-background shadow-sm border border-border/40"
@@ -527,11 +471,10 @@ const Auth = () => {
                       key={m}
                       type="button"
                       onClick={() => handleModeChange(m)}
-                      className={`relative z-10 flex-1 py-2 text-sm font-medium rounded-full transition-colors duration-200 ${
-                        mode === m
+                      className={`relative z-10 flex-1 py-2 text-sm font-medium rounded-full transition-colors duration-200 ${mode === m
                           ? "text-foreground"
                           : "text-muted-foreground hover:text-foreground/80"
-                      }`}
+                        }`}
                     >
                       {m === "login" ? "Sign in" : "Create account"}
                     </button>
@@ -544,9 +487,9 @@ const Auth = () => {
                   variant="outline"
                   onClick={handleGoogleLogin}
                   disabled={isSubmitting}
-                  className="w-full h-11 rounded-xl border-border/50 bg-background/50 hover:bg-muted/50 gap-2.5 font-medium transition-all group"
+                  className="w-full h-11 rounded-xl learnhub-edge bg-background/50 hover:bg-muted/50 gap-2.5 font-bold transition-all group"
                 >
-                  <svg className="w-4 h-4" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5" viewBox="0 0 24 24">
                     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
                     <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
                     <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
@@ -556,7 +499,7 @@ const Auth = () => {
                 </Button>
 
                 {/* Divider */}
-                <div className="relative my-6">
+                <div className="relative my-4">
                   <div className="absolute inset-0 flex items-center">
                     <div className="w-full border-t border-border/30" />
                   </div>
@@ -607,7 +550,7 @@ const Auth = () => {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: mode === "register" ? -16 : 16 }}
                     transition={{ duration: 0.25 }}
-                    className="space-y-4"
+                    className="space-y-2.5"
                   >
                     {/* Display name (register) */}
                     {mode === "register" && (
@@ -622,7 +565,7 @@ const Auth = () => {
                             placeholder="Your name"
                             value={displayName}
                             onChange={(e) => setDisplayName(e.target.value)}
-                            className="pl-10 h-11 rounded-xl bg-background/50 border-border/40 focus:border-primary/60 transition-colors"
+                            className={`pl-10 learnhub-input h-[46px]`}
                             autoComplete="name"
                           />
                         </div>
@@ -642,7 +585,7 @@ const Auth = () => {
                           placeholder="you@example.com"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
-                          className="pl-10 h-11 rounded-xl bg-background/50 border-border/40 focus:border-primary/60 transition-colors"
+                          className="pl-10 learnhub-input"
                           autoComplete="email"
                         />
                       </div>
@@ -671,7 +614,7 @@ const Auth = () => {
                           placeholder="••••••••"
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
-                          className="pl-10 pr-10 h-11 rounded-xl bg-background/50 border-border/40 focus:border-primary/60 transition-colors"
+                          className="pl-10 pr-10 learnhub-input"
                           autoComplete={
                             mode === "login"
                               ? "current-password"
@@ -699,22 +642,20 @@ const Auth = () => {
                             {[1, 2, 3, 4].map((i) => (
                               <div
                                 key={i}
-                                className={`h-1 flex-1 rounded-full transition-colors duration-300 ${
-                                  i <= pwStrength
+                                className={`h-1 flex-1 rounded-full transition-colors duration-300 ${i <= pwStrength
                                     ? strengthColors[pwStrength]
                                     : "bg-border/40"
-                                }`}
+                                  }`}
                               />
                             ))}
                           </div>
                           <span
-                            className={`text-[10px] font-medium ${
-                              pwStrength >= 3
+                            className={`text-[10px] font-medium ${pwStrength >= 3
                                 ? "text-emerald-500"
                                 : pwStrength >= 2
-                                ? "text-amber-500"
-                                : "text-red-500"
-                            }`}
+                                  ? "text-amber-500"
+                                  : "text-red-500"
+                              }`}
                           >
                             {strengthLabels[pwStrength]}
                           </span>
@@ -737,13 +678,12 @@ const Auth = () => {
                               placeholder="••••••••"
                               value={confirm}
                               onChange={(e) => setConfirm(e.target.value)}
-                              className={`pl-10 h-11 rounded-xl bg-background/50 border-border/40 focus:border-primary/60 transition-colors ${
-                                confirm && confirm !== password
+                              className={`pl-10 learnhub-input ${confirm && confirm !== password
                                   ? "border-destructive/50 focus:border-destructive"
                                   : confirm && confirm === password
-                                  ? "border-emerald-500/50"
-                                  : ""
-                              }`}
+                                    ? "border-emerald-500/50"
+                                    : ""
+                                }`}
                               autoComplete="new-password"
                             />
                             {confirm && confirm === password && (
@@ -764,11 +704,10 @@ const Auth = () => {
                                 key={level}
                                 type="button"
                                 onClick={() => setJlptTarget(level)}
-                                className={`relative flex-1 py-2 rounded-xl text-sm font-medium transition-all duration-200 border ${
-                                  jlptTarget === level
+                                className={`relative flex-1 py-2 rounded-xl text-sm font-medium transition-all duration-200 border ${jlptTarget === level
                                     ? "bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20"
                                     : "bg-background/50 border-border/40 text-muted-foreground hover:text-foreground hover:border-border/60"
-                                }`}
+                                  }`}
                               >
                                 {level}
                               </button>
@@ -798,7 +737,7 @@ const Auth = () => {
                     <Button
                       type="submit"
                       disabled={isSubmitting}
-                      className="w-full h-11 rounded-xl bg-gradient-to-r from-primary to-secondary text-primary-foreground font-semibold shadow-lg shadow-primary/20 hover:shadow-primary/35 hover:brightness-110 transition-all gap-2 mt-2"
+                      className="w-full h-12 rounded-2xl bg-gradient-to-r from-primary to-secondary text-primary-foreground font-black text-lg learnhub-edge learnhub-shadow hover:brightness-110 active:translate-y-1 active:shadow-none transition-all gap-2 mt-2"
                     >
                       {isSubmitting ? (
                         <motion.div
