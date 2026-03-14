@@ -85,8 +85,8 @@ const Navigation = () => {
   return (
     <header
       className={cn(
-        "fixed top-0 inset-x-0 z-50 transition-all duration-500",
-        scrolled ? "py-2" : "py-3"
+        "fixed top-0 inset-x-0 z-50 transition-all duration-700",
+        scrolled ? "py-1" : "py-4 md:py-6"
       )}
     >
       {/* Glassmorphic background — adapts to light / dark via CSS vars */}
@@ -110,8 +110,8 @@ const Navigation = () => {
       <nav className="container relative mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-4">
         {/* ── Logo ── */}
         <Link to="/" className="flex items-center gap-3 group shrink-0">
-          <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-primary to-secondary grid place-items-center text-xl font-bold text-primary-foreground shadow-lg shadow-primary/25 group-hover:shadow-primary/40 transition-shadow">
-            日
+          <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-primary to-secondary grid place-items-center text-xl font-bold text-primary-foreground shadow-lg shadow-primary/10 group-hover:shadow-primary/30 transition-shadow display-font italic">
+            雪
           </div>
           <div className="hidden md:block leading-tight">
             <div className="text-[1.1rem] font-extrabold tracking-tight">Yukihon</div>
@@ -193,11 +193,11 @@ const Navigation = () => {
       {/* ── Mobile slide-down menu ── */}
       <div
         className={cn(
-          "md:hidden overflow-hidden transition-all duration-300 ease-out",
+          "md:hidden overflow-hidden transition-all duration-500 ease-in-out",
           mobileOpen ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0"
         )}
       >
-        <div className="border-t border-border/40 bg-background/95 backdrop-blur-xl">
+        <div className="border-t border-border/10 bg-background/95 backdrop-blur-3xl">
           <div className="container mx-auto px-4 sm:px-6 py-4 space-y-3">
             {/* Section pills */}
             <div className="flex gap-2 pb-3 border-b border-border/30 overflow-x-auto">
@@ -223,9 +223,9 @@ const Navigation = () => {
             {/* Route links */}
             {[
               { to: "/courses", label: "Courses" },
-              { to: "/dictionary", label: "Tra cứu" },
-              { to: "/translation", label: "Dịch" },
-              { to: "/community", label: "Cộng đồng" },
+              { to: "/dictionary", label: "Dictionary" },
+              { to: "/translation", label: "Translate" },
+              { to: "/community", label: "Community" },
               { to: "/my-words", label: "My Words" },
             ].map((link) => (
               <Link

@@ -83,11 +83,10 @@ const WinterNightBackground = ({
   return (
     <div className={`fixed inset-0 pointer-events-none overflow-hidden ${className}`} style={{ zIndex: 0 }}>
       {/* Background gradient */}
-      <div className={`absolute inset-0 transition-colors duration-500 ${
-        isLight
+      <div className={`absolute inset-0 transition-colors duration-500 ${isLight
           ? "bg-gradient-to-b from-sky-50/80 via-slate-100/40 to-background"
           : "bg-gradient-to-b from-slate-950 via-slate-900 to-background"
-      }`} />
+        }`} />
 
       {/* Aurora — pure CSS animation, no framer-motion */}
       {showAurora && !prefersReducedMotion && (
@@ -171,17 +170,16 @@ const WinterNightBackground = ({
         />
       ))}
 
-      {/* Depth overlays */}
-      <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-60" />
-      <div className="absolute inset-0 bg-gradient-to-r from-background/30 via-transparent to-background/30" />
+      {/* Depth overlays — Simplified for Senior Seamlessness */}
+      <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-60" />
 
-      {/* Vignette */}
+      {/* Vignette — Softened for a true Zen feel */}
       <div
         className="absolute inset-0"
         style={{
           background: isLight
-            ? "radial-gradient(ellipse at center, transparent 50%, rgba(200, 210, 230, 0.25) 100%)"
-            : "radial-gradient(ellipse at center, transparent 40%, rgba(2, 6, 23, 0.4) 100%)",
+            ? "radial-gradient(circle at 50% 50%, transparent 60%, rgba(200, 215, 235, 0.4) 100%)"
+            : "radial-gradient(circle at 50% 50%, transparent 60%, rgba(2, 6, 23, 0.6) 100%)",
         }}
       />
 
