@@ -679,7 +679,7 @@ const Index = () => {
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
             {/* 1. Smart Review - Large Hero Card */}
             <motion.div
-              className="md:col-span-7 md:row-span-2 group relative overflow-hidden rounded-[3rem] border border-white/10 bg-card/40 backdrop-blur-3xl p-10 flex flex-col justify-between h-[500px]"
+              className="md:col-span-7 md:row-span-2 group relative overflow-hidden learnhub-card p-10 flex flex-col justify-between h-[500px]"
               variants={fadeUp}
               initial="hidden"
               whileInView="visible"
@@ -715,7 +715,7 @@ const Index = () => {
 
             {/* 2. Interactive Lessons - Medium Top Right */}
             <motion.div
-              className="md:col-span-5 group relative overflow-hidden rounded-[3rem] border border-white/10 bg-card/40 backdrop-blur-3xl p-8 h-[300px]"
+              className="md:col-span-5 group relative overflow-hidden learnhub-card p-8 h-[300px]"
               variants={fadeUp}
               initial="hidden"
               whileInView="visible"
@@ -740,7 +740,7 @@ const Index = () => {
 
             {/* 3. Listening - Bottom Middle/Right Middle */}
             <motion.div
-              className="md:col-span-5 group relative overflow-hidden rounded-[2.5rem] border border-white/10 bg-card/40 backdrop-blur-3xl p-8"
+              className="md:col-span-5 group relative overflow-hidden learnhub-card p-8 h-auto flex items-center"
               variants={fadeUp}
               initial="hidden"
               whileInView="visible"
@@ -762,7 +762,7 @@ const Index = () => {
 
             {/* 4. Progress Dashboard - Bottom Full Width Row */}
             <motion.div
-              className="md:col-span-12 group relative overflow-hidden rounded-[3rem] border border-white/10 bg-gradient-to-r from-card/40 to-primary/5 backdrop-blur-3xl p-8 flex flex-col md:flex-row items-center gap-10"
+              className="md:col-span-12 group relative overflow-hidden learnhub-card p-8 flex flex-col md:flex-row items-center gap-10 bg-gradient-to-r from-card/40 to-primary/5"
               variants={fadeUp}
               initial="hidden"
               whileInView="visible"
@@ -830,7 +830,7 @@ const Index = () => {
               <motion.div
                 key={t.name}
                 variants={fadeUp}
-                className={`clay-card relative rounded-3xl p-8 transition-transform duration-500 hover:-translate-y-3 ${
+                className={`learnhub-card relative p-8 transition-transform duration-500 hover:-translate-y-3 ${
                   i === 1 ? "md:-translate-y-8" : "md:translate-y-0"
                 } ${
                   i % 3 === 0 ? "bg-gradient-to-br from-indigo-50 to-indigo-100/50 dark:from-indigo-950/40 dark:to-background border-indigo-200/50 shadow-indigo-500/10" :
@@ -919,7 +919,7 @@ const Index = () => {
                 <Link to="/auth">
                   <Button
                     size="lg"
-                    className="h-16 px-10 text-xl clay-btn bg-primary text-primary-foreground hover:scale-105 transition-all overflow-hidden group shadow-lg shadow-primary/20"
+                    className="h-16 px-10 text-xl learnhub-edge learnhub-shadow bg-primary text-primary-foreground hover:scale-105 transition-all overflow-hidden group"
                   >
                     <span className="relative z-10 flex items-center gap-2">
                       Start free trial

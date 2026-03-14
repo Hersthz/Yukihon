@@ -84,8 +84,8 @@ const WinterNightBackground = ({
     <div className={`fixed inset-0 pointer-events-none overflow-hidden ${className}`} style={{ zIndex: 0 }}>
       {/* Background gradient */}
       <div className={`absolute inset-0 transition-colors duration-500 ${isLight
-          ? "bg-gradient-to-b from-sky-50/80 via-slate-100/40 to-background"
-          : "bg-gradient-to-b from-slate-950 via-slate-900 to-background"
+        ? "bg-gradient-to-b from-sky-50/80 via-slate-100/40 to-background"
+        : "bg-gradient-to-b from-slate-950 via-slate-900 to-background"
         }`} />
 
       {/* Aurora — pure CSS animation, no framer-motion */}
