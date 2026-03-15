@@ -1,18 +1,25 @@
-import { useEffect, useState, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import {
-  BookmarkPlus, Star, StarOff, Folder, FolderPlus, Search,
-  Trash2, StickyNote, CheckCircle2, BookOpen, BarChart3, Edit3
+  BookOpen,
+  BookmarkPlus,
+  CheckCircle2,
+  Edit3,
+  Folder,
+  Search,
+  Star,
+  StarOff,
+  StickyNote,
+  Trash2,
 } from "lucide-react";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import apiClient from "@/lib/apiClient";
 import { useToast } from "@/hooks/use-toast";
+import apiClient from "@/lib/apiClient";
 
 interface SavedWord {
   id: number;
@@ -44,25 +51,25 @@ const MyWords = () => {
   const [stats, setStats] = useState<WordStats>({ totalSaved: 0, masteredCount: 0, folders: [] });
   const [editingNote, setEditingNote] = useState<number | null>(null);
   const [noteText, setNoteText] = useState("");
-  const [newFolderName, setNewFolderName] = useState("");
-  const [showNewFolder, setShowNewFolder] = useState(false);
 
   const fetchWords = useCallback(async () => {
     setLoading(true);
     try {
       let data: SavedWord[];
+
       if (filterFolder) {
-        data = await apiClient.myWords.getAll(filterFolder) as SavedWord[];
+        data = (await apiClient.myWords.getAll(filterFolder)) as SavedWord[];
       } else if (filterMastered === "true") {
-        data = await apiClient.myWords.getMastered(true) as SavedWord[];
+        data = (await apiClient.myWords.getMastered(true)) as SavedWord[];
       } else if (filterMastered === "false") {
-        data = await apiClient.myWords.getMastered(false) as SavedWord[];
+        data = (await apiClient.myWords.getMastered(false)) as SavedWord[];
       } else {
-        data = await apiClient.myWords.getAll() as SavedWord[];
+        data = (await apiClient.myWords.getAll()) as SavedWord[];
       }
+
       setWords(data);
     } catch {
-      toast({ title: "Error", description: "Failed to load saved words", variant: "destructive" });
+      toast({ title: "Không tải được sổ tay", description: "Vui lòng thử lại.", variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -70,232 +77,242 @@ const MyWords = () => {
 
   const fetchStats = useCallback(async () => {
     try {
-      const data = await apiClient.myWords.getStats() as WordStats;
+      const data = (await apiClient.myWords.getStats()) as WordStats;
       setStats(data);
-    } catch { /* silent */ }
+    } catch {
+      // silent
+    }
   }, []);
 
-  useEffect(() => { fetchWords(); fetchStats(); }, [fetchWords, fetchStats]);
+  useEffect(() => {
+    fetchWords();
+    fetchStats();
+  }, [fetchStats, fetchWords]);
 
   const toggleMastered = async (wordId: number) => {
     try {
-      const updated = await apiClient.myWords.toggleMastered(wordId) as SavedWord;
-      setWords(prev => prev.map(w => w.id === wordId ? updated : w));
+      const updated = (await apiClient.myWords.toggleMastered(wordId)) as SavedWord;
+      setWords((prev) => prev.map((word) => (word.id === wordId ? updated : word)));
       fetchStats();
-      toast({
-        title: updated.mastered ? "Mastered! 🎉" : "Unmastered",
-        description: updated.mastered ? `${updated.kanji || updated.hiragana} đã thuộc!` : "Đã bỏ đánh dấu thuộc",
-      });
     } catch {
-      toast({ title: "Error", description: "Failed to toggle", variant: "destructive" });
+      toast({ title: "Không thể cập nhật", description: "Thử lại sau.", variant: "destructive" });
     }
   };
 
   const removeWord = async (wordId: number) => {
     try {
       await apiClient.myWords.removeWord(wordId);
-      setWords(prev => prev.filter(w => w.id !== wordId));
+      setWords((prev) => prev.filter((word) => word.id !== wordId));
       fetchStats();
-      toast({ title: "Removed", description: "Word removed from collection" });
     } catch {
-      toast({ title: "Error", description: "Failed to remove", variant: "destructive" });
+      toast({ title: "Không thể xoá từ", description: "Thử lại sau.", variant: "destructive" });
     }
   };
 
   const updateNote = async (wordId: number) => {
     try {
       await apiClient.myWords.updateNote(wordId, noteText);
-      setWords(prev => prev.map(w => w.id === wordId ? { ...w, personalNote: noteText } : w));
+      setWords((prev) => prev.map((word) => (word.id === wordId ? { ...word, personalNote: noteText } : word)));
       setEditingNote(null);
-      toast({ title: "Saved", description: "Note updated" });
+      setNoteText("");
+      toast({ title: "Đã lưu ghi chú", description: "Thông tin cá nhân cho từ vựng đã được cập nhật." });
     } catch {
-      toast({ title: "Error", description: "Failed to update note", variant: "destructive" });
+      toast({ title: "Không lưu được ghi chú", description: "Vui lòng thử lại.", variant: "destructive" });
     }
   };
 
-  const filtered = words.filter(w => {
-    if (!search) return true;
-    const q = search.toLowerCase();
-    return (
-      (w.kanji && w.kanji.toLowerCase().includes(q)) ||
-      (w.hiragana && w.hiragana.toLowerCase().includes(q)) ||
-      (w.romaji && w.romaji.toLowerCase().includes(q)) ||
-      (w.meaning && w.meaning.toLowerCase().includes(q))
+  const filteredWords = useMemo(() => {
+    if (!search.trim()) return words;
+    const normalized = search.toLowerCase();
+    return words.filter((word) =>
+      [word.kanji, word.hiragana, word.romaji, word.meaning].some((value) => value?.toLowerCase().includes(normalized))
     );
-  });
+  }, [search, words]);
 
-  const masteredPercent = stats.totalSaved > 0 ? Math.round((stats.masteredCount / stats.totalSaved) * 100) : 0;
+  const masteredPercent = stats.totalSaved ? Math.round((stats.masteredCount / stats.totalSaved) * 100) : 0;
 
   return (
     <DashboardLayout>
-      <div className="container mx-auto px-4 py-12 max-w-5xl">
-          {/* Header */}
-          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-            <div className="flex items-center gap-4 mb-3">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/20">
-                <BookmarkPlus className="w-7 h-7 text-emerald-400" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold text-white">My Words 私の単語</h1>
-                <p className="text-sm text-slate-400">Bộ từ vựng cá nhân của bạn</p>
-              </div>
-            </div>
-          </motion.div>
+      <div className="mx-auto max-w-[1420px]">
+        <PageHeader
+          icon={<BookmarkPlus className="h-6 w-6 text-emerald-600" />}
+          title="Từ của tôi"
+          description="Một sổ tay gọn hơn, nhìn được nhiều thẻ hơn trong cùng một màn hình và chỉnh ghi chú ngay tại chỗ."
+          eyebrow="My Words"
+        />
 
-          {/* Stats */}
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }} className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-5 flex items-center gap-4">
-              <div className="p-2.5 rounded-xl bg-cyan-500/10"><BookOpen className="w-6 h-6 text-cyan-400" /></div>
-              <div>
-                <p className="text-2xl font-bold text-white">{stats.totalSaved}</p>
-                <p className="text-xs text-slate-500">Tổng từ đã lưu</p>
-              </div>
-            </div>
-            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-5 flex items-center gap-4">
-              <div className="p-2.5 rounded-xl bg-emerald-500/10"><CheckCircle2 className="w-6 h-6 text-emerald-400" /></div>
-              <div>
-                <p className="text-2xl font-bold text-white">{stats.masteredCount}</p>
-                <p className="text-xs text-slate-500">Đã thuộc</p>
-              </div>
-            </div>
-            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-5 flex items-center gap-4">
-              <div className="p-2.5 rounded-xl bg-amber-500/10"><BarChart3 className="w-6 h-6 text-amber-400" /></div>
-              <div>
-                <p className="text-2xl font-bold text-white">{masteredPercent}%</p>
-                <p className="text-xs text-slate-500">Tỷ lệ hoàn thành</p>
-              </div>
-            </div>
-          </motion.div>
+        <div className="mb-4 grid gap-3 md:grid-cols-3">
+          <MetricCard hint="Tất cả mục đã lưu" icon={<BookOpen className="h-4 w-4 text-sky-500" />} label="Tổng từ" value={stats.totalSaved} />
+          <MetricCard hint="Đã đánh dấu nắm chắc" icon={<CheckCircle2 className="h-4 w-4 text-emerald-500" />} label="Đã thuộc" value={stats.masteredCount} />
+          <MetricCard hint="Theo tiến độ hiện tại" icon={<Star className="h-4 w-4 text-amber-500" />} label="Tỉ lệ nhớ" value={`${masteredPercent}%`} />
+        </div>
 
-          {/* Filters */}
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="flex flex-wrap gap-3 mb-8">
-            <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+        <PageSection className="mb-4" title="Bộ lọc nhanh" description="Giảm thao tác cuộn bằng cách gom filter lên một hàng.">
+          <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_180px_180px]">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
-                placeholder="Tìm kiếm từ vựng..."
-                value={search}
+                className="h-11 rounded-2xl border-white/80 bg-white/90 pl-11 text-slate-900 placeholder:text-slate-400"
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-10 bg-white/[0.03] border-white/[0.06] text-white placeholder:text-slate-500"
+                placeholder="Tìm theo kanji, hiragana, romaji hoặc nghĩa"
+                value={search}
               />
             </div>
-            <Select value={filterFolder || "all"} onValueChange={(v) => { setFilterFolder(v === "all" ? "" : v); setFilterMastered(""); }}>
-              <SelectTrigger className="w-[160px] bg-white/[0.03] border-white/[0.06] text-white">
-                <Folder className="w-4 h-4 mr-2 text-slate-500" />
+
+            <Select
+              onValueChange={(value) => {
+                setFilterFolder(value === "all" ? "" : value);
+                setFilterMastered("");
+              }}
+              value={filterFolder || "all"}
+            >
+              <SelectTrigger className="h-11 rounded-2xl border-white/80 bg-white/90 text-slate-700">
+                <Folder className="mr-2 h-4 w-4 text-slate-400" />
                 <SelectValue placeholder="Folder" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Tất cả</SelectItem>
-                {stats.folders?.map((f) => (<SelectItem key={f} value={f}>{f}</SelectItem>))}
+                <SelectItem value="all">Tất cả folder</SelectItem>
+                {stats.folders.map((folder) => (
+                  <SelectItem key={folder} value={folder}>
+                    {folder}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
-            <Select value={filterMastered || "all"} onValueChange={(v) => { setFilterMastered(v === "all" ? "" : v); setFilterFolder(""); }}>
-              <SelectTrigger className="w-[160px] bg-white/[0.03] border-white/[0.06] text-white">
-                <SelectValue placeholder="Status" />
+
+            <Select
+              onValueChange={(value) => {
+                setFilterMastered(value === "all" ? "" : value);
+                setFilterFolder("");
+              }}
+              value={filterMastered || "all"}
+            >
+              <SelectTrigger className="h-11 rounded-2xl border-white/80 bg-white/90 text-slate-700">
+                <SelectValue placeholder="Trạng thái" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Tất cả</SelectItem>
-                <SelectItem value="true">Đã thuộc ✅</SelectItem>
-                <SelectItem value="false">Chưa thuộc 📝</SelectItem>
+                <SelectItem value="all">Tất cả trạng thái</SelectItem>
+                <SelectItem value="true">Đã thuộc</SelectItem>
+                <SelectItem value="false">Chưa thuộc</SelectItem>
               </SelectContent>
             </Select>
-          </motion.div>
+          </div>
+        </PageSection>
 
-          {/* Word List */}
+        <PageSection title="Sổ tay cá nhân" description="Card thấp hơn và giữ đủ thông tin để bạn quét nhanh toàn bộ bộ từ.">
           {loading ? (
             <div className="flex items-center justify-center py-20">
-              <div className="relative w-12 h-12">
-                <motion.div className="absolute inset-0 rounded-full border-2 border-emerald-500/20" animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }} />
-                <motion.div className="absolute inset-0 rounded-full border-2 border-transparent border-t-emerald-400" animate={{ rotate: -360 }} transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }} />
-              </div>
+              <div className="h-12 w-12 rounded-full border-4 border-emerald-100 border-t-emerald-500 animate-spin" />
             </div>
-          ) : filtered.length === 0 ? (
-            <div className="text-center py-20">
-              <BookmarkPlus className="w-14 h-14 text-slate-600 mx-auto mb-4" />
-              <p className="text-lg text-slate-400">Chưa có từ nào</p>
-              <p className="text-sm text-slate-500">Lưu từ vựng từ trang Tra cứu hoặc bài học</p>
-            </div>
+          ) : filteredWords.length === 0 ? (
+            <EmptyState
+              description="Hãy lưu từ từ trang tra cứu hoặc bài học để bắt đầu một bộ sưu tập rõ ràng hơn."
+              icon={<BookmarkPlus className="h-6 w-6" />}
+              title="Sổ tay vẫn đang trống"
+            />
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               <AnimatePresence>
-                {filtered.map((word, i) => (
+                {filteredWords.map((word, index) => (
                   <motion.div
                     key={word.id}
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ delay: i * 0.03 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="rounded-[22px] border border-white bg-white p-4 shadow-[0_10px_24px_rgba(148,163,184,0.10)]"
+                    exit={{ opacity: 0, y: -10 }}
+                    initial={{ opacity: 0, y: 10 }}
+                    transition={{ delay: index * 0.02 }}
                   >
-                    <div className={`rounded-2xl border border-white/[0.06] bg-white/[0.03] overflow-hidden transition-all hover:border-white/[0.1] ${word.mastered ? "border-l-4 border-l-emerald-500" : ""}`}>
-                      <div className="h-0.5 bg-gradient-to-r from-emerald-500/30 to-teal-500/30" />
-                      <div className="p-5">
-                        <div className="flex items-start justify-between mb-2">
-                          <div>
-                            <p className="text-2xl font-bold text-white">{word.kanji || word.hiragana}</p>
-                            {word.kanji && <p className="text-sm text-cyan-400">{word.hiragana}</p>}
-                            <p className="text-xs text-slate-500">{word.romaji}</p>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            {word.jlptLevel && <Badge className="bg-cyan-500/15 text-cyan-400 border border-cyan-500/20 text-xs">{word.jlptLevel}</Badge>}
-                            {word.folderName && (
-                              <Badge variant="outline" className="text-xs border-white/[0.08] text-slate-400">
-                                <Folder className="w-3 h-3 mr-1" />{word.folderName}
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                        <p className="text-slate-300 mb-3">{word.meaning}</p>
+                    <div className="mb-3 flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-[1.5rem] font-semibold text-slate-900">{word.kanji || word.hiragana}</p>
+                        <p className="text-sm text-sky-700">{word.hiragana}</p>
+                        <p className="text-xs text-slate-500">{word.romaji}</p>
+                      </div>
 
-                        {/* Personal Note */}
-                        {editingNote === word.id ? (
-                          <div className="flex gap-2 mb-3">
-                            <Input
-                              value={noteText}
-                              onChange={(e) => setNoteText(e.target.value)}
-                              placeholder="Ghi chú..."
-                              className="bg-white/[0.03] border-white/[0.06] text-white text-sm placeholder:text-slate-500"
-                              onKeyDown={(e) => e.key === "Enter" && updateNote(word.id)}
-                            />
-                            <Button size="sm" onClick={() => updateNote(word.id)} className="bg-white/[0.06] hover:bg-emerald-500/15 text-white border border-white/[0.08]">Save</Button>
-                            <Button size="sm" variant="ghost" className="text-slate-400" onClick={() => setEditingNote(null)}>✕</Button>
-                          </div>
-                        ) : word.personalNote ? (
-                          <div className="flex items-center gap-2 mb-3 p-3 rounded-xl bg-amber-500/[0.06] border border-amber-500/15">
-                            <StickyNote className="w-3 h-3 text-amber-400 shrink-0" />
-                            <p className="text-xs text-amber-300 flex-1">{word.personalNote}</p>
-                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-slate-400 hover:text-white" onClick={() => { setEditingNote(word.id); setNoteText(word.personalNote); }}>
-                              <Edit3 className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        ) : null}
+                      <div className="flex flex-wrap justify-end gap-2">
+                        {word.jlptLevel && (
+                          <Badge className="rounded-full border border-sky-200 bg-sky-50 text-sky-700">{word.jlptLevel}</Badge>
+                        )}
+                        {word.folderName && (
+                          <Badge className="rounded-full border border-slate-200 bg-slate-50 text-slate-600">{word.folderName}</Badge>
+                        )}
+                      </div>
+                    </div>
 
-                        {/* Actions */}
-                        <div className="flex items-center gap-2">
+                    <p className="text-sm text-slate-700">{word.meaning}</p>
+
+                    {editingNote === word.id ? (
+                      <div className="mt-3 flex gap-2">
+                        <Input
+                          className="h-10 rounded-xl border-white/80 bg-white/90 text-sm text-slate-900"
+                          onChange={(e) => setNoteText(e.target.value)}
+                          onKeyDown={(e) => e.key === "Enter" && updateNote(word.id)}
+                          placeholder="Thêm một ghi chú ngắn"
+                          value={noteText}
+                        />
+                        <Button className="rounded-xl bg-slate-900 text-white hover:bg-slate-800" onClick={() => updateNote(word.id)} size="sm">
+                          Lưu
+                        </Button>
+                      </div>
+                    ) : word.personalNote ? (
+                      <div className="mt-3 rounded-[18px] border border-amber-200 bg-amber-50/80 p-3">
+                        <div className="flex items-start gap-2">
+                          <StickyNote className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs uppercase tracking-[0.18em] text-amber-700">Ghi chú</p>
+                            <p className="mt-1 text-sm text-amber-900">{word.personalNote}</p>
+                          </div>
                           <Button
-                            variant={word.mastered ? "default" : "ghost"}
-                            size="sm"
-                            onClick={() => toggleMastered(word.id)}
-                            className={word.mastered ? "bg-emerald-600 hover:bg-emerald-700 text-white" : "bg-white/[0.04] border border-white/[0.08] text-slate-300 hover:text-white"}
+                            className="h-8 w-8 rounded-xl text-slate-500 hover:text-slate-900"
+                            onClick={() => {
+                              setEditingNote(word.id);
+                              setNoteText(word.personalNote);
+                            }}
+                            size="icon"
+                            variant="ghost"
                           >
-                            {word.mastered ? <StarOff className="w-4 h-4 mr-1" /> : <Star className="w-4 h-4 mr-1" />}
-                            {word.mastered ? "Bỏ thuộc" : "Đã thuộc"}
-                          </Button>
-                          {!word.personalNote && (
-                            <Button variant="ghost" size="sm" className="text-slate-400 hover:text-white" onClick={() => { setEditingNote(word.id); setNoteText(""); }}>
-                              <StickyNote className="w-4 h-4 mr-1" /> Ghi chú
-                            </Button>
-                          )}
-                          <Button variant="ghost" size="sm" className="text-red-400/70 hover:text-red-400 ml-auto" onClick={() => removeWord(word.id)}>
-                            <Trash2 className="w-4 h-4" />
+                            <Edit3 className="h-4 w-4" />
                           </Button>
                         </div>
                       </div>
+                    ) : null}
+
+                    <div className="mt-4 flex items-center gap-2">
+                      <Button
+                        className={word.mastered ? "rounded-xl bg-emerald-500 text-white hover:bg-emerald-400" : "rounded-xl bg-sky-50 text-sky-700 hover:bg-sky-100"}
+                        onClick={() => toggleMastered(word.id)}
+                        size="sm"
+                      >
+                        {word.mastered ? <StarOff className="mr-1 h-4 w-4" /> : <Star className="mr-1 h-4 w-4" />}
+                        {word.mastered ? "Bỏ đã thuộc" : "Đánh dấu thuộc"}
+                      </Button>
+
+                      {!word.personalNote && (
+                        <Button
+                          className="rounded-xl border-slate-200 bg-white text-slate-600"
+                          onClick={() => {
+                            setEditingNote(word.id);
+                            setNoteText("");
+                          }}
+                          size="sm"
+                          variant="outline"
+                        >
+                          <StickyNote className="mr-1 h-4 w-4" />
+                          Ghi chú
+                        </Button>
+                      )}
+
+                      <Button className="ml-auto rounded-xl text-rose-600 hover:text-rose-700" onClick={() => removeWord(word.id)} size="icon" variant="ghost">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </motion.div>
                 ))}
               </AnimatePresence>
             </div>
           )}
-        </div>
+        </PageSection>
+      </div>
     </DashboardLayout>
   );
 };

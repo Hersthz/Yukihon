@@ -781,16 +781,16 @@ html {
 }
 
 ::-webkit-scrollbar-track {
-  background: hsl(222 47% 5%);
+  background: rgba(226, 232, 240, 0.75);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(222 20% 25%);
-  border-radius: 4px;
+  background: rgba(125, 145, 173, 0.65);
+  border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(222 20% 35%);
+  background: rgba(98, 116, 142, 0.82);
 }
 
 .light::-webkit-scrollbar-track {

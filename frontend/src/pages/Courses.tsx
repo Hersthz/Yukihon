@@ -1,9 +1,10 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { GraduationCap, BookOpen, Clock, Layers, ChevronRight, Sparkles } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { BookOpen, ChevronRight, Clock, Compass, GraduationCap, Layers, Sparkles } from "lucide-react";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import DashboardLayout from "@/components/layout/DashboardLayout";
 
 interface Course {
   id: string;
@@ -16,198 +17,190 @@ interface Course {
   progress: number;
 }
 
-const levelGradients: Record<string, { from: string; to: string; shadow: string; badge: string }> = {
-  "JLPT N5": { from: "from-emerald-500/20", to: "to-green-500/20", shadow: "shadow-emerald-500/10", badge: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" },
-  "JLPT N4": { from: "from-cyan-500/20", to: "to-blue-500/20", shadow: "shadow-cyan-500/10", badge: "bg-cyan-500/20 text-cyan-400 border-cyan-500/30" },
-  "JLPT N3": { from: "from-amber-500/20", to: "to-yellow-500/20", shadow: "shadow-amber-500/10", badge: "bg-amber-500/20 text-amber-400 border-amber-500/30" },
-  "JLPT N2": { from: "from-orange-500/20", to: "to-red-500/20", shadow: "shadow-orange-500/10", badge: "bg-orange-500/20 text-orange-400 border-orange-500/30" },
-  "JLPT N1": { from: "from-rose-500/20", to: "to-pink-500/20", shadow: "shadow-rose-500/10", badge: "bg-rose-500/20 text-rose-400 border-rose-500/30" },
-  "N3-N2": { from: "from-purple-500/20", to: "to-violet-500/20", shadow: "shadow-purple-500/10", badge: "bg-purple-500/20 text-purple-400 border-purple-500/30" },
+const levelTone: Record<string, string> = {
+  "JLPT N5": "border-emerald-200 bg-emerald-50 text-emerald-700",
+  "JLPT N4": "border-sky-200 bg-sky-50 text-sky-700",
+  "JLPT N3": "border-violet-200 bg-violet-50 text-violet-700",
+  "JLPT N2": "border-amber-200 bg-amber-50 text-amber-700",
+  "JLPT N1": "border-rose-200 bg-rose-50 text-rose-700",
+  "N3-N2": "border-slate-200 bg-slate-50 text-slate-700",
 };
+
+const courses: Course[] = [
+  {
+    id: "n5-foundations",
+    title: "N5 Foundations",
+    level: "JLPT N5",
+    description: "Bắt đầu từ nền tảng với hiragana, katakana, ngữ pháp cơ bản và nhóm từ vựng thiết yếu.",
+    lessons: 45,
+    hours: 20,
+    skills: ["Vocab", "Grammar", "Kanji"],
+    progress: 0,
+  },
+  {
+    id: "n4-conversations",
+    title: "N4 Daily Conversations",
+    level: "JLPT N4",
+    description: "Tập trung vào giao tiếp hằng ngày với các tình huống đời sống và mẫu câu quen thuộc.",
+    lessons: 60,
+    hours: 28,
+    skills: ["Speaking", "Grammar", "Listening"],
+    progress: 62,
+  },
+  {
+    id: "n3-fluency",
+    title: "N3 Building Fluency",
+    level: "JLPT N3",
+    description: "Mở rộng vốn từ và khả năng diễn đạt tự nhiên hơn bằng nội dung trung cấp.",
+    lessons: 75,
+    hours: 35,
+    skills: ["Reading", "Listening", "Grammar"],
+    progress: 18,
+  },
+  {
+    id: "n2-professional",
+    title: "N2 Professional Japanese",
+    level: "JLPT N2",
+    description: "Học các chủ đề nâng cao hơn như công việc, tin tức và ngữ cảnh học thuật.",
+    lessons: 90,
+    hours: 42,
+    skills: ["Reading", "Kanji", "Listening"],
+    progress: 0,
+  },
+  {
+    id: "n1-mastery",
+    title: "N1 Complete Mastery",
+    level: "JLPT N1",
+    description: "Lộ trình chuyên sâu để tiếp cận các nội dung có độ tinh tế và ngữ nghĩa cao hơn.",
+    lessons: 120,
+    hours: 60,
+    skills: ["All skills"],
+    progress: 0,
+  },
+  {
+    id: "business-japanese",
+    title: "Business Japanese",
+    level: "N3-N2",
+    description: "Một nhánh học ứng dụng cho email, cuộc họp, tác phong giao tiếp và tài liệu công việc.",
+    lessons: 40,
+    hours: 18,
+    skills: ["Email", "Speaking"],
+    progress: 8,
+  },
+];
+
+const levels = ["all", "JLPT N5", "JLPT N4", "JLPT N3", "JLPT N2", "JLPT N1", "N3-N2"];
 
 const Courses = () => {
   const [selectedLevel, setSelectedLevel] = useState<string>("all");
 
-  const courses: Course[] = [
-    {
-      id: "n5-foundations",
-      title: "N5 Foundations",
-      level: "JLPT N5",
-      description: "Start your Japanese journey with basic grammar, hiragana, katakana, and essential vocabulary.",
-      lessons: 45, hours: 20, skills: ["Vocab", "Grammar", "Kanji"], progress: 0,
-    },
-    {
-      id: "n4-conversations",
-      title: "N4 Daily Conversations",
-      level: "JLPT N4",
-      description: "Master everyday situations with expanded vocabulary and intermediate grammar patterns.",
-      lessons: 60, hours: 28, skills: ["Vocab", "Grammar", "Listening"], progress: 62,
-    },
-    {
-      id: "n3-fluency",
-      title: "N3 Building Fluency",
-      level: "JLPT N3",
-      description: "Develop natural expression with complex grammar and authentic Japanese materials.",
-      lessons: 75, hours: 35, skills: ["Grammar", "Reading", "Listening"], progress: 0,
-    },
-    {
-      id: "n2-professional",
-      title: "N2 Professional Japanese",
-      level: "JLPT N2",
-      description: "Business Japanese, news comprehension, and advanced kanji for professional contexts.",
-      lessons: 90, hours: 42, skills: ["Reading", "Listening", "Kanji"], progress: 0,
-    },
-    {
-      id: "n1-mastery",
-      title: "N1 Complete Mastery",
-      level: "JLPT N1",
-      description: "Near-native proficiency with literature, academic texts, and nuanced expression.",
-      lessons: 120, hours: 60, skills: ["All skills"], progress: 0,
-    },
-    {
-      id: "business-japanese",
-      title: "Business Japanese",
-      level: "N3-N2",
-      description: "Specialized course for workplace communication, emails, and meetings.",
-      lessons: 40, hours: 18, skills: ["Vocab", "Grammar"], progress: 0,
-    },
-  ];
-
-  const levels = ["all", "JLPT N5", "JLPT N4", "JLPT N3", "JLPT N2", "JLPT N1"];
-  const filteredCourses = selectedLevel === "all" ? courses : courses.filter((c) => c.level === selectedLevel);
+  const filteredCourses = useMemo(() => {
+    return selectedLevel === "all" ? courses : courses.filter((course) => course.level === selectedLevel);
+  }, [selectedLevel]);
 
   return (
     <DashboardLayout>
-      <div className="container mx-auto px-4 py-12">
-        {/* Header */}
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="mb-10">
-          <div className="flex items-center gap-4 mb-3">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-violet-500/20 to-purple-500/20 border border-violet-500/20">
-              <GraduationCap className="w-7 h-7 text-violet-400" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-white">Course Catalog</h1>
-              <p className="text-sm text-slate-400">Choose your path to Japanese fluency</p>
-            </div>
-          </div>
-        </motion.div>
+      <div className="mx-auto max-w-[1420px]">
+        <PageHeader
+          icon={<GraduationCap className="h-6 w-6 text-violet-600" />}
+          title="Khóa học"
+          description="Danh mục khóa học được nén gọn để bạn nhìn rõ nhiều lựa chọn cùng lúc, không còn cảm giác như landing page."
+          eyebrow="Courses"
+        />
 
-        {/* Level Filter Tabs */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15, duration: 0.5 }} className="mb-8">
+        <div className="mb-4 grid gap-3 md:grid-cols-3">
+          <MetricCard hint="Toàn bộ lộ trình hiện có" icon={<BookOpen className="h-4 w-4 text-sky-500" />} label="Khóa học" value={courses.length} />
+          <MetricCard hint="Bộ lọc đang mở" icon={<Layers className="h-4 w-4 text-violet-500" />} label="Mức JLPT" value={selectedLevel === "all" ? "Tất cả" : selectedLevel} />
+          <MetricCard hint="Có thể tiếp tục học ngay" icon={<Sparkles className="h-4 w-4 text-emerald-500" />} label="Đang theo học" value={courses.filter((course) => course.progress > 0).length} />
+        </div>
+
+        <PageSection className="mb-4" title="Bộ lọc level" description="Thanh chọn thấp, nhẹ và không đẩy content chính xuống quá nhiều.">
           <div className="flex flex-wrap gap-2">
-            {levels.map((level) => (
-              <button
-                key={level}
-                onClick={() => setSelectedLevel(level)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 border ${
-                  selectedLevel === level
-                    ? "bg-white/10 border-white/20 text-white shadow-lg"
-                    : "bg-white/[0.03] border-white/[0.06] text-slate-400 hover:bg-white/[0.06] hover:text-slate-300"
-                }`}
-              >
-                {level === "all" ? "All Levels" : level}
-              </button>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Course Grid */}
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.08 } } }}
-          className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
-        >
-          <AnimatePresence mode="popLayout">
-            {filteredCourses.map((course) => {
-              const grad = levelGradients[course.level] || levelGradients["N3-N2"];
+            {levels.map((level) => {
+              const active = selectedLevel === level;
               return (
-                <motion.div
-                  key={course.id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.35 }}
-                  whileHover={{ y: -4 }}
-                  className={`rounded-2xl border border-white/[0.06] bg-white/[0.03] overflow-hidden group hover:shadow-xl ${grad.shadow} transition-shadow`}
+                <button
+                  key={level}
+                  className={`rounded-2xl border px-4 py-2 text-sm font-medium transition ${
+                    active
+                      ? `${level === "all" ? "border-slate-200 bg-slate-100 text-slate-800" : levelTone[level]} shadow-[0_10px_20px_rgba(148,163,184,0.10)]`
+                      : "border-white/80 bg-white/90 text-slate-600 hover:bg-slate-50"
+                  }`}
+                  onClick={() => setSelectedLevel(level)}
+                  type="button"
                 >
-                  {/* Top accent gradient */}
-                  <div className={`h-1.5 bg-gradient-to-r ${grad.from} ${grad.to}`} />
-
-                  <div className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1">
-                        <h3 className="text-lg font-bold text-white mb-1 group-hover:text-cyan-300 transition-colors">{course.title}</h3>
-                        <Badge className={`text-xs border ${grad.badge}`}>{course.level}</Badge>
-                      </div>
-                      {course.progress > 0 && (
-                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-                          <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-                          <span className="text-xs font-semibold text-emerald-400">{course.progress}%</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <p className="text-sm text-slate-400 leading-relaxed mb-5">{course.description}</p>
-
-                    {/* Stats */}
-                    <div className="flex items-center gap-4 mb-5 text-xs text-slate-500">
-                      <div className="flex items-center gap-1.5">
-                        <BookOpen className="w-3.5 h-3.5" />
-                        <span>{course.lessons} lessons</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <Clock className="w-3.5 h-3.5" />
-                        <span>{course.hours}h</span>
-                      </div>
-                    </div>
-
-                    {/* Skills */}
-                    <div className="flex flex-wrap gap-1.5 mb-5">
-                      {course.skills.map((skill) => (
-                        <span key={skill} className="px-2.5 py-1 rounded-md bg-white/[0.04] border border-white/[0.06] text-xs text-slate-400">
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-
-                    {/* Progress Bar */}
-                    {course.progress > 0 && (
-                      <div className="mb-5">
-                        <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${course.progress}%` }}
-                            transition={{ duration: 1, delay: 0.3 }}
-                            className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-blue-500"
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    {/* CTA */}
-                    <Button
-                      className="w-full bg-white/[0.06] hover:bg-white/[0.1] text-white border border-white/[0.08] hover:border-white/[0.15] transition-all group/btn"
-                      variant="ghost"
-                    >
-                      {course.progress > 0 ? "Continue Learning" : "Start Course"}
-                      <ChevronRight className="w-4 h-4 ml-1 group-hover/btn:translate-x-1 transition-transform" />
-                    </Button>
-                  </div>
-                </motion.div>
+                  {level === "all" ? "Tất cả" : level}
+                </button>
               );
             })}
-          </AnimatePresence>
-        </motion.div>
+          </div>
+        </PageSection>
 
-        {filteredCourses.length === 0 && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20">
-            <Layers className="w-14 h-14 mx-auto text-slate-600 mb-4" />
-            <p className="text-slate-400 text-lg">No courses found for this level</p>
-            <p className="text-sm text-slate-500 mt-1">Try selecting a different level</p>
-          </motion.div>
-        )}
+        <PageSection title="Danh sách khóa học" description="Card thấp hơn và chia thông tin thành các cụm rõ để quét nhanh hơn.">
+          {filteredCourses.length === 0 ? (
+            <EmptyState description="Thử chọn lại level khác để mở rộng danh sách." icon={<Compass className="h-6 w-6" />} title="Không có khóa học phù hợp" />
+          ) : (
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {filteredCourses.map((course) => (
+                <div key={course.id} className="rounded-[22px] border border-white bg-white p-4 shadow-[0_10px_24px_rgba(148,163,184,0.10)]">
+                  <div className="mb-3 flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="text-lg font-semibold text-slate-900">{course.title}</h3>
+                      <Badge className={`mt-2 rounded-full border ${levelTone[course.level] || "border-slate-200 bg-slate-50 text-slate-700"}`}>
+                        {course.level}
+                      </Badge>
+                    </div>
+                    {course.progress > 0 && (
+                      <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                        {course.progress}%
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="text-sm leading-6 text-slate-600">{course.description}</p>
+
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {course.skills.map((skill) => (
+                      <span key={skill} className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-600">
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className="mt-4 flex items-center gap-4 text-sm text-slate-500">
+                    <span className="inline-flex items-center gap-1">
+                      <BookOpen className="h-4 w-4" />
+                      {course.lessons} bài
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <Clock className="h-4 w-4" />
+                      {course.hours} giờ
+                    </span>
+                  </div>
+
+                  {course.progress > 0 && (
+                    <div className="mt-4">
+                      <div className="mb-2 flex items-center justify-between text-xs text-slate-500">
+                        <span>Tiến độ</span>
+                        <span>{course.progress}%</span>
+                      </div>
+                      <div className="h-2.5 overflow-hidden rounded-full bg-slate-200">
+                        <div className="h-full rounded-full bg-[linear-gradient(90deg,#60a5fa,#22d3ee)]" style={{ width: `${course.progress}%` }} />
+                      </div>
+                    </div>
+                  )}
+
+                  <Link to={`/courses/${course.id}`}>
+                    <Button className="mt-4 w-full rounded-2xl bg-slate-900 text-white hover:bg-slate-800">
+                      {course.progress > 0 ? "Tiếp tục học" : "Xem khóa học"}
+                      <ChevronRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </Link>
+                </div>
+              ))}
+            </div>
+          )}
+        </PageSection>
       </div>
     </DashboardLayout>
   );

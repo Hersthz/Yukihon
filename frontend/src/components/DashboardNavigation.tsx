@@ -1,4 +1,4 @@
-import { type ElementType, useMemo, useState } from "react";
+import { type ElementType, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -6,6 +6,7 @@ import {
   BookMarked,
   BookOpen,
   Brain,
+  ChevronLeft,
   ChevronRight,
   Compass,
   Flame,
@@ -14,7 +15,6 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
-  MessageSquareMore,
   Search,
   Settings,
   Shield,
@@ -39,13 +39,18 @@ type NavGroup = {
   items: NavItem[];
 };
 
+interface DashboardNavigationProps {
+  collapsed: boolean;
+  onToggleCollapse: () => void;
+}
+
 const PRIMARY_GROUPS: NavGroup[] = [
   {
     label: "Khám phá",
     items: [
       { label: "Tổng quan", path: "/dashboard", icon: LayoutDashboard },
       { label: "Tra cứu", path: "/dictionary", icon: Search },
-      { label: "Dịch thuật", path: "/translation", icon: Globe2 },
+      { label: "Dịch", path: "/translation", icon: Globe2 },
       { label: "Cộng đồng", path: "/community", icon: Users },
       { label: "JLPT", path: "/jlpt-lessons", icon: GraduationCap },
     ],
@@ -55,8 +60,9 @@ const PRIMARY_GROUPS: NavGroup[] = [
     items: [
       { label: "Từ vựng", path: "/vocabulary", icon: BookOpen },
       { label: "Ngữ pháp", path: "/grammar", icon: Brain },
-      { label: "Bài kiểm tra", path: "/quiz", icon: Zap, badge: "Hot" },
+      { label: "Quiz", path: "/quiz", icon: Zap, badge: "Hot" },
       { label: "Khóa học", path: "/courses", icon: Compass },
+      { label: "Kanji", path: "/kanji-library", icon: BookOpen },
       { label: "Từ của tôi", path: "/my-words", icon: BookMarked },
     ],
   },
@@ -67,102 +73,42 @@ const SECONDARY_ITEMS: NavItem[] = [
   { label: "Cài đặt", path: "/settings", icon: Settings },
 ];
 
-const PAGE_META: Record<
-  string,
-  { title: string; description: string; eyebrow: string }
-> = {
-  "/dashboard": {
-    title: "Không gian học tập",
-    description: "Theo dõi tiến độ, quay lại bài học gần nhất và giữ nhịp học đều mỗi ngày.",
-    eyebrow: "Winter dashboard",
-  },
-  "/dictionary": {
-    title: "Tra cứu từ điển",
-    description: "Tìm từ, ví dụ và ngữ cảnh nhanh trong một giao diện yên tĩnh, dễ tập trung.",
-    eyebrow: "Lookup",
-  },
-  "/translation": {
-    title: "Dịch thuật",
-    description: "Dịch cụm từ và so sánh sắc thái diễn đạt theo ngữ cảnh.",
-    eyebrow: "Translate",
-  },
-  "/community": {
-    title: "Cộng đồng",
-    description: "Theo dõi thảo luận, hỏi đáp và các chủ đề đang được quan tâm.",
-    eyebrow: "Community",
-  },
-  "/jlpt-lessons": {
-    title: "Lộ trình JLPT",
-    description: "Học theo cấp độ với cấu trúc rõ ràng từ N5 đến N1.",
-    eyebrow: "Roadmap",
-  },
-  "/vocabulary": {
-    title: "Kho từ vựng",
-    description: "Ôn tập theo cụm chủ đề, thẻ nhớ và nhịp độ học cá nhân.",
-    eyebrow: "Vocabulary",
-  },
-  "/grammar": {
-    title: "Ngữ pháp",
-    description: "Xây nền ngữ pháp với ví dụ thực tế và trình tự học hợp lý.",
-    eyebrow: "Grammar",
-  },
-  "/quiz": {
-    title: "Bài kiểm tra",
-    description: "Kiểm tra nhanh để khóa kiến thức và nhìn rõ điểm cần ôn lại.",
-    eyebrow: "Practice",
-  },
-  "/courses": {
-    title: "Khóa học",
-    description: "Tập trung vào những khóa học dài hơi với cấu trúc rõ ràng.",
-    eyebrow: "Courses",
-  },
-  "/my-words": {
-    title: "Từ của tôi",
-    description: "Quản lý bộ sưu tập từ cá nhân, ghi chú và phân loại ôn tập.",
-    eyebrow: "Notebook",
-  },
-  "/profile": {
-    title: "Hồ sơ học tập",
-    description: "Quản lý thông tin cá nhân và theo dõi cột mốc học tập của bạn.",
-    eyebrow: "Profile",
-  },
-  "/settings": {
-    title: "Cài đặt",
-    description: "Tùy chỉnh trải nghiệm học và môi trường hiển thị phù hợp mắt nhìn.",
-    eyebrow: "Preferences",
-  },
+const PAGE_META: Record<string, string> = {
+  "/dashboard": "Không gian học tập",
+  "/dictionary": "Tra cứu",
+  "/translation": "Dịch",
+  "/community": "Cộng đồng",
+  "/jlpt-lessons": "JLPT",
+  "/vocabulary": "Từ vựng",
+  "/grammar": "Ngữ pháp",
+  "/quiz": "Quiz",
+  "/courses": "Khóa học",
+  "/kanji-library": "Kanji",
+  "/my-words": "Từ của tôi",
+  "/profile": "Hồ sơ",
+  "/settings": "Cài đặt",
 };
 
-const isItemActive = (pathname: string, itemPath: string) =>
-  pathname === itemPath || pathname.startsWith(`${itemPath}/`);
+const isItemActive = (pathname: string, itemPath: string) => pathname === itemPath || pathname.startsWith(`${itemPath}/`);
 
-const DashboardNavigation = () => {
+const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigationProps) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
 
-  const pageMeta = useMemo(
-    () =>
-      PAGE_META[location.pathname] ?? {
-        title: "Yukihon",
-        description: "Không gian học tiếng Nhật dịu mắt, rõ ràng và tập trung.",
-        eyebrow: "Workspace",
-      },
-    [location.pathname]
-  );
-
-  const user = useMemo(() => {
+  const user = (() => {
     try {
       const raw = localStorage.getItem("yukihon_user");
       return raw ? JSON.parse(raw) : null;
     } catch {
       return null;
     }
-  }, []);
+  })();
 
   const userName = user?.displayName || "Learner";
   const userInitial = userName.charAt(0).toUpperCase();
+  const pageTitle = PAGE_META[location.pathname] || "Yukihon";
 
   const handleLogout = () => {
     localStorage.removeItem("yukihon_token");
@@ -170,152 +116,136 @@ const DashboardNavigation = () => {
     navigate("/");
   };
 
-  const SidebarContent = (
-    <div className="flex h-full flex-col">
-      <div className="border-b border-white/6 px-4 pb-4 pt-4">
-        <div className="flex items-center gap-3">
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.08] shadow-[0_12px_32px_rgba(15,23,42,0.45)]">
-          <span className="text-lg font-semibold text-white">ゆ</span>
-        </div>
-        <div className="min-w-0">
-          <p className="truncate text-2xl font-semibold leading-none text-white">Yukihon</p>
-          <p className="mt-1 text-[11px] uppercase tracking-[0.2em] text-slate-500">
-            Study in silence
-          </p>
-        </div>
-      </div>
-        <div className="mt-4 flex items-center gap-3 rounded-[20px] border border-white/[0.08] bg-white/[0.04] px-3 py-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-300/80 via-cyan-200/70 to-emerald-200/60 text-sm font-semibold text-slate-900">
-            {userInitial}
+  const renderItem = (item: NavItem, compact: boolean) => {
+    const Icon = item.icon;
+    const active = isItemActive(location.pathname, item.path);
+
+    return (
+      <Link
+        key={item.path}
+        title={compact ? item.label : undefined}
+        to={item.path}
+        onClick={() => setMobileOpen(false)}
+        className={cn(
+          "group flex items-center rounded-[18px] transition-all duration-200",
+          compact ? "justify-center px-2 py-2.5" : "justify-between px-3 py-2.5",
+          active
+            ? "bg-[linear-gradient(135deg,rgba(103,232,249,0.18),rgba(59,130,246,0.12))] text-slate-950 shadow-[0_10px_24px_rgba(56,189,248,0.18)]"
+            : "text-slate-700 hover:bg-slate-900/[0.05] hover:text-slate-900"
+        )}
+      >
+        <div className={cn("flex min-w-0 items-center", compact ? "justify-center" : "gap-3")}>
+          <div
+            className={cn(
+              "flex h-9 w-9 items-center justify-center rounded-2xl transition-colors",
+              active ? "bg-white/70 text-sky-700" : "bg-white/70 text-slate-500 group-hover:text-sky-700"
+            )}
+          >
+            <Icon className="h-4 w-4" />
           </div>
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-white">{userName}</p>
-            <div className="mt-1 flex items-center gap-3 text-[11px] uppercase tracking-[0.18em] text-slate-500">
-              <span className="flex items-center gap-1.5">
-                <Flame className="h-3.5 w-3.5 text-amber-300" />
-                12
+          {!compact && <span className="truncate text-sm font-medium">{item.label}</span>}
+        </div>
+
+        {!compact && (
+          <div className="flex items-center gap-2">
+            {item.badge && (
+              <span className="rounded-full bg-amber-300/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-900">
+                {item.badge}
               </span>
-              <span className="flex items-center gap-1.5">
-                <Sparkles className="h-3.5 w-3.5 text-sky-300" />
-                87%
-              </span>
+            )}
+            <ChevronRight className={cn("h-4 w-4", active ? "text-sky-700" : "text-slate-400")} />
+          </div>
+        )}
+      </Link>
+    );
+  };
+
+  const sidebarContent = (compact: boolean) => (
+    <div className="flex h-full flex-col">
+      <div className={cn("border-b border-slate-300/60", compact ? "px-3 py-4" : "px-4 py-4")}>
+        <div className={cn("flex items-center", compact ? "justify-center" : "gap-3")}>
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#7dd3fc,#c4b5fd)] text-slate-900 shadow-[0_10px_24px_rgba(125,211,252,0.25)]">
+            <span className="text-lg font-semibold">ゆ</span>
+          </div>
+          {!compact && (
+            <div className="min-w-0">
+              <p className="truncate text-xl font-semibold text-slate-900">Yukihon</p>
+              <p className="mt-1 text-[11px] uppercase tracking-[0.18em] text-slate-500">Study in silence</p>
+            </div>
+          )}
+        </div>
+
+        {!compact && (
+          <div className="mt-4 rounded-[20px] border border-white/60 bg-white/60 px-3 py-3 shadow-[0_8px_20px_rgba(148,163,184,0.12)]">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#93c5fd,#86efac)] text-sm font-semibold text-slate-900">
+                {userInitial}
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-slate-900">{userName}</p>
+                <div className="mt-1 flex items-center gap-3 text-[11px] uppercase tracking-[0.16em] text-slate-500">
+                  <span className="flex items-center gap-1">
+                    <Flame className="h-3.5 w-3.5 text-amber-500" />
+                    12
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Sparkles className="h-3.5 w-3.5 text-sky-500" />
+                    87%
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
-      <div className="mt-5 flex-1 overflow-y-auto px-3 pb-6">
+      <div className={cn("mt-4 flex-1 overflow-y-auto pb-4", compact ? "px-2" : "px-3")}>
         {PRIMARY_GROUPS.map((group) => (
           <div key={group.label} className="mb-5">
-            <p className="px-3 pb-2 text-[11px] font-medium uppercase tracking-[0.2em] text-slate-500">
-              {group.label}
-            </p>
-            <div className="space-y-1.5">
-              {group.items.map((item) => {
-                const active = isItemActive(location.pathname, item.path);
-                const Icon = item.icon;
-
-                return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    onClick={() => setMobileOpen(false)}
-                    className={cn(
-                      "group flex items-center justify-between rounded-[18px] px-3 py-3 transition-all duration-200",
-                      active
-                        ? "border border-sky-300/[0.14] bg-white/[0.07] text-white"
-                        : "border border-transparent text-slate-300 hover:border-white/6 hover:bg-white/[0.035] hover:text-white"
-                    )}
-                  >
-                    <div className="flex min-w-0 items-center gap-3">
-                      <div
-                        className={cn(
-                          "flex h-10 w-10 items-center justify-center rounded-2xl transition-colors",
-                          active
-                            ? "bg-sky-400/18 text-sky-200"
-                            : "bg-slate-950/30 text-slate-400 group-hover:text-slate-200"
-                        )}
-                      >
-                        <Icon className="h-4 w-4" />
-                      </div>
-                      <span className="truncate text-sm font-medium">{item.label}</span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      {item.badge && (
-                        <span className="rounded-full border border-amber-300/30 bg-amber-300/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-200">
-                          {item.badge}
-                        </span>
-                      )}
-                      <ChevronRight
-                        className={cn(
-                          "h-4 w-4 transition-all",
-                          active ? "text-sky-200" : "text-slate-600 group-hover:text-slate-300"
-                        )}
-                      />
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
+            {!compact && <p className="px-3 pb-2 text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">{group.label}</p>}
+            <div className="space-y-1.5">{group.items.map((item) => renderItem(item, compact))}</div>
           </div>
         ))}
 
-          <div className="mb-4">
-            <p className="px-3 pb-2 text-[11px] font-medium uppercase tracking-[0.2em] text-slate-500">
-              Cá nhân
-            </p>
-            <div className="space-y-1.5">
-              {SECONDARY_ITEMS.map((item) => {
-                const active = isItemActive(location.pathname, item.path);
-                const Icon = item.icon;
-
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  onClick={() => setMobileOpen(false)}
-                  className={cn(
-                    "group flex items-center gap-3 rounded-[18px] px-3 py-3 text-sm font-medium transition-all",
-                    active
-                      ? "border border-sky-300/[0.14] bg-white/[0.07] text-white"
-                      : "text-slate-300 hover:bg-white/[0.035] hover:text-white"
-                  )}
-                >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950/30 text-slate-400 group-hover:text-slate-200">
-                    <Icon className="h-4 w-4" />
-                  </div>
-                  {item.label}
-                </Link>
-              );
-            })}
-
+        <div className="mb-4">
+          {!compact && <p className="px-3 pb-2 text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">Cá nhân</p>}
+          <div className="space-y-1.5">
+            {SECONDARY_ITEMS.map((item) => renderItem(item, compact))}
             {isAdmin() && (
               <Link
+                title={compact ? "Admin" : undefined}
                 to="/admin"
                 onClick={() => setMobileOpen(false)}
-                className="group flex items-center gap-3 rounded-[18px] px-3 py-3 text-sm font-medium text-violet-200 transition-all hover:bg-violet-400/10"
+                className={cn(
+                  "group flex items-center rounded-[18px] text-violet-700 transition-all duration-200 hover:bg-violet-500/10",
+                  compact ? "justify-center px-2 py-2.5" : "gap-3 px-3 py-2.5"
+                )}
               >
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-200">
+                <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-700">
                   <Shield className="h-4 w-4" />
                 </div>
-                Admin panel
+                {!compact && <span className="text-sm font-medium">Admin panel</span>}
               </Link>
             )}
           </div>
         </div>
       </div>
 
-      <div className="border-t border-white/6 px-3 py-4">
+      <div className={cn("border-t border-slate-300/60 py-4", compact ? "px-2" : "px-3")}>
         <button
+          title={compact ? "Đăng xuất" : undefined}
+          type="button"
           onClick={handleLogout}
-          className="flex w-full items-center justify-between rounded-[18px] border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-sm font-medium text-slate-300 transition-all hover:border-red-300/20 hover:bg-red-400/[0.08] hover:text-red-100"
+          className={cn(
+            "flex w-full items-center rounded-[18px] border border-white/60 bg-white/60 text-sm font-medium text-slate-700 transition hover:border-red-300/40 hover:bg-red-50 hover:text-red-600",
+            compact ? "justify-center px-2 py-2.5" : "justify-between px-4 py-3"
+          )}
         >
-          <span className="flex items-center gap-3">
+          <span className={cn("flex items-center", compact ? "justify-center" : "gap-3")}>
             <LogOut className="h-4 w-4" />
-            Đăng xuất
+            {!compact && "Đăng xuất"}
           </span>
-          <ChevronRight className="h-4 w-4" />
+          {!compact && <ChevronRight className="h-4 w-4" />}
         </button>
       </div>
     </div>
@@ -323,49 +253,66 @@ const DashboardNavigation = () => {
 
   return (
     <>
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[288px] border-r border-white/[0.06] bg-[#09111d]/[0.78] backdrop-blur-xl lg:block">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(125,211,252,0.07),transparent_34%),radial-gradient(circle_at_bottom_left,rgba(226,232,240,0.035),transparent_24%)]" />
-        <div className="relative h-full">{SidebarContent}</div>
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-40 hidden border-r border-white/50 bg-[linear-gradient(180deg,rgba(248,250,252,0.90),rgba(237,242,255,0.88))] backdrop-blur-2xl lg:block",
+          collapsed ? "w-[80px]" : "w-[224px]"
+        )}
+      >
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(125,211,252,0.22),transparent_34%),radial-gradient(circle_at_bottom_left,rgba(196,181,253,0.18),transparent_26%)]" />
+        <div className="relative h-full">{sidebarContent(collapsed)}</div>
       </aside>
 
-      <div className="fixed left-0 right-0 top-0 z-50 border-b border-white/6 bg-[#08101b]/70 backdrop-blur-xl lg:left-[288px]">
-        <div className="flex h-[72px] items-center justify-between gap-6 px-5 sm:px-7 lg:px-8 xl:px-10">
+      <div
+        className={cn(
+          "fixed right-0 top-0 z-50 border-b border-white/55 bg-[linear-gradient(180deg,rgba(247,250,255,0.82),rgba(240,245,255,0.76))] backdrop-blur-2xl",
+          collapsed ? "left-[80px]" : "left-[224px]"
+        )}
+      >
+        <div className="flex h-[64px] items-center justify-between gap-4 px-4 sm:px-5 lg:px-6">
           <div className="flex items-center gap-3">
             <button
-              type="button"
-              onClick={() => setMobileOpen(true)}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/[0.08] bg-white/[0.04] text-white transition hover:bg-white/[0.08] lg:hidden"
               aria-label="Open navigation"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/60 bg-white/70 text-slate-700 lg:hidden"
+              onClick={() => setMobileOpen(true)}
+              type="button"
             >
               <Menu className="h-5 w-5" />
             </button>
 
-            <div className="min-w-0">
-              <h1 className="text-xl font-semibold text-white sm:text-[2rem]">{pageMeta.title}</h1>
+            <button
+              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              className="hidden h-10 w-10 items-center justify-center rounded-2xl border border-white/60 bg-white/70 text-slate-700 transition hover:bg-white lg:inline-flex"
+              onClick={onToggleCollapse}
+              type="button"
+            >
+              {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+            </button>
+
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Winter dashboard</p>
+              <h1 className="text-lg font-semibold text-slate-900">{pageTitle}</h1>
             </div>
           </div>
 
-          <div className="hidden min-w-0 flex-1 items-center justify-end gap-3 md:flex">
+          <div className="flex items-center gap-3">
             <button
-              type="button"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/[0.08] bg-white/[0.04] text-slate-300 transition hover:bg-white/[0.08] hover:text-white"
               aria-label="Notifications"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/60 bg-white/70 text-slate-700 transition hover:bg-white"
+              type="button"
             >
               <Bell className="h-4 w-4" />
             </button>
 
-            <button
-              type="button"
-              className="inline-flex h-11 items-center gap-3 rounded-[24px] border border-white/[0.08] bg-white/[0.04] px-3 py-2.5 text-left transition hover:bg-white/[0.08]"
-            >
-              <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-300/80 via-cyan-200/70 to-emerald-200/60 text-sm font-semibold text-slate-900">
+            <div className="hidden items-center gap-3 rounded-[20px] border border-white/70 bg-white/75 px-3 py-2 shadow-[0_10px_24px_rgba(148,163,184,0.10)] sm:flex">
+              <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#a5f3fc,#bfdbfe)] text-sm font-semibold text-slate-900">
                 {userInitial}
               </div>
-              <div className="hidden xl:block">
-                <p className="text-sm font-medium text-white">{userName}</p>
-                <p className="text-xs text-slate-500">Màn đêm dịu mắt</p>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-slate-900">{userName}</p>
+                <p className="text-xs text-slate-500">Màn đêm dịu mát</p>
               </div>
-            </button>
+            </div>
           </div>
         </div>
       </div>
@@ -374,37 +321,29 @@ const DashboardNavigation = () => {
         {mobileOpen && (
           <>
             <motion.button
-              type="button"
-              initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
+              className="fixed inset-0 z-40 bg-slate-950/20 backdrop-blur-sm lg:hidden"
               exit={{ opacity: 0 }}
+              initial={{ opacity: 0 }}
               onClick={() => setMobileOpen(false)}
-              className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm lg:hidden"
-              aria-label="Close navigation"
+              type="button"
             />
-
             <motion.aside
-              initial={{ x: -320 }}
               animate={{ x: 0 }}
-              exit={{ x: -320 }}
-              transition={{ type: "spring", damping: 28, stiffness: 260 }}
-              className="fixed inset-y-0 left-0 z-[60] w-[88vw] max-w-[320px] border-r border-white/[0.08] bg-[#09111d]/[0.96] backdrop-blur-2xl lg:hidden"
+              className="fixed inset-y-0 left-0 z-50 w-[272px] border-r border-white/60 bg-[linear-gradient(180deg,rgba(248,250,252,0.97),rgba(237,242,255,0.95))] backdrop-blur-2xl lg:hidden"
+              exit={{ x: "-100%" }}
+              initial={{ x: "-100%" }}
+              transition={{ type: "spring", stiffness: 260, damping: 28 }}
             >
-              <div className="flex items-center justify-between border-b border-white/6 px-4 py-4">
-                <div>
-                  <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Navigation</p>
-                  <p className="text-lg font-semibold text-white">Yukihon</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setMobileOpen(false)}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/[0.08] bg-white/[0.04] text-white"
-                  aria-label="Close navigation"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-              {SidebarContent}
+              <button
+                aria-label="Close navigation"
+                className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/70 bg-white/80 text-slate-700"
+                onClick={() => setMobileOpen(false)}
+                type="button"
+              >
+                <X className="h-4 w-4" />
+              </button>
+              {sidebarContent(false)}
             </motion.aside>
           </>
         )}

@@ -1,49 +1,45 @@
-import { useState, useCallback, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useCallback, useEffect, useState, type KeyboardEvent } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import {
-  Languages, ArrowRightLeft, Copy, Check, Volume2,
-  History, Bookmark, BookmarkCheck, Trash2, ChevronDown,
-  ChevronUp, Clock, X, AlertCircle,
+  AlertCircle,
+  ArrowRightLeft,
+  Bookmark,
+  BookmarkCheck,
+  Check,
+  Clock,
+  Copy,
+  History,
+  Languages,
+  Trash2,
+  Volume2,
+  X,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import apiClient, { TranslationHistoryItem } from "@/lib/apiClient";
 
 const LANGUAGES = [
-  { code: "vi", label: "Tiếng Việt 🇻🇳", flag: "🇻🇳" },
-  { code: "ja", label: "日本語 🇯🇵", flag: "🇯🇵" },
-  { code: "en", label: "English 🇺🇸", flag: "🇺🇸" },
-  { code: "ko", label: "한국어 🇰🇷", flag: "🇰🇷" },
-  { code: "zh", label: "中文 🇨🇳", flag: "🇨🇳" },
+  { code: "vi", label: "Tiếng Việt" },
+  { code: "ja", label: "日本語" },
+  { code: "en", label: "English" },
+  { code: "ko", label: "한국어" },
+  { code: "zh", label: "中文" },
 ];
 
-// Quick phrase suggestions for learning
 const QUICK_PHRASES = [
   { ja: "おはようございます", vi: "Chào buổi sáng", romaji: "Ohayou gozaimasu" },
   { ja: "ありがとうございます", vi: "Cảm ơn rất nhiều", romaji: "Arigatou gozaimasu" },
   { ja: "すみません", vi: "Xin lỗi / Cho phép hỏi", romaji: "Sumimasen" },
-  { ja: "いただきます", vi: "Tôi xin phép ăn", romaji: "Itadakimasu" },
-  { ja: "お願いします", vi: "Làm ơn / Xin vui lòng", romaji: "Onegaishimasu" },
   { ja: "大丈夫です", vi: "Không sao đâu", romaji: "Daijoubu desu" },
-  { ja: "頑張ってください", vi: "Hãy cố gắng lên", romaji: "Ganbatte kudasai" },
-  { ja: "お疲れ様です", vi: "Bạn vất vả rồi", romaji: "Otsukaresama desu" },
-];
-
-const GRAMMAR_EXAMPLES = [
-  { pattern: "〜ている", meaning: "Đang làm gì đó / Trạng thái", example: "食べている → Đang ăn", level: "N5" },
-  { pattern: "〜たい", meaning: "Muốn làm gì", example: "行きたい → Muốn đi", level: "N5" },
-  { pattern: "〜てもいい", meaning: "Có thể / Được phép", example: "見てもいい → Có thể xem", level: "N4" },
-  { pattern: "〜なければならない", meaning: "Phải / Bắt buộc", example: "勉強しなければならない → Phải học", level: "N4" },
-  { pattern: "〜ようにする", meaning: "Cố gắng để...", example: "早く寝るようにする → Cố ngủ sớm", level: "N3" },
-  { pattern: "〜わけがない", meaning: "Không thể nào / Không có lý do", example: "分かるわけがない → Không thể hiểu được", level: "N2" },
 ];
 
 const MAX_CHARS = 5000;
 
-const langLabel = (code: string) => LANGUAGES.find((l) => l.code === code)?.flag ?? code;
+const langLabel = (code: string) => LANGUAGES.find((item) => item.code === code)?.label || code;
 
 const timeAgo = (dateStr: string) => {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -64,8 +60,6 @@ const Translation = () => {
   const [translatedText, setTranslatedText] = useState("");
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
-
-  // History & bookmark state
   const [showHistory, setShowHistory] = useState(false);
   const [historyTab, setHistoryTab] = useState<"all" | "bookmarks">("all");
   const [history, setHistory] = useState<TranslationHistoryItem[]>([]);
@@ -75,72 +69,77 @@ const Translation = () => {
   const [historyTotalPages, setHistoryTotalPages] = useState(0);
   const [stats, setStats] = useState<{ totalTranslations: number; totalBookmarks: number } | null>(null);
 
-  // ─── Stats (declared first so handleTranslate can reference) ────
   const loadStats = useCallback(async () => {
     try {
-      const res = await apiClient.translation.getStats();
-      setStats(res);
+      const response = await apiClient.translation.getStats();
+      setStats(response);
     } catch {
-      /* silent */
+      // silent
     }
   }, []);
 
-  // ─── History ──────────────────────────────────────────────────────
-  const loadHistory = useCallback(async (page = 0) => {
-    setHistoryLoading(true);
-    try {
-      const res = await apiClient.translation.getHistory(page, 10);
-      setHistory(res.content);
-      setHistoryPage(res.number);
-      setHistoryTotalPages(res.totalPages);
-    } catch {
-      toast({ title: "Lỗi", description: "Không tải được lịch sử", variant: "destructive" });
-    } finally {
-      setHistoryLoading(false);
-    }
-  }, [toast]);
+  const loadHistory = useCallback(
+    async (page = 0) => {
+      setHistoryLoading(true);
+      try {
+        const response = await apiClient.translation.getHistory(page, 10);
+        setHistory(response.content);
+        setHistoryPage(response.number);
+        setHistoryTotalPages(response.totalPages);
+      } catch {
+        toast({ title: "Không tải được lịch sử", description: "Vui lòng thử lại.", variant: "destructive" });
+      } finally {
+        setHistoryLoading(false);
+      }
+    },
+    [toast]
+  );
 
   const loadBookmarks = useCallback(async () => {
     try {
-      const res = await apiClient.translation.getBookmarks();
-      setBookmarks(res);
+      const response = await apiClient.translation.getBookmarks();
+      setBookmarks(response);
     } catch {
-      /* silent */
+      // silent
     }
   }, []);
 
-  // ─── Translate ───────────────────────────────────────────────────
   const handleTranslate = useCallback(async () => {
     if (!sourceText.trim()) return;
     if (sourceText.length > MAX_CHARS) {
-      toast({ title: "Quá dài", description: `Tối đa ${MAX_CHARS} ký tự`, variant: "destructive" });
+      toast({ title: "Văn bản quá dài", description: `Tối đa ${MAX_CHARS} ký tự.`, variant: "destructive" });
       return;
     }
     if (sourceLang === targetLang) {
-      toast({ title: "Lỗi", description: "Ngôn ngữ nguồn và đích phải khác nhau", variant: "destructive" });
+      toast({ title: "Chọn hai ngôn ngữ khác nhau", description: "Nguồn và đích không thể trùng nhau.", variant: "destructive" });
       return;
     }
 
     setLoading(true);
     try {
-      const res = await apiClient.translation.translate({
+      const response = await apiClient.translation.translate({
         sourceLang,
         targetLang,
         text: sourceText.trim(),
       });
-      setTranslatedText(res.translatedText);
-      // Refresh stats
+      setTranslatedText(response.translatedText);
       loadStats();
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Lỗi dịch";
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Không thể dịch lúc này.";
       setTranslatedText("");
-      toast({ title: "Lỗi dịch", description: msg, variant: "destructive" });
+      toast({ title: "Dịch chưa thành công", description: message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
-  }, [sourceText, sourceLang, targetLang, toast, loadStats]);
+  }, [loadStats, sourceLang, sourceText, targetLang, toast]);
 
-  // ─── Swap ────────────────────────────────────────────────────────
+  const handleKeyDown = (event: KeyboardEvent) => {
+    if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+      event.preventDefault();
+      handleTranslate();
+    }
+  };
+
   const swapLanguages = () => {
     setSourceLang(targetLang);
     setTargetLang(sourceLang);
@@ -148,11 +147,10 @@ const Translation = () => {
     setTranslatedText(sourceText);
   };
 
-  // ─── Copy ────────────────────────────────────────────────────────
   const copyToClipboard = async () => {
     await navigator.clipboard.writeText(translatedText);
     setCopied(true);
-    toast({ title: "Đã copy!", description: "Bản dịch đã được sao chép" });
+    toast({ title: "Đã sao chép", description: "Bản dịch đã vào clipboard." });
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -161,34 +159,36 @@ const Translation = () => {
   }, [loadStats]);
 
   useEffect(() => {
-    if (showHistory) {
-      if (historyTab === "all") loadHistory(0);
-      else loadBookmarks();
+    if (!showHistory) return;
+    if (historyTab === "all") {
+      loadHistory(0);
+    } else {
+      loadBookmarks();
     }
-  }, [showHistory, historyTab, loadHistory, loadBookmarks]);
+  }, [historyTab, loadBookmarks, loadHistory, showHistory]);
 
   const handleToggleBookmark = async (id: number) => {
     try {
       const updated = await apiClient.translation.toggleBookmark(id);
-      setHistory((prev) => prev.map((h) => (h.id === id ? updated : h)));
+      setHistory((prev) => prev.map((item) => (item.id === id ? updated : item)));
       setBookmarks((prev) => {
-        if (updated.bookmarked) return [updated, ...prev.filter((b) => b.id !== id)];
-        return prev.filter((b) => b.id !== id);
+        if (updated.bookmarked) return [updated, ...prev.filter((item) => item.id !== id)];
+        return prev.filter((item) => item.id !== id);
       });
       loadStats();
     } catch {
-      toast({ title: "Lỗi", description: "Không cập nhật được bookmark", variant: "destructive" });
+      toast({ title: "Không cập nhật được bookmark", description: "Vui lòng thử lại.", variant: "destructive" });
     }
   };
 
   const handleDeleteHistory = async (id: number) => {
     try {
       await apiClient.translation.deleteHistory(id);
-      setHistory((prev) => prev.filter((h) => h.id !== id));
-      setBookmarks((prev) => prev.filter((b) => b.id !== id));
+      setHistory((prev) => prev.filter((item) => item.id !== id));
+      setBookmarks((prev) => prev.filter((item) => item.id !== id));
       loadStats();
     } catch {
-      toast({ title: "Lỗi", description: "Không xoá được", variant: "destructive" });
+      toast({ title: "Không xoá được mục này", description: "Vui lòng thử lại.", variant: "destructive" });
     }
   };
 
@@ -198,9 +198,9 @@ const Translation = () => {
       setHistory([]);
       setBookmarks([]);
       loadStats();
-      toast({ title: "Đã xoá", description: "Toàn bộ lịch sử dịch đã được xoá" });
+      toast({ title: "Đã xoá lịch sử", description: "Lịch sử dịch đã được làm trống." });
     } catch {
-      toast({ title: "Lỗi", description: "Không xoá được", variant: "destructive" });
+      toast({ title: "Không thể xoá lịch sử", description: "Vui lòng thử lại.", variant: "destructive" });
     }
   };
 
@@ -212,328 +212,263 @@ const Translation = () => {
     setShowHistory(false);
   };
 
-  // ─── Keyboard shortcut (Ctrl+Enter) ──────────────────────────────
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
-      e.preventDefault();
-      handleTranslate();
-    }
-  };
-
-  const displayItems = historyTab === "all" ? history : bookmarks;
+  const visibleHistory = historyTab === "all" ? history : bookmarks;
 
   return (
     <DashboardLayout>
-      <div className="container mx-auto px-4 py-12 max-w-5xl">
-        {/* Header */}
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/20">
-                <Languages className="w-7 h-7 text-purple-400" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold text-white">Dịch thuật 翻訳</h1>
-                <p className="text-sm text-slate-400">Dịch Việt ↔ Nhật ↔ Anh ↔ Hàn ↔ Trung</p>
-              </div>
-            </div>
-
-            {/* Stats + History toggle */}
-            <div className="flex items-center gap-3">
-              {stats && (
-                <div className="flex gap-3 text-xs text-slate-400">
-                  <span className="flex items-center gap-1">
-                    <Languages className="w-3.5 h-3.5" /> {stats.totalTranslations} bản dịch
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Bookmark className="w-3.5 h-3.5" /> {stats.totalBookmarks} đã lưu
-                  </span>
-                </div>
-              )}
+      <div className="mx-auto max-w-[1440px]">
+        <PageHeader
+          icon={<Languages className="h-6 w-6 text-violet-600" />}
+          title="Dịch"
+          description="Bố cục thấp hơn để bạn vừa dịch, vừa nhìn lịch sử và cụm mẫu mà không bị phải cuộn quá nhiều."
+          eyebrow="Translation"
+          action={
+            <>
               <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowHistory(!showHistory)}
-                className={`gap-2 text-slate-400 hover:text-white ${showHistory ? "bg-white/[0.06] text-white" : ""}`}
+                className="rounded-2xl border-white/80 bg-white/90 text-slate-700 hover:bg-white"
+                onClick={() => setShowHistory((prev) => !prev)}
+                variant="outline"
               >
-                <History className="w-4 h-4" />
-                Lịch sử
-                {showHistory ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                <History className="mr-2 h-4 w-4" />
+                {showHistory ? "Ẩn lịch sử" : "Mở lịch sử"}
               </Button>
-            </div>
-          </div>
-        </motion.div>
+              <Button className="rounded-2xl bg-violet-500 text-white hover:bg-violet-400" onClick={handleTranslate}>
+                <Languages className="mr-2 h-4 w-4" />
+                Dịch ngay
+              </Button>
+            </>
+          }
+        />
 
-        {/* Translation Box */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-          <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] overflow-hidden mb-8">
-            <div className="h-0.5 bg-gradient-to-r from-purple-500/40 to-pink-500/40" />
-            <div className="p-6">
-              {/* Language Selectors */}
-              <div className="flex items-center gap-4 mb-5">
-                <Select value={sourceLang} onValueChange={setSourceLang}>
-                  <SelectTrigger className="w-[180px] bg-white/[0.03] border-white/[0.06] text-white">
+        <div className="mb-4 grid gap-3 md:grid-cols-3">
+          <MetricCard hint="Tổng số lần đã dịch" icon={<Languages className="h-4 w-4 text-sky-500" />} label="Lượt dịch" value={stats?.totalTranslations ?? "-"} />
+          <MetricCard hint="Bookmark đang lưu" icon={<BookmarkCheck className="h-4 w-4 text-amber-500" />} label="Đã lưu" value={stats?.totalBookmarks ?? "-"} />
+          <MetricCard hint="Phím tắt Ctrl/Cmd + Enter" icon={<Clock className="h-4 w-4 text-violet-500" />} label="Tốc độ" value="Nhanh" />
+        </div>
+
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
+          <div className="space-y-4">
+            <PageSection title="Khung dịch" description="Hai ô dịch đặt ngang để dễ so sánh và tránh mất nhịp đọc.">
+              <div className="mb-3 flex flex-wrap items-center gap-3">
+                <Select onValueChange={setSourceLang} value={sourceLang}>
+                  <SelectTrigger className="h-11 w-[180px] rounded-2xl border-white/80 bg-white/90 text-slate-700">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {LANGUAGES.map((l) => (
-                      <SelectItem key={l.code} value={l.code}>{l.label}</SelectItem>
+                    {LANGUAGES.map((language) => (
+                      <SelectItem key={language.code} value={language.code}>
+                        {language.label}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
 
-                <Button variant="ghost" size="icon" onClick={swapLanguages} className="rounded-full text-slate-400 hover:text-white hover:bg-white/[0.06]">
-                  <ArrowRightLeft className="w-5 h-5" />
+                <Button className="rounded-2xl border-slate-200 bg-white text-slate-700" onClick={swapLanguages} size="icon" variant="outline">
+                  <ArrowRightLeft className="h-4 w-4" />
                 </Button>
 
-                <Select value={targetLang} onValueChange={setTargetLang}>
-                  <SelectTrigger className="w-[180px] bg-white/[0.03] border-white/[0.06] text-white">
+                <Select onValueChange={setTargetLang} value={targetLang}>
+                  <SelectTrigger className="h-11 w-[180px] rounded-2xl border-white/80 bg-white/90 text-slate-700">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {LANGUAGES.map((l) => (
-                      <SelectItem key={l.code} value={l.code}>{l.label}</SelectItem>
+                    {LANGUAGES.map((language) => (
+                      <SelectItem key={language.code} value={language.code}>
+                        {language.label}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
 
-              {/* Text Areas */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
+              <div className="grid gap-3 lg:grid-cols-2">
+                <div className="rounded-[22px] border border-slate-200 bg-white p-3">
                   <Textarea
-                    placeholder="Nhập văn bản cần dịch... (Ctrl+Enter để dịch)"
-                    value={sourceText}
+                    className="min-h-[220px] resize-none rounded-[18px] border-none bg-slate-50 text-base text-slate-900 shadow-none placeholder:text-slate-400 focus-visible:ring-0"
+                    maxLength={MAX_CHARS}
                     onChange={(e) => setSourceText(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    className="min-h-[200px] bg-white/[0.03] border-white/[0.06] text-lg text-white placeholder:text-slate-500 resize-none focus:border-purple-500/40"
-                    maxLength={MAX_CHARS}
+                    placeholder="Nhập văn bản cần dịch..."
+                    value={sourceText}
                   />
-                  <div className="flex justify-between mt-1">
-                    <span className="text-xs text-slate-500">{sourceText.length} / {MAX_CHARS} ký tự</span>
+                  <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
+                    <span>{sourceText.length} / {MAX_CHARS} ký tự</span>
                     {sourceText.length > MAX_CHARS * 0.9 && (
-                      <span className="text-xs text-amber-400 flex items-center gap-1">
-                        <AlertCircle className="w-3 h-3" /> Gần đầy
+                      <span className="inline-flex items-center gap-1 text-amber-600">
+                        <AlertCircle className="h-3.5 w-3.5" />
+                        Sắp chạm giới hạn
                       </span>
                     )}
                   </div>
                 </div>
-                <div className="relative">
+
+                <div className="relative rounded-[22px] border border-slate-200 bg-white p-3">
                   <Textarea
-                    placeholder="Bản dịch sẽ hiện ở đây..."
-                    value={translatedText}
+                    className="min-h-[220px] resize-none rounded-[18px] border-none bg-sky-50/65 text-base text-slate-900 shadow-none placeholder:text-slate-400 focus-visible:ring-0"
+                    placeholder="Bản dịch sẽ hiển thị ở đây..."
                     readOnly
-                    className="min-h-[200px] bg-white/[0.02] border-white/[0.04] text-lg text-white placeholder:text-slate-600 resize-none"
+                    value={translatedText}
                   />
                   {translatedText && (
-                    <Button variant="ghost" size="sm" className="absolute top-2 right-2 text-slate-400 hover:text-white" onClick={copyToClipboard}>
-                      {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                    <Button className="absolute right-5 top-5 rounded-xl" onClick={copyToClipboard} size="icon" variant="ghost">
+                      {copied ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4 text-slate-500" />}
                     </Button>
                   )}
                 </div>
               </div>
+            </PageSection>
 
-              <Button
-                onClick={handleTranslate}
-                disabled={loading || !sourceText.trim() || sourceLang === targetLang}
-                className="w-full mt-5 h-12 text-lg bg-white/[0.06] hover:bg-purple-500/15 text-white border border-white/[0.08] hover:border-purple-500/30 transition-all"
-              >
-                {loading ? (
-                  <div className="relative w-5 h-5">
-                    <motion.div className="absolute inset-0 rounded-full border-2 border-transparent border-t-white" animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} />
-                  </div>
-                ) : (
-                  <>
-                    <Languages className="w-5 h-5 mr-2" />
-                    Dịch (Ctrl+Enter)
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* History Panel */}
-        <AnimatePresence>
-          {showHistory && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="overflow-hidden mb-8"
-            >
-              <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] overflow-hidden">
-                <div className="h-0.5 bg-gradient-to-r from-emerald-500/40 to-teal-500/40" />
-                <div className="p-6">
-                  {/* Tabs + Clear */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setHistoryTab("all")}
-                        className={`gap-2 ${historyTab === "all" ? "bg-white/[0.06] text-white" : "text-slate-400"}`}
-                      >
-                        <Clock className="w-4 h-4" /> Tất cả
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setHistoryTab("bookmarks")}
-                        className={`gap-2 ${historyTab === "bookmarks" ? "bg-white/[0.06] text-white" : "text-slate-400"}`}
-                      >
-                        <BookmarkCheck className="w-4 h-4" /> Đã lưu
-                      </Button>
-                    </div>
-                    {history.length > 0 && historyTab === "all" && (
-                      <Button variant="ghost" size="sm" onClick={handleClearAll} className="text-red-400 hover:text-red-300 gap-1">
-                        <Trash2 className="w-3.5 h-3.5" /> Xoá tất cả
-                      </Button>
-                    )}
-                  </div>
-
-                  {/* Items */}
-                  {historyLoading ? (
-                    <div className="text-center py-8 text-slate-500">Đang tải...</div>
-                  ) : displayItems.length === 0 ? (
-                    <div className="text-center py-8 text-slate-500">
-                      {historyTab === "all" ? "Chưa có lịch sử dịch" : "Chưa có bản dịch nào được lưu"}
-                    </div>
-                  ) : (
-                    <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
-                      {displayItems.map((item) => (
-                        <motion.div
-                          key={item.id}
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:border-emerald-500/20 hover:bg-white/[0.04] transition-all group cursor-pointer"
-                          onClick={() => fillFromHistory(item)}
-                        >
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
-                                <span>{langLabel(item.sourceLang)} → {langLabel(item.targetLang)}</span>
-                                <span>•</span>
-                                <span>{timeAgo(item.createdAt)}</span>
-                              </div>
-                              <p className="text-sm text-white truncate">{item.sourceText}</p>
-                              <p className="text-sm text-cyan-400 truncate mt-0.5">{item.translatedText}</p>
-                            </div>
-                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 text-slate-400 hover:text-amber-400"
-                                onClick={() => handleToggleBookmark(item.id)}
-                              >
-                                {item.bookmarked ? (
-                                  <BookmarkCheck className="w-4 h-4 text-amber-400" />
-                                ) : (
-                                  <Bookmark className="w-4 h-4" />
-                                )}
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 text-slate-400 hover:text-red-400"
-                                onClick={() => handleDeleteHistory(item.id)}
-                              >
-                                <X className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Pagination */}
-                  {historyTab === "all" && historyTotalPages > 1 && (
-                    <div className="flex justify-center gap-2 mt-4">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        disabled={historyPage === 0}
-                        onClick={() => loadHistory(historyPage - 1)}
-                        className="text-slate-400"
-                      >
-                        ← Trước
-                      </Button>
-                      <span className="text-xs text-slate-500 self-center">
-                        {historyPage + 1} / {historyTotalPages}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        disabled={historyPage >= historyTotalPages - 1}
-                        onClick={() => loadHistory(historyPage + 1)}
-                        className="text-slate-400"
-                      >
-                        Sau →
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Quick Phrases */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-          <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] overflow-hidden mb-8">
-            <div className="h-0.5 bg-gradient-to-r from-cyan-500/40 to-blue-500/40" />
-            <div className="p-6">
-              <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                <Volume2 className="w-5 h-5 text-cyan-400" />
-                Cụm từ thông dụng
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {QUICK_PHRASES.map((phrase, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 + index * 0.04 }}
-                    className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:border-cyan-500/20 hover:bg-white/[0.04] transition-all cursor-pointer"
+            <PageSection title="Cụm mẫu thường dùng" description="Giữ sẵn vài cụm ngắn để dịch nhanh và học bằng ví dụ thật.">
+              <div className="grid gap-3 md:grid-cols-2">
+                {QUICK_PHRASES.map((phrase) => (
+                  <button
+                    key={phrase.ja}
+                    className="rounded-[20px] border border-slate-200 bg-white p-4 text-left transition hover:-translate-y-1 hover:bg-sky-50/60"
                     onClick={() => {
                       setSourceText(phrase.ja);
                       setSourceLang("ja");
                       setTargetLang("vi");
                       setTranslatedText(phrase.vi);
                     }}
+                    type="button"
                   >
-                    <p className="text-base font-semibold text-white">{phrase.ja}</p>
-                    <p className="text-sm text-cyan-400 mt-0.5">{phrase.romaji}</p>
-                    <p className="text-sm text-slate-500 mt-0.5">{phrase.vi}</p>
-                  </motion.div>
+                    <p className="text-base font-semibold text-slate-900">{phrase.ja}</p>
+                    <p className="mt-1 text-sm text-violet-600">{phrase.romaji}</p>
+                    <p className="mt-2 text-sm text-slate-600">{phrase.vi}</p>
+                  </button>
                 ))}
               </div>
-            </div>
+            </PageSection>
           </div>
-        </motion.div>
 
-        {/* Grammar Cheat Sheet */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-          <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] overflow-hidden">
-            <div className="h-0.5 bg-gradient-to-r from-amber-500/40 to-yellow-500/40" />
-            <div className="p-6">
-              <h3 className="text-lg font-bold text-white mb-4">Mẫu ngữ pháp phổ biến</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {GRAMMAR_EXAMPLES.map((g, index) => (
-                  <div key={index} className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.04]">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-base font-bold text-purple-400">{g.pattern}</span>
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-400 border border-purple-500/20">{g.level}</span>
+          <div className="space-y-4">
+            <AnimatePresence>
+              {showHistory && (
+                <motion.div animate={{ opacity: 1, y: 0 }} initial={{ opacity: 0, y: 10 }}>
+                  <PageSection
+                    action={
+                      historyTab === "all" && history.length > 0 ? (
+                        <Button className="rounded-xl text-rose-600 hover:text-rose-700" onClick={handleClearAll} size="sm" variant="ghost">
+                          <Trash2 className="mr-1 h-4 w-4" />
+                          Xoá tất cả
+                        </Button>
+                      ) : null
+                    }
+                    title="Lịch sử dịch"
+                    description="Ẩn/hiện theo nhu cầu để dashboard dịch luôn gọn."
+                  >
+                    <div className="mb-3 flex gap-2">
+                      <Button
+                        className={historyTab === "all" ? "rounded-xl bg-slate-900 text-white hover:bg-slate-800" : "rounded-xl border-slate-200 bg-white text-slate-600"}
+                        onClick={() => setHistoryTab("all")}
+                        size="sm"
+                        variant={historyTab === "all" ? "default" : "outline"}
+                      >
+                        <Clock className="mr-1 h-4 w-4" />
+                        Tất cả
+                      </Button>
+                      <Button
+                        className={historyTab === "bookmarks" ? "rounded-xl bg-amber-500 text-white hover:bg-amber-400" : "rounded-xl border-slate-200 bg-white text-slate-600"}
+                        onClick={() => setHistoryTab("bookmarks")}
+                        size="sm"
+                        variant={historyTab === "bookmarks" ? "default" : "outline"}
+                      >
+                        <BookmarkCheck className="mr-1 h-4 w-4" />
+                        Đã lưu
+                      </Button>
                     </div>
-                    <p className="text-sm text-white">{g.meaning}</p>
-                    <p className="text-xs text-slate-500 mt-1">{g.example}</p>
-                  </div>
-                ))}
+
+                    {historyLoading ? (
+                      <div className="flex items-center justify-center py-14">
+                        <div className="h-10 w-10 rounded-full border-4 border-emerald-100 border-t-emerald-500 animate-spin" />
+                      </div>
+                    ) : visibleHistory.length === 0 ? (
+                      <EmptyState
+                        description="Lịch sử sẽ hiển thị lại ngay khi bạn thực hiện hoặc lưu bản dịch mới."
+                        icon={<History className="h-6 w-6" />}
+                        title="Chưa có dữ liệu"
+                      />
+                    ) : (
+                      <div className="space-y-2">
+                        {visibleHistory.map((item) => (
+                          <button
+                            key={item.id}
+                            className="w-full rounded-[18px] border border-slate-200 bg-white p-3 text-left transition hover:bg-slate-50"
+                            onClick={() => fillFromHistory(item)}
+                            type="button"
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0 flex-1">
+                                <div className="mb-1 flex items-center gap-2 text-xs text-slate-500">
+                                  <span>
+                                    {langLabel(item.sourceLang)} → {langLabel(item.targetLang)}
+                                  </span>
+                                  <span>•</span>
+                                  <span>{timeAgo(item.createdAt)}</span>
+                                </div>
+                                <p className="truncate text-sm text-slate-800">{item.sourceText}</p>
+                                <p className="mt-1 truncate text-sm text-sky-700">{item.translatedText}</p>
+                              </div>
+                              <div className="flex shrink-0 items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                                <Button className="h-8 w-8 rounded-xl" onClick={() => handleToggleBookmark(item.id)} size="icon" variant="ghost">
+                                  {item.bookmarked ? <BookmarkCheck className="h-4 w-4 text-amber-500" /> : <Bookmark className="h-4 w-4 text-slate-400" />}
+                                </Button>
+                                <Button className="h-8 w-8 rounded-xl" onClick={() => handleDeleteHistory(item.id)} size="icon" variant="ghost">
+                                  <X className="h-4 w-4 text-rose-500" />
+                                </Button>
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {historyTab === "all" && historyTotalPages > 1 && (
+                      <div className="mt-3 flex items-center justify-center gap-2">
+                        <Button className="rounded-xl" disabled={historyPage === 0} onClick={() => loadHistory(historyPage - 1)} size="sm" variant="outline">
+                          Trước
+                        </Button>
+                        <span className="text-xs text-slate-500">
+                          {historyPage + 1} / {historyTotalPages}
+                        </span>
+                        <Button
+                          className="rounded-xl"
+                          disabled={historyPage >= historyTotalPages - 1}
+                          onClick={() => loadHistory(historyPage + 1)}
+                          size="sm"
+                          variant="outline"
+                        >
+                          Sau
+                        </Button>
+                      </div>
+                    )}
+                  </PageSection>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <PageSection title="Gợi ý dùng nhanh" description="Một vài nguyên tắc để thao tác ít hơn nhưng vẫn hiệu quả.">
+              <div className="space-y-3">
+                <div className="rounded-[18px] border border-violet-200 bg-violet-50/70 p-4">
+                  <p className="text-sm font-semibold text-violet-800">Ctrl/Cmd + Enter</p>
+                  <p className="mt-1 text-sm text-slate-600">Dịch ngay mà không cần rê chuột xuống nút bấm.</p>
+                </div>
+                <div className="rounded-[18px] border border-sky-200 bg-sky-50/70 p-4">
+                  <p className="text-sm font-semibold text-sky-800">Swap ngôn ngữ</p>
+                  <p className="mt-1 text-sm text-slate-600">Đảo chiều dịch khi cần đối chiếu nhanh hai chiều Việt - Nhật.</p>
+                </div>
+                <div className="rounded-[18px] border border-amber-200 bg-amber-50/70 p-4">
+                  <p className="text-sm font-semibold text-amber-800">Lưu bản dịch tốt</p>
+                  <p className="mt-1 text-sm text-slate-600">Bookmark những câu bạn muốn ôn lại sau để biến lịch sử thành tài liệu học.</p>
+                </div>
+                <Button className="w-full rounded-2xl border-slate-200 bg-white text-slate-700" variant="outline">
+                  <Volume2 className="mr-2 h-4 w-4" />
+                  Phát âm văn bản sau khi dịch
+                </Button>
               </div>
-            </div>
+            </PageSection>
           </div>
-        </motion.div>
+        </div>
       </div>
     </DashboardLayout>
   );

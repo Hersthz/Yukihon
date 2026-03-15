@@ -1,17 +1,10 @@
-import { useState } from "react";
-import Navigation from "@/components/Navigation";
-import { Input } from "@/components/ui/input";
+import { useMemo, useState } from "react";
+import { BookOpen, Search } from "lucide-react";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, BookOpen } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 interface Kanji {
   character: string;
@@ -23,206 +16,178 @@ interface Kanji {
   examples: string[];
 }
 
+const kanjiData: Kanji[] = [
+  {
+    character: "日",
+    meaning: "sun, day",
+    onReading: "ニチ、ジツ",
+    kunReading: "ひ、か",
+    strokes: 4,
+    level: "N5",
+    examples: ["日本 (にほん) - Japan", "毎日 (まいにち) - every day", "今日 (きょう) - today"],
+  },
+  {
+    character: "本",
+    meaning: "book, origin",
+    onReading: "ホン",
+    kunReading: "もと",
+    strokes: 5,
+    level: "N5",
+    examples: ["本 (ほん) - book", "日本 (にほん) - Japan", "本当 (ほんとう) - truth"],
+  },
+  {
+    character: "人",
+    meaning: "person",
+    onReading: "ジン、ニン",
+    kunReading: "ひと",
+    strokes: 2,
+    level: "N5",
+    examples: ["人 (ひと) - person", "日本人 (にほんじん) - Japanese person", "三人 (さんにん) - three people"],
+  },
+  {
+    character: "学",
+    meaning: "study, learning",
+    onReading: "ガク",
+    kunReading: "まな(ぶ)",
+    strokes: 8,
+    level: "N5",
+    examples: ["学校 (がっこう) - school", "学生 (がくせい) - student", "大学 (だいがく) - university"],
+  },
+  {
+    character: "生",
+    meaning: "life, birth",
+    onReading: "セイ、ショウ",
+    kunReading: "い(きる)、う(まれる)",
+    strokes: 5,
+    level: "N5",
+    examples: ["学生 (がくせい) - student", "先生 (せんせい) - teacher", "人生 (じんせい) - life"],
+  },
+  {
+    character: "会",
+    meaning: "meet, gathering",
+    onReading: "カイ、エ",
+    kunReading: "あ(う)",
+    strokes: 6,
+    level: "N5",
+    examples: ["会社 (かいしゃ) - company", "会う (あう) - to meet", "社会 (しゃかい) - society"],
+  },
+];
+
+const LEVELS = ["N5", "N4", "N3", "N2", "N1"];
+
 const KanjiLibrary = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLevel, setSelectedLevel] = useState("N5");
   const [selectedKanji, setSelectedKanji] = useState<Kanji | null>(null);
 
-  const kanjiData: Kanji[] = [
-    {
-      character: "日",
-      meaning: "sun, day",
-      onReading: "ニチ、ジツ",
-      kunReading: "ひ、か",
-      strokes: 4,
-      level: "N5",
-      examples: ["日本 (にほん) - Japan", "毎日 (まいにち) - every day", "今日 (きょう) - today"]
-    },
-    {
-      character: "本",
-      meaning: "book, origin",
-      onReading: "ホン",
-      kunReading: "もと",
-      strokes: 5,
-      level: "N5",
-      examples: ["本 (ほん) - book", "日本 (にほん) - Japan", "本当 (ほんとう) - truth"]
-    },
-    {
-      character: "人",
-      meaning: "person",
-      onReading: "ジン、ニン",
-      kunReading: "ひと",
-      strokes: 2,
-      level: "N5",
-      examples: ["人 (ひと) - person", "日本人 (にほんじん) - Japanese person", "三人 (さんにん) - three people"]
-    },
-    {
-      character: "学",
-      meaning: "study, learning",
-      onReading: "ガク",
-      kunReading: "まな(ぶ)",
-      strokes: 8,
-      level: "N5",
-      examples: ["学校 (がっこう) - school", "学生 (がくせい) - student", "大学 (だいがく) - university"]
-    },
-    {
-      character: "生",
-      meaning: "life, birth",
-      onReading: "セイ、ショウ",
-      kunReading: "い(きる)、う(まれる)",
-      strokes: 5,
-      level: "N5",
-      examples: ["学生 (がくせい) - student", "先生 (せんせい) - teacher", "人生 (じんせい) - life"]
-    },
-    {
-      character: "会",
-      meaning: "meet, gathering",
-      onReading: "カイ、エ",
-      kunReading: "あ(う)",
-      strokes: 6,
-      level: "N5",
-      examples: ["会社 (かいしゃ) - company", "会う (あう) - to meet", "社会 (しゃかい) - society"]
-    },
-  ];
-
-  const filteredKanji = kanjiData.filter(k => 
-    (k.character.includes(searchQuery) || 
-     k.meaning.toLowerCase().includes(searchQuery.toLowerCase())) &&
-    k.level === selectedLevel
-  );
+  const filteredKanji = useMemo(() => {
+    return kanjiData.filter(
+      (item) =>
+        item.level === selectedLevel &&
+        (item.character.includes(searchQuery) || item.meaning.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
+  }, [searchQuery, selectedLevel]);
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
+    <DashboardLayout>
+      <div className="mx-auto max-w-[1380px]">
+        <PageHeader
+          eyebrow="Kanji"
+          icon={<BookOpen className="h-6 w-6 text-sky-600" />}
+          title="Kanji library"
+          description="Bố cục thư viện được nén lại để bạn nhìn được nhiều ô kanji hơn, nhưng vẫn mở chi tiết dễ dàng khi cần."
+        />
 
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8 animate-fade-in">
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">Kanji library</h1>
-          <p className="text-muted-foreground">Explore and master all JLPT kanji</p>
+        <div className="mb-4 grid gap-3 md:grid-cols-3">
+          <MetricCard hint="Cấp đang xem" icon={<BookOpen className="h-4 w-4 text-sky-500" />} label="Level" value={selectedLevel} />
+          <MetricCard hint="Số kanji đang hiện" icon={<Search className="h-4 w-4 text-violet-500" />} label="Hiển thị" value={filteredKanji.length} />
+          <MetricCard hint="Joyo tổng quát" icon={<BookOpen className="h-4 w-4 text-emerald-500" />} label="Tổng bộ" value="2,136" />
         </div>
 
-        {/* Search and Filters */}
-        <div className="space-y-4 mb-8 animate-slide-up">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by kanji or meaning..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 h-11"
-            />
-          </div>
+        <PageSection className="mb-4" title="Tìm kiếm và lọc" description="Gom search và level lên một hàng để giữ vùng lưới thật rộng.">
+          <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto]">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Input
+                className="h-11 rounded-2xl border-white/80 bg-white/90 pl-11 text-slate-900 placeholder:text-slate-400"
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Tìm theo kanji hoặc nghĩa"
+                value={searchQuery}
+              />
+            </div>
 
-          <Tabs value={selectedLevel} onValueChange={setSelectedLevel}>
-            <TabsList className="w-full md:w-auto">
-              {["N5", "N4", "N3", "N2", "N1"].map((level) => (
-                <TabsTrigger key={level} value={level}>
+            <div className="flex flex-wrap gap-2">
+              {LEVELS.map((level) => (
+                <button
+                  key={level}
+                  className={`rounded-2xl border px-4 py-2 text-sm font-medium transition ${
+                    selectedLevel === level ? "border-sky-200 bg-sky-50 text-sky-700" : "border-white/80 bg-white/90 text-slate-600 hover:bg-slate-50"
+                  }`}
+                  onClick={() => setSelectedLevel(level)}
+                  type="button"
+                >
                   {level}
-                </TabsTrigger>
+                </button>
               ))}
-            </TabsList>
-          </Tabs>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <Card className="card-premium">
-            <CardContent className="pt-6">
-              <div className="text-2xl font-bold text-primary">100</div>
-              <p className="text-sm text-muted-foreground">N5 Kanji</p>
-            </CardContent>
-          </Card>
-          <Card className="card-premium">
-            <CardContent className="pt-6">
-              <div className="text-2xl font-bold text-secondary">300</div>
-              <p className="text-sm text-muted-foreground">N4 Kanji</p>
-            </CardContent>
-          </Card>
-          <Card className="card-premium">
-            <CardContent className="pt-6">
-              <div className="text-2xl font-bold">650</div>
-              <p className="text-sm text-muted-foreground">N3 Kanji</p>
-            </CardContent>
-          </Card>
-          <Card className="card-premium">
-            <CardContent className="pt-6">
-              <div className="text-2xl font-bold">2,136</div>
-              <p className="text-sm text-muted-foreground">Total Joyo</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Kanji Grid */}
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
-          {filteredKanji.map((kanji, i) => (
-            <Card
-              key={kanji.character}
-              className="card-premium hover-lift cursor-pointer text-center aspect-square flex flex-col items-center justify-center animate-scale-in"
-              style={{ animationDelay: `${i * 0.02}s` }}
-              onClick={() => setSelectedKanji(kanji)}
-            >
-              <CardContent className="p-4 flex flex-col items-center justify-center h-full">
-                <div className="text-4xl md:text-5xl font-bold mb-1">{kanji.character}</div>
-                <div className="text-xs text-muted-foreground truncate w-full">{kanji.meaning.split(',')[0]}</div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {filteredKanji.length === 0 && (
-          <div className="text-center py-12">
-            <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">No kanji found matching your search.</p>
+            </div>
           </div>
-        )}
+        </PageSection>
 
-        {/* Kanji Detail Dialog */}
-        <Dialog open={!!selectedKanji} onOpenChange={() => setSelectedKanji(null)}>
-          <DialogContent className="max-w-2xl">
+        <PageSection title="Lưới kanji" description="Ô nhỏ vừa đủ để giữ cảm giác overview, không biến thư viện thành một trang cuộn quá sâu.">
+          {filteredKanji.length === 0 ? (
+            <EmptyState description="Thử từ khóa khác hoặc chuyển sang level khác." icon={<BookOpen className="h-6 w-6" />} title="Không tìm thấy kanji" />
+          ) : (
+            <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
+              {filteredKanji.map((kanji) => (
+                <button
+                  key={kanji.character}
+                  className="aspect-square rounded-[20px] border border-white bg-white p-3 text-center shadow-[0_10px_24px_rgba(148,163,184,0.10)] transition hover:-translate-y-1 hover:bg-sky-50/50"
+                  onClick={() => setSelectedKanji(kanji)}
+                  type="button"
+                >
+                  <div className="flex h-full flex-col items-center justify-center">
+                    <p className="text-4xl font-semibold text-slate-900">{kanji.character}</p>
+                    <p className="mt-1 line-clamp-1 text-xs text-slate-500">{kanji.meaning.split(",")[0]}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </PageSection>
+
+        <Dialog onOpenChange={() => setSelectedKanji(null)} open={!!selectedKanji}>
+          <DialogContent className="max-w-2xl rounded-[28px] border-white/80 bg-white/[0.98]">
             {selectedKanji && (
               <>
                 <DialogHeader>
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="text-8xl font-bold">{selectedKanji.character}</div>
-                    <Badge>{selectedKanji.level}</Badge>
+                  <div className="mb-2 flex items-start justify-between gap-3">
+                    <div className="text-7xl font-semibold text-slate-900">{selectedKanji.character}</div>
+                    <Badge className="rounded-full border border-sky-200 bg-sky-50 text-sky-700">{selectedKanji.level}</Badge>
                   </div>
-                  <DialogTitle className="text-2xl">{selectedKanji.meaning}</DialogTitle>
-                  <DialogDescription>
-                    {selectedKanji.strokes} strokes
-                  </DialogDescription>
+                  <DialogTitle className="text-2xl text-slate-900">{selectedKanji.meaning}</DialogTitle>
+                  <DialogDescription className="text-slate-500">{selectedKanji.strokes} nét</DialogDescription>
                 </DialogHeader>
 
-                <div className="space-y-6">
-                  {/* Readings */}
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <h3 className="font-semibold text-sm text-muted-foreground">On'yomi (音読み)</h3>
-                      <p className="text-lg font-medium">{selectedKanji.onReading}</p>
+                <div className="space-y-4">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="rounded-[20px] border border-slate-200 bg-slate-50/70 p-4">
+                      <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Onyomi</p>
+                      <p className="mt-2 text-lg text-slate-900">{selectedKanji.onReading}</p>
                     </div>
-                    <div className="space-y-2">
-                      <h3 className="font-semibold text-sm text-muted-foreground">Kun'yomi (訓読み)</h3>
-                      <p className="text-lg font-medium">{selectedKanji.kunReading}</p>
+                    <div className="rounded-[20px] border border-slate-200 bg-slate-50/70 p-4">
+                      <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Kunyomi</p>
+                      <p className="mt-2 text-lg text-slate-900">{selectedKanji.kunReading}</p>
                     </div>
                   </div>
 
-                  {/* Examples */}
-                  <div className="space-y-3">
-                    <h3 className="font-semibold text-sm text-muted-foreground">Example words</h3>
-                    <div className="space-y-2">
-                      {selectedKanji.examples.map((example, i) => (
-                        <div key={i} className="p-3 rounded-lg bg-muted/30 text-sm">
+                  <div className="rounded-[20px] border border-slate-200 bg-white p-4">
+                    <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Ví dụ</p>
+                    <div className="mt-3 space-y-2">
+                      {selectedKanji.examples.map((example) => (
+                        <div key={example} className="rounded-[16px] border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
                           {example}
                         </div>
                       ))}
-                    </div>
-                  </div>
-
-                  {/* Placeholder for stroke order */}
-                  <div className="space-y-2">
-                    <h3 className="font-semibold text-sm text-muted-foreground">Stroke order</h3>
-                    <div className="aspect-square bg-muted/30 rounded-lg flex items-center justify-center">
-                      <p className="text-sm text-muted-foreground">Stroke order diagram</p>
                     </div>
                   </div>
                 </div>
@@ -230,8 +195,8 @@ const KanjiLibrary = () => {
             )}
           </DialogContent>
         </Dialog>
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 };
 
