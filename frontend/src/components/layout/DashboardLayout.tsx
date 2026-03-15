@@ -1,5 +1,3 @@
-// src/components/layout/DashboardLayout.tsx
-
 import { ReactNode } from "react";
 import DashboardNavigation from "@/components/DashboardNavigation";
 import SnowEffect from "@/components/SnowEffect";
@@ -10,50 +8,26 @@ interface DashboardLayoutProps {
 
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   return (
-    <div className="min-h-screen flex flex-col relative overflow-x-hidden">
-      {/* Layered background */}
-      <div className="fixed inset-0 z-0">
-        {/* Base dark gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0a0e1a] via-[#0d1525] to-[#0a1628]" />
-        {/* Subtle radial accents */}
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-cyan-500/[0.03] rounded-full blur-[120px]" />
-        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-blue-500/[0.04] rounded-full blur-[100px]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-purple-500/[0.02] rounded-full blur-[150px]" />
-        {/* Noise overlay */}
-        <div className="absolute inset-0 opacity-[0.015]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\'/%3E%3C/svg%3E")' }} />
+    <div className="min-h-screen bg-background text-foreground">
+      <div className="fixed inset-0 -z-10 overflow-hidden">
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,#07111d_0%,#0a1422_20%,#0d1724_50%,#0f1a28_100%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(191,219,254,0.12),transparent_25%),radial-gradient(circle_at_top_right,rgba(255,255,255,0.03),transparent_16%),radial-gradient(circle_at_bottom_left,rgba(125,211,252,0.08),transparent_20%),radial-gradient(circle_at_bottom_right,rgba(196,181,253,0.06),transparent_18%)]" />
+        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px)", backgroundSize: "64px 64px" }} />
+        <div className="absolute inset-0 opacity-[0.04] bg-noise" />
+        <div className="absolute left-[8%] top-[10%] h-[28rem] w-[28rem] rounded-full bg-sky-300/[0.05] blur-[150px]" />
+        <div className="absolute bottom-[8%] right-[8%] h-[22rem] w-[22rem] rounded-full bg-cyan-200/[0.05] blur-[140px]" />
       </div>
 
-      {/* Gentle snow */}
-      <SnowEffect count={25} />
+      <SnowEffect count={14} className="opacity-60" />
+      <div className="fixed inset-x-0 top-0 -z-10 h-40 bg-gradient-to-b from-slate-50/[0.03] via-transparent to-transparent" />
 
-      {/* Navigation */}
       <DashboardNavigation />
 
-      {/* Main content */}
-      <main className="relative z-10 flex-1 pt-20">
-        {children}
-      </main>
-
-      {/* Dashboard footer */}
-      <footer className="relative z-10 border-t border-white/5 mt-12">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
-            <div className="flex items-center gap-2 text-slate-500 text-xs">
-              <div className="w-5 h-5 rounded-md bg-gradient-to-br from-cyan-500 to-blue-600 grid place-items-center text-[0.5rem] font-bold text-white">
-                日
-              </div>
-              <span>© 2025 Yukihon. All rights reserved.</span>
-            </div>
-            <div className="flex items-center gap-4 text-xs text-slate-500">
-              <span className="hover:text-slate-300 transition-colors cursor-pointer">Privacy</span>
-              <span className="text-white/10">•</span>
-              <span className="hover:text-slate-300 transition-colors cursor-pointer">Terms</span>
-              <span className="text-white/10">•</span>
-              <span className="hover:text-slate-300 transition-colors cursor-pointer">Support</span>
-            </div>
-          </div>
+      <main className="relative z-10 pt-[88px] lg:pl-[288px]">
+        <div className="min-h-[calc(100vh-88px)] px-4 pb-12 sm:px-6 lg:px-8 xl:px-10">
+          {children}
         </div>
-      </footer>
+      </main>
     </div>
   );
 };
