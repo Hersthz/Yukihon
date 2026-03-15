@@ -1,31 +1,54 @@
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import DashboardNavigation from "@/components/DashboardNavigation";
 import SnowEffect from "@/components/SnowEffect";
+import { cn } from "@/lib/utils";
 
 interface DashboardLayoutProps {
   children: ReactNode;
 }
 
+const STORAGE_KEY = "yukihon_sidebar_collapsed";
+
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
+  const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    setCollapsed(stored === "true");
+  }, []);
+
+  const handleToggleCollapse = () => {
+    setCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem(STORAGE_KEY, String(next));
+      return next;
+    });
+  };
+
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-[#edf5ff] text-slate-900">
       <div className="fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,#07111d_0%,#0a1422_20%,#0d1724_50%,#0f1a28_100%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(191,219,254,0.12),transparent_25%),radial-gradient(circle_at_top_right,rgba(255,255,255,0.03),transparent_16%),radial-gradient(circle_at_bottom_left,rgba(125,211,252,0.08),transparent_20%),radial-gradient(circle_at_bottom_right,rgba(196,181,253,0.06),transparent_18%)]" />
-        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px)", backgroundSize: "64px 64px" }} />
-        <div className="absolute inset-0 opacity-[0.04] bg-noise" />
-        <div className="absolute left-[8%] top-[10%] h-[28rem] w-[28rem] rounded-full bg-sky-300/[0.05] blur-[150px]" />
-        <div className="absolute bottom-[8%] right-[8%] h-[22rem] w-[22rem] rounded-full bg-cyan-200/[0.05] blur-[140px]" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,#f8fbff_0%,#eef6ff_38%,#f7f4ff_72%,#fdf6f0_100%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(125,211,252,0.30),transparent_30%),radial-gradient(circle_at_top_right,rgba(187,247,208,0.26),transparent_22%),radial-gradient(circle_at_bottom_left,rgba(196,181,253,0.22),transparent_22%),radial-gradient(circle_at_bottom_right,rgba(251,191,183,0.18),transparent_24%)]" />
+        <div className="absolute inset-0 opacity-[0.35] bg-noise" />
+        <div className="absolute left-[10%] top-[8%] h-[18rem] w-[18rem] rounded-full bg-sky-300/25 blur-[110px]" />
+        <div className="absolute bottom-[5%] right-[10%] h-[16rem] w-[16rem] rounded-full bg-violet-300/20 blur-[120px]" />
       </div>
 
-      <SnowEffect count={14} className="opacity-60" />
-      <div className="fixed inset-x-0 top-0 -z-10 h-40 bg-gradient-to-b from-slate-50/[0.03] via-transparent to-transparent" />
+      <SnowEffect count={16} className="opacity-45" />
 
-      <DashboardNavigation />
+      <DashboardNavigation collapsed={collapsed} onToggleCollapse={handleToggleCollapse} />
 
-      <main className="relative z-10 pt-[88px] lg:pl-[288px]">
-        <div className="min-h-[calc(100vh-88px)] px-4 pb-12 sm:px-6 lg:px-8 xl:px-10">
-          {children}
+      <main
+        className={cn(
+          "relative z-10 pt-[76px] transition-[padding] duration-300",
+          collapsed ? "lg:pl-[80px]" : "lg:pl-[224px]"
+        )}
+      >
+        <div className="min-h-[calc(100vh-76px)] px-3 pb-6 pt-3 sm:px-4 lg:px-5 xl:px-6">
+          <div className="rounded-[28px] border border-white/75 bg-white/[0.34] p-3 shadow-[0_18px_40px_rgba(148,163,184,0.10)] backdrop-blur-[8px]">
+            {children}
+          </div>
         </div>
       </main>
     </div>

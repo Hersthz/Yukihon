@@ -1,5 +1,3 @@
-// src/pages/Grammar.tsx
-
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Brain, Search, ChevronRight, BookOpen } from "lucide-react";
@@ -9,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { useQuery } from "@tanstack/react-query";
 import { grammarAPI } from "@/lib/api/learningClient";
+import { EmptyState, PageHeader, PageSection } from "@/components/layout/UserPage";
 
 interface GrammarItem {
   id: number;
@@ -23,11 +22,11 @@ interface GrammarItem {
 }
 
 const levelColors: Record<string, string> = {
-  N5: "bg-emerald-500/15 text-emerald-400 border-emerald-500/25",
-  N4: "bg-cyan-500/15 text-cyan-400 border-cyan-500/25",
-  N3: "bg-amber-500/15 text-amber-400 border-amber-500/25",
-  N2: "bg-orange-500/15 text-orange-400 border-orange-500/25",
-  N1: "bg-rose-500/15 text-rose-400 border-rose-500/25",
+  N5: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  N4: "bg-sky-100 text-sky-700 border-sky-200",
+  N3: "bg-amber-100 text-amber-700 border-amber-200",
+  N2: "bg-orange-100 text-orange-700 border-orange-200",
+  N1: "bg-rose-100 text-rose-700 border-rose-200",
 };
 
 const Grammar = () => {
@@ -42,39 +41,33 @@ const Grammar = () => {
   const filteredGrammar = useMemo(() => {
     return grammarList.filter((item: GrammarItem) => {
       const levelMatch = selectedLevel === "all" || item.jlptLevel === selectedLevel;
+      const q = searchQuery.toLowerCase();
       const searchMatch =
-        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.pattern.toLowerCase().includes(searchQuery.toLowerCase());
+        item.title.toLowerCase().includes(q) ||
+        item.pattern.toLowerCase().includes(q);
       return levelMatch && searchMatch;
     });
   }, [grammarList, selectedLevel, searchQuery]);
 
   return (
     <DashboardLayout>
-      <div className="container mx-auto px-4 py-12">
-        {/* Header */}
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="mb-10">
-          <div className="flex items-center gap-4 mb-3">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/20">
-              <Brain className="w-7 h-7 text-purple-400" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-white">Grammar Patterns</h1>
-              <p className="text-sm text-slate-400">Master Japanese grammar patterns for different JLPT levels</p>
-            </div>
-          </div>
-        </motion.div>
+      <div className="mx-auto max-w-[1400px]">
+        <PageHeader
+          icon={<Brain className="h-5 w-5 text-violet-600" />}
+          eyebrow="Grammar"
+          title="Ngữ pháp"
+          description="Quét nhanh mẫu câu theo cấp độ, ví dụ và cách dùng thực tế."
+        />
 
-        {/* Filters */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.5 }} className="mb-8">
-          <div className="flex flex-col md:flex-row gap-4">
+        <PageSection className="mb-4">
+          <div className="flex flex-col gap-3 lg:flex-row">
             <div className="relative flex-1">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
-                placeholder="Search grammar patterns..."
+                placeholder="Tìm mẫu ngữ pháp..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-white/[0.03] border-white/[0.06] focus:border-purple-500/40 focus:ring-purple-500/10 text-white placeholder:text-slate-500"
+                className="h-10 rounded-2xl border-white/80 bg-white/85 pl-10 text-slate-800 placeholder:text-slate-400"
               />
             </div>
             <div className="flex flex-wrap gap-2">
@@ -82,110 +75,109 @@ const Grammar = () => {
                 <button
                   key={level}
                   onClick={() => setSelectedLevel(level)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 border ${
+                  className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
                     selectedLevel === level
-                      ? "bg-white/10 border-white/20 text-white"
-                      : "bg-white/[0.03] border-white/[0.06] text-slate-400 hover:bg-white/[0.06] hover:text-slate-300"
+                      ? "border-sky-200 bg-sky-100 text-sky-800"
+                      : "border-white/70 bg-white/75 text-slate-600 hover:bg-white"
                   }`}
                 >
-                  {level === "all" ? "All" : level}
+                  {level === "all" ? "Tất cả" : level}
                 </button>
               ))}
             </div>
           </div>
-        </motion.div>
+        </PageSection>
 
-        {/* Loading */}
         {isLoading ? (
-          <div className="flex justify-center py-20">
-            <div className="relative w-12 h-12">
-              <motion.div
-                className="absolute inset-0 rounded-full border-2 border-purple-500/20"
-                animate={{ rotate: 360 }}
-                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-              />
-              <motion.div
-                className="absolute inset-0 rounded-full border-2 border-transparent border-t-purple-400"
-                animate={{ rotate: -360 }}
-                transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-              />
+          <PageSection>
+            <div className="flex justify-center py-16">
+              <div className="relative h-12 w-12">
+                <motion.div
+                  className="absolute inset-0 rounded-full border-2 border-violet-200"
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                />
+                <motion.div
+                  className="absolute inset-0 rounded-full border-2 border-transparent border-t-violet-500"
+                  animate={{ rotate: -360 }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                />
+              </div>
             </div>
-          </div>
+          </PageSection>
+        ) : filteredGrammar.length === 0 ? (
+          <PageSection>
+            <EmptyState
+              icon={<Brain className="h-6 w-6" />}
+              title="Không tìm thấy mẫu ngữ pháp"
+              description="Thử đổi từ khóa hoặc bộ lọc JLPT."
+            />
+          </PageSection>
         ) : (
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.06 } } }}
-            className="space-y-4"
-          >
-            {filteredGrammar.map((item: GrammarItem) => (
-              <motion.div
-                key={item.id}
-                variants={{ hidden: { opacity: 0, y: 15 }, visible: { opacity: 1, y: 0 } }}
-                className="rounded-2xl border border-white/[0.06] bg-white/[0.03] overflow-hidden group hover:border-purple-500/20 hover:shadow-lg hover:shadow-purple-500/5 transition-all"
-              >
-                {/* Accent line */}
-                <div className="h-0.5 bg-gradient-to-r from-purple-500/40 to-pink-500/40" />
-
-                <div className="p-6">
-                  <div className="flex items-start justify-between mb-4">
+          <PageSection>
+            <div className="space-y-3">
+              {filteredGrammar.map((item: GrammarItem) => (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="rounded-[20px] border border-white bg-white/90 p-5 shadow-[0_8px_18px_rgba(148,163,184,0.08)]"
+                >
+                  <div className="mb-4 flex items-start justify-between gap-4">
                     <div>
-                      <h3 className="text-xl font-bold text-white mb-1">{item.pattern}</h3>
-                      <p className="text-slate-400">{item.title}</p>
+                      <h3 className="text-xl font-semibold text-slate-900">{item.pattern}</h3>
+                      <p className="mt-1 text-sm text-slate-500">{item.title}</p>
                     </div>
-                    <Badge className={`text-xs border shrink-0 ml-4 ${levelColors[item.jlptLevel] || "bg-slate-500/15 text-slate-400"}`}>
+                    <Badge className={`border ${levelColors[item.jlptLevel] || "bg-slate-100 text-slate-700 border-slate-200"}`}>
                       {item.jlptLevel}
                     </Badge>
                   </div>
 
-                  <div className="space-y-4">
-                    <div>
-                      <p className="text-xs uppercase tracking-wider text-purple-400/80 font-semibold mb-1.5">Explanation</p>
-                      <p className="text-sm text-slate-300 leading-relaxed">{item.explanation}</p>
+                  <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
+                    <div className="space-y-3">
+                      <div>
+                        <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-violet-500">
+                          Giải thích
+                        </p>
+                        <p className="text-sm leading-6 text-slate-700">{item.explanation}</p>
+                      </div>
+
+                      {item.usage && (
+                        <div>
+                          <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-violet-500">
+                            Cách dùng
+                          </p>
+                          <p className="text-sm leading-6 text-slate-700">{item.usage}</p>
+                        </div>
+                      )}
+
+                      {item.relatedPatterns && (
+                        <div>
+                          <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-violet-500">
+                            Liên quan
+                          </p>
+                          <p className="text-sm leading-6 text-slate-600">{item.relatedPatterns}</p>
+                        </div>
+                      )}
                     </div>
 
-                    {item.usage && (
-                      <div>
-                        <p className="text-xs uppercase tracking-wider text-purple-400/80 font-semibold mb-1.5">Usage</p>
-                        <p className="text-sm text-slate-300">{item.usage}</p>
-                      </div>
-                    )}
-
-                    {item.exampleJP && (
-                      <div className="rounded-xl bg-white/[0.03] border border-white/[0.05] p-4">
-                        <p className="text-xs uppercase tracking-wider text-purple-400/80 font-semibold mb-2">Example</p>
-                        <p className="text-white font-medium mb-1">{item.exampleJP}</p>
-                        {item.exampleEN && (
-                          <p className="text-sm text-slate-500 italic">{item.exampleEN}</p>
-                        )}
-                      </div>
-                    )}
-
-                    {item.relatedPatterns && (
-                      <div>
-                        <p className="text-xs uppercase tracking-wider text-purple-400/80 font-semibold mb-1.5">Related Patterns</p>
-                        <p className="text-sm text-slate-400">{item.relatedPatterns}</p>
-                      </div>
-                    )}
-
-                    <Button className="w-full bg-white/[0.05] hover:bg-purple-500/15 text-white border border-white/[0.08] hover:border-purple-500/30 transition-all group/btn">
-                      <BookOpen className="w-4 h-4 mr-2" />
-                      Study This Pattern
-                      <ChevronRight className="w-4 h-4 ml-auto group-hover/btn:translate-x-1 transition-transform" />
-                    </Button>
+                    <div className="rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-4">
+                      <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-violet-500">
+                        Ví dụ
+                      </p>
+                      <p className="text-sm font-medium text-slate-900">{item.exampleJP}</p>
+                      {item.exampleEN && <p className="mt-2 text-sm text-slate-500">{item.exampleEN}</p>}
+                      <Button className="mt-4 h-10 w-full rounded-2xl bg-violet-500 text-white hover:bg-violet-400">
+                        <BookOpen className="mr-2 h-4 w-4" />
+                        Học mẫu này
+                        <ChevronRight className="ml-auto h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
-
-        {!isLoading && filteredGrammar.length === 0 && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20">
-            <Brain className="w-14 h-14 mx-auto text-slate-600 mb-4" />
-            <p className="text-slate-400 text-lg">No grammar patterns found</p>
-            <p className="text-sm text-slate-500 mt-1">Try adjusting your search or filter</p>
-          </motion.div>
+                </motion.div>
+              ))}
+            </div>
+          </PageSection>
         )}
       </div>
     </DashboardLayout>

@@ -1,12 +1,13 @@
-import { useState, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Search, BookOpen, Volume2, Star, Plus, X } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { useCallback, useMemo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { BookOpen, Plus, Search, Star, Volume2, X } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import apiClient from "@/lib/apiClient";
+import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import apiClient from "@/lib/apiClient";
 
 interface VocabResult {
   id: number;
@@ -21,6 +22,14 @@ interface VocabResult {
   additionalNotes: string;
 }
 
+const levelClass: Record<string, string> = {
+  N5: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  N4: "border-sky-200 bg-sky-50 text-sky-700",
+  N3: "border-amber-200 bg-amber-50 text-amber-700",
+  N2: "border-orange-200 bg-orange-50 text-orange-700",
+  N1: "border-rose-200 bg-rose-50 text-rose-700",
+};
+
 const Dictionary = () => {
   const { toast } = useToast();
   const [query, setQuery] = useState("");
@@ -31,14 +40,20 @@ const Dictionary = () => {
 
   const handleSearch = useCallback(async () => {
     if (!query.trim()) return;
+
     setLoading(true);
     setSearched(true);
+
     try {
-      const data = await apiClient.dictionary.search(query) as VocabResult[];
+      const data = (await apiClient.dictionary.search(query.trim())) as VocabResult[];
       setResults(data);
     } catch (error) {
-      console.error("Search failed:", error);
-      toast({ title: "Error", description: "Search failed", variant: "destructive" });
+      console.error("Dictionary search failed", error);
+      toast({
+        title: "Không thể tra cứu",
+        description: "Vui lòng thử lại sau ít phút.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -47,181 +62,195 @@ const Dictionary = () => {
   const handleSaveWord = async (vocabId: number) => {
     try {
       await apiClient.myWords.saveWord({ vocabularyId: vocabId });
-      toast({ title: "Saved!", description: "Word added to My Words" });
+      toast({ title: "Đã lưu", description: "Từ vựng đã được thêm vào sổ tay." });
     } catch {
-      // Try checking if error is about already saved
-      toast({ title: "Error", description: "Failed to save", variant: "destructive" });
+      toast({ title: "Lưu chưa thành công", description: "Từ này có thể đã tồn tại trong sổ tay.", variant: "destructive" });
     }
   };
 
-  const levelColor: Record<string, string> = {
-    N5: "bg-green-500/20 text-green-400 border-green-500/30",
-    N4: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-    N3: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-    N2: "bg-orange-500/20 text-orange-400 border-orange-500/30",
-    N1: "bg-red-500/20 text-red-400 border-red-500/30",
-  };
+  const quickStats = useMemo(
+    () => [
+      { label: "Kết quả", value: searched ? results.length : "-", icon: <Search className="h-4 w-4 text-sky-500" />, hint: "Số mục phù hợp" },
+      { label: "Từ khóa", value: query.trim() ? query.trim().slice(0, 14) : "-", icon: <Star className="h-4 w-4 text-violet-500" />, hint: "Từ đang tra cứu" },
+      { label: "Chế độ", value: "Nhật - Việt", icon: <BookOpen className="h-4 w-4 text-emerald-500" />, hint: "Tra nhanh trong một khung" },
+    ],
+    [query, results.length, searched]
+  );
 
   return (
     <DashboardLayout>
-      <div className="container mx-auto px-4 py-12">
-          {/* Header */}
-          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-            <div className="flex items-center gap-4 mb-3">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/20">
-                <BookOpen className="w-7 h-7 text-cyan-400" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold text-white">
-                  Từ điển 辞書
-                </h1>
-                <p className="text-sm text-slate-400">Tra cứu từ vựng tiếng Nhật</p>
-              </div>
-            </div>
-          </motion.div>
+      <div className="mx-auto max-w-[1380px]">
+        <PageHeader
+          icon={<BookOpen className="h-6 w-6 text-sky-600" />}
+          title="Tra cứu"
+          description="Giữ giao diện gọn, nhìn được nhiều kết quả hơn và mở nhanh phần chi tiết khi cần."
+          eyebrow="Dictionary"
+          action={
+            <Button className="rounded-2xl bg-sky-500 text-white hover:bg-sky-400" onClick={handleSearch}>
+              <Search className="mr-2 h-4 w-4" />
+              Tra cứu
+            </Button>
+          }
+        />
 
-          {/* Search */}
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mb-8">
-            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-5">
-              <div className="flex gap-3">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-                  <Input
-                    placeholder="Nhập kanji, hiragana, romaji hoặc nghĩa..."
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                    className="pl-12 h-12 text-lg bg-white/[0.03] border-white/[0.06] text-white placeholder:text-slate-500 focus:border-cyan-500/40"
-                  />
-                </div>
-                <Button onClick={handleSearch} size="lg" className="px-8 bg-white/[0.06] hover:bg-cyan-500/15 text-white border border-white/[0.08] hover:border-cyan-500/30 transition-all">
-                  <Search className="w-5 h-5 mr-2" />
-                  Tra cứu
-                </Button>
-              </div>
-            </div>
-          </motion.div>
+        <div className="mb-4 grid gap-3 md:grid-cols-3">
+          {quickStats.map((item) => (
+            <MetricCard key={item.label} hint={item.hint} icon={item.icon} label={item.label} value={item.value} />
+          ))}
+        </div>
 
-          {/* Results */}
+        <PageSection className="mb-4" title="Ô tìm kiếm" description="Nhập kanji, hiragana, romaji hoặc nghĩa tiếng Việt.">
+          <div className="flex flex-col gap-3 lg:flex-row">
+            <div className="relative flex-1">
+              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Input
+                className="h-12 rounded-2xl border-white/80 bg-white/90 pl-11 text-base text-slate-900 placeholder:text-slate-400"
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                placeholder="Ví dụ: 勉強, benkyou, học tập..."
+                value={query}
+              />
+            </div>
+            <Button className="h-12 rounded-2xl bg-slate-900 text-white hover:bg-slate-800" onClick={handleSearch}>
+              <Search className="mr-2 h-4 w-4" />
+              Tìm ngay
+            </Button>
+          </div>
+        </PageSection>
+
+        <PageSection title="Kết quả" description="Card thấp, rõ nghĩa và đủ metadata để quét nhanh.">
           {loading ? (
             <div className="flex items-center justify-center py-20">
-              <div className="relative w-12 h-12">
-                <motion.div className="absolute inset-0 rounded-full border-2 border-cyan-500/20" animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }} />
-                <motion.div className="absolute inset-0 rounded-full border-2 border-transparent border-t-cyan-400" animate={{ rotate: -360 }} transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }} />
-              </div>
+              <div className="h-12 w-12 rounded-full border-4 border-sky-100 border-t-sky-500 animate-spin" />
             </div>
           ) : searched && results.length === 0 ? (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20">
-              <Search className="w-14 h-14 mx-auto text-slate-600 mb-4" />
-              <p className="text-lg text-slate-400">Không tìm thấy kết quả cho "{query}"</p>
-              <p className="text-sm text-slate-500 mt-1">Thử từ khóa khác hoặc kiểm tra chính tả</p>
-            </motion.div>
+            <EmptyState
+              description={`Không tìm thấy mục phù hợp với "${query}". Thử romaji, nghĩa tiếng Việt hoặc từ ngắn hơn.`}
+              icon={<Search className="h-6 w-6" />}
+              title="Chưa có kết quả"
+            />
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               <AnimatePresence>
                 {results.map((word, index) => (
-                  <motion.div
+                  <motion.button
                     key={word.id}
-                    initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -15 }}
-                    transition={{ delay: index * 0.05 }}
+                    className="rounded-[22px] border border-white bg-white p-4 text-left shadow-[0_10px_24px_rgba(148,163,184,0.10)] transition hover:-translate-y-1 hover:shadow-[0_16px_30px_rgba(148,163,184,0.16)]"
+                    exit={{ opacity: 0, y: -10 }}
+                    initial={{ opacity: 0, y: 10 }}
+                    onClick={() => setSelectedWord(word)}
+                    transition={{ delay: index * 0.03 }}
+                    type="button"
                   >
-                    <div
-                      className="rounded-2xl border border-white/[0.06] bg-white/[0.03] overflow-hidden hover:border-cyan-500/20 hover:shadow-lg hover:shadow-cyan-500/5 transition-all cursor-pointer group"
-                      onClick={() => setSelectedWord(word)}
-                    >
-                      <div className="h-0.5 bg-gradient-to-r from-cyan-500/30 to-blue-500/30" />
-                      <div className="p-5">
-                        <div className="flex items-start justify-between mb-3">
-                          <div>
-                            <h3 className="text-2xl font-bold text-white mb-1">{word.kanji || word.hiragana}</h3>
-                            <p className="text-sm text-cyan-400">{word.hiragana} · {word.romaji}</p>
-                          </div>
-                          {word.jlptLevel && (
-                            <Badge className={`text-xs border shrink-0 ml-2 ${levelColor[word.jlptLevel] || "bg-slate-500/15 text-slate-400"}`}>
-                              {word.jlptLevel}
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-white/90 mb-2">{word.meaning}</p>
-                        {word.wordType && (
-                          <Badge variant="outline" className="text-xs border-white/[0.08] text-slate-400">{word.wordType}</Badge>
-                        )}
-                        <div className="flex gap-2 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button size="sm" variant="ghost" className="text-slate-400 hover:text-cyan-400" onClick={(e) => { e.stopPropagation(); handleSaveWord(word.id); }}>
-                            <Plus className="w-4 h-4 mr-1" /> Save
-                          </Button>
-                        </div>
+                    <div className="mb-3 flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-[1.65rem] font-semibold text-slate-900">{word.kanji || word.hiragana}</p>
+                        <p className="text-sm text-sky-700">
+                          {word.hiragana} · {word.romaji}
+                        </p>
                       </div>
+                      {word.jlptLevel && (
+                        <Badge className={`rounded-full border ${levelClass[word.jlptLevel] || "border-slate-200 bg-slate-50 text-slate-700"}`}>
+                          {word.jlptLevel}
+                        </Badge>
+                      )}
                     </div>
-                  </motion.div>
+
+                    <p className="line-clamp-2 text-sm text-slate-700">{word.meaning}</p>
+
+                    <div className="mt-3 flex items-center justify-between gap-2">
+                      {word.wordType ? (
+                        <Badge className="rounded-full border border-slate-200 bg-slate-50 text-slate-600">{word.wordType}</Badge>
+                      ) : (
+                        <span className="text-xs text-slate-400">Nhấn để xem ví dụ</span>
+                      )}
+
+                      <Button
+                        className="rounded-xl bg-sky-50 text-sky-700 hover:bg-sky-100"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSaveWord(word.id);
+                        }}
+                        size="sm"
+                        variant="ghost"
+                      >
+                        <Plus className="mr-1 h-4 w-4" />
+                        Lưu
+                      </Button>
+                    </div>
+                  </motion.button>
                 ))}
               </AnimatePresence>
             </div>
           )}
+        </PageSection>
 
-          {/* Detail Modal */}
-          <AnimatePresence>
-            {selectedWord && (
+        <AnimatePresence>
+          {selectedWord && (
+            <motion.div
+              animate={{ opacity: 1 }}
+              className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/30 px-4 backdrop-blur-sm"
+              exit={{ opacity: 0 }}
+              initial={{ opacity: 0 }}
+              onClick={() => setSelectedWord(null)}
+            >
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-                onClick={() => setSelectedWord(null)}
+                animate={{ opacity: 1, scale: 1 }}
+                className="w-full max-w-xl rounded-[28px] border border-white/80 bg-white/[0.96] p-6 shadow-[0_24px_60px_rgba(15,23,42,0.18)]"
+                exit={{ opacity: 0, scale: 0.96 }}
+                initial={{ opacity: 0, scale: 0.96 }}
+                onClick={(e) => e.stopPropagation()}
               >
-                <motion.div
-                  initial={{ scale: 0.95, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0.95, opacity: 0 }}
-                  className="rounded-2xl border border-white/[0.08] bg-slate-950 p-8 max-w-lg w-full shadow-2xl"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div className="flex items-start justify-between mb-6">
-                    <div>
-                      <h2 className="text-4xl font-bold text-white mb-2">{selectedWord.kanji || selectedWord.hiragana}</h2>
-                      <p className="text-lg text-cyan-400">{selectedWord.hiragana} · {selectedWord.romaji}</p>
+                <div className="mb-5 flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-[2.2rem] font-semibold leading-none text-slate-900">{selectedWord.kanji || selectedWord.hiragana}</p>
+                    <p className="mt-2 text-sm text-sky-700">
+                      {selectedWord.hiragana} · {selectedWord.romaji}
+                    </p>
+                  </div>
+                  <Button className="rounded-xl" onClick={() => setSelectedWord(null)} size="icon" variant="ghost">
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="rounded-[20px] border border-slate-200 bg-slate-50 p-4">
+                    <p className="mb-1 text-xs uppercase tracking-[0.18em] text-slate-500">Nghĩa</p>
+                    <p className="text-base text-slate-800">{selectedWord.meaning}</p>
+                  </div>
+
+                  {selectedWord.exampleSentenceJP && (
+                    <div className="rounded-[20px] border border-slate-200 bg-white p-4">
+                      <p className="mb-1 text-xs uppercase tracking-[0.18em] text-slate-500">Ví dụ</p>
+                      <p className="text-sm text-slate-800">{selectedWord.exampleSentenceJP}</p>
+                      {selectedWord.exampleSentenceEN && <p className="mt-2 text-sm text-slate-500">{selectedWord.exampleSentenceEN}</p>}
                     </div>
-                    <Button variant="ghost" size="sm" className="text-slate-400 hover:text-white" onClick={() => setSelectedWord(null)}>
-                      <X className="w-5 h-5" />
+                  )}
+
+                  {selectedWord.additionalNotes && (
+                    <div className="rounded-[20px] border border-slate-200 bg-violet-50/70 p-4">
+                      <p className="mb-1 text-xs uppercase tracking-[0.18em] text-slate-500">Ghi chú</p>
+                      <p className="text-sm text-slate-700">{selectedWord.additionalNotes}</p>
+                    </div>
+                  )}
+
+                  <div className="flex flex-wrap gap-2">
+                    <Button className="rounded-2xl bg-sky-500 text-white hover:bg-sky-400" onClick={() => handleSaveWord(selectedWord.id)}>
+                      <Star className="mr-2 h-4 w-4" />
+                      Thêm vào sổ tay
+                    </Button>
+                    <Button className="rounded-2xl border-slate-200 bg-white text-slate-700" variant="outline">
+                      <Volume2 className="mr-2 h-4 w-4" />
+                      Phát âm
                     </Button>
                   </div>
-                  <div className="space-y-4">
-                    <div>
-                      <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Meaning</h4>
-                      <p className="text-xl text-white">{selectedWord.meaning}</p>
-                    </div>
-                    {selectedWord.wordType && (
-                      <div>
-                        <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Type</h4>
-                        <Badge variant="outline" className="border-white/[0.08] text-slate-300">{selectedWord.wordType}</Badge>
-                      </div>
-                    )}
-                    {selectedWord.exampleSentenceJP && (
-                      <div className="rounded-xl bg-white/[0.03] border border-white/[0.05] p-4">
-                        <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Example</h4>
-                        <p className="text-white">{selectedWord.exampleSentenceJP}</p>
-                        <p className="text-sm text-slate-500 mt-1">{selectedWord.exampleSentenceEN}</p>
-                      </div>
-                    )}
-                    {selectedWord.additionalNotes && (
-                      <div>
-                        <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Notes</h4>
-                        <p className="text-sm text-slate-400">{selectedWord.additionalNotes}</p>
-                      </div>
-                    )}
-                    <div className="pt-4">
-                      <Button onClick={() => handleSaveWord(selectedWord.id)} className="w-full bg-white/[0.06] hover:bg-cyan-500/15 text-white border border-white/[0.08] hover:border-cyan-500/30 transition-all">
-                        <Star className="w-4 h-4 mr-2" /> Add to My Words
-                      </Button>
-                    </div>
-                  </div>
-                </motion.div>
+                </div>
               </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </DashboardLayout>
   );
 };

@@ -8,11 +8,11 @@ import {
   Clock3,
   Flame,
   GraduationCap,
-  LayoutGrid,
   MessageSquareMore,
   Search,
   Sparkles,
   Star,
+  Target,
   Trophy,
   Zap,
 } from "lucide-react";
@@ -36,25 +36,25 @@ interface MeResponse {
 
 const API_BASE_URL = "http://localhost:8080";
 
-const stats = [
-  { label: "Streak", value: "12", icon: Flame, tone: "text-amber-200" },
-  { label: "Từ đã học", value: "156", icon: BookOpen, tone: "text-sky-200" },
-  { label: "Quiz", value: "24", icon: Trophy, tone: "text-emerald-200" },
-  { label: "Tập trung", value: "87%", icon: Sparkles, tone: "text-cyan-200" },
+const quickStats = [
+  { label: "Streak", value: "12", icon: Flame, color: "text-amber-500" },
+  { label: "Từ đã học", value: "156", icon: BookOpen, color: "text-sky-500" },
+  { label: "Quiz", value: "24", icon: Trophy, color: "text-emerald-500" },
+  { label: "Tập trung", value: "87%", icon: Sparkles, color: "text-violet-500" },
 ];
 
-const tools = [
-  { title: "Tra cứu", subtitle: "Tìm từ, ví dụ, kanji", icon: Search, to: "/dictionary" },
-  { title: "Dịch", subtitle: "Dịch nhanh theo ngữ cảnh", icon: MessageSquareMore, to: "/translation" },
-  { title: "Ngữ pháp", subtitle: "Ôn mẫu câu thường gặp", icon: Brain, to: "/grammar" },
-  { title: "JLPT", subtitle: "Lộ trình theo cấp độ", icon: GraduationCap, to: "/jlpt-lessons" },
+const quickActions = [
+  { title: "Tra cứu", subtitle: "Kanji, ví dụ, cách đọc", icon: Search, to: "/dictionary", accent: "bg-sky-100 text-sky-700" },
+  { title: "Dịch", subtitle: "Dịch nhanh theo ngữ cảnh", icon: MessageSquareMore, to: "/translation", accent: "bg-violet-100 text-violet-700" },
+  { title: "Ngữ pháp", subtitle: "Ôn cấu trúc thường gặp", icon: Brain, to: "/grammar", accent: "bg-emerald-100 text-emerald-700" },
+  { title: "JLPT", subtitle: "Lộ trình theo cấp độ", icon: GraduationCap, to: "/jlpt-lessons", accent: "bg-amber-100 text-amber-700" },
 ];
 
 const notebookCollections = [
-  { name: "Minna no Nihongo", meta: "2052 từ | 50 bài", updated: "Cập nhật hôm nay" },
-  { name: "Giao tiếp cơ bản", meta: "883 từ | 18 bài", updated: "2 ngày trước" },
-  { name: "Kanji - Kyu", meta: "49 từ", updated: "Tuần này" },
-  { name: "Động từ N4", meta: "124 từ", updated: "Tuần này" },
+  { name: "Minna no Nihongo", meta: "2052 từ | 50 bài" },
+  { name: "Giao tiếp cơ bản", meta: "883 từ | 18 bài" },
+  { name: "Kanji - Kyu", meta: "49 từ" },
+  { name: "Động từ N4", meta: "124 từ" },
 ];
 
 const discoverSets = [
@@ -66,11 +66,14 @@ const discoverSets = [
 
 const recentTopics = ["夜", "暮らす", "特別", "喜ぶ", "困る", "読書", "学び", "静けさ"];
 
-const dashboardActivity = [
+const activity = [
   { title: "Hoàn thành quiz ngữ pháp N4", time: "12 phút trước" },
   { title: "Lưu 5 từ vào sổ tay cá nhân", time: "Hôm nay" },
   { title: "Mở lại bài Daily Conversations", time: "Hôm qua" },
 ];
+
+const shellCard =
+  "rounded-[24px] border border-white/70 bg-white/[0.72] shadow-[0_12px_30px_rgba(148,163,184,0.12)] backdrop-blur-xl";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -144,113 +147,108 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout>
-      <div className="mx-auto max-w-[1560px]">
+      <div className="mx-auto max-w-[1500px]">
         <motion.section
-          initial={{ opacity: 0, y: 12 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6"
+          className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"
         >
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <h2 className="text-3xl font-semibold text-white">
-                {greeting}, {greetingName}!
-              </h2>
-              <p className="mt-1 text-sm text-slate-400">
-                Tiếp tục nhịp học của bạn trong không gian yên tĩnh và dễ nhìn.
-              </p>
-            </div>
-            <div className="hidden md:flex items-center gap-3">
-              <Link to="/dictionary">
-                <Button
-                  variant="outline"
-                  className="h-11 rounded-2xl border-white/10 bg-white/[0.04] text-white hover:bg-white/[0.06]"
-                >
-                  <Search className="mr-2 h-4 w-4" />
-                  Tra cứu
-                </Button>
-              </Link>
-              <Link to={nextLesson.to}>
-                <Button className="h-11 rounded-2xl bg-sky-500 hover:bg-sky-400 text-white">
-                  <ArrowRight className="mr-2 h-4 w-4" />
-                  Học tiếp
-                </Button>
-              </Link>
-            </div>
+          <div>
+            <h2 className="text-[2rem] font-semibold leading-tight text-slate-900">
+              {greeting}, {greetingName}!
+            </h2>
+            <p className="mt-1 text-sm text-slate-600">
+              Bảng tổng quan gọn nhẹ để bạn nhìn nhanh tiến độ mà không phải kéo nhiều.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <Link to="/dictionary">
+              <Button
+                variant="outline"
+                className="h-10 rounded-2xl border-white/80 bg-white/75 text-slate-700 hover:bg-white"
+              >
+                <Search className="mr-2 h-4 w-4" />
+                Tra cứu
+              </Button>
+            </Link>
+            <Link to={nextLesson.to}>
+              <Button className="h-10 rounded-2xl bg-sky-500 text-white hover:bg-sky-400">
+                <ArrowRight className="mr-2 h-4 w-4" />
+                Học tiếp
+              </Button>
+            </Link>
           </div>
         </motion.section>
 
-        <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
-          <div className="space-y-5">
+        <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="space-y-4">
             <motion.div
-              initial={{ opacity: 0, y: 12 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.04 }}
-              className="rounded-[28px] border border-white/[0.08] bg-white/[0.045] p-5 backdrop-blur-xl"
+              className={`${shellCard} p-4`}
             >
-              <div className="grid gap-4 xl:grid-cols-[220px_minmax(0,1fr)]">
-                <div className="rounded-[24px] bg-sky-500 px-5 py-5 text-white">
-                  <p className="text-xs uppercase tracking-[0.22em] text-white/70">Tiếp tục học</p>
-                  <h3 className="mt-4 text-2xl font-semibold leading-tight">
-                    {nextLesson.title}
-                  </h3>
-                  <div className="mt-5 flex items-center gap-2">
-                    <Badge className="border-white/15 bg-white/10 text-white hover:bg-white/10">
+              <div className="grid gap-4 xl:grid-cols-[260px_minmax(0,1fr)]">
+                <div className="rounded-[22px] bg-[linear-gradient(135deg,#60a5fa,#38bdf8_55%,#6ee7b7)] p-4 text-white shadow-[0_12px_30px_rgba(56,189,248,0.22)]">
+                  <p className="text-[11px] uppercase tracking-[0.22em] text-white/70">Tiếp tục học</p>
+                  <h3 className="mt-3 text-[1.6rem] font-semibold leading-tight">{nextLesson.title}</h3>
+                  <div className="mt-4 flex items-center gap-2">
+                    <Badge className="border-white/20 bg-white/15 text-white hover:bg-white/15">
                       {nextLesson.level}
                     </Badge>
-                    <span className="flex items-center gap-1 text-sm text-white/80">
+                    <span className="flex items-center gap-1 text-sm text-white/85">
                       <Clock3 className="h-3.5 w-3.5" />
                       {nextLesson.duration}
                     </span>
                   </div>
                   <Link to={nextLesson.to}>
-                    <Button className="mt-6 h-11 w-full rounded-2xl bg-white text-sky-700 hover:bg-slate-100">
+                    <Button className="mt-5 h-10 w-full rounded-2xl bg-white text-sky-700 hover:bg-slate-100">
                       Mở bài học
                     </Button>
                   </Link>
                 </div>
 
-                <div className="rounded-[24px] border border-white/[0.08] bg-slate-950/25 p-5">
-                  <div className="flex items-center justify-between">
+                <div className="rounded-[22px] border border-slate-200 bg-slate-50/85 p-4">
+                  <div className="mb-4 flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-semibold text-white">Tiến độ hôm nay</p>
-                      <p className="text-sm text-slate-400">
-                        1 bài JLPT ngắn + 10 từ trong sổ tay
-                      </p>
+                      <p className="text-sm font-semibold text-slate-900">Tiến độ hôm nay</p>
+                      <p className="text-sm text-slate-500">1 bài JLPT ngắn + 10 từ trong sổ tay</p>
                     </div>
-                    <LayoutGrid className="h-5 w-5 text-slate-500" />
+                    <Target className="h-5 w-5 text-slate-400" />
                   </div>
 
-                  <div className="mt-5 grid gap-4 sm:grid-cols-4">
-                    {stats.map((item) => {
+                  <div className="grid gap-3 sm:grid-cols-4">
+                    {quickStats.map((item) => {
                       const Icon = item.icon;
                       return (
                         <div
                           key={item.label}
-                          className="rounded-[20px] border border-white/[0.08] bg-white/[0.035] px-4 py-4"
+                          className="rounded-[18px] border border-white bg-white px-3 py-3 shadow-[0_8px_18px_rgba(148,163,184,0.10)]"
                         >
                           <div className="flex items-center justify-between">
-                            <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                            <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
                               {item.label}
                             </p>
-                            <Icon className={`h-4 w-4 ${item.tone}`} />
+                            <Icon className={`h-4 w-4 ${item.color}`} />
                           </div>
-                          <p className="mt-3 text-2xl font-semibold text-white">{item.value}</p>
+                          <p className="mt-2 text-2xl font-semibold text-slate-900">{item.value}</p>
                         </div>
                       );
                     })}
                   </div>
 
-                  <div className="mt-5">
+                  <div className="mt-4">
                     <div className="mb-2 flex items-center justify-between text-sm">
-                      <span className="text-slate-400">Tiến độ bài hiện tại</span>
-                      <span className="font-medium text-sky-200">{nextLesson.progress}%</span>
+                      <span className="text-slate-500">Tiến độ bài hiện tại</span>
+                      <span className="font-medium text-sky-600">{nextLesson.progress}%</span>
                     </div>
-                    <div className="h-2.5 overflow-hidden rounded-full bg-white/[0.06]">
+                    <div className="h-2.5 overflow-hidden rounded-full bg-slate-200">
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${nextLesson.progress}%` }}
                         transition={{ duration: 0.8, ease: "easeOut" }}
-                        className="h-full rounded-full bg-[linear-gradient(90deg,rgba(96,165,250,0.95),rgba(103,232,249,0.85))]"
+                        className="h-full rounded-full bg-[linear-gradient(90deg,#60a5fa,#22d3ee)]"
                       />
                     </div>
                   </div>
@@ -259,29 +257,27 @@ const Dashboard = () => {
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, y: 12 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.08 }}
-              className="rounded-[28px] border border-white/[0.08] bg-white/[0.045] p-5 backdrop-blur-xl"
+              className={`${shellCard} p-4`}
             >
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-semibold text-white">Công cụ học tập</h3>
-                  <p className="text-sm text-slate-400">Đi nhanh vào những phần bạn dùng nhiều nhất</p>
-                </div>
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold text-slate-900">Công cụ học tập</h3>
+                <p className="text-sm text-slate-500">Đi nhanh vào phần bạn dùng nhiều nhất</p>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                {tools.map((tool) => {
-                  const Icon = tool.icon;
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                {quickActions.map((item) => {
+                  const Icon = item.icon;
                   return (
-                    <Link key={tool.title} to={tool.to} className="group">
-                      <div className="rounded-[22px] border border-white/[0.08] bg-slate-950/25 px-4 py-4 transition hover:border-white/[0.12] hover:bg-white/[0.05]">
-                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-500/15 text-sky-200">
+                    <Link key={item.title} to={item.to} className="group">
+                      <div className="rounded-[20px] border border-white bg-white/90 px-4 py-4 transition hover:-translate-y-0.5 hover:shadow-[0_12px_26px_rgba(148,163,184,0.12)]">
+                        <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${item.accent}`}>
                           <Icon className="h-5 w-5" />
                         </div>
-                        <p className="mt-4 text-lg font-semibold text-white">{tool.title}</p>
-                        <p className="mt-1 text-sm text-slate-400">{tool.subtitle}</p>
+                        <p className="mt-3 text-base font-semibold text-slate-900">{item.title}</p>
+                        <p className="mt-1 text-sm text-slate-500">{item.subtitle}</p>
                       </div>
                     </Link>
                   );
@@ -289,120 +285,115 @@ const Dashboard = () => {
               </div>
             </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.12 }}
-              className="rounded-[28px] border border-white/[0.08] bg-white/[0.045] p-5 backdrop-blur-xl"
-            >
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-semibold text-white">Sổ tay của tôi</h3>
-                  <p className="text-sm text-slate-400">Các bộ từ và danh sách bạn đang dùng</p>
-                </div>
-                <Link to="/my-words" className="text-sm text-slate-400 hover:text-white">
-                  Xem thêm
-                </Link>
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                {notebookCollections.map((item, index) => (
-                  <div
-                    key={item.name}
-                    className={`rounded-[22px] border px-4 py-4 ${
-                      index === 0
-                        ? "border-sky-400/30 bg-sky-500/14"
-                        : "border-white/[0.08] bg-slate-950/25"
-                    }`}
-                  >
-                    <p className="text-lg font-semibold text-white">{item.name}</p>
-                    <p className="mt-1 text-sm text-slate-400">{item.meta}</p>
-                    <p className="mt-5 text-xs uppercase tracking-[0.18em] text-slate-500">
-                      {item.updated}
-                    </p>
+            <div className="grid gap-4 xl:grid-cols-2">
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.12 }}
+                className={`${shellCard} p-4`}
+              >
+                <div className="mb-4 flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900">Sổ tay của tôi</h3>
+                    <p className="text-sm text-slate-500">Các bộ từ đang dùng</p>
                   </div>
-                ))}
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.16 }}
-              className="rounded-[28px] border border-white/[0.08] bg-white/[0.045] p-5 backdrop-blur-xl"
-            >
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-semibold text-white">Khám phá</h3>
-                  <p className="text-sm text-slate-400">Các bộ nội dung hữu ích để học tiếp</p>
+                  <Link to="/my-words" className="text-sm text-slate-500 hover:text-slate-900">
+                    Xem thêm
+                  </Link>
                 </div>
-              </div>
 
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                {discoverSets.map((item) => (
-                  <div
-                    key={item.title}
-                    className="rounded-[22px] border border-white/[0.08] bg-slate-950/25 px-4 py-4"
-                  >
-                    <p className="text-lg font-semibold text-white">{item.title}</p>
-                    <p className="mt-1 text-sm text-slate-400">{item.info}</p>
-                    <div className="mt-5 flex items-center justify-between text-sm text-slate-400">
-                      <span>{item.author}</span>
-                      <Star className="h-4 w-4" />
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {notebookCollections.map((item) => (
+                    <div
+                      key={item.name}
+                      className={`rounded-[18px] border border-white bg-[linear-gradient(135deg,rgba(255,255,255,0.94),rgba(255,255,255,0.86))] px-4 py-4`}
+                    >
+                      <p className="text-base font-semibold text-slate-900">{item.name}</p>
+                      <p className="mt-1 text-sm text-slate-500">{item.meta}</p>
                     </div>
+                  ))}
+                </div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.16 }}
+                className={`${shellCard} p-4`}
+              >
+                <div className="mb-4 flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900">Khám phá</h3>
+                    <p className="text-sm text-slate-500">Các bộ nội dung hữu ích để học tiếp</p>
                   </div>
-                ))}
-              </div>
-            </motion.div>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {discoverSets.map((item) => (
+                    <div
+                      key={item.title}
+                      className="rounded-[18px] border border-white bg-white/[0.92] px-4 py-4 shadow-[0_8px_18px_rgba(148,163,184,0.08)]"
+                    >
+                      <p className="text-base font-semibold text-slate-900">{item.title}</p>
+                      <p className="mt-1 text-sm text-slate-500">{item.info}</p>
+                      <div className="mt-4 flex items-center justify-between text-sm text-slate-500">
+                        <span>{item.author}</span>
+                        <Star className="h-4 w-4 text-amber-500" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            </div>
           </div>
 
-          <div className="space-y-5">
+          <div className="space-y-4">
             <motion.div
-              initial={{ opacity: 0, y: 12 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 }}
-              className="rounded-[28px] border border-white/[0.08] bg-white/[0.045] p-5 backdrop-blur-xl"
+              className={`${shellCard} p-4`}
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-xl font-semibold text-white">Mục tiêu hôm nay</h3>
-                  <p className="text-sm text-slate-400">25 phút học tập trung</p>
+                  <h3 className="text-lg font-semibold text-slate-900">Mục tiêu hôm nay</h3>
+                  <p className="text-sm text-slate-500">25 phút học tập trung</p>
                 </div>
-                <Zap className="h-5 w-5 text-slate-500" />
+                <Zap className="h-5 w-5 text-slate-400" />
               </div>
 
-              <div className="mt-5 space-y-3">
+              <div className="mt-4 space-y-3">
                 {["1 bài hội thoại", "10 từ trong sổ tay", "1 bài quiz nhanh"].map((goal) => (
                   <div
                     key={goal}
-                    className="flex items-center gap-3 rounded-[20px] border border-white/[0.08] bg-slate-950/25 px-4 py-4"
+                    className="flex items-center gap-3 rounded-[18px] border border-white bg-white/[0.92] px-4 py-3"
                   >
-                    <div className="h-3 w-3 rounded-full bg-sky-200" />
-                    <span className="text-base text-slate-200">{goal}</span>
+                    <div className="h-3 w-3 rounded-full bg-sky-400" />
+                    <span className="text-sm font-medium text-slate-800">{goal}</span>
                   </div>
                 ))}
               </div>
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, y: 12 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="rounded-[28px] border border-white/[0.08] bg-white/[0.045] p-5 backdrop-blur-xl"
+              className={`${shellCard} p-4`}
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-xl font-semibold text-white">Lịch sử tra cứu</h3>
-                  <p className="text-sm text-slate-400">Các từ bạn vừa quan tâm</p>
+                  <h3 className="text-lg font-semibold text-slate-900">Lịch sử tra cứu</h3>
+                  <p className="text-sm text-slate-500">Các từ bạn vừa quan tâm</p>
                 </div>
-                <Search className="h-5 w-5 text-slate-500" />
+                <Search className="h-5 w-5 text-slate-400" />
               </div>
 
-              <div className="mt-5 flex flex-wrap gap-2">
+              <div className="mt-4 flex flex-wrap gap-2">
                 {recentTopics.map((topic) => (
                   <span
                     key={topic}
-                    className="rounded-full bg-sky-500/16 px-3 py-2 text-sm text-slate-100"
+                    className="rounded-full bg-sky-100 px-3 py-2 text-sm font-medium text-sky-800"
                   >
                     {topic}
                   </span>
@@ -411,27 +402,27 @@ const Dashboard = () => {
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, y: 12 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.14 }}
-              className="rounded-[28px] border border-white/[0.08] bg-white/[0.045] p-5 backdrop-blur-xl"
+              className={`${shellCard} p-4`}
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-xl font-semibold text-white">Hoạt động gần đây</h3>
-                  <p className="text-sm text-slate-400">Những gì bạn vừa hoàn thành</p>
+                  <h3 className="text-lg font-semibold text-slate-900">Hoạt động gần đây</h3>
+                  <p className="text-sm text-slate-500">Những gì bạn vừa hoàn thành</p>
                 </div>
-                <MessageSquareMore className="h-5 w-5 text-slate-500" />
+                <MessageSquareMore className="h-5 w-5 text-slate-400" />
               </div>
 
-              <div className="mt-5 space-y-3">
-                {dashboardActivity.map((item) => (
+              <div className="mt-4 space-y-3">
+                {activity.map((item) => (
                   <div
                     key={item.title}
-                    className="rounded-[20px] border border-white/[0.08] bg-slate-950/25 px-4 py-4"
+                    className="rounded-[18px] border border-white bg-white/[0.92] px-4 py-3"
                   >
-                    <p className="text-base text-white">{item.title}</p>
-                    <p className="mt-2 text-xs uppercase tracking-[0.18em] text-slate-500">
+                    <p className="text-sm font-medium text-slate-900">{item.title}</p>
+                    <p className="mt-2 text-[11px] uppercase tracking-[0.18em] text-slate-500">
                       {item.time}
                     </p>
                   </div>

@@ -1,17 +1,14 @@
-import { useEffect, useState, useCallback } from "react";
-import { motion } from "framer-motion";
-import {
-  Settings as SettingsIcon, Moon, Sun, Bell, BellOff, Globe, Target,
-  Volume2, VolumeX, BookOpen, GraduationCap, Save, RotateCcw, Palette
-} from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Bell, BookOpen, Globe, Palette, RotateCcw, Save, Target, Volume2 } from "lucide-react";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import apiClient from "@/lib/apiClient";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+import apiClient from "@/lib/apiClient";
 
 interface UserSettingsData {
   theme: string;
@@ -26,7 +23,7 @@ interface UserSettingsData {
 }
 
 const DEFAULT_SETTINGS: UserSettingsData = {
-  theme: "dark",
+  theme: "light",
   language: "vi",
   dailyGoalMinutes: 30,
   notificationsEnabled: true,
@@ -46,27 +43,34 @@ const Settings = () => {
 
   const fetchSettings = useCallback(async () => {
     try {
-      const data = await apiClient.settings.get() as UserSettingsData;
+      const data = (await apiClient.settings.get()) as UserSettingsData;
       setSettings(data);
       setOriginal(data);
     } catch {
-      // Use defaults
+      setSettings(DEFAULT_SETTINGS);
+      setOriginal(DEFAULT_SETTINGS);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => { fetchSettings(); }, [fetchSettings]);
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
+
+  const update = (key: keyof UserSettingsData, value: string | number | boolean) => {
+    setSettings((prev) => ({ ...prev, [key]: value }));
+  };
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      const updated = await apiClient.settings.update(settings as unknown as Record<string, unknown>) as UserSettingsData;
+      const updated = (await apiClient.settings.update(settings as unknown as Record<string, unknown>)) as UserSettingsData;
       setSettings(updated);
       setOriginal(updated);
-      toast({ title: "Saved! ✅", description: "Cài đặt đã được lưu thành công" });
+      toast({ title: "Đã lưu cài đặt", description: "Tùy chọn học tập đã được cập nhật." });
     } catch {
-      toast({ title: "Error", description: "Failed to save settings", variant: "destructive" });
+      toast({ title: "Không thể lưu cài đặt", description: "Vui lòng thử lại.", variant: "destructive" });
     } finally {
       setSaving(false);
     }
@@ -74,23 +78,16 @@ const Settings = () => {
 
   const handleReset = () => {
     setSettings(original);
-    toast({ title: "Reset", description: "Settings reverted to last saved state" });
+    toast({ title: "Đã hoàn tác", description: "Cài đặt quay về lần lưu gần nhất." });
   };
 
   const hasChanges = JSON.stringify(settings) !== JSON.stringify(original);
 
-  const update = (key: keyof UserSettingsData, value: string | number | boolean) => {
-    setSettings(prev => ({ ...prev, [key]: value }));
-  };
-
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center h-[60vh]">
-          <div className="relative w-12 h-12">
-            <motion.div className="absolute inset-0 rounded-full border-2 border-violet-500/20" animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }} />
-            <motion.div className="absolute inset-0 rounded-full border-2 border-transparent border-t-violet-400" animate={{ rotate: -360 }} transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }} />
-          </div>
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <div className="h-12 w-12 rounded-full border-4 border-violet-100 border-t-violet-500 animate-spin" />
         </div>
       </DashboardLayout>
     );
@@ -98,228 +95,170 @@ const Settings = () => {
 
   return (
     <DashboardLayout>
-      <div className="container mx-auto px-4 py-12 max-w-3xl">
-          {/* Header */}
-          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-gradient-to-br from-violet-500/20 to-purple-500/20 border border-violet-500/20">
-                  <SettingsIcon className="w-7 h-7 text-violet-400" />
-                </div>
-                <div>
-                  <h1 className="text-3xl font-bold text-white">Cài đặt 設定</h1>
-                  <p className="text-sm text-slate-400">Tùy chỉnh trải nghiệm học tập</p>
-                </div>
-              </div>
-              {hasChanges && (
-                <div className="flex gap-2">
-                  <Button variant="ghost" onClick={handleReset} className="text-slate-400 hover:text-white"><RotateCcw className="w-4 h-4 mr-1" /> Reset</Button>
-                  <Button onClick={handleSave} disabled={saving} className="bg-white/[0.06] hover:bg-violet-500/15 text-white border border-white/[0.08] hover:border-violet-500/30 transition-all">
-                    {saving ? <div className="relative w-4 h-4 mr-1"><motion.div className="absolute inset-0 rounded-full border-2 border-transparent border-t-white" animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} /></div> : <><Save className="w-4 h-4 mr-1" /> Lưu</>}
-                  </Button>
-                </div>
-              )}
+      <div className="mx-auto max-w-[1380px]">
+        <PageHeader
+          action={
+            <div className="flex gap-2">
+              <Button className="rounded-2xl border-white/80 bg-white/90 text-slate-700 hover:bg-white" onClick={handleReset} variant="outline">
+                <RotateCcw className="mr-2 h-4 w-4" />
+                Reset
+              </Button>
+              <Button className="rounded-2xl bg-violet-500 text-white hover:bg-violet-400" disabled={!hasChanges || saving} onClick={handleSave}>
+                <Save className="mr-2 h-4 w-4" />
+                {saving ? "Đang lưu..." : "Lưu"}
+              </Button>
             </div>
-          </motion.div>
+          }
+          eyebrow="Settings"
+          icon={<Palette className="h-6 w-6 text-violet-600" />}
+          title="Cài đặt"
+          description="Mình gom các tùy chọn thành các cụm nhỏ, giúp bạn nhìn tổng quát mọi thiết lập mà không phải kéo sâu."
+        />
 
-          <div className="space-y-6">
-            {/* Appearance */}
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-              <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] overflow-hidden">
-                <div className="h-0.5 bg-gradient-to-r from-violet-500/40 to-purple-500/40" />
-                <div className="p-6">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Palette className="w-5 h-5 text-violet-400" />
-                    <h3 className="text-base font-bold text-white">Giao diện</h3>
-                  </div>
-                  <p className="text-xs text-slate-500 mb-5">Theme và ngôn ngữ hiển thị</p>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between pb-4 border-b border-white/[0.04]">
-                      <div className="flex items-center gap-3">
-                        {settings.theme === "dark" ? <Moon className="w-5 h-5 text-blue-400" /> : <Sun className="w-5 h-5 text-amber-400" />}
-                        <div>
-                          <Label className="text-sm text-white">Theme</Label>
-                          <p className="text-xs text-slate-500">Chế độ sáng / tối</p>
-                        </div>
-                      </div>
-                      <Select value={settings.theme} onValueChange={(v) => update("theme", v)}>
-                        <SelectTrigger className="w-[120px] bg-white/[0.03] border-white/[0.06] text-white text-sm"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="dark">🌙 Dark</SelectItem>
-                          <SelectItem value="light">☀️ Light</SelectItem>
-                          <SelectItem value="system">💻 System</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Globe className="w-5 h-5 text-cyan-400" />
-                        <div>
-                          <Label className="text-sm text-white">Ngôn ngữ</Label>
-                          <p className="text-xs text-slate-500">Ngôn ngữ hiển thị giao diện</p>
-                        </div>
-                      </div>
-                      <Select value={settings.language} onValueChange={(v) => update("language", v)}>
-                        <SelectTrigger className="w-[140px] bg-white/[0.03] border-white/[0.06] text-white text-sm"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="vi">🇻🇳 Tiếng Việt</SelectItem>
-                          <SelectItem value="en">🇬🇧 English</SelectItem>
-                          <SelectItem value="ja">🇯🇵 日本語</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Learning */}
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-              <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] overflow-hidden">
-                <div className="h-0.5 bg-gradient-to-r from-emerald-500/40 to-teal-500/40" />
-                <div className="p-6">
-                  <div className="flex items-center gap-2 mb-1">
-                    <BookOpen className="w-5 h-5 text-emerald-400" />
-                    <h3 className="text-base font-bold text-white">Học tập</h3>
-                  </div>
-                  <p className="text-xs text-slate-500 mb-5">Cài đặt hiển thị và luyện tập</p>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between pb-4 border-b border-white/[0.04]">
-                      <div>
-                        <Label className="text-sm text-white">Hiện Furigana</Label>
-                        <p className="text-xs text-slate-500">Hiện chữ đọc bên trên Kanji</p>
-                      </div>
-                      <Switch checked={settings.showFurigana} onCheckedChange={(v) => update("showFurigana", v)} />
-                    </div>
-                    <div className="flex items-center justify-between pb-4 border-b border-white/[0.04]">
-                      <div>
-                        <Label className="text-sm text-white">Hiện Romaji</Label>
-                        <p className="text-xs text-slate-500">Hiện phiên âm Latin</p>
-                      </div>
-                      <Switch checked={settings.showRomaji} onCheckedChange={(v) => update("showRomaji", v)} />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        {settings.autoPlayAudio ? <Volume2 className="w-5 h-5 text-emerald-400" /> : <VolumeX className="w-5 h-5 text-slate-500" />}
-                        <div>
-                          <Label className="text-sm text-white">Tự động phát âm</Label>
-                          <p className="text-xs text-slate-500">Phát âm khi xem từ vựng</p>
-                        </div>
-                      </div>
-                      <Switch checked={settings.autoPlayAudio} onCheckedChange={(v) => update("autoPlayAudio", v)} />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Goals */}
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-              <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] overflow-hidden">
-                <div className="h-0.5 bg-gradient-to-r from-orange-500/40 to-amber-500/40" />
-                <div className="p-6">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Target className="w-5 h-5 text-orange-400" />
-                    <h3 className="text-base font-bold text-white">Mục tiêu</h3>
-                  </div>
-                  <p className="text-xs text-slate-500 mb-5">Đặt mục tiêu học tập cá nhân</p>
-                  <div className="space-y-5">
-                    <div className="pb-5 border-b border-white/[0.04]">
-                      <div className="flex items-center justify-between mb-3">
-                        <Label className="text-sm text-white">Mục tiêu hàng ngày</Label>
-                        <span className="text-sm font-bold text-orange-400">{settings.dailyGoalMinutes} phút</span>
-                      </div>
-                      <Slider
-                        value={[settings.dailyGoalMinutes]}
-                        onValueChange={([v]) => update("dailyGoalMinutes", v)}
-                        max={120}
-                        min={5}
-                        step={5}
-                        className="w-full"
-                      />
-                      <div className="flex justify-between text-xs text-slate-600 mt-1">
-                        <span>5 phút</span><span>60 phút</span><span>120 phút</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between pb-5 border-b border-white/[0.04]">
-                      <div className="flex items-center gap-3">
-                        <GraduationCap className="w-5 h-5 text-cyan-400" />
-                        <div>
-                          <Label className="text-sm text-white">Mục tiêu JLPT</Label>
-                          <p className="text-xs text-slate-500">Level bạn muốn đạt được</p>
-                        </div>
-                      </div>
-                      <Select value={settings.targetJlptLevel} onValueChange={(v) => update("targetJlptLevel", v)}>
-                        <SelectTrigger className="w-[100px] bg-white/[0.03] border-white/[0.06] text-white text-sm"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {["N5", "N4", "N3", "N2", "N1"].map(l => (
-                            <SelectItem key={l} value={l}>{l}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label className="text-sm text-white">Độ khó Quiz</Label>
-                        <p className="text-xs text-slate-500">Mức độ khó của câu hỏi</p>
-                      </div>
-                      <Select value={settings.quizDifficulty} onValueChange={(v) => update("quizDifficulty", v)}>
-                        <SelectTrigger className="w-[130px] bg-white/[0.03] border-white/[0.06] text-white text-sm"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="EASY">🟢 Dễ</SelectItem>
-                          <SelectItem value="MEDIUM">🟡 Trung bình</SelectItem>
-                          <SelectItem value="HARD">🔴 Khó</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Notifications */}
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-              <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] overflow-hidden">
-                <div className="h-0.5 bg-gradient-to-r from-amber-500/40 to-yellow-500/40" />
-                <div className="p-6">
-                  <div className="flex items-center gap-2 mb-1">
-                    {settings.notificationsEnabled ? <Bell className="w-5 h-5 text-amber-400" /> : <BellOff className="w-5 h-5 text-slate-500" />}
-                    <h3 className="text-base font-bold text-white">Thông báo</h3>
-                  </div>
-                  <p className="text-xs text-slate-500 mb-5">Quản lý thông báo nhắc nhở</p>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="text-sm text-white">Bật thông báo</Label>
-                      <p className="text-xs text-slate-500">Nhận nhắc nhở học tập hàng ngày</p>
-                    </div>
-                    <Switch checked={settings.notificationsEnabled} onCheckedChange={(v) => update("notificationsEnabled", v)} />
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-
-          {/* Floating Save */}
-          <AnimatedSaveBtn visible={hasChanges} onSave={handleSave} saving={saving} />
+        <div className="mb-4 grid gap-3 md:grid-cols-3">
+          <MetricCard hint="Theme hiện tại" icon={<Palette className="h-4 w-4 text-violet-500" />} label="Giao diện" value={settings.theme} />
+          <MetricCard hint="Mục tiêu cá nhân" icon={<Target className="h-4 w-4 text-amber-500" />} label="Daily goal" value={`${settings.dailyGoalMinutes} phút`} />
+          <MetricCard hint="Trạng thái hệ thống" icon={<Bell className="h-4 w-4 text-sky-500" />} label="Thông báo" value={settings.notificationsEnabled ? "Bật" : "Tắt"} />
         </div>
-    </DashboardLayout>
-  );
-};
 
-const AnimatedSaveBtn = ({ visible, onSave, saving }: { visible: boolean; onSave: () => void; saving: boolean }) => {
-  if (!visible) return null;
-  return (
-    <motion.div
-      initial={{ y: 100, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      exit={{ y: 100, opacity: 0 }}
-      className="fixed bottom-6 right-6 z-50"
-    >
-      <Button size="lg" onClick={onSave} disabled={saving} className="bg-white/[0.08] hover:bg-violet-500/20 text-white border border-white/[0.1] hover:border-violet-500/30 shadow-lg shadow-black/20 transition-all">
-        {saving ? <div className="relative w-4 h-4 mr-2"><motion.div className="absolute inset-0 rounded-full border-2 border-transparent border-t-white" animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} /></div> : <Save className="w-5 h-5 mr-2" />}
-        Lưu thay đổi
-      </Button>
-    </motion.div>
+        <div className="grid gap-4 xl:grid-cols-2">
+          <PageSection title="Giao diện và ngôn ngữ" description="Các lựa chọn hiển thị chính được gom lại để đổi nhanh hơn.">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between rounded-[18px] border border-slate-200 bg-white p-4">
+                <div className="flex items-center gap-3">
+                  <Palette className="h-5 w-5 text-violet-500" />
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">Theme</p>
+                    <p className="mt-1 text-sm text-slate-500">Chuyển giữa chế độ sáng, tối hoặc theo hệ thống.</p>
+                  </div>
+                </div>
+                <Select onValueChange={(value) => update("theme", value)} value={settings.theme}>
+                  <SelectTrigger className="h-11 w-[140px] rounded-2xl border-white/80 bg-white/90 text-slate-700">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="light">Light</SelectItem>
+                    <SelectItem value="dark">Dark</SelectItem>
+                    <SelectItem value="system">System</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center justify-between rounded-[18px] border border-slate-200 bg-white p-4">
+                <div className="flex items-center gap-3">
+                  <Globe className="h-5 w-5 text-sky-500" />
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">Ngôn ngữ giao diện</p>
+                    <p className="mt-1 text-sm text-slate-500">Đổi ngôn ngữ hiển thị tổng thể của ứng dụng.</p>
+                  </div>
+                </div>
+                <Select onValueChange={(value) => update("language", value)} value={settings.language}>
+                  <SelectTrigger className="h-11 w-[160px] rounded-2xl border-white/80 bg-white/90 text-slate-700">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="vi">Tiếng Việt</SelectItem>
+                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="ja">日本語</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </PageSection>
+
+          <PageSection title="Tùy chọn học tập" description="Bật/tắt nhanh các hỗ trợ đọc và âm thanh ngay trong một cụm gọn.">
+            <div className="space-y-4">
+              {[
+                { key: "showFurigana", title: "Hiện furigana", description: "Bật gợi ý đọc phía trên kanji." },
+                { key: "showRomaji", title: "Hiện romaji", description: "Hiện phiên âm Latin khi phù hợp." },
+                { key: "autoPlayAudio", title: "Tự phát âm", description: "Phát audio khi xem từ vựng hoặc ví dụ." },
+              ].map((item) => (
+                <div key={item.key} className="flex items-center justify-between rounded-[18px] border border-slate-200 bg-white p-4">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">{item.title}</p>
+                    <p className="mt-1 text-sm text-slate-500">{item.description}</p>
+                  </div>
+                  <Switch
+                    checked={settings[item.key as keyof UserSettingsData] as boolean}
+                    onCheckedChange={(value) => update(item.key as keyof UserSettingsData, value)}
+                  />
+                </div>
+              ))}
+            </div>
+          </PageSection>
+
+          <PageSection title="Mục tiêu và độ khó" description="Các slider và selector được làm thấp hơn để không kéo trang quá dài.">
+            <div className="space-y-5">
+              <div className="rounded-[18px] border border-slate-200 bg-white p-4">
+                <div className="mb-3 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Target className="h-5 w-5 text-amber-500" />
+                    <div>
+                      <Label className="text-sm font-semibold text-slate-900">Mục tiêu hằng ngày</Label>
+                      <p className="mt-1 text-sm text-slate-500">Điều chỉnh số phút học bạn muốn giữ đều mỗi ngày.</p>
+                    </div>
+                  </div>
+                  <span className="text-sm font-semibold text-amber-700">{settings.dailyGoalMinutes} phút</span>
+                </div>
+                <Slider
+                  className="w-full"
+                  max={120}
+                  min={5}
+                  onValueChange={([value]) => update("dailyGoalMinutes", value)}
+                  step={5}
+                  value={[settings.dailyGoalMinutes]}
+                />
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="rounded-[18px] border border-slate-200 bg-white p-4">
+                  <Label className="mb-2 block text-sm font-semibold text-slate-900">Mục tiêu JLPT</Label>
+                  <Select onValueChange={(value) => update("targetJlptLevel", value)} value={settings.targetJlptLevel}>
+                    <SelectTrigger className="h-11 rounded-2xl border-white/80 bg-white/90 text-slate-700">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {["N5", "N4", "N3", "N2", "N1"].map((level) => (
+                        <SelectItem key={level} value={level}>
+                          {level}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="rounded-[18px] border border-slate-200 bg-white p-4">
+                  <Label className="mb-2 block text-sm font-semibold text-slate-900">Độ khó quiz</Label>
+                  <Select onValueChange={(value) => update("quizDifficulty", value)} value={settings.quizDifficulty}>
+                    <SelectTrigger className="h-11 rounded-2xl border-white/80 bg-white/90 text-slate-700">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="EASY">Easy</SelectItem>
+                      <SelectItem value="MEDIUM">Medium</SelectItem>
+                      <SelectItem value="HARD">Hard</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          </PageSection>
+
+          <PageSection title="Thông báo" description="Không đẩy thành một màn hình riêng nữa, chỉ giữ phần thực sự cần thiết.">
+            <div className="flex items-center justify-between rounded-[18px] border border-slate-200 bg-white p-4">
+              <div className="flex items-center gap-3">
+                <Volume2 className="h-5 w-5 text-sky-500" />
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">Nhắc học mỗi ngày</p>
+                  <p className="mt-1 text-sm text-slate-500">Bật để nhận nhắc nhở giữ nhịp học đều.</p>
+                </div>
+              </div>
+              <Switch checked={settings.notificationsEnabled} onCheckedChange={(value) => update("notificationsEnabled", value)} />
+            </div>
+          </PageSection>
+        </div>
+      </div>
+    </DashboardLayout>
   );
 };
 

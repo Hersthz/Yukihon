@@ -1,9 +1,7 @@
-// src/components/learning/LessonCard2.tsx
-
 import { motion } from "framer-motion";
-import { Lock, PlayCircle, CheckCircle, Clock } from "lucide-react";
+import { CheckCircle, Clock, Lock, PlayCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import GlassCard from "@/components/genshin/GlassCard";
+import { cn } from "@/lib/utils";
 
 interface LessonItem {
   id: number;
@@ -30,39 +28,27 @@ const LessonCard2 = ({
   estimatedTime = 15,
 }: LessonCard2Props) => {
   return (
-    <motion.div
-      whileHover={!isLocked ? { scale: 1.05 } : {}}
-      whileTap={!isLocked ? { scale: 0.98 } : {}}
-    >
-      <GlassCard className="h-full relative overflow-hidden group">
-        <div className="relative z-10 p-6 h-full flex flex-col justify-between">
-          {/* Header */}
+    <motion.div whileHover={!isLocked ? { y: -4 } : {}} whileTap={!isLocked ? { scale: 0.99 } : {}}>
+      <div className="relative h-full overflow-hidden rounded-[22px] border border-white/70 bg-white/[0.84] shadow-[0_12px_30px_rgba(148,163,184,0.12)] backdrop-blur-xl">
+        <div className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,#7dd3fc,#c4b5fd,#86efac)] opacity-75" />
+        <div className="relative flex h-full flex-col justify-between p-5">
           <div>
-            <div className="flex items-start justify-between mb-3">
-              <span className="inline-block px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full text-xs font-semibold">
+            <div className="mb-3 flex items-start justify-between">
+              <span className="inline-flex rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">
                 {lesson.jlptLevel || "N4"}
               </span>
-              {isCompleted && (
-                <CheckCircle className="w-5 h-5 text-green-400" />
-              )}
-              {isLocked && <Lock className="w-5 h-5 text-gray-400" />}
+              {isCompleted && <CheckCircle className="h-5 w-5 text-emerald-500" />}
+              {isLocked && <Lock className="h-5 w-5 text-slate-400" />}
             </div>
 
-            <h3 className="text-xl font-bold text-white mb-2 line-clamp-2">
-              {lesson.title}
-            </h3>
+            <h3 className="mb-2 line-clamp-2 text-lg font-semibold text-slate-900">{lesson.title}</h3>
 
-            {lesson.description && (
-              <p className="text-sm text-gray-400 line-clamp-2">
-                {lesson.description}
-              </p>
-            )}
+            {lesson.description && <p className="line-clamp-2 text-sm text-slate-600">{lesson.description}</p>}
           </div>
 
-          {/* Footer */}
-          <div className="flex items-center justify-between pt-4 border-t border-white/10">
-            <div className="flex items-center gap-1 text-gray-400 text-sm">
-              <Clock className="w-4 h-4" />
+          <div className="mt-5 flex items-center justify-between border-t border-slate-200/80 pt-4">
+            <div className="flex items-center gap-1 text-sm text-slate-500">
+              <Clock className="h-4 w-4" />
               <span>{estimatedTime} min</span>
             </div>
 
@@ -70,27 +56,29 @@ const LessonCard2 = ({
               <Button
                 size="sm"
                 onClick={() => onStart(lesson.id)}
-                className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white"
+                className={cn(
+                  "rounded-xl text-white shadow-[0_10px_20px_rgba(14,165,233,0.20)]",
+                  isCompleted ? "bg-emerald-500 hover:bg-emerald-400" : "bg-sky-500 hover:bg-sky-400"
+                )}
               >
-                <PlayCircle className="w-4 h-4 mr-2" />
+                <PlayCircle className="mr-2 h-4 w-4" />
                 {isCompleted ? "Review" : "Start"}
               </Button>
             )}
           </div>
         </div>
 
-        {/* Background image overlay */}
         {lesson.imageUrl && (
           <div
-            className="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity"
+            className="absolute inset-0 opacity-10 transition-opacity hover:opacity-20"
             style={{
               backgroundImage: `url(${lesson.imageUrl})`,
-              backgroundSize: "cover",
               backgroundPosition: "center",
+              backgroundSize: "cover",
             }}
           />
         )}
-      </GlassCard>
+      </div>
     </motion.div>
   );
 };
