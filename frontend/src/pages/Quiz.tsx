@@ -6,7 +6,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { quizAPI } from "@/lib/api/learningClient";
+import { quizApi } from "@/api";
 
 interface QuizItem {
   id: number;
@@ -30,7 +30,7 @@ const Quiz = () => {
 
   const { data: quizzes = [], isLoading } = useQuery({
     queryKey: ["quizzes"],
-    queryFn: () => quizAPI.getAll(),
+    queryFn: () => quizApi.getAll(),
   });
 
   const filteredQuizzes = useMemo(() => {

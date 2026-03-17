@@ -18,8 +18,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { myWordsApi } from "@/api";
 import { useToast } from "@/hooks/use-toast";
-import apiClient from "@/lib/apiClient";
 
 interface SavedWord {
   id: number;
@@ -58,13 +58,13 @@ const MyWords = () => {
       let data: SavedWord[];
 
       if (filterFolder) {
-        data = (await apiClient.myWords.getAll(filterFolder)) as SavedWord[];
+        data = (await myWordsApi.getAll(filterFolder)) as SavedWord[];
       } else if (filterMastered === "true") {
-        data = (await apiClient.myWords.getMastered(true)) as SavedWord[];
+        data = (await myWordsApi.getMastered(true)) as SavedWord[];
       } else if (filterMastered === "false") {
-        data = (await apiClient.myWords.getMastered(false)) as SavedWord[];
+        data = (await myWordsApi.getMastered(false)) as SavedWord[];
       } else {
-        data = (await apiClient.myWords.getAll()) as SavedWord[];
+        data = (await myWordsApi.getAll()) as SavedWord[];
       }
 
       setWords(data);
@@ -77,7 +77,7 @@ const MyWords = () => {
 
   const fetchStats = useCallback(async () => {
     try {
-      const data = (await apiClient.myWords.getStats()) as WordStats;
+      const data = (await myWordsApi.getStats()) as WordStats;
       setStats(data);
     } catch {
       // silent
@@ -91,7 +91,7 @@ const MyWords = () => {
 
   const toggleMastered = async (wordId: number) => {
     try {
-      const updated = (await apiClient.myWords.toggleMastered(wordId)) as SavedWord;
+      const updated = (await myWordsApi.toggleMastered(wordId)) as SavedWord;
       setWords((prev) => prev.map((word) => (word.id === wordId ? updated : word)));
       fetchStats();
     } catch {
@@ -101,7 +101,7 @@ const MyWords = () => {
 
   const removeWord = async (wordId: number) => {
     try {
-      await apiClient.myWords.removeWord(wordId);
+      await myWordsApi.removeWord(wordId);
       setWords((prev) => prev.filter((word) => word.id !== wordId));
       fetchStats();
     } catch {
@@ -111,7 +111,7 @@ const MyWords = () => {
 
   const updateNote = async (wordId: number) => {
     try {
-      await apiClient.myWords.updateNote(wordId, noteText);
+      await myWordsApi.updateNote(wordId, noteText);
       setWords((prev) => prev.map((word) => (word.id === wordId ? { ...word, personalNote: noteText } : word)));
       setEditingNote(null);
       setNoteText("");

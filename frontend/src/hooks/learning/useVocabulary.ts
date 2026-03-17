@@ -1,14 +1,14 @@
 // src/hooks/learning/useVocabulary.ts
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { vocabularyAPI } from "@/lib/api/learningClient";
+import { vocabularyApi } from "@/api";
 
 export const useVocabulary = (id?: number) => {
   return useQuery({
     queryKey: ["vocabulary", id],
     queryFn: () => {
       if (!id) throw new Error("ID is required");
-      return vocabularyAPI.getById(id);
+      return vocabularyApi.getById(id);
     },
     enabled: !!id,
   });
@@ -17,7 +17,7 @@ export const useVocabulary = (id?: number) => {
 export const useVocabularyList = () => {
   return useQuery({
     queryKey: ["vocabulary"],
-    queryFn: () => vocabularyAPI.getAll(),
+    queryFn: () => vocabularyApi.getAll(),
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 };
@@ -25,7 +25,7 @@ export const useVocabularyList = () => {
 export const useVocabularyByLevel = (level: string) => {
   return useQuery({
     queryKey: ["vocabulary", "level", level],
-    queryFn: () => vocabularyAPI.getByLevel(level),
+    queryFn: () => vocabularyApi.getByLevel(level),
     staleTime: 1000 * 60 * 5,
   });
 };
@@ -33,7 +33,7 @@ export const useVocabularyByLevel = (level: string) => {
 export const useVocabularyLevels = () => {
   return useQuery({
     queryKey: ["vocabulary", "levels"],
-    queryFn: () => vocabularyAPI.getAllLevels(),
+    queryFn: () => vocabularyApi.getLevels(),
     staleTime: 1000 * 60 * 60, // 1 hour
   });
 };

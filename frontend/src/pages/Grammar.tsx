@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { useQuery } from "@tanstack/react-query";
-import { grammarAPI } from "@/lib/api/learningClient";
+import { grammarApi } from "@/api";
 import { EmptyState, PageHeader, PageSection } from "@/components/layout/UserPage";
 
 interface GrammarItem {
@@ -35,7 +35,7 @@ const Grammar = () => {
 
   const { data: grammarList = [], isLoading } = useQuery({
     queryKey: ["grammar"],
-    queryFn: () => grammarAPI.getAll(),
+    queryFn: () => grammarApi.getAll(),
   });
 
   const filteredGrammar = useMemo(() => {

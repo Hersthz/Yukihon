@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import WinterNightBackground from "@/components/WinterNightBackground";
 import DynamicTable, { ColumnDef } from "@/components/admin/DynamicTable";
-import apiClient from "@/lib/apiClient";
+import { grammarApi, lessonApi, quizApi, vocabularyApi } from "@/api";
 import { useToast } from "@/hooks/use-toast";
 
 // --- Types ---
@@ -94,22 +94,22 @@ const AdminContent = () => {
     try {
       switch (tab) {
         case "lessons": {
-          const d = await apiClient.lessons.getAll() as Lesson[] | { content: Lesson[] };
+          const d = await lessonApi.getAll() as Lesson[] | { content: Lesson[] };
           setLessons(Array.isArray(d) ? d : d.content || []);
           break;
         }
         case "vocabulary": {
-          const d = await apiClient.vocabulary.getAll() as VocabItem[] | { content: VocabItem[] };
+          const d = await vocabularyApi.getAll() as VocabItem[] | { content: VocabItem[] };
           setVocab(Array.isArray(d) ? d : d.content || []);
           break;
         }
         case "grammar": {
-          const d = await apiClient.grammar.getAll() as GrammarItem[] | { content: GrammarItem[] };
+          const d = await grammarApi.getAll() as GrammarItem[] | { content: GrammarItem[] };
           setGrammar(Array.isArray(d) ? d : d.content || []);
           break;
         }
         case "quizzes": {
-          const d = await apiClient.quizzes.getAll() as QuizItem[] | { content: QuizItem[] };
+          const d = await quizApi.getAll() as QuizItem[] | { content: QuizItem[] };
           setQuizzes(Array.isArray(d) ? d : d.content || []);
           break;
         }
@@ -133,31 +133,31 @@ const AdminContent = () => {
       if (id) {
         switch (tab) {
           case "lessons":
-            await apiClient.lessons.update(id, item);
+            await lessonApi.update(id, item);
             break;
           case "vocabulary":
-            await apiClient.vocabulary.update(id, item);
+            await vocabularyApi.update(id, item);
             break;
           case "grammar":
-            await apiClient.grammar.update(id, item);
+            await grammarApi.update(id, item);
             break;
           case "quizzes":
-            await apiClient.quizzes.update(id, item);
+            await quizApi.update(id, item);
             break;
         }
       } else {
         switch (tab) {
           case "lessons":
-            await apiClient.lessons.create(item);
+            await lessonApi.create(item);
             break;
           case "vocabulary":
-            await apiClient.vocabulary.create(item);
+            await vocabularyApi.create(item);
             break;
           case "grammar":
-            await apiClient.grammar.create(item);
+            await grammarApi.create(item);
             break;
           case "quizzes":
-            await apiClient.quizzes.create(item);
+            await quizApi.create(item);
             break;
         }
       }
@@ -173,16 +173,16 @@ const AdminContent = () => {
     try {
       switch (tab) {
         case "lessons":
-          await apiClient.lessons.delete(id as number);
+          await lessonApi.delete(id as number);
           break;
         case "vocabulary":
-          await apiClient.vocabulary.delete(id as number);
+          await vocabularyApi.delete(id as number);
           break;
         case "grammar":
-          await apiClient.grammar.delete(id as number);
+          await grammarApi.delete(id as number);
           break;
         case "quizzes":
-          await apiClient.quizzes.delete(id as number);
+          await quizApi.delete(id as number);
           break;
       }
       toast({ title: "Deleted", description: "Đã xóa thành công" });

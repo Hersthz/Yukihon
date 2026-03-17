@@ -7,8 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
+import { settingsApi } from "@/api";
 import { useToast } from "@/hooks/use-toast";
-import apiClient from "@/lib/apiClient";
 
 interface UserSettingsData {
   theme: string;
@@ -43,7 +43,7 @@ const Settings = () => {
 
   const fetchSettings = useCallback(async () => {
     try {
-      const data = (await apiClient.settings.get()) as UserSettingsData;
+      const data = (await settingsApi.get()) as UserSettingsData;
       setSettings(data);
       setOriginal(data);
     } catch {
@@ -65,7 +65,7 @@ const Settings = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const updated = (await apiClient.settings.update(settings as unknown as Record<string, unknown>)) as UserSettingsData;
+      const updated = (await settingsApi.update(settings as unknown as Record<string, unknown>)) as UserSettingsData;
       setSettings(updated);
       setOriginal(updated);
       toast({ title: "Đã lưu cài đặt", description: "Tùy chọn học tập đã được cập nhật." });
