@@ -46,10 +46,8 @@ public class SavedWordService {
             throw new IllegalArgumentException("Word already saved");
         }
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        Vocabulary vocab = vocabularyRepository.findById(request.getVocabularyId())
-                .orElseThrow(() -> new ResourceNotFoundException("Vocabulary not found"));
+        User user = findUserByIdOrThrow(userId);
+        Vocabulary vocab = findVocabularyByIdOrThrow(request.getVocabularyId());
 
         SavedWord savedWord = SavedWord.builder()
                 .user(user)
@@ -65,12 +63,7 @@ public class SavedWordService {
 
     @Transactional
     public SavedWordDto toggleMastered(Long savedWordId, Long userId) {
-        SavedWord saved = savedWordRepository.findById(savedWordId)
-                .orElseThrow(() -> new ResourceNotFoundException("Saved word not found"));
-
-        if (!saved.getUser().getId().equals(userId)) {
-            throw new IllegalArgumentException("Not your saved word");
-        }
+        SavedWord saved = findOwnedSavedWordOrThrow(savedWordId, userId);
 
         saved.setMastered(!saved.isMastered());
         SavedWord updated = savedWordRepository.save(saved);
@@ -79,12 +72,7 @@ public class SavedWordService {
 
     @Transactional
     public SavedWordDto updateNote(Long savedWordId, Long userId, String note) {
-        SavedWord saved = savedWordRepository.findById(savedWordId)
-                .orElseThrow(() -> new ResourceNotFoundException("Saved word not found"));
-
-        if (!saved.getUser().getId().equals(userId)) {
-            throw new IllegalArgumentException("Not your saved word");
-        }
+        SavedWord saved = findOwnedSavedWordOrThrow(savedWordId, userId);
 
         saved.setPersonalNote(note);
         SavedWord updated = savedWordRepository.save(saved);
@@ -93,12 +81,7 @@ public class SavedWordService {
 
     @Transactional
     public void removeSavedWord(Long savedWordId, Long userId) {
-        SavedWord saved = savedWordRepository.findById(savedWordId)
-                .orElseThrow(() -> new ResourceNotFoundException("Saved word not found"));
-
-        if (!saved.getUser().getId().equals(userId)) {
-            throw new IllegalArgumentException("Not your saved word");
-        }
+        SavedWord saved = findOwnedSavedWordOrThrow(savedWordId, userId);
 
         savedWordRepository.delete(saved);
         log.info("User {} removed saved word {}", userId, savedWordId);
@@ -114,5 +97,25 @@ public class SavedWordService {
 
     public long getMasteredCount(Long userId) {
         return savedWordRepository.countByUserIdAndMastered(userId, true);
+    }
+
+    private User findUserByIdOrThrow(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    }
+
+    private Vocabulary findVocabularyByIdOrThrow(Long vocabularyId) {
+        return vocabularyRepository.findById(vocabularyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Vocabulary not found"));
+    }
+
+    private SavedWord findOwnedSavedWordOrThrow(Long savedWordId, Long userId) {
+        SavedWord saved = savedWordRepository.findById(savedWordId)
+                .orElseThrow(() -> new ResourceNotFoundException("Saved word not found"));
+
+        if (!saved.getUser().getId().equals(userId)) {
+            throw new IllegalArgumentException("Not your saved word");
+        }
+        return saved;
     }
 }

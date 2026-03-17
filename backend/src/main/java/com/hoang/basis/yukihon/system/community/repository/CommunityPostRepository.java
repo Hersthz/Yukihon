@@ -1,0 +1,19 @@
+package com.hoang.basis.yukihon.system.community.repository;
+
+import com.hoang.basis.yukihon.system.community.entity.CommunityPost;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface CommunityPostRepository extends JpaRepository<CommunityPost, Long> {
+
+    Page<CommunityPost> findAllByOrderByCreatedAtDesc(Pageable pageable);
+
+    Page<CommunityPost> findByCategoryOrderByCreatedAtDesc(String category, Pageable pageable);
+
+    Page<CommunityPost> findByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
+
+    Page<CommunityPost> findByJlptLevelOrderByCreatedAtDesc(String jlptLevel, Pageable pageable);
+
+    long countByUserId(Long userId);
+}

@@ -1,7 +1,7 @@
 package com.hoang.basis.yukihon.security;
 
-import com.hoang.basis.yukihon.model.User;
-import com.hoang.basis.yukihon.repository.UserRepository;
+import com.hoang.basis.yukihon.system.user.entity.User;
+import com.hoang.basis.yukihon.system.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

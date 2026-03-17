@@ -57,8 +57,7 @@ public class TranslationService {
         String translatedText = callTranslationAPI(sourceText, sourceLang, targetLang);
 
         // Lưu lịch sử
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user = findUserByIdOrThrow(userId);
 
         TranslationHistory history = TranslationHistory.builder()
                 .user(user)
@@ -97,8 +96,7 @@ public class TranslationService {
 
     @Transactional
     public TranslationHistoryDto toggleBookmark(Long userId, Long historyId) {
-        TranslationHistory history = historyRepository.findByIdAndUserId(historyId, userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Translation not found"));
+        TranslationHistory history = findHistoryByIdAndUserIdOrThrow(historyId, userId);
         history.setBookmarked(!history.isBookmarked());
         TranslationHistory updated = historyRepository.save(history);
         log.info("Bookmark toggled: historyId={} → bookmarked={}", historyId, updated.isBookmarked());
@@ -107,8 +105,7 @@ public class TranslationService {
 
     @Transactional
     public void deleteHistoryItem(Long userId, Long historyId) {
-        TranslationHistory history = historyRepository.findByIdAndUserId(historyId, userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Translation not found"));
+        TranslationHistory history = findHistoryByIdAndUserIdOrThrow(historyId, userId);
         historyRepository.delete(history);
         log.info("Translation history deleted: historyId={}", historyId);
     }
@@ -121,8 +118,7 @@ public class TranslationService {
 
     public Map<String, Object> getStats(Long userId) {
         long totalTranslations = historyRepository.countByUserId(userId);
-        long totalBookmarks = historyRepository
-                .findByUserIdAndBookmarkedTrueOrderByCreatedAtDesc(userId).size();
+        long totalBookmarks = historyRepository.countByUserIdAndBookmarkedTrue(userId);
         return Map.of(
                 "totalTranslations", totalTranslations,
                 "totalBookmarks", totalBookmarks
@@ -182,5 +178,15 @@ public class TranslationService {
         if (!SUPPORTED_LANGS.contains(request.getTargetLang().toLowerCase())) {
             throw new IllegalArgumentException("Unsupported target language: " + request.getTargetLang());
         }
+    }
+
+    private User findUserByIdOrThrow(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    }
+
+    private TranslationHistory findHistoryByIdAndUserIdOrThrow(Long historyId, Long userId) {
+        return historyRepository.findByIdAndUserId(historyId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Translation not found"));
     }
 }
