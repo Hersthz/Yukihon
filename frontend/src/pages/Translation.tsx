@@ -19,8 +19,8 @@ import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/la
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { translationApi, type TranslationHistoryItem } from "@/api";
 import { useToast } from "@/hooks/use-toast";
-import apiClient, { TranslationHistoryItem } from "@/lib/apiClient";
 
 const LANGUAGES = [
   { code: "vi", label: "Tiếng Việt" },
@@ -71,7 +71,7 @@ const Translation = () => {
 
   const loadStats = useCallback(async () => {
     try {
-      const response = await apiClient.translation.getStats();
+      const response = await translationApi.getStats();
       setStats(response);
     } catch {
       // silent
@@ -82,7 +82,7 @@ const Translation = () => {
     async (page = 0) => {
       setHistoryLoading(true);
       try {
-        const response = await apiClient.translation.getHistory(page, 10);
+        const response = await translationApi.getHistory(page, 10);
         setHistory(response.content);
         setHistoryPage(response.number);
         setHistoryTotalPages(response.totalPages);
@@ -97,7 +97,7 @@ const Translation = () => {
 
   const loadBookmarks = useCallback(async () => {
     try {
-      const response = await apiClient.translation.getBookmarks();
+      const response = await translationApi.getBookmarks();
       setBookmarks(response);
     } catch {
       // silent
@@ -117,7 +117,7 @@ const Translation = () => {
 
     setLoading(true);
     try {
-      const response = await apiClient.translation.translate({
+      const response = await translationApi.translate({
         sourceLang,
         targetLang,
         text: sourceText.trim(),
@@ -169,7 +169,7 @@ const Translation = () => {
 
   const handleToggleBookmark = async (id: number) => {
     try {
-      const updated = await apiClient.translation.toggleBookmark(id);
+      const updated = await translationApi.toggleBookmark(id);
       setHistory((prev) => prev.map((item) => (item.id === id ? updated : item)));
       setBookmarks((prev) => {
         if (updated.bookmarked) return [updated, ...prev.filter((item) => item.id !== id)];
@@ -183,7 +183,7 @@ const Translation = () => {
 
   const handleDeleteHistory = async (id: number) => {
     try {
-      await apiClient.translation.deleteHistory(id);
+      await translationApi.deleteHistory(id);
       setHistory((prev) => prev.filter((item) => item.id !== id));
       setBookmarks((prev) => prev.filter((item) => item.id !== id));
       loadStats();
@@ -194,7 +194,7 @@ const Translation = () => {
 
   const handleClearAll = async () => {
     try {
-      await apiClient.translation.clearHistory();
+      await translationApi.clearHistory();
       setHistory([]);
       setBookmarks([]);
       loadStats();

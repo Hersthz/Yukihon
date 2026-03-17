@@ -1,18 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
+import { authApi, type AuthResponse, type AuthUser } from "@/api";
 import apiClient from "@/lib/apiClient";
-
-export interface AuthUser {
-  id: number;
-  email: string;
-  displayName: string;
-  roles: string[];
-}
-
-interface AuthResponse {
-  accessToken: string;
-  refreshToken?: string;
-  user: AuthUser;
-}
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -40,7 +28,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const refreshUser = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await apiClient.auth.getCurrentUser() as AuthUser;
+      const response = await authApi.getCurrentUser();
       setUser(response);
       apiClient.setAuthData(
         localStorage.getItem("yukihon_token") || "",
@@ -68,10 +56,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     setError(null);
     try {
-      const response = await apiClient.auth.login({
+      const response = await authApi.login({
         email,
         password,
-      }) as AuthResponse;
+      });
       apiClient.setAuthData(response.accessToken, response.user);
       setUser(response.user);
       setIsAuthenticated(true);
@@ -89,12 +77,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(true);
       setError(null);
       try {
-        const response = await apiClient.auth.register({
+        const response = await authApi.register({
           email,
           password,
           displayName,
           jlptTargetLevel,
-        }) as AuthResponse;
+        });
         apiClient.setAuthData(response.accessToken, response.user);
         setUser(response.user);
         setIsAuthenticated(true);

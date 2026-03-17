@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import WinterNightBackground from "@/components/WinterNightBackground";
-import apiClient from "@/lib/apiClient";
+import { adminApi } from "@/api";
 import { useAuth } from "@/hooks/use-auth";
 import { Navigate } from "react-router-dom";
 
@@ -34,7 +34,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const data = await apiClient.admin.getSystemStats() as SystemStats;
+        const data = await adminApi.getSystemStats() as SystemStats;
         setStats(data);
       } catch (error) {
         console.error("Failed to fetch system stats:", error);

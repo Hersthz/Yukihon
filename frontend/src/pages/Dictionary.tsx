@@ -6,8 +6,8 @@ import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/la
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { dictionaryApi, myWordsApi } from "@/api";
 import { useToast } from "@/hooks/use-toast";
-import apiClient from "@/lib/apiClient";
 
 interface VocabResult {
   id: number;
@@ -45,7 +45,7 @@ const Dictionary = () => {
     setSearched(true);
 
     try {
-      const data = (await apiClient.dictionary.search(query.trim())) as VocabResult[];
+      const data = (await dictionaryApi.search(query.trim())) as VocabResult[];
       setResults(data);
     } catch (error) {
       console.error("Dictionary search failed", error);
@@ -61,7 +61,7 @@ const Dictionary = () => {
 
   const handleSaveWord = async (vocabId: number) => {
     try {
-      await apiClient.myWords.saveWord({ vocabularyId: vocabId });
+      await myWordsApi.saveWord({ vocabularyId: vocabId });
       toast({ title: "Đã lưu", description: "Từ vựng đã được thêm vào sổ tay." });
     } catch {
       toast({ title: "Lưu chưa thành công", description: "Từ này có thể đã tồn tại trong sổ tay.", variant: "destructive" });

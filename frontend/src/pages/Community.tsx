@@ -20,9 +20,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { communityApi } from "@/api";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import apiClient from "@/lib/apiClient";
 
 interface Post {
   id: number;
@@ -100,7 +100,7 @@ const Community = () => {
     async (pageNum = 0, category?: string) => {
       try {
         setLoading(true);
-        const data = (await apiClient.community.getPosts(pageNum, 20, category || undefined)) as PagedPosts;
+        const data = (await communityApi.getPosts(pageNum, 20, category || undefined)) as PagedPosts;
         setPosts(data.content);
         setTotalPages(data.totalPages);
         setPage(data.number);
@@ -121,7 +121,7 @@ const Community = () => {
     if (!newContent.trim()) return;
     setPosting(true);
     try {
-      await apiClient.community.createPost({
+      await communityApi.createPost({
         content: newContent,
         category: newCategory,
         jlptLevel: newJlptLevel || undefined,
@@ -141,7 +141,7 @@ const Community = () => {
 
   const handleLike = async (postId: number) => {
     try {
-      const updated = (await apiClient.community.toggleLike(postId)) as Post;
+      const updated = (await communityApi.toggleLike(postId)) as Post;
       setPosts((prev) => prev.map((post) => (post.id === postId ? updated : post)));
     } catch {
       toast({ title: "Không thể thả tim", description: "Vui lòng thử lại.", variant: "destructive" });
@@ -150,7 +150,7 @@ const Community = () => {
 
   const handleDeletePost = async (postId: number) => {
     try {
-      await apiClient.community.deletePost(postId);
+      await communityApi.deletePost(postId);
       setPosts((prev) => prev.filter((post) => post.id !== postId));
     } catch {
       toast({ title: "Không thể xoá bài viết", description: "Vui lòng thử lại.", variant: "destructive" });
@@ -167,7 +167,7 @@ const Community = () => {
     setLoadingComments(true);
 
     try {
-      const data = (await apiClient.community.getComments(postId)) as PagedComments;
+      const data = (await communityApi.getComments(postId)) as PagedComments;
       setComments(data.content);
     } catch {
       toast({ title: "Không tải được bình luận", description: "Vui lòng thử lại.", variant: "destructive" });
@@ -180,7 +180,7 @@ const Community = () => {
     if (!commentText.trim()) return;
 
     try {
-      const newComment = (await apiClient.community.addComment(postId, commentText)) as Comment;
+      const newComment = (await communityApi.addComment(postId, commentText)) as Comment;
       setComments((prev) => [newComment, ...prev]);
       setCommentText("");
       setPosts((prev) =>

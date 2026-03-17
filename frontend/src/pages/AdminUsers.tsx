@@ -25,7 +25,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import WinterNightBackground from "@/components/WinterNightBackground";
-import apiClient from "@/lib/apiClient";
+import { adminApi } from "@/api";
 import { useAuth } from "@/hooks/use-auth";
 import { Navigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -62,7 +62,7 @@ const AdminUsers = () => {
   const fetchUsers = useCallback(async (pageNum = 0) => {
     try {
       setLoading(true);
-      const data = await apiClient.admin.getUsers(pageNum, 20) as PagedResponse;
+      const data = await adminApi.getUsers(pageNum, 20) as PagedResponse;
       setUsers(data.content);
       setTotalPages(data.totalPages);
       setPage(data.number);
@@ -90,7 +90,7 @@ const AdminUsers = () => {
 
     try {
       setLoading(true);
-      const data = await apiClient.admin.searchUsers(searchQuery) as UserManagement[];
+      const data = await adminApi.searchUsers(searchQuery) as UserManagement[];
       setUsers(data);
       setTotalPages(1);
       setPage(0);
@@ -112,19 +112,19 @@ const AdminUsers = () => {
     try {
       switch (actionType) {
         case "promote":
-          await apiClient.admin.promoteToAdmin(selectedUser.id);
+          await adminApi.promoteToAdmin(selectedUser.id);
           toast({ title: "Success", description: "User promoted to admin" });
           break;
         case "demote":
-          await apiClient.admin.demoteFromAdmin(selectedUser.id);
+          await adminApi.demoteFromAdmin(selectedUser.id);
           toast({ title: "Success", description: "Admin demoted to user" });
           break;
         case "disable":
-          await apiClient.admin.updateUserStatus(selectedUser.id, false);
+          await adminApi.updateUserStatus(selectedUser.id, false);
           toast({ title: "Success", description: "User disabled" });
           break;
         case "enable":
-          await apiClient.admin.updateUserStatus(selectedUser.id, true);
+          await adminApi.updateUserStatus(selectedUser.id, true);
           toast({ title: "Success", description: "User enabled" });
           break;
       }

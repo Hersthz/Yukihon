@@ -1,14 +1,14 @@
 // src/hooks/learning/useQuiz.ts
 
 import { useQuery } from "@tanstack/react-query";
-import { quizAPI } from "@/lib/api/learningClient";
+import { quizApi } from "@/api";
 
 export const useQuiz = (id?: number) => {
   return useQuery({
     queryKey: ["quiz", id],
     queryFn: () => {
       if (!id) throw new Error("ID is required");
-      return quizAPI.getById(id);
+      return quizApi.getById(id);
     },
     enabled: !!id,
   });
@@ -17,7 +17,7 @@ export const useQuiz = (id?: number) => {
 export const useQuizList = () => {
   return useQuery({
     queryKey: ["quizzes"],
-    queryFn: () => quizAPI.getAll(),
+    queryFn: () => quizApi.getAll(),
     staleTime: 1000 * 60 * 5,
   });
 };
@@ -25,7 +25,7 @@ export const useQuizList = () => {
 export const useQuizByLevel = (level: string) => {
   return useQuery({
     queryKey: ["quizzes", "level", level],
-    queryFn: () => quizAPI.getByLevel(level),
+    queryFn: () => quizApi.getByLevel(level),
     staleTime: 1000 * 60 * 5,
   });
 };
@@ -33,7 +33,7 @@ export const useQuizByLevel = (level: string) => {
 export const useQuizByDifficulty = (difficulty: string) => {
   return useQuery({
     queryKey: ["quizzes", "difficulty", difficulty],
-    queryFn: () => quizAPI.getByDifficulty(difficulty),
+    queryFn: () => quizApi.getByDifficulty(difficulty),
     staleTime: 1000 * 60 * 5,
   });
 };
