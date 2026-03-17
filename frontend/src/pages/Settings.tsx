@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import apiClient from "@/lib/apiClient";
+import apiClient from "@/api";
 
 interface UserSettingsData {
   theme: string;

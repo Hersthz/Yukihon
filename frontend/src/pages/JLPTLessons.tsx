@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Award, BookOpen, GraduationCap, PlayCircle, Target, TrendingUp } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import LessonCard2 from "@/components/learning/LessonCard2";
+import { LessonPathCard } from "@/components/learning";
 import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
 import { Button } from "@/components/ui/button";
 import { usePublishedLessons } from "@/hooks/learning/useLessons";
@@ -131,7 +131,7 @@ const JLPTLessons = () => {
             ) : (
               <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                 {currentLevelLessons.map((lesson) => (
-                  <LessonCard2 estimatedTime={20} key={lesson.id} lesson={lesson} onStart={(id) => console.log("Start lesson:", id)} />
+                  <LessonPathCard estimatedTime={20} key={lesson.id} lesson={lesson} onStart={(id) => console.log("Start lesson:", id)} />
                 ))}
               </div>
             )}

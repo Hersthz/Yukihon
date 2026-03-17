@@ -25,7 +25,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import WinterNightBackground from "@/components/WinterNightBackground";
-import apiClient from "@/lib/apiClient";
+import apiClient from "@/api";
 import { useAuth } from "@/hooks/use-auth";
 import { Navigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";

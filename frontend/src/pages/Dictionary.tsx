@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import apiClient from "@/lib/apiClient";
+import apiClient from "@/api";
 
 interface VocabResult {
   id: number;

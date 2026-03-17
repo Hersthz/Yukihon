@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
-import apiClient from "@/lib/apiClient";
+import apiClient from "@/api";
 
 export interface AuthUser {
   id: number;

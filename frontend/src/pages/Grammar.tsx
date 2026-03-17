@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { useQuery } from "@tanstack/react-query";
-import { grammarAPI } from "@/lib/api/learningClient";
+import { grammarAPI } from "@/api/learningApi";
 import { EmptyState, PageHeader, PageSection } from "@/components/layout/UserPage";
 
 interface GrammarItem {

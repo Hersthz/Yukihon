@@ -1,7 +1,7 @@
 // src/hooks/learning/useVocabulary.ts
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { vocabularyAPI } from "@/lib/api/learningClient";
+import { useQuery } from "@tanstack/react-query";
+import { vocabularyAPI } from "@/api/learningApi";
 
 export const useVocabulary = (id?: number) => {
   return useQuery({

@@ -3,7 +3,7 @@ import { motion, Variants } from "framer-motion";
 import { BookOpen, Filter, Search, Star, TrendingUp } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import VocabularyCard from "@/components/learning/VocabularyCard";
+import { VocabularyFlipCard } from "@/components/learning";
 import { useVocabularyList, useVocabularyLevels } from "@/hooks/learning/useVocabulary";
 import { Input } from "@/components/ui/input";
 import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
@@ -150,7 +150,7 @@ const Vocabulary = () => {
             >
               {filteredVocabulary.map((item: VocabularyItem) => (
                 <motion.div key={item.id} variants={itemVariants}>
-                  <VocabularyCard
+                  <VocabularyFlipCard
                     item={item}
                     onLearn={handleMarkLearned}
                     isLearned={learnedItems.has(item.id)}

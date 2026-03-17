@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import WinterNightBackground from "@/components/WinterNightBackground";
 import DynamicTable, { ColumnDef } from "@/components/admin/DynamicTable";
-import apiClient from "@/lib/apiClient";
+import apiClient from "@/api";
 import { useToast } from "@/hooks/use-toast";
 
 // --- Types ---

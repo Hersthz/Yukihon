@@ -1,7 +1,7 @@
 // src/hooks/learning/useLessons.ts
 
 import { useQuery } from "@tanstack/react-query";
-import { lessonAPI } from "@/lib/api/learningClient";
+import { lessonAPI } from "@/api/learningApi";
 
 export const useLesson = (id?: number) => {
   return useQuery({
