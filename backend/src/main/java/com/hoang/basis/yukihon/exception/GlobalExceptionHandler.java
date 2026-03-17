@@ -11,6 +11,21 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private ResponseEntity<ApiError> buildErrorResponse(
+            HttpStatus status,
+            String code,
+            String message,
+            HttpServletRequest request
+    ) {
+        ApiError body = new ApiError(
+                status.value(),
+                code,
+                message,
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(status).body(body);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> handleValidation(
             MethodArgumentNotValidException ex,
@@ -21,13 +36,7 @@ public class GlobalExceptionHandler {
                 .map(error -> error.getField() + " " + error.getDefaultMessage())
                 .orElse("Invalid request");
 
-        ApiError body = new ApiError(
-                HttpStatus.BAD_REQUEST.value(),
-                "VALIDATION_ERROR",
-                message,
-                request.getRequestURI()
-        );
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", message, request);
     }
 
     @ExceptionHandler(BadCredentialsException.class)
@@ -35,13 +44,7 @@ public class GlobalExceptionHandler {
             BadCredentialsException ex,
             HttpServletRequest request
     ) {
-        ApiError body = new ApiError(
-                HttpStatus.UNAUTHORIZED.value(),
-                "BAD_CREDENTIALS",
-                ex.getMessage(),
-                request.getRequestURI()
-        );
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED, "BAD_CREDENTIALS", ex.getMessage(), request);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
@@ -49,40 +52,22 @@ public class GlobalExceptionHandler {
             IllegalArgumentException ex,
             HttpServletRequest request
     ) {
-        ApiError body = new ApiError(
-                HttpStatus.BAD_REQUEST.value(),
-                "BAD_REQUEST",
-                ex.getMessage(),
-                request.getRequestURI()
-        );
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "BAD_REQUEST", ex.getMessage(), request);
     }
 
-        @ExceptionHandler(ResourceNotFoundException.class)
-        public ResponseEntity<ApiError> handleResourceNotFound(
-                        ResourceNotFoundException ex,
-                        HttpServletRequest request
-        ) {
-                ApiError body = new ApiError(
-                                HttpStatus.NOT_FOUND.value(),
-                                "NOT_FOUND",
-                                ex.getMessage(),
-                                request.getRequestURI()
-                );
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
-        }
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiError> handleResourceNotFound(
+            ResourceNotFoundException ex,
+            HttpServletRequest request
+    ) {
+        return buildErrorResponse(HttpStatus.NOT_FOUND, "NOT_FOUND", ex.getMessage(), request);
+    }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleOther(
             Exception ex,
             HttpServletRequest request
     ) {
-        ApiError body = new ApiError(
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "INTERNAL_ERROR",
-                ex.getMessage(),
-                request.getRequestURI()
-        );
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
+        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", ex.getMessage(), request);
     }
 }

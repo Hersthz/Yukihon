@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Locale;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -44,9 +45,7 @@ public class AdminService {
      * Get user by ID
      */
     public UserManagementDto getUserById(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
-        return UserManagementDto.fromEntity(user);
+        return UserManagementDto.fromEntity(findUserByIdOrThrow(userId));
     }
 
     /**
@@ -56,8 +55,7 @@ public class AdminService {
     public UserManagementDto updateUserRoles(Long userId, UpdateUserRolesRequest request) {
         log.info("Updating roles for user {}: {}", userId, request.getRoles());
         
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        User user = findUserByIdOrThrow(userId);
 
         Set<RoleName> roles = request.getRoles().stream()
                 .map(String::toUpperCase)
@@ -78,8 +76,7 @@ public class AdminService {
     public UserManagementDto updateUserStatus(Long userId, UpdateUserStatusRequest request) {
         log.info("Updating status for user {}: enabled={}", userId, request.getEnabled());
         
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        User user = findUserByIdOrThrow(userId);
 
         user.setEnabled(request.getEnabled());
         User updated = userRepository.save(user);
@@ -95,8 +92,7 @@ public class AdminService {
     public void deleteUser(Long userId) {
         log.info("Deleting user {}", userId);
         
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        User user = findUserByIdOrThrow(userId);
 
         user.setEnabled(false);
         userRepository.save(user);
@@ -137,10 +133,14 @@ public class AdminService {
     public List<UserManagementDto> searchUsers(String query) {
         log.info("Searching users with query: {}", query);
         
+        String normalizedQuery = query == null ? "" : query.toLowerCase(Locale.ROOT);
+
         List<User> users = userRepository.findAll().stream()
-                .filter(user -> 
-                    user.getEmail().toLowerCase().contains(query.toLowerCase()) ||
-                    user.getDisplayName().toLowerCase().contains(query.toLowerCase()))
+                .filter(user -> {
+                    String email = user.getEmail() == null ? "" : user.getEmail().toLowerCase(Locale.ROOT);
+                    String displayName = user.getDisplayName() == null ? "" : user.getDisplayName().toLowerCase(Locale.ROOT);
+                    return email.contains(normalizedQuery) || displayName.contains(normalizedQuery);
+                })
                 .toList();
 
         return users.stream()
@@ -155,8 +155,7 @@ public class AdminService {
     public UserManagementDto promoteToAdmin(Long userId) {
         log.info("Promoting user {} to admin", userId);
         
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        User user = findUserByIdOrThrow(userId);
 
         Set<RoleName> roles = new HashSet<>(user.getRoles());
         roles.add(RoleName.ADMIN);
@@ -175,8 +174,7 @@ public class AdminService {
     public UserManagementDto demoteFromAdmin(Long userId) {
         log.info("Demoting user {} from admin", userId);
         
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        User user = findUserByIdOrThrow(userId);
 
         Set<RoleName> roles = new HashSet<>(user.getRoles());
         roles.remove(RoleName.ADMIN);
@@ -189,5 +187,10 @@ public class AdminService {
         
         log.info("Successfully demoted user {} from admin", userId);
         return UserManagementDto.fromEntity(updated);
+    }
+
+    private User findUserByIdOrThrow(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
     }
 }

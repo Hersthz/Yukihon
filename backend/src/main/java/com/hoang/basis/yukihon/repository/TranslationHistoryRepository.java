@@ -25,6 +25,9 @@ public interface TranslationHistoryRepository extends JpaRepository<TranslationH
     /** Đếm tổng bản dịch của user */
     long countByUserId(Long userId);
 
+    /** Đếm tổng bản dịch đã bookmark của user */
+    long countByUserIdAndBookmarkedTrue(Long userId);
+
     /** Xoá toàn bộ lịch sử dịch của user */
     @Modifying
     @Query("DELETE FROM TranslationHistory t WHERE t.user.id = :userId")

@@ -42,16 +42,14 @@ public class CommunityService {
     }
 
     public PostDto getPostById(Long postId, Long currentUserId) {
-        CommunityPost post = postRepository.findById(postId)
-                .orElseThrow(() -> new ResourceNotFoundException("Post not found"));
+        CommunityPost post = findPostByIdOrThrow(postId);
         return PostDto.fromEntity(post,
                 likeRepository.existsByPostIdAndUserId(postId, currentUserId));
     }
 
     @Transactional
     public PostDto createPost(Long userId, CreatePostRequest request) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user = findUserByIdOrThrow(userId);
 
         CommunityPost post = CommunityPost.builder()
                 .user(user)
@@ -68,8 +66,7 @@ public class CommunityService {
 
     @Transactional
     public void deletePost(Long postId, Long userId) {
-        CommunityPost post = postRepository.findById(postId)
-                .orElseThrow(() -> new ResourceNotFoundException("Post not found"));
+        CommunityPost post = findPostByIdOrThrow(postId);
 
         if (!post.getUser().getId().equals(userId)) {
             throw new IllegalArgumentException("You can only delete your own posts");
@@ -83,10 +80,8 @@ public class CommunityService {
 
     @Transactional
     public PostDto toggleLike(Long postId, Long userId) {
-        CommunityPost post = postRepository.findById(postId)
-                .orElseThrow(() -> new ResourceNotFoundException("Post not found"));
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        CommunityPost post = findPostByIdOrThrow(postId);
+        User user = findUserByIdOrThrow(userId);
 
         var existingLike = likeRepository.findByPostIdAndUserId(postId, userId);
 
@@ -116,10 +111,8 @@ public class CommunityService {
 
     @Transactional
     public CommentDto addComment(Long postId, Long userId, CreateCommentRequest request) {
-        CommunityPost post = postRepository.findById(postId)
-                .orElseThrow(() -> new ResourceNotFoundException("Post not found"));
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        CommunityPost post = findPostByIdOrThrow(postId);
+        User user = findUserByIdOrThrow(userId);
 
         PostComment comment = PostComment.builder()
                 .post(post)
@@ -137,8 +130,7 @@ public class CommunityService {
 
     @Transactional
     public void deleteComment(Long commentId, Long userId) {
-        PostComment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Comment not found"));
+        PostComment comment = findCommentByIdOrThrow(commentId);
 
         if (!comment.getUser().getId().equals(userId)) {
             throw new IllegalArgumentException("You can only delete your own comments");
@@ -151,4 +143,19 @@ public class CommunityService {
 
         log.info("User {} deleted comment {} from post {}", userId, commentId, post.getId());
     }
+
+        private CommunityPost findPostByIdOrThrow(Long postId) {
+        return postRepository.findById(postId)
+            .orElseThrow(() -> new ResourceNotFoundException("Post not found"));
+        }
+
+        private User findUserByIdOrThrow(Long userId) {
+        return userRepository.findById(userId)
+            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        }
+
+        private PostComment findCommentByIdOrThrow(Long commentId) {
+        return commentRepository.findById(commentId)
+            .orElseThrow(() -> new ResourceNotFoundException("Comment not found"));
+        }
 }
