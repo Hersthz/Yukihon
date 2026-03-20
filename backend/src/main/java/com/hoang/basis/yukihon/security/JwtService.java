@@ -18,6 +18,10 @@ import java.util.List;
 @Component
 public class JwtService {
 
+    private static final String TOKEN_TYPE_CLAIM = "token_type";
+    private static final String ACCESS_TOKEN_TYPE = "ACCESS";
+    private static final String REFRESH_TOKEN_TYPE = "REFRESH";
+
     private final String secret;
     private final long accessTokenExpirationMs;
     private final long refreshTokenExpirationMs;
@@ -41,14 +45,14 @@ public class JwtService {
     }
 
     public String generateAccessToken(UserDetails userDetails) {
-        return generateToken(userDetails, accessTokenExpirationMs);
+        return generateToken(userDetails, accessTokenExpirationMs, ACCESS_TOKEN_TYPE);
     }
 
     public String generateRefreshToken(UserDetails userDetails) {
-        return generateToken(userDetails, refreshTokenExpirationMs);
+        return generateToken(userDetails, refreshTokenExpirationMs, REFRESH_TOKEN_TYPE);
     }
 
-    private String generateToken(UserDetails userDetails, long expirationMs) {
+    private String generateToken(UserDetails userDetails, long expirationMs, String tokenType) {
         Instant now = Instant.now();
         Instant expiry = now.plusMillis(expirationMs);
 
@@ -60,6 +64,7 @@ public class JwtService {
         return Jwts.builder()
                 .subject(userDetails.getUsername())
                 .claim("roles", roles)
+                .claim(TOKEN_TYPE_CLAIM, tokenType)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expiry))
                 .signWith(key)
@@ -71,10 +76,31 @@ public class JwtService {
     }
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
+        return isTokenValid(token, userDetails, ACCESS_TOKEN_TYPE);
+    }
+
+    public boolean isAccessTokenValid(String token, UserDetails userDetails) {
+        return isTokenValid(token, userDetails, ACCESS_TOKEN_TYPE);
+    }
+
+    public boolean isRefreshTokenValid(String token, UserDetails userDetails) {
+        return isTokenValid(token, userDetails, REFRESH_TOKEN_TYPE);
+    }
+
+    public boolean isAccessToken(String token) {
+        Claims claims = getClaims(token);
+        return ACCESS_TOKEN_TYPE.equals(claims.get(TOKEN_TYPE_CLAIM, String.class));
+    }
+
+    private boolean isTokenValid(String token, UserDetails userDetails, String expectedTokenType) {
         Claims claims = getClaims(token);
         String username = claims.getSubject();
         Date expiration = claims.getExpiration();
-        return username.equals(userDetails.getUsername()) && expiration.after(new Date());
+        String tokenType = claims.get(TOKEN_TYPE_CLAIM, String.class);
+
+        return username.equals(userDetails.getUsername())
+                && expiration.after(new Date())
+                && expectedTokenType.equals(tokenType);
     }
 
     private Claims getClaims(String token) {

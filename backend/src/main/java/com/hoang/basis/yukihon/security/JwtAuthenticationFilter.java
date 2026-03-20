@@ -33,23 +33,29 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
+            try {
             String username = jwtService.extractUsername(token);
 
-            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            if (username != null
+                && SecurityContextHolder.getContext().getAuthentication() == null
+                && jwtService.isAccessToken(token)) {
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-                if (jwtService.isTokenValid(token, userDetails)) {
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(
-                                    userDetails,
-                                    null,
-                                    userDetails.getAuthorities()
-                            );
-                    authentication.setDetails(
-                            new WebAuthenticationDetailsSource().buildDetails(request)
+                if (jwtService.isAccessTokenValid(token, userDetails)) {
+                UsernamePasswordAuthenticationToken authentication =
+                    new UsernamePasswordAuthenticationToken(
+                        userDetails,
+                        null,
+                        userDetails.getAuthorities()
                     );
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                authentication.setDetails(
+                    new WebAuthenticationDetailsSource().buildDetails(request)
+                );
+                SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
+                }
+            } catch (RuntimeException ignored) {
+            SecurityContextHolder.clearContext();
             }
         }
 
@@ -61,6 +67,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String path = request.getServletPath();
         return "/api/auth/login".equals(path)
                 || "/api/auth/register".equals(path)
-                || "/api/auth/google".equals(path);
+            || "/api/auth/google".equals(path)
+            || "/api/auth/refresh".equals(path);
     }
 }

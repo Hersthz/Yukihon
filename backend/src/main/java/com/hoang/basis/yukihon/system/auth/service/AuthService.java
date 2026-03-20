@@ -127,6 +127,35 @@ public class AuthService {
         return UserDto.fromEntity(user);
     }
 
+    public AuthResponse refreshToken(String refreshToken) {
+        String username;
+        try {
+            username = jwtService.extractUsername(refreshToken);
+        } catch (RuntimeException ex) {
+            throw new BadCredentialsException("Invalid refresh token");
+        }
+
+        User user = userRepository.findByEmail(username.toLowerCase())
+                .orElseThrow(() -> new BadCredentialsException("Invalid refresh token"));
+
+        List<SimpleGrantedAuthority> authorities = user.getRoles()
+                .stream()
+                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.name()))
+                .toList();
+
+        var springUser = new org.springframework.security.core.userdetails.User(
+                user.getEmail(),
+                user.getPassword(),
+                authorities
+        );
+
+        if (!jwtService.isRefreshTokenValid(refreshToken, springUser)) {
+            throw new BadCredentialsException("Invalid refresh token");
+        }
+
+        return buildAuthResponse(user);
+    }
+
     private AuthResponse buildAuthResponse(User user) {
         List<SimpleGrantedAuthority> authorities = user.getRoles()
                 .stream()

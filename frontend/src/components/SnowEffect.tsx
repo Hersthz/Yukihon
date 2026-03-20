@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { CSSProperties, useEffect, useState } from "react";
 
 interface Snowflake {
   id: number;
@@ -34,16 +34,20 @@ const SnowEffect = ({ count = 30, className = "" }: SnowEffectProps) => {
   return (
     <div className={`fixed inset-0 pointer-events-none overflow-hidden z-[1] ${className}`}>
       {snowflakes.map((flake) => (
-        <div
-          key={flake.id}
-          className="absolute animate-snow-fall"
-          style={{
+        (() => {
+          const flakeStyle: CSSProperties & { "--snow-drift": string } = {
             left: `${flake.left}%`,
             top: "-10px",
             animationDelay: `${flake.delay}s`,
             animationDuration: `${flake.duration}s`,
-            ["--snow-drift" as any]: `${flake.drift}px`,
-          }}
+            "--snow-drift": `${flake.drift}px`,
+          };
+
+          return (
+        <div
+          key={flake.id}
+          className="absolute animate-snow-fall"
+          style={flakeStyle}
         >
           <div
             className="rounded-full bg-white/90"
@@ -55,6 +59,8 @@ const SnowEffect = ({ count = 30, className = "" }: SnowEffectProps) => {
             }}
           />
         </div>
+          );
+        })()
       ))}
     </div>
   );

@@ -1,116 +1,107 @@
-import { useEffect, useState, useCallback } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import {
-  BookOpen, FileText, PenTool, HelpCircle, Plus, Save, GraduationCap
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import WinterNightBackground from "@/components/WinterNightBackground";
-import DynamicTable, { ColumnDef } from "@/components/admin/DynamicTable";
+import { GraduationCap, Plus, Save } from "lucide-react";
 import { grammarApi, lessonApi, quizApi, vocabularyApi } from "@/api";
+import DynamicTable from "@/components/admin/DynamicTable";
+import WinterNightBackground from "@/components/WinterNightBackground";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import AdminContentForm from "@/pages/admin-content/AdminContentForm";
+import {
+  createEmptyGrammar,
+  createEmptyLesson,
+  createEmptyQuiz,
+  createEmptyVocab,
+  grammarColumns,
+  lessonColumns,
+  quizColumns,
+  TABS,
+  vocabColumns,
+} from "@/pages/admin-content/constants";
+import { AdminTab, EditableItem, GrammarItem, Lesson, QuizItem, VocabItem } from "@/pages/admin-content/types";
 
-// --- Types ---
-interface Lesson {
-  id?: number;
-  title: string;
-  description: string;
-  jlptLevel: string;
-  category: string;
-  content: string;
-  orderIndex: number;
+interface PagedResponse<T> {
+  content: T[];
 }
 
-interface VocabItem {
-  id?: number;
-  kanji: string;
-  hiragana: string;
-  romaji: string;
-  meaning: string;
-  jlptLevel: string;
-  category: string;
-  exampleSentence: string;
-  exampleMeaning: string;
-}
+const isPagedResponse = <T,>(value: unknown): value is PagedResponse<T> => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
 
-interface GrammarItem {
-  id?: number;
-  pattern: string;
-  meaning: string;
-  jlptLevel: string;
-  explanation: string;
-  exampleSentence: string;
-  exampleMeaning: string;
-}
+  const candidate = value as { content?: unknown };
+  return Array.isArray(candidate.content);
+};
 
-interface QuizItem {
-  id?: number;
-  question: string;
-  optionA: string;
-  optionB: string;
-  optionC: string;
-  optionD: string;
-  correctAnswer: string;
-  jlptLevel: string;
-  category: string;
-  explanation: string;
-}
+const normalizeList = <T,>(value: unknown): T[] => {
+  if (Array.isArray(value)) {
+    return value as T[];
+  }
 
-// --- Tab configs ---
-const TABS = [
-  { value: "lessons", label: "Bài học", icon: BookOpen },
-  { value: "vocabulary", label: "Từ vựng", icon: FileText },
-  { value: "grammar", label: "Ngữ pháp", icon: PenTool },
-  { value: "quizzes", label: "Câu hỏi", icon: HelpCircle },
-];
+  if (isPagedResponse<T>(value)) {
+    return value.content;
+  }
 
-const JLPT_LEVELS = ["N5", "N4", "N3", "N2", "N1"];
+  return [];
+};
 
-// --- Main Page ---
+const toEditableItem = (tab: AdminTab, row: Record<string, unknown>): EditableItem => {
+  switch (tab) {
+    case "lessons":
+      return row as unknown as Lesson;
+    case "vocabulary":
+      return row as unknown as VocabItem;
+    case "grammar":
+      return row as unknown as GrammarItem;
+    case "quizzes":
+      return row as unknown as QuizItem;
+    default:
+      return row as unknown as EditableItem;
+  }
+};
+
+const toApiPayload = (item: EditableItem): Record<string, unknown> => item as unknown as Record<string, unknown>;
+
 const AdminContent = () => {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("lessons");
+
+  const [activeTab, setActiveTab] = useState<AdminTab>("lessons");
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [vocab, setVocab] = useState<VocabItem[]>([]);
   const [grammar, setGrammar] = useState<GrammarItem[]>([]);
   const [quizzes, setQuizzes] = useState<QuizItem[]>([]);
+
   const [loading, setLoading] = useState(false);
-
-  // Dialog state
-  const [dialogOpen, setDialogOpen] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [editItem, setEditItem] = useState<any>(null);
   const [saving, setSaving] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editItem, setEditItem] = useState<EditableItem | null>(null);
 
-  const fetchData = useCallback(async (tab: string) => {
+  const fetchData = useCallback(async (tab: AdminTab) => {
     setLoading(true);
+
     try {
       switch (tab) {
         case "lessons": {
-          const d = await lessonApi.getAll() as Lesson[] | { content: Lesson[] };
-          setLessons(Array.isArray(d) ? d : d.content || []);
+          const data = await lessonApi.getAll();
+          setLessons(normalizeList<Lesson>(data));
           break;
         }
         case "vocabulary": {
-          const d = await vocabularyApi.getAll() as VocabItem[] | { content: VocabItem[] };
-          setVocab(Array.isArray(d) ? d : d.content || []);
+          const data = await vocabularyApi.getAll();
+          setVocab(normalizeList<VocabItem>(data));
           break;
         }
         case "grammar": {
-          const d = await grammarApi.getAll() as GrammarItem[] | { content: GrammarItem[] };
-          setGrammar(Array.isArray(d) ? d : d.content || []);
+          const data = await grammarApi.getAll();
+          setGrammar(normalizeList<GrammarItem>(data));
           break;
         }
         case "quizzes": {
-          const d = await quizApi.getAll() as QuizItem[] | { content: QuizItem[] };
-          setQuizzes(Array.isArray(d) ? d : d.content || []);
+          const data = await quizApi.getAll();
+          setQuizzes(normalizeList<QuizItem>(data));
           break;
         }
       }
@@ -123,433 +114,113 @@ const AdminContent = () => {
 
   useEffect(() => {
     fetchData(activeTab);
-  }, [fetchData, activeTab]);
+  }, [activeTab, fetchData]);
 
-  // --- CRUD helpers ---
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const saveFn = async (tab: string, item: any) => {
+  const saveItem = useCallback(async (tab: AdminTab, item: EditableItem) => {
     try {
-      const id = item.id as number | undefined;
+      const id = item.id;
       if (id) {
-        switch (tab) {
-          case "lessons":
-            await lessonApi.update(id, item);
-            break;
-          case "vocabulary":
-            await vocabularyApi.update(id, item);
-            break;
-          case "grammar":
-            await grammarApi.update(id, item);
-            break;
-          case "quizzes":
-            await quizApi.update(id, item);
-            break;
+        if (tab === "lessons") {
+          await lessonApi.update(id, toApiPayload(item));
+        }
+        if (tab === "vocabulary") {
+          await vocabularyApi.update(id, toApiPayload(item));
+        }
+        if (tab === "grammar") {
+          await grammarApi.update(id, toApiPayload(item));
+        }
+        if (tab === "quizzes") {
+          await quizApi.update(id, toApiPayload(item));
         }
       } else {
-        switch (tab) {
-          case "lessons":
-            await lessonApi.create(item);
-            break;
-          case "vocabulary":
-            await vocabularyApi.create(item);
-            break;
-          case "grammar":
-            await grammarApi.create(item);
-            break;
-          case "quizzes":
-            await quizApi.create(item);
-            break;
+        if (tab === "lessons") {
+          await lessonApi.create(toApiPayload(item));
+        }
+        if (tab === "vocabulary") {
+          await vocabularyApi.create(toApiPayload(item));
+        }
+        if (tab === "grammar") {
+          await grammarApi.create(toApiPayload(item));
+        }
+        if (tab === "quizzes") {
+          await quizApi.create(toApiPayload(item));
         }
       }
-      toast({ title: "Saved!", description: "Dữ liệu đã được lưu" });
+
+      toast({ title: "Saved", description: "Data has been saved" });
       setDialogOpen(false);
-      fetchData(activeTab);
+      await fetchData(tab);
     } catch {
       toast({ title: "Error", description: "Save failed", variant: "destructive" });
     }
-  };
+  }, [fetchData, toast]);
 
-  const deleteFn = async (tab: string, id: unknown) => {
+  const deleteItem = useCallback(async (tab: AdminTab, id: unknown) => {
     try {
-      switch (tab) {
-        case "lessons":
-          await lessonApi.delete(id as number);
-          break;
-        case "vocabulary":
-          await vocabularyApi.delete(id as number);
-          break;
-        case "grammar":
-          await grammarApi.delete(id as number);
-          break;
-        case "quizzes":
-          await quizApi.delete(id as number);
-          break;
+      const itemId = Number(id);
+
+      if (tab === "lessons") {
+        await lessonApi.delete(itemId);
       }
-      toast({ title: "Deleted", description: "Đã xóa thành công" });
-      fetchData(activeTab);
+      if (tab === "vocabulary") {
+        await vocabularyApi.delete(itemId);
+      }
+      if (tab === "grammar") {
+        await grammarApi.delete(itemId);
+      }
+      if (tab === "quizzes") {
+        await quizApi.delete(itemId);
+      }
+
+      toast({ title: "Deleted", description: "Item deleted successfully" });
+      await fetchData(tab);
     } catch {
       toast({ title: "Error", description: "Delete failed", variant: "destructive" });
     }
-  };
+  }, [fetchData, toast]);
 
-  // --- Column definitions ---
-  const lessonColumns: ColumnDef[] = [
-    { key: "title", label: "Tiêu đề", sortable: true, render: (val) => <span className="font-medium">{String(val)}</span> },
-    { key: "jlptLevel", label: "JLPT", type: "badge", badgeColor: () => "bg-cyan-500/20 text-cyan-400 border-cyan-500/30" },
-    { key: "category", label: "Danh mục", sortable: true },
-    { key: "orderIndex", label: "Order", type: "number" },
-  ];
-
-  const vocabColumns: ColumnDef[] = [
-    { key: "kanji", label: "Kanji", sortable: true, render: (val) => <span className="font-bold text-lg">{String(val)}</span> },
-    { key: "hiragana", label: "Hiragana", render: (val) => <span className="text-cyan-400">{String(val)}</span> },
-    { key: "romaji", label: "Romaji", render: (val) => <span className="text-xs text-muted-foreground">{String(val)}</span> },
-    { key: "meaning", label: "Nghĩa", sortable: true },
-    { key: "jlptLevel", label: "JLPT", type: "badge", badgeColor: () => "bg-cyan-500/20 text-cyan-400 border-cyan-500/30" },
-  ];
-
-  const grammarColumns: ColumnDef[] = [
-    { key: "pattern", label: "Mẫu câu", sortable: true, render: (val) => <span className="font-bold">{String(val)}</span> },
-    { key: "meaning", label: "Nghĩa", sortable: true },
-    { key: "jlptLevel", label: "JLPT", type: "badge", badgeColor: () => "bg-cyan-500/20 text-cyan-400 border-cyan-500/30" },
-  ];
-
-  const quizColumns: ColumnDef[] = [
-    { key: "question", label: "Câu hỏi", sortable: true, render: (val) => <span className="truncate">{String(val)}</span> },
-    { key: "correctAnswer", label: "Đáp án", type: "badge", badgeColor: () => "bg-green-500/20 text-green-400 border-green-500/30" },
-    { key: "jlptLevel", label: "JLPT", type: "badge", badgeColor: () => "bg-cyan-500/20 text-cyan-400 border-cyan-500/30" },
-    { key: "category", label: "Danh mục" },
-  ];
-
-  // --- Form component ---
-  const renderForm = () => {
-    if (!editItem) return null;
-
-    switch (activeTab) {
-      case "lessons":
-        return (
-          <>
-            <div>
-              <Label>Tiêu đề</Label>
-              <Input
-                value={editItem.title}
-                onChange={(e) => setEditItem({ ...editItem, title: e.target.value })}
-                className="bg-background/50"
-              />
-            </div>
-            <div>
-              <Label>Mô tả</Label>
-              <Textarea
-                value={editItem.description}
-                onChange={(e) => setEditItem({ ...editItem, description: e.target.value })}
-                className="bg-background/50"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>JLPT Level</Label>
-                <Select value={editItem.jlptLevel} onValueChange={(v) => setEditItem({ ...editItem, jlptLevel: v })}>
-                  <SelectTrigger className="bg-background/50">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {JLPT_LEVELS.map((l) => (
-                      <SelectItem key={l} value={l}>
-                        {l}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Danh mục</Label>
-                <Input
-                  value={editItem.category}
-                  onChange={(e) => setEditItem({ ...editItem, category: e.target.value })}
-                  className="bg-background/50"
-                />
-              </div>
-            </div>
-            <div>
-              <Label>Nội dung</Label>
-              <Textarea
-                value={editItem.content}
-                onChange={(e) => setEditItem({ ...editItem, content: e.target.value })}
-                className="bg-background/50 min-h-[150px]"
-              />
-            </div>
-            <div>
-              <Label>Order Index</Label>
-              <Input
-                type="number"
-                value={editItem.orderIndex}
-                onChange={(e) => setEditItem({ ...editItem, orderIndex: parseInt(e.target.value) || 0 })}
-                className="bg-background/50 w-24"
-              />
-            </div>
-          </>
-        );
-
-      case "vocabulary":
-        return (
-          <>
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <Label>Kanji</Label>
-                <Input
-                  value={editItem.kanji}
-                  onChange={(e) => setEditItem({ ...editItem, kanji: e.target.value })}
-                  className="bg-background/50 text-xl"
-                />
-              </div>
-              <div>
-                <Label>Hiragana</Label>
-                <Input
-                  value={editItem.hiragana}
-                  onChange={(e) => setEditItem({ ...editItem, hiragana: e.target.value })}
-                  className="bg-background/50"
-                />
-              </div>
-              <div>
-                <Label>Romaji</Label>
-                <Input
-                  value={editItem.romaji}
-                  onChange={(e) => setEditItem({ ...editItem, romaji: e.target.value })}
-                  className="bg-background/50"
-                />
-              </div>
-            </div>
-            <div>
-              <Label>Nghĩa</Label>
-              <Input
-                value={editItem.meaning}
-                onChange={(e) => setEditItem({ ...editItem, meaning: e.target.value })}
-                className="bg-background/50"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>JLPT Level</Label>
-                <Select value={editItem.jlptLevel} onValueChange={(v) => setEditItem({ ...editItem, jlptLevel: v })}>
-                  <SelectTrigger className="bg-background/50">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {JLPT_LEVELS.map((l) => (
-                      <SelectItem key={l} value={l}>
-                        {l}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Danh mục</Label>
-                <Input
-                  value={editItem.category}
-                  onChange={(e) => setEditItem({ ...editItem, category: e.target.value })}
-                  className="bg-background/50"
-                />
-              </div>
-            </div>
-            <div>
-              <Label>Ví dụ (JP)</Label>
-              <Input
-                value={editItem.exampleSentence}
-                onChange={(e) => setEditItem({ ...editItem, exampleSentence: e.target.value })}
-                className="bg-background/50"
-              />
-            </div>
-            <div>
-              <Label>Ví dụ (VN)</Label>
-              <Input
-                value={editItem.exampleMeaning}
-                onChange={(e) => setEditItem({ ...editItem, exampleMeaning: e.target.value })}
-                className="bg-background/50"
-              />
-            </div>
-          </>
-        );
-
-      case "grammar":
-        return (
-          <>
-            <div>
-              <Label>Mẫu câu</Label>
-              <Input
-                value={editItem.pattern}
-                onChange={(e) => setEditItem({ ...editItem, pattern: e.target.value })}
-                className="bg-background/50 text-lg"
-              />
-            </div>
-            <div>
-              <Label>Nghĩa</Label>
-              <Input
-                value={editItem.meaning}
-                onChange={(e) => setEditItem({ ...editItem, meaning: e.target.value })}
-                className="bg-background/50"
-              />
-            </div>
-            <div>
-              <Label>JLPT Level</Label>
-              <Select value={editItem.jlptLevel} onValueChange={(v) => setEditItem({ ...editItem, jlptLevel: v })}>
-                <SelectTrigger className="bg-background/50">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {JLPT_LEVELS.map((l) => (
-                    <SelectItem key={l} value={l}>
-                      {l}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Giải thích chi tiết</Label>
-              <Textarea
-                value={editItem.explanation}
-                onChange={(e) => setEditItem({ ...editItem, explanation: e.target.value })}
-                className="bg-background/50 min-h-[100px]"
-              />
-            </div>
-            <div>
-              <Label>Ví dụ (JP)</Label>
-              <Input
-                value={editItem.exampleSentence}
-                onChange={(e) => setEditItem({ ...editItem, exampleSentence: e.target.value })}
-                className="bg-background/50"
-              />
-            </div>
-            <div>
-              <Label>Ví dụ (VN)</Label>
-              <Input
-                value={editItem.exampleMeaning}
-                onChange={(e) => setEditItem({ ...editItem, exampleMeaning: e.target.value })}
-                className="bg-background/50"
-              />
-            </div>
-          </>
-        );
-
-      case "quizzes":
-        return (
-          <>
-            <div>
-              <Label>Câu hỏi</Label>
-              <Textarea
-                value={editItem.question}
-                onChange={(e) => setEditItem({ ...editItem, question: e.target.value })}
-                className="bg-background/50"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Option A</Label>
-                <Input
-                  value={editItem.optionA}
-                  onChange={(e) => setEditItem({ ...editItem, optionA: e.target.value })}
-                  className="bg-background/50"
-                />
-              </div>
-              <div>
-                <Label>Option B</Label>
-                <Input
-                  value={editItem.optionB}
-                  onChange={(e) => setEditItem({ ...editItem, optionB: e.target.value })}
-                  className="bg-background/50"
-                />
-              </div>
-              <div>
-                <Label>Option C</Label>
-                <Input
-                  value={editItem.optionC}
-                  onChange={(e) => setEditItem({ ...editItem, optionC: e.target.value })}
-                  className="bg-background/50"
-                />
-              </div>
-              <div>
-                <Label>Option D</Label>
-                <Input
-                  value={editItem.optionD}
-                  onChange={(e) => setEditItem({ ...editItem, optionD: e.target.value })}
-                  className="bg-background/50"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <Label>Đáp án đúng</Label>
-                <Select value={editItem.correctAnswer} onValueChange={(v) => setEditItem({ ...editItem, correctAnswer: v })}>
-                  <SelectTrigger className="bg-background/50">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {["A", "B", "C", "D"].map((o) => (
-                      <SelectItem key={o} value={o}>
-                        {o}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>JLPT Level</Label>
-                <Select value={editItem.jlptLevel} onValueChange={(v) => setEditItem({ ...editItem, jlptLevel: v })}>
-                  <SelectTrigger className="bg-background/50">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {JLPT_LEVELS.map((l) => (
-                      <SelectItem key={l} value={l}>
-                        {l}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Danh mục</Label>
-                <Input
-                  value={editItem.category}
-                  onChange={(e) => setEditItem({ ...editItem, category: e.target.value })}
-                  className="bg-background/50"
-                />
-              </div>
-            </div>
-            <div>
-              <Label>Giải thích</Label>
-              <Textarea
-                value={editItem.explanation}
-                onChange={(e) => setEditItem({ ...editItem, explanation: e.target.value })}
-                className="bg-background/50"
-              />
-            </div>
-          </>
-        );
-
-      default:
-        return null;
+  const handleOpenCreate = useCallback((tab: AdminTab) => {
+    if (tab === "lessons") {
+      setEditItem(createEmptyLesson());
     }
-  };
-
-  const handleTableEdit = (item: Record<string, unknown>) => {
-    setEditItem(item);
+    if (tab === "vocabulary") {
+      setEditItem(createEmptyVocab());
+    }
+    if (tab === "grammar") {
+      setEditItem(createEmptyGrammar());
+    }
+    if (tab === "quizzes") {
+      setEditItem(createEmptyQuiz());
+    }
     setDialogOpen(true);
-  };
+  }, []);
 
-  const handleSave = async () => {
+  const handleTableEdit = useCallback((row: Record<string, unknown>) => {
+    setEditItem(toEditableItem(activeTab, row));
+    setDialogOpen(true);
+  }, [activeTab]);
+
+  const handleSave = useCallback(async () => {
+    if (!editItem) {
+      return;
+    }
+
     setSaving(true);
-    await saveFn(activeTab, editItem);
+    await saveItem(activeTab, editItem);
     setSaving(false);
-  };
+  }, [activeTab, editItem, saveItem]);
+
+  const currentTabLabel = useMemo(
+    () => TABS.find((tab) => tab.value === activeTab)?.label ?? "Content",
+    [activeTab]
+  );
 
   return (
     <DashboardLayout>
       <div className="min-h-screen relative">
         <WinterNightBackground snowCount={15} sparkleCount={8} intensity="light" />
+
         <div className="relative z-10 container mx-auto px-4 py-8 max-w-6xl">
-          {/* Header */}
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
             <div className="flex items-center gap-3">
               <div className="p-3 rounded-xl bg-gradient-to-br from-red-500/20 to-orange-500/20 border border-red-500/30">
@@ -557,173 +228,117 @@ const AdminContent = () => {
               </div>
               <div>
                 <h1 className="text-4xl font-bold bg-gradient-to-r from-red-400 via-orange-400 to-yellow-400 bg-clip-text text-transparent">
-                  Quản lý nội dung 管理
+                  Quan ly noi dung
                 </h1>
-                <p className="text-muted-foreground">CRUD bài học, từ vựng, ngữ pháp, câu hỏi</p>
+                <p className="text-muted-foreground">CRUD bai hoc, tu vung, ngu phap, cau hoi</p>
               </div>
             </div>
           </motion.div>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as AdminTab)} className="w-full">
             <TabsList className="bg-card/40 backdrop-blur-md border border-border/50 w-full justify-start mb-6">
-              {TABS.map((t) => (
-                <TabsTrigger key={t.value} value={t.value} className="flex items-center gap-2">
-                  <t.icon className="w-4 h-4" /> {t.label}
+              {TABS.map((tab) => (
+                <TabsTrigger key={tab.value} value={tab.value} className="flex items-center gap-2">
+                  <tab.icon className="w-4 h-4" />
+                  {tab.label}
                 </TabsTrigger>
               ))}
             </TabsList>
 
-            {/* LESSONS Tab */}
             <TabsContent value="lessons" className="space-y-4">
               <div className="flex justify-end">
-                <Button
-                  onClick={() => {
-                    setEditItem({
-                      title: "",
-                      description: "",
-                      jlptLevel: "N5",
-                      category: "",
-                      content: "",
-                      orderIndex: 0,
-                    });
-                    setDialogOpen(true);
-                  }}
-                >
-                  <Plus className="w-4 h-4 mr-2" /> Thêm mới
+                <Button onClick={() => handleOpenCreate("lessons")}>
+                  <Plus className="w-4 h-4 mr-2" /> Them moi
                 </Button>
               </div>
               <DynamicTable
                 columns={lessonColumns}
                 data={lessons}
                 onEdit={handleTableEdit}
-                onDelete={(id) => deleteFn("lessons", id)}
+                onDelete={(id) => deleteItem("lessons", id)}
                 loading={loading}
                 searchFields={["title", "category"]}
-                title="Danh sách bài học"
+                title="Danh sach bai hoc"
               />
             </TabsContent>
 
-            {/* VOCABULARY Tab */}
             <TabsContent value="vocabulary" className="space-y-4">
               <div className="flex justify-end">
-                <Button
-                  onClick={() => {
-                    setEditItem({
-                      kanji: "",
-                      hiragana: "",
-                      romaji: "",
-                      meaning: "",
-                      jlptLevel: "N5",
-                      category: "",
-                      exampleSentence: "",
-                      exampleMeaning: "",
-                    });
-                    setDialogOpen(true);
-                  }}
-                >
-                  <Plus className="w-4 h-4 mr-2" /> Thêm mới
+                <Button onClick={() => handleOpenCreate("vocabulary")}>
+                  <Plus className="w-4 h-4 mr-2" /> Them moi
                 </Button>
               </div>
               <DynamicTable
                 columns={vocabColumns}
                 data={vocab}
                 onEdit={handleTableEdit}
-                onDelete={(id) => deleteFn("vocabulary", id)}
+                onDelete={(id) => deleteItem("vocabulary", id)}
                 loading={loading}
                 searchFields={["kanji", "hiragana", "meaning"]}
-                title="Danh sách từ vựng"
+                title="Danh sach tu vung"
               />
             </TabsContent>
 
-            {/* GRAMMAR Tab */}
             <TabsContent value="grammar" className="space-y-4">
               <div className="flex justify-end">
-                <Button
-                  onClick={() => {
-                    setEditItem({
-                      pattern: "",
-                      meaning: "",
-                      jlptLevel: "N5",
-                      explanation: "",
-                      exampleSentence: "",
-                      exampleMeaning: "",
-                    });
-                    setDialogOpen(true);
-                  }}
-                >
-                  <Plus className="w-4 h-4 mr-2" /> Thêm mới
+                <Button onClick={() => handleOpenCreate("grammar")}>
+                  <Plus className="w-4 h-4 mr-2" /> Them moi
                 </Button>
               </div>
               <DynamicTable
                 columns={grammarColumns}
                 data={grammar}
                 onEdit={handleTableEdit}
-                onDelete={(id) => deleteFn("grammar", id)}
+                onDelete={(id) => deleteItem("grammar", id)}
                 loading={loading}
                 searchFields={["pattern", "meaning"]}
-                title="Danh sách ngữ pháp"
+                title="Danh sach ngu phap"
               />
             </TabsContent>
 
-            {/* QUIZZES Tab */}
             <TabsContent value="quizzes" className="space-y-4">
               <div className="flex justify-end">
-                <Button
-                  onClick={() => {
-                    setEditItem({
-                      question: "",
-                      optionA: "",
-                      optionB: "",
-                      optionC: "",
-                      optionD: "",
-                      correctAnswer: "A",
-                      jlptLevel: "N5",
-                      category: "",
-                      explanation: "",
-                    });
-                    setDialogOpen(true);
-                  }}
-                >
-                  <Plus className="w-4 h-4 mr-2" /> Thêm mới
+                <Button onClick={() => handleOpenCreate("quizzes")}>
+                  <Plus className="w-4 h-4 mr-2" /> Them moi
                 </Button>
               </div>
               <DynamicTable
                 columns={quizColumns}
                 data={quizzes}
                 onEdit={handleTableEdit}
-                onDelete={(id) => deleteFn("quizzes", id)}
+                onDelete={(id) => deleteItem("quizzes", id)}
                 loading={loading}
                 searchFields={["question", "category"]}
-                title="Danh sách câu hỏi"
+                title="Danh sach cau hoi"
               />
             </TabsContent>
           </Tabs>
 
-          {/* Edit/Create Dialog */}
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto bg-card/95 backdrop-blur">
               <DialogHeader>
-                <DialogTitle>
-                  {editItem?.id ? "Chỉnh sửa" : "Tạo mới"}{" "}
-                  {
-                    TABS.find((t) => t.value === activeTab)?.label
-                  }
-                </DialogTitle>
+                <DialogTitle>{editItem?.id ? "Chinh sua" : "Tao moi"} {currentTabLabel}</DialogTitle>
               </DialogHeader>
+
               <div className="space-y-4 py-2">
-                {renderForm()}
+                <AdminContentForm
+                  activeTab={activeTab}
+                  editItem={editItem}
+                  setEditItem={setEditItem}
+                />
               </div>
+
               <DialogFooter>
                 <Button variant="ghost" onClick={() => setDialogOpen(false)}>
-                  Hủy
+                  Huy
                 </Button>
-                <Button onClick={handleSave} disabled={saving}>
+                <Button onClick={handleSave} disabled={saving || !editItem}>
                   {saving ? (
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
                   ) : (
                     <Save className="w-4 h-4 mr-1" />
                   )}
-                  Lưu
+                  Luu
                 </Button>
               </DialogFooter>
             </DialogContent>
