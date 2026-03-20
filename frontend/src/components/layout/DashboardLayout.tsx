@@ -48,7 +48,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         )}
       >
         <div className="min-h-[calc(100vh-76px)] px-3 pb-6 pt-3 sm:px-4 lg:px-5 xl:px-6">
-          <div className="rounded-[1.75rem] border-2 border-border/50 bg-card/20 p-3 backdrop-blur-[8px]">
+          <div className="rounded-[1.75rem] border-2 border-border bg-card/30 p-3 backdrop-blur-[8px]">
             {children}
           </div>
         </div>
