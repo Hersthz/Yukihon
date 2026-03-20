@@ -1,4 +1,4 @@
-import { BookOpen, Flame, Sparkles } from "lucide-react";
+﻿import { BookOpen, Flame, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { fadeUp, stagger } from "@/data/landing";
 import kaorukoExcited from "@/assets/kaoruko-excited.png";

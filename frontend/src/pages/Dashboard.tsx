@@ -40,14 +40,14 @@ const quickStats = [
   { label: "Streak", value: "12", icon: Flame, color: "text-amber-500" },
   { label: "Từ đã học", value: "156", icon: BookOpen, color: "text-sky-500" },
   { label: "Quiz", value: "24", icon: Trophy, color: "text-emerald-500" },
-  { label: "Tập trung", value: "87%", icon: Sparkles, color: "text-violet-500" },
+  { label: "Tập trung", value: "87%", icon: Sparkles, color: "text-primary" },
 ];
 
 const quickActions = [
-  { title: "Tra cứu", subtitle: "Kanji, ví dụ, cách đọc", icon: Search, to: "/dictionary", accent: "bg-sky-100 text-sky-700" },
-  { title: "Dịch", subtitle: "Dịch nhanh theo ngữ cảnh", icon: MessageSquareMore, to: "/translation", accent: "bg-violet-100 text-violet-700" },
-  { title: "Ngữ pháp", subtitle: "Ôn cấu trúc thường gặp", icon: Brain, to: "/grammar", accent: "bg-emerald-100 text-emerald-700" },
-  { title: "JLPT", subtitle: "Lộ trình theo cấp độ", icon: GraduationCap, to: "/jlpt-lessons", accent: "bg-amber-100 text-amber-700" },
+  { title: "Tra cứu", subtitle: "Kanji, ví dụ, cách đọc", icon: Search, to: "/dictionary", accent: "bg-sky-500/15 text-sky-600 dark:text-sky-400" },
+  { title: "Dịch", subtitle: "Dịch nhanh theo ngữ cảnh", icon: MessageSquareMore, to: "/translation", accent: "bg-primary/15 text-primary" },
+  { title: "Ngữ pháp", subtitle: "Ôn cấu trúc thường gặp", icon: Brain, to: "/grammar", accent: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" },
+  { title: "JLPT", subtitle: "Lộ trình theo cấp độ", icon: GraduationCap, to: "/jlpt-lessons", accent: "bg-amber-500/15 text-amber-600 dark:text-amber-400" },
 ];
 
 const notebookCollections = [
@@ -71,9 +71,6 @@ const activity = [
   { title: "Lưu 5 từ vào sổ tay cá nhân", time: "Hôm nay" },
   { title: "Mở lại bài Daily Conversations", time: "Hôm qua" },
 ];
-
-const shellCard =
-  "rounded-[24px] border border-white/70 bg-white/[0.72] shadow-[0_12px_30px_rgba(148,163,184,0.12)] backdrop-blur-xl";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -154,10 +151,10 @@ const Dashboard = () => {
           className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"
         >
           <div>
-            <h2 className="text-[2rem] font-semibold leading-tight text-slate-900">
+            <h2 className="text-[2rem] font-semibold leading-tight text-foreground">
               {greeting}, {greetingName}!
             </h2>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-1 text-sm text-muted-foreground">
               Bảng tổng quan gọn nhẹ để bạn nhìn nhanh tiến độ mà không phải kéo nhiều.
             </p>
           </div>
@@ -166,14 +163,14 @@ const Dashboard = () => {
             <Link to="/dictionary">
               <Button
                 variant="outline"
-                className="h-10 rounded-2xl border-white/80 bg-white/75 text-slate-700 hover:bg-white"
+                className="h-10 rounded-2xl border-2 border-border bg-card text-foreground hover:bg-muted"
               >
                 <Search className="mr-2 h-4 w-4" />
                 Tra cứu
               </Button>
             </Link>
             <Link to={nextLesson.to}>
-              <Button className="h-10 rounded-2xl bg-sky-500 text-white hover:bg-sky-400">
+              <Button className="h-10 rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90">
                 <ArrowRight className="mr-2 h-4 w-4" />
                 Học tiếp
               </Button>
@@ -183,14 +180,16 @@ const Dashboard = () => {
 
         <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
           <div className="space-y-4">
+            {/* Continue Learning + Today Stats */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.04 }}
-              className={`${shellCard} p-4`}
+              className="yukihon-card p-4 cursor-default"
             >
               <div className="grid gap-4 xl:grid-cols-[260px_minmax(0,1fr)]">
-                <div className="rounded-[22px] bg-[linear-gradient(135deg,#60a5fa,#38bdf8_55%,#6ee7b7)] p-4 text-white shadow-[0_12px_30px_rgba(56,189,248,0.22)]">
+                {/* Continue card */}
+                <div className="rounded-[1.25rem] bg-gradient-to-br from-primary to-secondary p-4 text-white">
                   <p className="text-[11px] uppercase tracking-[0.22em] text-white/70">Tiếp tục học</p>
                   <h3 className="mt-3 text-[1.6rem] font-semibold leading-tight">{nextLesson.title}</h3>
                   <div className="mt-4 flex items-center gap-2">
@@ -203,19 +202,20 @@ const Dashboard = () => {
                     </span>
                   </div>
                   <Link to={nextLesson.to}>
-                    <Button className="mt-5 h-10 w-full rounded-2xl bg-white text-sky-700 hover:bg-slate-100">
+                    <Button className="mt-5 h-10 w-full rounded-2xl bg-white text-primary hover:bg-white/90">
                       Mở bài học
                     </Button>
                   </Link>
                 </div>
 
-                <div className="rounded-[22px] border border-slate-200 bg-slate-50/85 p-4">
+                {/* Today stats */}
+                <div className="rounded-[1.25rem] border-2 border-border bg-muted/30 p-4">
                   <div className="mb-4 flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-semibold text-slate-900">Tiến độ hôm nay</p>
-                      <p className="text-sm text-slate-500">1 bài JLPT ngắn + 10 từ trong sổ tay</p>
+                      <p className="text-sm font-semibold text-foreground">Tiến độ hôm nay</p>
+                      <p className="text-sm text-muted-foreground">1 bài JLPT ngắn + 10 từ trong sổ tay</p>
                     </div>
-                    <Target className="h-5 w-5 text-slate-400" />
+                    <Target className="h-5 w-5 text-muted-foreground" />
                   </div>
 
                   <div className="grid gap-3 sm:grid-cols-4">
@@ -224,15 +224,15 @@ const Dashboard = () => {
                       return (
                         <div
                           key={item.label}
-                          className="rounded-[18px] border border-white bg-white px-3 py-3 shadow-[0_8px_18px_rgba(148,163,184,0.10)]"
+                          className="yukihon-card-flat px-3 py-3 cursor-default"
                         >
                           <div className="flex items-center justify-between">
-                            <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
+                            <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
                               {item.label}
                             </p>
                             <Icon className={`h-4 w-4 ${item.color}`} />
                           </div>
-                          <p className="mt-2 text-2xl font-semibold text-slate-900">{item.value}</p>
+                          <p className="mt-2 text-2xl font-semibold text-foreground">{item.value}</p>
                         </div>
                       );
                     })}
@@ -240,15 +240,15 @@ const Dashboard = () => {
 
                   <div className="mt-4">
                     <div className="mb-2 flex items-center justify-between text-sm">
-                      <span className="text-slate-500">Tiến độ bài hiện tại</span>
-                      <span className="font-medium text-sky-600">{nextLesson.progress}%</span>
+                      <span className="text-muted-foreground">Tiến độ bài hiện tại</span>
+                      <span className="font-medium text-primary">{nextLesson.progress}%</span>
                     </div>
-                    <div className="h-2.5 overflow-hidden rounded-full bg-slate-200">
+                    <div className="h-2.5 overflow-hidden rounded-full bg-muted">
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${nextLesson.progress}%` }}
                         transition={{ duration: 0.8, ease: "easeOut" }}
-                        className="h-full rounded-full bg-[linear-gradient(90deg,#60a5fa,#22d3ee)]"
+                        className="h-full rounded-full bg-gradient-to-r from-primary to-secondary"
                       />
                     </div>
                   </div>
@@ -256,15 +256,16 @@ const Dashboard = () => {
               </div>
             </motion.div>
 
+            {/* Quick Actions */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.08 }}
-              className={`${shellCard} p-4`}
+              className="yukihon-card p-4 cursor-default"
             >
               <div className="mb-4">
-                <h3 className="text-lg font-semibold text-slate-900">Công cụ học tập</h3>
-                <p className="text-sm text-slate-500">Đi nhanh vào phần bạn dùng nhiều nhất</p>
+                <h3 className="text-lg font-semibold text-foreground">Công cụ học tập</h3>
+                <p className="text-sm text-muted-foreground">Đi nhanh vào phần bạn dùng nhiều nhất</p>
               </div>
 
               <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -272,12 +273,12 @@ const Dashboard = () => {
                   const Icon = item.icon;
                   return (
                     <Link key={item.title} to={item.to} className="group">
-                      <div className="rounded-[20px] border border-white bg-white/90 px-4 py-4 transition hover:-translate-y-0.5 hover:shadow-[0_12px_26px_rgba(148,163,184,0.12)]">
+                      <div className="yukihon-card-flat px-4 py-4">
                         <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${item.accent}`}>
                           <Icon className="h-5 w-5" />
                         </div>
-                        <p className="mt-3 text-base font-semibold text-slate-900">{item.title}</p>
-                        <p className="mt-1 text-sm text-slate-500">{item.subtitle}</p>
+                        <p className="mt-3 text-base font-semibold text-foreground">{item.title}</p>
+                        <p className="mt-1 text-sm text-muted-foreground">{item.subtitle}</p>
                       </div>
                     </Link>
                   );
@@ -285,19 +286,20 @@ const Dashboard = () => {
               </div>
             </motion.div>
 
+            {/* Notebook + Discover */}
             <div className="grid gap-4 xl:grid-cols-2">
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.12 }}
-                className={`${shellCard} p-4`}
+                className="yukihon-card p-4 cursor-default"
               >
                 <div className="mb-4 flex items-center justify-between">
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-900">Sổ tay của tôi</h3>
-                    <p className="text-sm text-slate-500">Các bộ từ đang dùng</p>
+                    <h3 className="text-lg font-semibold text-foreground">Sổ tay của tôi</h3>
+                    <p className="text-sm text-muted-foreground">Các bộ từ đang dùng</p>
                   </div>
-                  <Link to="/my-words" className="text-sm text-slate-500 hover:text-slate-900">
+                  <Link to="/my-words" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                     Xem thêm
                   </Link>
                 </div>
@@ -306,10 +308,10 @@ const Dashboard = () => {
                   {notebookCollections.map((item) => (
                     <div
                       key={item.name}
-                      className={`rounded-[18px] border border-white bg-[linear-gradient(135deg,rgba(255,255,255,0.94),rgba(255,255,255,0.86))] px-4 py-4`}
+                      className="yukihon-card-flat px-4 py-4 cursor-default"
                     >
-                      <p className="text-base font-semibold text-slate-900">{item.name}</p>
-                      <p className="mt-1 text-sm text-slate-500">{item.meta}</p>
+                      <p className="text-base font-semibold text-foreground">{item.name}</p>
+                      <p className="mt-1 text-sm text-muted-foreground">{item.meta}</p>
                     </div>
                   ))}
                 </div>
@@ -319,12 +321,12 @@ const Dashboard = () => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.16 }}
-                className={`${shellCard} p-4`}
+                className="yukihon-card p-4 cursor-default"
               >
                 <div className="mb-4 flex items-center justify-between">
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-900">Khám phá</h3>
-                    <p className="text-sm text-slate-500">Các bộ nội dung hữu ích để học tiếp</p>
+                    <h3 className="text-lg font-semibold text-foreground">Khám phá</h3>
+                    <p className="text-sm text-muted-foreground">Các bộ nội dung hữu ích để học tiếp</p>
                   </div>
                 </div>
 
@@ -332,11 +334,11 @@ const Dashboard = () => {
                   {discoverSets.map((item) => (
                     <div
                       key={item.title}
-                      className="rounded-[18px] border border-white bg-white/[0.92] px-4 py-4 shadow-[0_8px_18px_rgba(148,163,184,0.08)]"
+                      className="yukihon-card-flat px-4 py-4 cursor-default"
                     >
-                      <p className="text-base font-semibold text-slate-900">{item.title}</p>
-                      <p className="mt-1 text-sm text-slate-500">{item.info}</p>
-                      <div className="mt-4 flex items-center justify-between text-sm text-slate-500">
+                      <p className="text-base font-semibold text-foreground">{item.title}</p>
+                      <p className="mt-1 text-sm text-muted-foreground">{item.info}</p>
+                      <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
                         <span>{item.author}</span>
                         <Star className="h-4 w-4 text-amber-500" />
                       </div>
@@ -347,53 +349,56 @@ const Dashboard = () => {
             </div>
           </div>
 
+          {/* Right Sidebar */}
           <div className="space-y-4">
+            {/* Goals */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 }}
-              className={`${shellCard} p-4`}
+              className="yukihon-card p-4 cursor-default"
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-900">Mục tiêu hôm nay</h3>
-                  <p className="text-sm text-slate-500">25 phút học tập trung</p>
+                  <h3 className="text-lg font-semibold text-foreground">Mục tiêu hôm nay</h3>
+                  <p className="text-sm text-muted-foreground">25 phút học tập trung</p>
                 </div>
-                <Zap className="h-5 w-5 text-slate-400" />
+                <Zap className="h-5 w-5 text-muted-foreground" />
               </div>
 
               <div className="mt-4 space-y-3">
                 {["1 bài hội thoại", "10 từ trong sổ tay", "1 bài quiz nhanh"].map((goal) => (
                   <div
                     key={goal}
-                    className="flex items-center gap-3 rounded-[18px] border border-white bg-white/[0.92] px-4 py-3"
+                    className="flex items-center gap-3 yukihon-card-flat px-4 py-3 cursor-default"
                   >
-                    <div className="h-3 w-3 rounded-full bg-sky-400" />
-                    <span className="text-sm font-medium text-slate-800">{goal}</span>
+                    <div className="h-3 w-3 rounded-full bg-primary" />
+                    <span className="text-sm font-medium text-foreground">{goal}</span>
                   </div>
                 ))}
               </div>
             </motion.div>
 
+            {/* Recent Topics */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className={`${shellCard} p-4`}
+              className="yukihon-card p-4 cursor-default"
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-900">Lịch sử tra cứu</h3>
-                  <p className="text-sm text-slate-500">Các từ bạn vừa quan tâm</p>
+                  <h3 className="text-lg font-semibold text-foreground">Lịch sử tra cứu</h3>
+                  <p className="text-sm text-muted-foreground">Các từ bạn vừa quan tâm</p>
                 </div>
-                <Search className="h-5 w-5 text-slate-400" />
+                <Search className="h-5 w-5 text-muted-foreground" />
               </div>
 
               <div className="mt-4 flex flex-wrap gap-2">
                 {recentTopics.map((topic) => (
                   <span
                     key={topic}
-                    className="rounded-full bg-sky-100 px-3 py-2 text-sm font-medium text-sky-800"
+                    className="rounded-full bg-primary/10 px-3 py-2 text-sm font-medium text-primary border border-primary/20"
                   >
                     {topic}
                   </span>
@@ -401,28 +406,29 @@ const Dashboard = () => {
               </div>
             </motion.div>
 
+            {/* Activity */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.14 }}
-              className={`${shellCard} p-4`}
+              className="yukihon-card p-4 cursor-default"
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-900">Hoạt động gần đây</h3>
-                  <p className="text-sm text-slate-500">Những gì bạn vừa hoàn thành</p>
+                  <h3 className="text-lg font-semibold text-foreground">Hoạt động gần đây</h3>
+                  <p className="text-sm text-muted-foreground">Những gì bạn vừa hoàn thành</p>
                 </div>
-                <MessageSquareMore className="h-5 w-5 text-slate-400" />
+                <MessageSquareMore className="h-5 w-5 text-muted-foreground" />
               </div>
 
               <div className="mt-4 space-y-3">
                 {activity.map((item) => (
                   <div
                     key={item.title}
-                    className="rounded-[18px] border border-white bg-white/[0.92] px-4 py-3"
+                    className="yukihon-card-flat px-4 py-3 cursor-default"
                   >
-                    <p className="text-sm font-medium text-slate-900">{item.title}</p>
-                    <p className="mt-2 text-[11px] uppercase tracking-[0.18em] text-slate-500">
+                    <p className="text-sm font-medium text-foreground">{item.title}</p>
+                    <p className="mt-2 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
                       {item.time}
                     </p>
                   </div>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Award, BookOpen, GraduationCap, PlayCircle, Target, TrendingUp } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -72,7 +72,7 @@ const JLPTLessons = () => {
                 <button
                   key={level}
                   className={`rounded-2xl border px-4 py-2 text-sm font-medium transition ${
-                    active ? `${levelTone[level]} shadow-[0_10px_20px_rgba(148,163,184,0.10)]` : "border-white/80 bg-white/90 text-slate-600 hover:bg-slate-50"
+                    active ? `${levelTone[level]} shadow-[0_10px_20px_rgba(148,163,184,0.10)]` : "border-border bg-card text-muted-foreground hover:bg-muted"
                   }`}
                   onClick={() => setSelectedLevel(level)}
                   type="button"
@@ -89,14 +89,14 @@ const JLPTLessons = () => {
             <div className="space-y-4">
               <div className="rounded-[20px] border border-sky-200 bg-sky-50/80 p-4">
                 <p className="text-xs uppercase tracking-[0.18em] text-sky-700">Tập trung hôm nay</p>
-                <p className="mt-2 text-sm leading-6 text-slate-700">Học 1 bài mới, ôn 10 từ và giữ nhịp đều thay vì mở quá nhiều module cùng lúc.</p>
+                <p className="mt-2 text-sm leading-6 text-foreground/80">Học 1 bài mới, ôn 10 từ và giữ nhịp đều thay vì mở quá nhiều module cùng lúc.</p>
               </div>
-              <div className="rounded-[20px] border border-slate-200 bg-white p-4">
+              <div className="rounded-[20px] border border-border bg-card p-4">
                 <div className="mb-2 flex items-center justify-between text-sm">
-                  <span className="text-slate-500">Tổng quát level</span>
+                  <span className="text-muted-foreground">Tổng quát level</span>
                   <span className="font-medium text-sky-700">{progress}%</span>
                 </div>
-                <div className="h-2.5 overflow-hidden rounded-full bg-slate-200">
+                <div className="h-2.5 overflow-hidden rounded-full bg-muted">
                   <motion.div
                     animate={{ width: `${progress}%` }}
                     className="h-full rounded-full bg-[linear-gradient(90deg,#60a5fa,#22d3ee)]"
@@ -105,12 +105,12 @@ const JLPTLessons = () => {
                   />
                 </div>
               </div>
-              <div className="rounded-[20px] border border-slate-200 bg-white p-4">
+              <div className="rounded-[20px] border border-border bg-card p-4">
                 <div className="flex items-start gap-3">
                   <Target className="mt-1 h-5 w-5 text-violet-500" />
                   <div>
-                    <p className="text-sm font-semibold text-slate-900">Nhịp học đề xuất</p>
-                    <p className="mt-1 text-sm text-slate-600">15 đến 20 phút một phiên để nhìn được toàn bộ lộ trình mà không bị quá tải.</p>
+                    <p className="text-sm font-semibold text-foreground">Nhịp học đề xuất</p>
+                    <p className="mt-1 text-sm text-muted-foreground">15 đến 20 phút một phiên để nhìn được toàn bộ lộ trình mà không bị quá tải.</p>
                   </div>
                 </div>
               </div>

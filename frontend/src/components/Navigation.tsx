@@ -1,4 +1,4 @@
-// src/components/Navigation.tsx
+﻿// src/components/Navigation.tsx
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";

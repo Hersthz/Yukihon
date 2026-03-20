@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Award, BookOpen, Calendar, Flame, GraduationCap, LogOut, Shield, Trophy, User } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -59,18 +59,18 @@ const Profile = () => {
             <PageSection title="Thông tin nhanh" description="Một cột tóm tắt để giảm tải cho phần form chi tiết.">
               <div className="flex items-center gap-4">
                 <Avatar className="h-20 w-20 bg-[linear-gradient(135deg,#93c5fd,#86efac)]">
-                  <AvatarFallback className="bg-transparent text-xl font-semibold text-slate-900">AC</AvatarFallback>
+                  <AvatarFallback className="bg-transparent text-xl font-semibold text-foreground">AC</AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="text-lg font-semibold text-slate-900">Alex Chen</p>
-                  <p className="text-sm text-slate-500">alex@example.com</p>
+                  <p className="text-lg font-semibold text-foreground">Alex Chen</p>
+                  <p className="text-sm text-muted-foreground">alex@example.com</p>
                   <Badge className="mt-2 rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700">Calm mode</Badge>
                 </div>
               </div>
 
               <div className="mt-4 rounded-[20px] border border-violet-200 bg-violet-50/70 p-4">
                 <p className="text-sm font-semibold text-violet-800">Mục tiêu tuần này</p>
-                <p className="mt-1 text-sm leading-6 text-slate-700">Giữ 5 phiên học ngắn, ôn 1 chủ đề JLPT và không mở quá nhiều module cùng lúc.</p>
+                <p className="mt-1 text-sm leading-6 text-foreground/80">Giữ 5 phiên học ngắn, ôn 1 chủ đề JLPT và không mở quá nhiều module cùng lúc.</p>
               </div>
 
               <Button className="mt-4 w-full rounded-2xl border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100" onClick={handleLogout} variant="outline">
@@ -85,15 +85,15 @@ const Profile = () => {
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="name">Họ tên</Label>
-                  <Input className="h-11 rounded-2xl border-white/80 bg-white/90" defaultValue="Alex Chen" id="name" />
+                  <Input className="h-11 rounded-2xl border-border bg-card" defaultValue="Alex Chen" id="name" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input className="h-11 rounded-2xl border-white/80 bg-slate-50" defaultValue="alex@example.com" disabled id="email" />
+                  <Input className="h-11 rounded-2xl border-border bg-muted" defaultValue="alex@example.com" disabled id="email" />
                 </div>
                 <div className="space-y-2 md:col-span-2">
                   <Label htmlFor="bio">Giới thiệu</Label>
-                  <Input className="h-11 rounded-2xl border-white/80 bg-white/90" defaultValue="Learning Japanese for travel and work" id="bio" />
+                  <Input className="h-11 rounded-2xl border-border bg-card" defaultValue="Learning Japanese for travel and work" id="bio" />
                 </div>
               </div>
             </PageSection>
@@ -105,10 +105,10 @@ const Profile = () => {
                   { title: "Hiện furigana", description: "Bật gợi ý đọc cho kanji khó." },
                   { title: "Tự động phát âm", description: "Nghe lại âm thanh khi mở thẻ học." },
                 ].map((item, index) => (
-                  <div key={item.title} className="flex items-center justify-between rounded-[18px] border border-slate-200 bg-white p-4">
+                  <div key={item.title} className="flex items-center justify-between rounded-[18px] border border-border bg-card p-4">
                     <div>
-                      <p className="text-sm font-semibold text-slate-900">{item.title}</p>
-                      <p className="mt-1 text-sm text-slate-500">{item.description}</p>
+                      <p className="text-sm font-semibold text-foreground">{item.title}</p>
+                      <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
                     </div>
                     <Switch defaultChecked={index < 2} />
                   </div>
@@ -122,16 +122,16 @@ const Profile = () => {
                   <div
                     key={item.title}
                     className={`rounded-[20px] border p-4 ${
-                      item.unlocked ? "border-amber-200 bg-amber-50/70" : "border-slate-200 bg-white"
+                      item.unlocked ? "border-amber-200 bg-amber-50/70" : "border-border bg-white"
                     }`}
                   >
                     <div className="flex items-start gap-3">
-                      <div className={`rounded-2xl p-2 ${item.unlocked ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-400"}`}>
+                      <div className={`rounded-2xl p-2 ${item.unlocked ? "bg-amber-100 text-amber-700" : "bg-muted text-muted-foreground"}`}>
                         <item.icon className="h-5 w-5" />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-slate-900">{item.title}</p>
-                        <p className="mt-1 text-sm text-slate-500">{item.description}</p>
+                        <p className="text-sm font-semibold text-foreground">{item.title}</p>
+                        <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
                         {item.unlocked && <Badge className="mt-2 rounded-full border border-amber-200 bg-white text-amber-700">Unlocked</Badge>}
                       </div>
                     </div>
@@ -144,14 +144,14 @@ const Profile = () => {
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="current-password">Mật khẩu hiện tại</Label>
-                  <Input className="h-11 rounded-2xl border-white/80 bg-white/90" id="current-password" type="password" />
+                  <Input className="h-11 rounded-2xl border-border bg-card" id="current-password" type="password" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="new-password">Mật khẩu mới</Label>
-                  <Input className="h-11 rounded-2xl border-white/80 bg-white/90" id="new-password" type="password" />
+                  <Input className="h-11 rounded-2xl border-border bg-card" id="new-password" type="password" />
                 </div>
               </div>
-              <Button className="mt-4 rounded-2xl border-slate-200 bg-white text-slate-700" variant="outline">
+              <Button className="mt-4 rounded-2xl border-border bg-white text-foreground/80" variant="outline">
                 <Shield className="mr-2 h-4 w-4" />
                 Cập nhật mật khẩu
               </Button>

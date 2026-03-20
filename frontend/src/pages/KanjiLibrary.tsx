@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
 import { BookOpen, Search } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
@@ -107,9 +107,9 @@ const KanjiLibrary = () => {
         <PageSection className="mb-4" title="Tìm kiếm và lọc" description="Gom search và level lên một hàng để giữ vùng lưới thật rộng.">
           <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto]">
             <div className="relative">
-              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                className="h-11 rounded-2xl border-white/80 bg-white/90 pl-11 text-slate-900 placeholder:text-slate-400"
+                className="h-11 rounded-2xl border-border bg-card pl-11 text-foreground placeholder:text-muted-foreground"
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Tìm theo kanji hoặc nghĩa"
                 value={searchQuery}
@@ -121,7 +121,7 @@ const KanjiLibrary = () => {
                 <button
                   key={level}
                   className={`rounded-2xl border px-4 py-2 text-sm font-medium transition ${
-                    selectedLevel === level ? "border-sky-200 bg-sky-50 text-sky-700" : "border-white/80 bg-white/90 text-slate-600 hover:bg-slate-50"
+                    selectedLevel === level ? "border-sky-200 bg-sky-50 text-sky-700" : "border-border bg-card text-muted-foreground hover:bg-muted"
                   }`}
                   onClick={() => setSelectedLevel(level)}
                   type="button"
@@ -141,13 +141,13 @@ const KanjiLibrary = () => {
               {filteredKanji.map((kanji) => (
                 <button
                   key={kanji.character}
-                  className="aspect-square rounded-[20px] border border-white bg-white p-3 text-center shadow-[0_10px_24px_rgba(148,163,184,0.10)] transition hover:-translate-y-1 hover:bg-sky-50/50"
+                  className="aspect-square rounded-[20px] border border-white bg-card p-3 text-center shadow-[0_10px_24px_rgba(148,163,184,0.10)] transition hover:-translate-y-1 hover:bg-sky-50/50"
                   onClick={() => setSelectedKanji(kanji)}
                   type="button"
                 >
                   <div className="flex h-full flex-col items-center justify-center">
-                    <p className="text-4xl font-semibold text-slate-900">{kanji.character}</p>
-                    <p className="mt-1 line-clamp-1 text-xs text-slate-500">{kanji.meaning.split(",")[0]}</p>
+                    <p className="text-4xl font-semibold text-foreground">{kanji.character}</p>
+                    <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">{kanji.meaning.split(",")[0]}</p>
                   </div>
                 </button>
               ))}
@@ -156,35 +156,35 @@ const KanjiLibrary = () => {
         </PageSection>
 
         <Dialog onOpenChange={() => setSelectedKanji(null)} open={!!selectedKanji}>
-          <DialogContent className="max-w-2xl rounded-[28px] border-white/80 bg-white/[0.98]">
+          <DialogContent className="max-w-2xl rounded-[28px] border-border bg-white/[0.98]">
             {selectedKanji && (
               <>
                 <DialogHeader>
                   <div className="mb-2 flex items-start justify-between gap-3">
-                    <div className="text-7xl font-semibold text-slate-900">{selectedKanji.character}</div>
+                    <div className="text-7xl font-semibold text-foreground">{selectedKanji.character}</div>
                     <Badge className="rounded-full border border-sky-200 bg-sky-50 text-sky-700">{selectedKanji.level}</Badge>
                   </div>
-                  <DialogTitle className="text-2xl text-slate-900">{selectedKanji.meaning}</DialogTitle>
-                  <DialogDescription className="text-slate-500">{selectedKanji.strokes} nét</DialogDescription>
+                  <DialogTitle className="text-2xl text-foreground">{selectedKanji.meaning}</DialogTitle>
+                  <DialogDescription className="text-muted-foreground">{selectedKanji.strokes} nét</DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-4">
                   <div className="grid gap-4 md:grid-cols-2">
-                    <div className="rounded-[20px] border border-slate-200 bg-slate-50/70 p-4">
-                      <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Onyomi</p>
-                      <p className="mt-2 text-lg text-slate-900">{selectedKanji.onReading}</p>
+                    <div className="rounded-[20px] border border-border bg-muted/40 p-4">
+                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Onyomi</p>
+                      <p className="mt-2 text-lg text-foreground">{selectedKanji.onReading}</p>
                     </div>
-                    <div className="rounded-[20px] border border-slate-200 bg-slate-50/70 p-4">
-                      <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Kunyomi</p>
-                      <p className="mt-2 text-lg text-slate-900">{selectedKanji.kunReading}</p>
+                    <div className="rounded-[20px] border border-border bg-muted/40 p-4">
+                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Kunyomi</p>
+                      <p className="mt-2 text-lg text-foreground">{selectedKanji.kunReading}</p>
                     </div>
                   </div>
 
-                  <div className="rounded-[20px] border border-slate-200 bg-white p-4">
-                    <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Ví dụ</p>
+                  <div className="rounded-[20px] border border-border bg-card p-4">
+                    <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Ví dụ</p>
                     <div className="mt-3 space-y-2">
                       {selectedKanji.examples.map((example) => (
-                        <div key={example} className="rounded-[16px] border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+                        <div key={example} className="rounded-[16px] border border-border bg-muted p-3 text-sm text-foreground/80">
                           {example}
                         </div>
                       ))}

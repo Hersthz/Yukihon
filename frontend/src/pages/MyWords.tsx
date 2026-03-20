@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   BookOpen,
@@ -150,9 +150,9 @@ const MyWords = () => {
         <PageSection className="mb-4" title="Bộ lọc nhanh" description="Giảm thao tác cuộn bằng cách gom filter lên một hàng.">
           <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_180px_180px]">
             <div className="relative">
-              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                className="h-11 rounded-2xl border-white/80 bg-white/90 pl-11 text-slate-900 placeholder:text-slate-400"
+                className="h-11 rounded-2xl border-border bg-card pl-11 text-foreground placeholder:text-muted-foreground"
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Tìm theo kanji, hiragana, romaji hoặc nghĩa"
                 value={search}
@@ -166,8 +166,8 @@ const MyWords = () => {
               }}
               value={filterFolder || "all"}
             >
-              <SelectTrigger className="h-11 rounded-2xl border-white/80 bg-white/90 text-slate-700">
-                <Folder className="mr-2 h-4 w-4 text-slate-400" />
+              <SelectTrigger className="h-11 rounded-2xl border-border bg-card text-foreground/80">
+                <Folder className="mr-2 h-4 w-4 text-muted-foreground" />
                 <SelectValue placeholder="Folder" />
               </SelectTrigger>
               <SelectContent>
@@ -187,7 +187,7 @@ const MyWords = () => {
               }}
               value={filterMastered || "all"}
             >
-              <SelectTrigger className="h-11 rounded-2xl border-white/80 bg-white/90 text-slate-700">
+              <SelectTrigger className="h-11 rounded-2xl border-border bg-card text-foreground/80">
                 <SelectValue placeholder="Trạng thái" />
               </SelectTrigger>
               <SelectContent>
@@ -217,16 +217,16 @@ const MyWords = () => {
                   <motion.div
                     key={word.id}
                     animate={{ opacity: 1, y: 0 }}
-                    className="rounded-[22px] border border-white bg-white p-4 shadow-[0_10px_24px_rgba(148,163,184,0.10)]"
+                    className="rounded-[22px] border border-white bg-card p-4 shadow-[0_10px_24px_rgba(148,163,184,0.10)]"
                     exit={{ opacity: 0, y: -10 }}
                     initial={{ opacity: 0, y: 10 }}
                     transition={{ delay: index * 0.02 }}
                   >
                     <div className="mb-3 flex items-start justify-between gap-3">
                       <div>
-                        <p className="text-[1.5rem] font-semibold text-slate-900">{word.kanji || word.hiragana}</p>
+                        <p className="text-[1.5rem] font-semibold text-foreground">{word.kanji || word.hiragana}</p>
                         <p className="text-sm text-sky-700">{word.hiragana}</p>
-                        <p className="text-xs text-slate-500">{word.romaji}</p>
+                        <p className="text-xs text-muted-foreground">{word.romaji}</p>
                       </div>
 
                       <div className="flex flex-wrap justify-end gap-2">
@@ -234,23 +234,23 @@ const MyWords = () => {
                           <Badge className="rounded-full border border-sky-200 bg-sky-50 text-sky-700">{word.jlptLevel}</Badge>
                         )}
                         {word.folderName && (
-                          <Badge className="rounded-full border border-slate-200 bg-slate-50 text-slate-600">{word.folderName}</Badge>
+                          <Badge className="rounded-full border border-border bg-muted text-muted-foreground">{word.folderName}</Badge>
                         )}
                       </div>
                     </div>
 
-                    <p className="text-sm text-slate-700">{word.meaning}</p>
+                    <p className="text-sm text-foreground/80">{word.meaning}</p>
 
                     {editingNote === word.id ? (
                       <div className="mt-3 flex gap-2">
                         <Input
-                          className="h-10 rounded-xl border-white/80 bg-white/90 text-sm text-slate-900"
+                          className="h-10 rounded-xl border-border bg-card text-sm text-foreground"
                           onChange={(e) => setNoteText(e.target.value)}
                           onKeyDown={(e) => e.key === "Enter" && updateNote(word.id)}
                           placeholder="Thêm một ghi chú ngắn"
                           value={noteText}
                         />
-                        <Button className="rounded-xl bg-slate-900 text-white hover:bg-slate-800" onClick={() => updateNote(word.id)} size="sm">
+                        <Button className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => updateNote(word.id)} size="sm">
                           Lưu
                         </Button>
                       </div>
@@ -263,7 +263,7 @@ const MyWords = () => {
                             <p className="mt-1 text-sm text-amber-900">{word.personalNote}</p>
                           </div>
                           <Button
-                            className="h-8 w-8 rounded-xl text-slate-500 hover:text-slate-900"
+                            className="h-8 w-8 rounded-xl text-muted-foreground hover:text-foreground"
                             onClick={() => {
                               setEditingNote(word.id);
                               setNoteText(word.personalNote);
@@ -289,7 +289,7 @@ const MyWords = () => {
 
                       {!word.personalNote && (
                         <Button
-                          className="rounded-xl border-slate-200 bg-white text-slate-600"
+                          className="rounded-xl border-border bg-white text-muted-foreground"
                           onClick={() => {
                             setEditingNote(word.id);
                             setNoteText("");

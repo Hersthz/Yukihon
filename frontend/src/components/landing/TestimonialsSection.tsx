@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+﻿import { motion } from "framer-motion";
 import { TESTIMONIALS, fadeUp, stagger } from "@/data/landing";
 
 const CARD_THEMES = [
@@ -44,7 +44,7 @@ const TestimonialsSection = () => (
             <div className="absolute -top-4 -right-2 text-8xl font-serif text-primary/10 leading-none select-none drop-shadow-sm">"</div>
             
             <div className="flex items-center gap-4 mb-6 relative z-10">
-              <div className="w-14 h-14 rounded-full bg-white/60 dark:bg-black/20 backdrop-blur-md flex items-center justify-center text-2xl shadow-inner border border-white/50 dark:border-white/10">
+              <div className="w-14 h-14 rounded-full bg-card/60 backdrop-blur-md flex items-center justify-center text-2xl shadow-inner border border-border border-border/30">
                 {t.avatar}
               </div>
               <div>

@@ -18,49 +18,49 @@ html {
 
 @layer base {
   :root {
-    /* Dark cinematic backgrounds */
-    --background: 222 47% 5%;
+    /* Dark theme — Midnight Matcha (warm-refined) */
+    --background: 220 30% 7%;
     --foreground: 210 20% 92%;
 
-    /* Glass surfaces */
-    --card: 222 30% 10%;
+    /* Card surfaces */
+    --card: 220 25% 12%;
     --card-foreground: 210 20% 92%;
 
-    --popover: 222 30% 10%;
+    --popover: 220 25% 12%;
     --popover-foreground: 210 20% 92%;
 
-    /* Kaoruko's eye color - cool cyan */
-    --primary: 195 70% 78%;
-    --primary-foreground: 222 47% 5%;
+    /* Primary — Teal/Green (friendly, fresh) */
+    --primary: 160 60% 45%;
+    --primary-foreground: 0 0% 100%;
 
-    /* Soft green from clothing */
-    --secondary: 140 45% 72%;
-    --secondary-foreground: 222 47% 5%;
+    /* Secondary — Warm Green */
+    --secondary: 140 45% 55%;
+    --secondary-foreground: 0 0% 100%;
 
-    /* Warm skin tones */
-    --accent-warm: 25 60% 85%;
-    --accent-warm-deep: 25 45% 55%;
+    /* Warm accent (coral/orange) */
+    --accent-warm: 25 80% 65%;
+    --accent-warm-deep: 18 70% 50%;
 
-    /* Hair color - gray purple */
+    /* Hair color */
     --hair: 280 8% 40%;
 
     /* Muted surfaces */
-    --muted: 222 20% 15%;
-    --muted-foreground: 210 15% 60%;
+    --muted: 220 20% 16%;
+    --muted-foreground: 215 15% 55%;
 
-    --accent: 222 25% 18%;
+    --accent: 220 20% 18%;
     --accent-foreground: 210 20% 92%;
 
     --destructive: 0 65% 55%;
     --destructive-foreground: 0 0% 98%;
 
-    /* Borders with glass effect */
-    --border: 0 0% 100% / 0.15;
-    --input: 222 20% 20%;
-    --ring: 195 70% 78%;
+    /* Borders */
+    --border: 220 20% 22%;
+    --input: 220 20% 20%;
+    --ring: 160 60% 45%;
 
-    /* Success states */
-    --success: 140 50% 50%;
+    /* Success */
+    --success: 155 55% 45%;
     --success-foreground: 0 0% 98%;
 
     --info: 195 60% 55%;
@@ -68,101 +68,119 @@ html {
 
     --radius: 1rem;
 
+    /* Card styling */
+    --card-border-width: 2.5px;
+    --card-border-color: 220 20% 24%;
+    --card-shadow-offset: 0 6px 0 0 hsl(220 25% 8%);
+    --card-shadow-full: 0 6px 0 0 hsl(220 25% 8%), 0 12px 30px -8px rgba(0, 0, 0, 0.4);
+    --radius-card: 1.75rem;
+
     /* Glassmorphism values */
-    --glass-bg: 222 47% 5% / 0.75;
-    --glass-border: 0 0% 100% / 0.2;
+    --glass-bg: 220 30% 7% / 0.75;
+    --glass-border: 0 0% 100% / 0.12;
     --glass-blur: 24px;
 
     /* Shadows for depth */
-    --shadow-glow: 0 0 60px hsl(195 70% 78% / 0.15);
-    --shadow-deep: 0 24px 80px hsl(222 47% 5% / 0.9);
+    --shadow-glow: 0 0 60px hsl(160 60% 45% / 0.15);
+    --shadow-deep: 0 24px 80px hsl(220 30% 5% / 0.9);
 
-    --sidebar-background: 222 30% 8%;
+    --sidebar-background: 220 25% 9%;
     --sidebar-foreground: 210 20% 92%;
-    --sidebar-primary: 195 70% 78%;
-    --sidebar-primary-foreground: 222 47% 5%;
-    --sidebar-accent: 222 25% 15%;
+    --sidebar-primary: 160 60% 45%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 20% 16%;
     --sidebar-accent-foreground: 210 20% 92%;
-    --sidebar-border: 0 0% 100% / 0.1;
-    --sidebar-ring: 195 70% 78%;
+    --sidebar-border: 220 20% 18%;
+    --sidebar-ring: 160 60% 45%;
   }
 
   .dark {
-    /* Same as root - designed dark-first */
-    --background: 222 47% 5%;
+    /* Same as :root — dark-first design */
+    --background: 220 30% 7%;
     --foreground: 210 20% 92%;
-    --card: 222 30% 10%;
+    --card: 220 25% 12%;
     --card-foreground: 210 20% 92%;
-    --popover: 222 30% 10%;
+    --popover: 220 25% 12%;
     --popover-foreground: 210 20% 92%;
-    --primary: 195 70% 78%;
-    --primary-foreground: 222 47% 5%;
-    --secondary: 140 45% 72%;
-    --secondary-foreground: 222 47% 5%;
-    --muted: 222 20% 15%;
-    --muted-foreground: 210 15% 60%;
-    --accent: 222 25% 18%;
+    --primary: 160 60% 45%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 140 45% 55%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 220 20% 16%;
+    --muted-foreground: 215 15% 55%;
+    --accent: 220 20% 18%;
     --accent-foreground: 210 20% 92%;
     --destructive: 0 65% 55%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 100% / 0.15;
-    --input: 222 20% 20%;
-    --ring: 195 70% 78%;
-    --success: 140 50% 50%;
+    --border: 220 20% 22%;
+    --input: 220 20% 20%;
+    --ring: 160 60% 45%;
+    --success: 155 55% 45%;
     --success-foreground: 0 0% 98%;
     --info: 195 60% 55%;
     --info-foreground: 0 0% 98%;
+    --card-border-color: 220 20% 24%;
+    --card-shadow-offset: 0 6px 0 0 hsl(220 25% 8%);
+    --card-shadow-full: 0 6px 0 0 hsl(220 25% 8%), 0 12px 30px -8px rgba(0, 0, 0, 0.4);
   }
 
   .light {
-    /* Diamond Dust Light Theme - Crystal Clarity (水晶の朝) */
-    --background: 190 40% 99%;
-    --foreground: 222 47% 12%;
+    /* Warm Cream Light Theme — 暖かい光 (Warm Light) */
+    --background: 25 60% 97%;
+    --foreground: 220 30% 12%;
 
-    --card: 190 40% 100%;
-    --card-foreground: 222 47% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 30% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 12%;
+    --popover-foreground: 220 30% 12%;
 
-    --primary: 195 70% 45%;
+    /* Primary — Teal/Green (matches reference) */
+    --primary: 160 60% 38%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 170 45% 42%;
+    /* Secondary — Fresh green */
+    --secondary: 155 50% 42%;
     --secondary-foreground: 0 0% 100%;
 
-    --accent-warm: 200 60% 50%;
-    --accent-warm-deep: 200 45% 38%;
+    /* Warm accent — Coral/Orange */
+    --accent-warm: 20 85% 58%;
+    --accent-warm-deep: 15 75% 48%;
 
     --hair: 280 8% 50%;
 
-    --muted: 190 20% 95%;
-    --muted-foreground: 220 12% 45%;
+    --muted: 30 25% 94%;
+    --muted-foreground: 220 12% 42%;
 
-    --accent: 195 40% 92%;
-    --accent-foreground: 222 47% 12%;
+    --accent: 30 30% 95%;
+    --accent-foreground: 220 30% 12%;
 
     --destructive: 0 84% 45%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 190 30% 92%;
-    --input: 190 30% 93%;
-    --ring: 195 70% 45%;
+    --border: 25 20% 88%;
+    --input: 25 20% 91%;
+    --ring: 160 60% 38%;
 
-    --success: 160 50% 35%;
+    --success: 155 55% 35%;
     --success-foreground: 0 0% 98%;
 
     --info: 195 60% 40%;
     --info-foreground: 0 0% 98%;
 
-    --sidebar-background: 190 30% 98%;
-    --sidebar-foreground: 222 47% 12%;
-    --sidebar-primary: 195 70% 45%;
+    /* Card styling — thick border + offset shadow (LearnHub reference) */
+    --card-border-color: 220 20% 18%;
+    --card-shadow-offset: 0 6px 0 0 hsl(220 20% 18%);
+    --card-shadow-full: 0 6px 0 0 hsl(220 20% 18%), 0 14px 30px -8px rgba(0, 0, 0, 0.08);
+
+    --sidebar-background: 30 30% 98%;
+    --sidebar-foreground: 220 30% 12%;
+    --sidebar-primary: 160 60% 38%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 195 40% 92%;
-    --sidebar-accent-foreground: 222 47% 12%;
-    --sidebar-border: 190 30% 90%;
-    --sidebar-ring: 195 70% 45%;
+    --sidebar-accent: 30 30% 95%;
+    --sidebar-accent-foreground: 220 30% 12%;
+    --sidebar-border: 25 20% 90%;
+    --sidebar-ring: 160 60% 38%;
   }
 }
 
@@ -221,86 +239,165 @@ html {
 
 @layer components {
 
-  /* Glassmorphism Card - Refined Zen Styles */
-  .glass-card {
-    @apply bg-slate-900/60 backdrop-blur-[20px] border border-white/10 rounded-[2.5rem];
-    box-shadow: 0 30px 100px -10px rgba(15, 23, 42, 0.8), 0 10px 40px -20px rgba(255, 255, 255, 0.05);
+  /* ═══════════════════════════════════════════
+     YUKIHON CARD SYSTEM — Thick Border + Stacked Shadow
+     Inspired by LearnHub/PawSpa reference
+     ═══════════════════════════════════════════ */
+
+  .yukihon-card {
+    @apply bg-card rounded-[1.75rem] transition-all duration-300 cursor-pointer;
+    border: 2.5px solid hsl(var(--card-border-color));
+    box-shadow: var(--card-shadow-full);
   }
 
-  /* Claymorphism Card - Midnight Matcha (Playful Lanterns) */
-  .clay-card {
-    @apply rounded-[2.5rem] transition-all duration-300;
-    backdrop-filter: blur(12px);
-    box-shadow: 
-      0 20px 40px -10px rgba(0, 0, 0, 0.4), /* Soft outer drop shadow */
-      inset 0 4px 6px rgba(255, 255, 255, 0.15), /* Top inner highlight */
-      inset 0 -6px 10px rgba(0, 0, 0, 0.2); /* Bottom inner depth */
+  .yukihon-card:hover {
+    transform: translateY(-4px);
+    border-color: hsl(var(--primary));
+    box-shadow:
+      0 8px 0 0 hsl(var(--primary) / 0.5),
+      0 18px 40px -10px rgba(0, 0, 0, 0.15);
   }
-  
+
+  .yukihon-card:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 0 0 hsl(var(--card-border-color));
+  }
+
+  /* Smaller variant for nested cards */
+  .yukihon-card-sm {
+    @apply bg-card rounded-[1.25rem] transition-all duration-300;
+    border: 2px solid hsl(var(--card-border-color));
+    box-shadow:
+      0 4px 0 0 hsl(var(--card-border-color) / 0.7),
+      0 8px 20px -6px rgba(0, 0, 0, 0.08);
+  }
+
+  .yukihon-card-sm:hover {
+    transform: translateY(-2px);
+    border-color: hsl(var(--primary) / 0.6);
+  }
+
+  /* Flat card — no offset shadow, just border */
+  .yukihon-card-flat {
+    @apply bg-card rounded-[1.25rem] transition-all duration-200;
+    border: 2px solid hsl(var(--border));
+  }
+
+  .yukihon-card-flat:hover {
+    border-color: hsl(var(--primary) / 0.4);
+    box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.06);
+  }
+
+  /* Button with offset shadow */
+  .yukihon-btn {
+    @apply font-bold rounded-full transition-all duration-200 active:scale-95;
+    border: 2px solid hsl(var(--card-border-color));
+    box-shadow: 0 4px 0 0 hsl(var(--card-border-color));
+  }
+
+  .yukihon-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 0 hsl(var(--card-border-color));
+  }
+
+  .yukihon-btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 0 0 hsl(var(--card-border-color));
+  }
+
+  /* ═══════════════════════════════════════════
+     LEGACY CARD CLASSES (kept for backward compat)
+     ═══════════════════════════════════════════ */
+
+  .glass-card {
+    @apply bg-card/60 backdrop-blur-[20px] rounded-[2rem];
+    border: 2px solid hsl(var(--border));
+    box-shadow: var(--card-shadow-full);
+  }
+
+  .clay-card {
+    @apply rounded-[2rem] transition-all duration-300;
+    border: 2.5px solid hsl(var(--card-border-color));
+    box-shadow: var(--card-shadow-full);
+  }
+
   .clay-card:hover {
-    transform: translateY(-4px) scale(1.02);
-    box-shadow: 
-      0 30px 50px -12px rgba(0, 0, 0, 0.5),
-      inset 0 4px 8px rgba(255, 255, 255, 0.2),
-      inset 0 -6px 12px rgba(0, 0, 0, 0.25);
+    transform: translateY(-4px);
+    border-color: hsl(var(--primary) / 0.5);
   }
 
   .clay-btn {
-    @apply font-bold rounded-full transition-transform active:scale-95;
-    box-shadow: 
-      0 8px 20px -6px rgba(0, 0, 0, 0.4),
-      inset 0 3px 4px rgba(255, 255, 255, 0.25),
-      inset 0 -4px 6px rgba(0, 0, 0, 0.2);
+    @apply font-bold rounded-full transition-all duration-200 active:scale-95;
+    border: 2px solid hsl(var(--card-border-color));
+    box-shadow: 0 4px 0 0 hsl(var(--card-border-color));
   }
 
   .clay-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 
-      0 12px 24px -8px rgba(0, 0, 0, 0.5),
-      inset 0 3px 4px rgba(255, 255, 255, 0.3),
-      inset 0 -4px 6px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 6px 0 0 hsl(var(--card-border-color));
   }
 
   .glass-card-light {
-    @apply bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[2.5rem];
+    @apply bg-card/30 backdrop-blur-2xl rounded-[2rem];
+    border: 1.5px solid hsl(var(--border));
   }
 
-  /* LearnHub Refinement - Bold zen-playful styles */
+  /* LearnHub aliases → Yukihon card system */
   .learnhub-edge {
-    @apply border-[3px] border-white/20 transition-all duration-300;
+    border: 2.5px solid hsl(var(--card-border-color));
+    @apply transition-all duration-300;
   }
 
-  /* LearnHub Shadow - Stacked offset depth */
   .learnhub-shadow {
-    box-shadow: 
-      0 12px 0 0 rgba(0, 0, 0, 0.25), /* Deep bottom offset */
-      0 25px 50px -12px rgba(0, 0, 0, 0.5); /* Soft outer falloff */
+    box-shadow: var(--card-shadow-full);
   }
 
   .learnhub-shadow-sm {
-    box-shadow: 
-      0 6px 0 0 rgba(0, 0, 0, 0.2), 
-      0 10px 20px -5px rgba(0, 0, 0, 0.4);
+    box-shadow:
+      0 4px 0 0 hsl(var(--card-border-color) / 0.7),
+      0 8px 20px -5px rgba(0, 0, 0, 0.1);
   }
 
   .learnhub-card {
-    @apply learnhub-edge learnhub-shadow bg-card/40 backdrop-blur-3xl rounded-[3rem] hover:-translate-y-2 hover:border-primary/40 active:translate-y-0.5 active:shadow-none transition-all duration-300;
+    @apply bg-card/80 backdrop-blur-xl rounded-[1.75rem] transition-all duration-300;
+    border: 2.5px solid hsl(var(--card-border-color));
+    box-shadow: var(--card-shadow-full);
+  }
+
+  .learnhub-card:hover {
+    transform: translateY(-4px);
+    border-color: hsl(var(--primary) / 0.5);
+  }
+
+  .learnhub-card:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 0 0 hsl(var(--card-border-color));
   }
 
   .learnhub-input {
-    @apply h-14 px-6 rounded-2xl border-[2.5px] border-white/10 bg-white/5 focus:border-primary/60 focus:bg-white/10 transition-all duration-300 outline-none;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+    @apply h-14 px-6 rounded-2xl bg-muted/50 focus:bg-muted/80 transition-all duration-300 outline-none;
+    border: 2px solid hsl(var(--border));
+  }
+
+  .learnhub-input:focus {
+    border-color: hsl(var(--primary) / 0.6);
   }
 
   /* Light theme overrides */
   .light .glass-card {
-    @apply bg-white/40 backdrop-blur-[20px] border border-black/[0.08] rounded-[2.5rem];
-    box-shadow: 0 30px 100px -10px rgba(0, 0, 0, 0.05), 0 10px 40px -20px rgba(0, 0, 0, 0.02);
+    @apply bg-white/80 backdrop-blur-[20px] rounded-[2rem];
+    border: 2px solid hsl(var(--card-border-color));
+    box-shadow: var(--card-shadow-full);
   }
 
   .light .glass-card-light {
-    @apply bg-white/50 backdrop-blur-2xl border border-black/[0.08] rounded-[2.5rem];
+    @apply bg-white/60 backdrop-blur-2xl rounded-[2rem];
+    border: 1.5px solid hsl(var(--border));
   }
+
+  /* ═══════════════════════════════════════════
+     TYPOGRAPHY & UTILITIES
+     ═══════════════════════════════════════════ */
 
   /* Gradient text */
   .gradient-text {
@@ -313,23 +410,26 @@ html {
 
   /* Gradient button */
   .gradient-btn {
-    @apply bg-gradient-to-r from-primary via-secondary to-accent-warm text-background font-semibold;
+    @apply bg-gradient-to-r from-primary to-secondary text-white font-semibold;
     @apply rounded-full px-8 py-3 transition-all duration-300;
-    @apply hover:shadow-[0_0_30px_hsl(195_70%_78%/0.4)] hover:scale-105;
+    border: 2px solid hsl(var(--card-border-color));
+    box-shadow: 0 4px 0 0 hsl(var(--card-border-color));
   }
 
-  .light .gradient-btn {
-    @apply text-white;
+  .gradient-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 0 hsl(var(--card-border-color)), 0 0 24px hsl(var(--primary) / 0.3);
   }
 
   .gradient-btn-outline {
-    @apply border border-white/30 bg-transparent text-foreground font-medium;
+    @apply bg-transparent text-foreground font-medium;
     @apply rounded-full px-6 py-2.5 transition-all duration-300;
-    @apply hover:bg-white/10 hover:border-white/50;
+    border: 2px solid hsl(var(--border));
   }
 
-  .light .gradient-btn-outline {
-    @apply border-black/20 text-foreground hover:bg-black/5 hover:border-black/40;
+  .gradient-btn-outline:hover {
+    border-color: hsl(var(--primary) / 0.5);
+    @apply bg-primary/5;
   }
 
   /* Label style */
@@ -344,19 +444,11 @@ html {
 
   /* Glow effect */
   .glow-primary {
-    box-shadow: 0 0 40px hsl(195 70% 78% / 0.3);
+    box-shadow: 0 0 40px hsl(var(--primary) / 0.25);
   }
 
   .glow-warm {
-    box-shadow: 0 0 40px hsl(25 60% 85% / 0.3);
-  }
-
-  .light .glow-primary {
-    box-shadow: 0 0 40px hsl(195 70% 45% / 0.2);
-  }
-
-  .light .glow-warm {
-    box-shadow: 0 0 40px hsl(25 60% 50% / 0.2);
+    box-shadow: 0 0 40px hsl(var(--accent-warm) / 0.25);
   }
 
   /* Background patterns */

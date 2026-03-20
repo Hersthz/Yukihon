@@ -1,4 +1,4 @@
-import { type ElementType, useState } from "react";
+﻿import { type ElementType, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -131,14 +131,14 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
           compact ? "justify-center px-2 py-2.5" : "justify-between px-3 py-2.5",
           active
             ? "bg-[linear-gradient(135deg,rgba(103,232,249,0.18),rgba(59,130,246,0.12))] text-slate-950 shadow-[0_10px_24px_rgba(56,189,248,0.18)]"
-            : "text-slate-700 hover:bg-slate-900/[0.05] hover:text-slate-900"
+            : "text-foreground/80 hover:bg-slate-900/[0.05] hover:text-foreground"
         )}
       >
         <div className={cn("flex min-w-0 items-center", compact ? "justify-center" : "gap-3")}>
           <div
             className={cn(
               "flex h-9 w-9 items-center justify-center rounded-2xl transition-colors",
-              active ? "bg-white/70 text-sky-700" : "bg-white/70 text-slate-500 group-hover:text-sky-700"
+              active ? "bg-white/70 text-sky-700" : "bg-white/70 text-muted-foreground group-hover:text-sky-700"
             )}
           >
             <Icon className="h-4 w-4" />
@@ -153,7 +153,7 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
                 {item.badge}
               </span>
             )}
-            <ChevronRight className={cn("h-4 w-4", active ? "text-sky-700" : "text-slate-400")} />
+            <ChevronRight className={cn("h-4 w-4", active ? "text-sky-700" : "text-muted-foreground")} />
           </div>
         )}
       </Link>
@@ -162,15 +162,15 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
 
   const sidebarContent = (compact: boolean) => (
     <div className="flex h-full flex-col">
-      <div className={cn("border-b border-slate-300/60", compact ? "px-3 py-4" : "px-4 py-4")}>
+      <div className={cn("border-b border-border/60", compact ? "px-3 py-4" : "px-4 py-4")}>
         <div className={cn("flex items-center", compact ? "justify-center" : "gap-3")}>
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#7dd3fc,#c4b5fd)] text-slate-900 shadow-[0_10px_24px_rgba(125,211,252,0.25)]">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#7dd3fc,#c4b5fd)] text-foreground shadow-[0_10px_24px_rgba(125,211,252,0.25)]">
             <span className="text-lg font-semibold">ゆ</span>
           </div>
           {!compact && (
             <div className="min-w-0">
-              <p className="truncate text-xl font-semibold text-slate-900">Yukihon</p>
-              <p className="mt-1 text-[11px] uppercase tracking-[0.18em] text-slate-500">Study in silence</p>
+              <p className="truncate text-xl font-semibold text-foreground">Yukihon</p>
+              <p className="mt-1 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Study in silence</p>
             </div>
           )}
         </div>
@@ -178,12 +178,12 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
         {!compact && (
           <div className="mt-4 rounded-[20px] border border-white/60 bg-white/60 px-3 py-3 shadow-[0_8px_20px_rgba(148,163,184,0.12)]">
             <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#93c5fd,#86efac)] text-sm font-semibold text-slate-900">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#93c5fd,#86efac)] text-sm font-semibold text-foreground">
                 {userInitial}
               </div>
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-slate-900">{userName}</p>
-                <div className="mt-1 flex items-center gap-3 text-[11px] uppercase tracking-[0.16em] text-slate-500">
+                <p className="truncate text-sm font-semibold text-foreground">{userName}</p>
+                <div className="mt-1 flex items-center gap-3 text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Flame className="h-3.5 w-3.5 text-amber-500" />
                     12
@@ -202,13 +202,13 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
       <div className={cn("mt-4 flex-1 overflow-y-auto pb-4", compact ? "px-2" : "px-3")}>
         {PRIMARY_GROUPS.map((group) => (
           <div key={group.label} className="mb-5">
-            {!compact && <p className="px-3 pb-2 text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">{group.label}</p>}
+            {!compact && <p className="px-3 pb-2 text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">{group.label}</p>}
             <div className="space-y-1.5">{group.items.map((item) => renderItem(item, compact))}</div>
           </div>
         ))}
 
         <div className="mb-4">
-          {!compact && <p className="px-3 pb-2 text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">Cá nhân</p>}
+          {!compact && <p className="px-3 pb-2 text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">Cá nhân</p>}
           <div className="space-y-1.5">
             {SECONDARY_ITEMS.map((item) => renderItem(item, compact))}
             {isAdmin() && (
@@ -231,13 +231,13 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
         </div>
       </div>
 
-      <div className={cn("border-t border-slate-300/60 py-4", compact ? "px-2" : "px-3")}>
+      <div className={cn("border-t border-border/60 py-4", compact ? "px-2" : "px-3")}>
         <button
           title={compact ? "Đăng xuất" : undefined}
           type="button"
           onClick={handleLogout}
           className={cn(
-            "flex w-full items-center rounded-[18px] border border-white/60 bg-white/60 text-sm font-medium text-slate-700 transition hover:border-red-300/40 hover:bg-red-50 hover:text-red-600",
+            "flex w-full items-center rounded-[18px] border border-white/60 bg-white/60 text-sm font-medium text-foreground/80 transition hover:border-red-300/40 hover:bg-red-50 hover:text-red-600",
             compact ? "justify-center px-2 py-2.5" : "justify-between px-4 py-3"
           )}
         >
@@ -273,7 +273,7 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
           <div className="flex items-center gap-3">
             <button
               aria-label="Open navigation"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/60 bg-white/70 text-slate-700 lg:hidden"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/60 bg-white/70 text-foreground/80 lg:hidden"
               onClick={() => setMobileOpen(true)}
               type="button"
             >
@@ -282,7 +282,7 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
 
             <button
               aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-              className="hidden h-10 w-10 items-center justify-center rounded-2xl border border-white/60 bg-white/70 text-slate-700 transition hover:bg-white lg:inline-flex"
+              className="hidden h-10 w-10 items-center justify-center rounded-2xl border border-white/60 bg-white/70 text-foreground/80 transition hover:bg-white lg:inline-flex"
               onClick={onToggleCollapse}
               type="button"
             >
@@ -290,27 +290,27 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
             </button>
 
             <div>
-              <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Winter dashboard</p>
-              <h1 className="text-lg font-semibold text-slate-900">{pageTitle}</h1>
+              <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Winter dashboard</p>
+              <h1 className="text-lg font-semibold text-foreground">{pageTitle}</h1>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
             <button
               aria-label="Notifications"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/60 bg-white/70 text-slate-700 transition hover:bg-white"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/60 bg-white/70 text-foreground/80 transition hover:bg-white"
               type="button"
             >
               <Bell className="h-4 w-4" />
             </button>
 
-            <div className="hidden items-center gap-3 rounded-[20px] border border-white/70 bg-white/75 px-3 py-2 shadow-[0_10px_24px_rgba(148,163,184,0.10)] sm:flex">
-              <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#a5f3fc,#bfdbfe)] text-sm font-semibold text-slate-900">
+            <div className="hidden items-center gap-3 rounded-[20px] border border-border bg-card px-3 py-2 shadow-[0_10px_24px_rgba(148,163,184,0.10)] sm:flex">
+              <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#a5f3fc,#bfdbfe)] text-sm font-semibold text-foreground">
                 {userInitial}
               </div>
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-slate-900">{userName}</p>
-                <p className="text-xs text-slate-500">Màn đêm dịu mát</p>
+                <p className="truncate text-sm font-semibold text-foreground">{userName}</p>
+                <p className="text-xs text-muted-foreground">Màn đêm dịu mát</p>
               </div>
             </div>
           </div>
@@ -337,7 +337,7 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
             >
               <button
                 aria-label="Close navigation"
-                className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/70 bg-white/80 text-slate-700"
+                className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-card text-foreground/80"
                 onClick={() => setMobileOpen(false)}
                 type="button"
               >

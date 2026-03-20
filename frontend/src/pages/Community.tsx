@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+﻿import { useCallback, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Award,
@@ -60,7 +60,7 @@ interface PagedComments {
 }
 
 const CATEGORIES = [
-  { value: "", label: "Tất cả", icon: Users, tone: "border-slate-200 bg-white text-slate-700" },
+  { value: "", label: "Tất cả", icon: Users, tone: "border-border bg-white text-foreground/80" },
   { value: "GENERAL", label: "Tổng hợp", icon: MessageSquare, tone: "border-sky-200 bg-sky-50 text-sky-700" },
   { value: "QUESTION", label: "Hỏi đáp", icon: HelpCircle, tone: "border-amber-200 bg-amber-50 text-amber-700" },
   { value: "TIP", label: "Mẹo học", icon: Lightbulb, tone: "border-emerald-200 bg-emerald-50 text-emerald-700" },
@@ -222,7 +222,7 @@ const Community = () => {
                 <button
                   key={category.label}
                   className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-medium transition ${
-                    active ? category.tone : "border-white/80 bg-white/90 text-slate-600 hover:bg-slate-50"
+                    active ? category.tone : "border-border bg-card text-muted-foreground hover:bg-muted"
                   }`}
                   onClick={() => setActiveCategory(category.value)}
                   type="button"
@@ -241,14 +241,14 @@ const Community = () => {
               <PageSection title="Tạo bài viết" description="Composer thu gọn để không chiếm quá nhiều chiều cao của feed.">
                 <div className="space-y-3">
                   <Textarea
-                    className="min-h-[140px] rounded-[20px] border-white/80 bg-white/90 text-slate-900 placeholder:text-slate-400"
+                    className="min-h-[140px] rounded-[20px] border-border bg-card text-foreground placeholder:text-muted-foreground"
                     onChange={(e) => setNewContent(e.target.value)}
                     placeholder="Bạn đang muốn chia sẻ điều gì về việc học tiếng Nhật?"
                     value={newContent}
                   />
                   <div className="grid gap-3 md:grid-cols-[180px_140px_minmax(0,1fr)]">
                     <Select onValueChange={setNewCategory} value={newCategory}>
-                      <SelectTrigger className="h-11 rounded-2xl border-white/80 bg-white/90 text-slate-700">
+                      <SelectTrigger className="h-11 rounded-2xl border-border bg-card text-foreground/80">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -261,7 +261,7 @@ const Community = () => {
                     </Select>
 
                     <Select onValueChange={setNewJlptLevel} value={newJlptLevel || "none"}>
-                      <SelectTrigger className="h-11 rounded-2xl border-white/80 bg-white/90 text-slate-700">
+                      <SelectTrigger className="h-11 rounded-2xl border-border bg-card text-foreground/80">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -275,7 +275,7 @@ const Community = () => {
                     </Select>
 
                     <div className="flex justify-end gap-2">
-                      <Button className="rounded-2xl border-slate-200 bg-white text-slate-600" onClick={() => setShowCreatePost(false)} variant="outline">
+                      <Button className="rounded-2xl border-border bg-white text-muted-foreground" onClick={() => setShowCreatePost(false)} variant="outline">
                         Huỷ
                       </Button>
                       <Button
@@ -307,15 +307,15 @@ const Community = () => {
                 const category = CATEGORIES.find((item) => item.value === post.category) || CATEGORIES[0];
                 const Icon = category.icon;
                 return (
-                  <div key={post.id} className="rounded-[22px] border border-white bg-white p-4 shadow-[0_10px_24px_rgba(148,163,184,0.10)]">
+                  <div key={post.id} className="rounded-[22px] border border-white bg-card p-4 shadow-[0_10px_24px_rgba(148,163,184,0.10)]">
                     <div className="mb-3 flex items-start justify-between gap-3">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#f9a8d4,#c4b5fd)] text-sm font-semibold text-slate-900">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#f9a8d4,#c4b5fd)] text-sm font-semibold text-foreground">
                           {post.userDisplayName.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-slate-900">{post.userDisplayName}</p>
-                          <p className="text-xs text-slate-500">{timeAgo(post.createdAt)} trước</p>
+                          <p className="text-sm font-semibold text-foreground">{post.userDisplayName}</p>
+                          <p className="text-xs text-muted-foreground">{timeAgo(post.createdAt)} trước</p>
                         </div>
                       </div>
 
@@ -335,11 +335,11 @@ const Community = () => {
                       </div>
                     </div>
 
-                    <p className="whitespace-pre-wrap text-sm leading-6 text-slate-700">{post.content}</p>
+                    <p className="whitespace-pre-wrap text-sm leading-6 text-foreground/80">{post.content}</p>
 
-                    <div className="mt-4 flex items-center gap-2 border-t border-slate-200/80 pt-3">
+                    <div className="mt-4 flex items-center gap-2 border-t border-border/80 pt-3">
                       <Button
-                        className={post.likedByCurrentUser ? "rounded-xl bg-pink-50 text-pink-700 hover:bg-pink-100" : "rounded-xl text-slate-500 hover:text-pink-600"}
+                        className={post.likedByCurrentUser ? "rounded-xl bg-pink-50 text-pink-700 hover:bg-pink-100" : "rounded-xl text-muted-foreground hover:text-pink-600"}
                         onClick={() => handleLike(post.id)}
                         size="sm"
                         variant="ghost"
@@ -347,7 +347,7 @@ const Community = () => {
                         <Heart className={`mr-1 h-4 w-4 ${post.likedByCurrentUser ? "fill-pink-500 text-pink-500" : ""}`} />
                         {post.likeCount}
                       </Button>
-                      <Button className="rounded-xl text-slate-500 hover:text-slate-900" onClick={() => loadComments(post.id)} size="sm" variant="ghost">
+                      <Button className="rounded-xl text-muted-foreground hover:text-foreground" onClick={() => loadComments(post.id)} size="sm" variant="ghost">
                         <MessageCircle className="mr-1 h-4 w-4" />
                         {post.commentCount}
                       </Button>
@@ -356,16 +356,16 @@ const Community = () => {
                     <AnimatePresence>
                       {openComments === post.id && (
                         <motion.div animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} initial={{ opacity: 0, height: 0 }} className="overflow-hidden">
-                          <div className="mt-4 space-y-3 border-t border-slate-200/80 pt-3">
+                          <div className="mt-4 space-y-3 border-t border-border/80 pt-3">
                             <div className="flex gap-2">
                               <Input
-                                className="h-10 rounded-xl border-white/80 bg-white/90 text-slate-900 placeholder:text-slate-400"
+                                className="h-10 rounded-xl border-border bg-card text-foreground placeholder:text-muted-foreground"
                                 onChange={(e) => setCommentText(e.target.value)}
                                 onKeyDown={(e) => e.key === "Enter" && handleComment(post.id)}
                                 placeholder="Viết bình luận..."
                                 value={commentText}
                               />
-                              <Button className="rounded-xl bg-slate-900 text-white hover:bg-slate-800" disabled={!commentText.trim()} onClick={() => handleComment(post.id)} size="icon">
+                              <Button className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90" disabled={!commentText.trim()} onClick={() => handleComment(post.id)} size="icon">
                                 <Send className="h-4 w-4" />
                               </Button>
                             </div>
@@ -375,15 +375,15 @@ const Community = () => {
                                 <div className="h-10 w-10 rounded-full border-4 border-sky-100 border-t-sky-500 animate-spin" />
                               </div>
                             ) : comments.length === 0 ? (
-                              <p className="text-sm text-slate-500">Chưa có bình luận nào.</p>
+                              <p className="text-sm text-muted-foreground">Chưa có bình luận nào.</p>
                             ) : (
                               comments.map((comment) => (
-                                <div key={comment.id} className="rounded-[18px] border border-slate-200 bg-slate-50/70 p-3">
+                                <div key={comment.id} className="rounded-[18px] border border-border bg-muted/40 p-3">
                                   <div className="mb-1 flex items-center gap-2">
-                                    <span className="text-sm font-semibold text-slate-900">{comment.userDisplayName}</span>
-                                    <span className="text-xs text-slate-500">{timeAgo(comment.createdAt)} trước</span>
+                                    <span className="text-sm font-semibold text-foreground">{comment.userDisplayName}</span>
+                                    <span className="text-xs text-muted-foreground">{timeAgo(comment.createdAt)} trước</span>
                                   </div>
-                                  <p className="text-sm text-slate-700">{comment.content}</p>
+                                  <p className="text-sm text-foreground/80">{comment.content}</p>
                                 </div>
                               ))
                             )}
@@ -400,7 +400,7 @@ const Community = () => {
                   <Button className="rounded-xl" disabled={page === 0} onClick={() => fetchPosts(page - 1, activeCategory)} size="sm" variant="outline">
                     Trước
                   </Button>
-                  <span className="text-xs text-slate-500">
+                  <span className="text-xs text-muted-foreground">
                     {page + 1} / {totalPages}
                   </span>
                   <Button className="rounded-xl" disabled={page >= totalPages - 1} onClick={() => fetchPosts(page + 1, activeCategory)} size="sm" variant="outline">
