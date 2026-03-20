@@ -131,7 +131,7 @@ const JLPTLessons = () => {
             ) : (
               <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                 {currentLevelLessons.map((lesson) => (
-                  <LessonCard2 estimatedTime={20} key={lesson.id} lesson={lesson} onStart={(id) => console.log("Start lesson:", id)} />
+                  <LessonCard2 estimatedTime={20} key={lesson.id} lesson={lesson} onStart={() => undefined} />
                 ))}
               </div>
             )}

@@ -20,6 +20,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -33,27 +37,43 @@ public class CommunityService {
     // ==================== POSTS ====================
 
     public Page<PostDto> getAllPosts(Long currentUserId, Pageable pageable) {
-        return postRepository.findAllByOrderByCreatedAtDesc(pageable)
-                .map(post -> PostDto.fromEntity(post,
-                        likeRepository.existsByPostIdAndUserId(post.getId(), currentUserId)));
+        Page<CommunityPost> posts = postRepository.findAllByOrderByCreatedAtDesc(pageable);
+        Set<Long> likedPostIds = findLikedPostIds(posts, currentUserId);
+
+        return posts.map(post -> PostDto.fromEntity(post, likedPostIds.contains(post.getId())));
     }
 
     public Page<PostDto> getPostsByCategory(String category, Long currentUserId, Pageable pageable) {
-        return postRepository.findByCategoryOrderByCreatedAtDesc(category, pageable)
-                .map(post -> PostDto.fromEntity(post,
-                        likeRepository.existsByPostIdAndUserId(post.getId(), currentUserId)));
+        Page<CommunityPost> posts = postRepository.findByCategoryOrderByCreatedAtDesc(category, pageable);
+        Set<Long> likedPostIds = findLikedPostIds(posts, currentUserId);
+
+        return posts.map(post -> PostDto.fromEntity(post, likedPostIds.contains(post.getId())));
     }
 
     public Page<PostDto> getPostsByUser(Long userId, Long currentUserId, Pageable pageable) {
-        return postRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable)
-                .map(post -> PostDto.fromEntity(post,
-                        likeRepository.existsByPostIdAndUserId(post.getId(), currentUserId)));
+        Page<CommunityPost> posts = postRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable);
+        Set<Long> likedPostIds = findLikedPostIds(posts, currentUserId);
+
+        return posts.map(post -> PostDto.fromEntity(post, likedPostIds.contains(post.getId())));
     }
 
     public PostDto getPostById(Long postId, Long currentUserId) {
         CommunityPost post = findPostByIdOrThrow(postId);
         return PostDto.fromEntity(post,
                 likeRepository.existsByPostIdAndUserId(postId, currentUserId));
+    }
+
+    private Set<Long> findLikedPostIds(Page<CommunityPost> posts, Long currentUserId) {
+        if (currentUserId == null || posts.isEmpty()) {
+            return Collections.emptySet();
+        }
+
+        Set<Long> postIds = posts.stream().map(CommunityPost::getId).collect(java.util.stream.Collectors.toSet());
+        if (postIds.isEmpty()) {
+            return Collections.emptySet();
+        }
+
+        return new HashSet<>(likeRepository.findLikedPostIdsByUserIdAndPostIds(currentUserId, postIds));
     }
 
     @Transactional

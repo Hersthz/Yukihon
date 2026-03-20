@@ -43,7 +43,7 @@ public class SecurityConfig {
                 .exceptionHandling(ex ->
                         ex.authenticationEntryPoint(authenticationEntryPoint))
                 .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/google").permitAll()
+                    .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/google", "/api/auth/refresh").permitAll()
                     .requestMatchers("/api/auth/me").authenticated()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // Admin endpoints - require ADMIN role

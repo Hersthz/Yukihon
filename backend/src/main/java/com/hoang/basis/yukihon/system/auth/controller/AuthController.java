@@ -3,6 +3,7 @@ package com.hoang.basis.yukihon.system.auth.controller;
 import com.hoang.basis.yukihon.system.auth.dto.AuthResponse;
 import com.hoang.basis.yukihon.system.auth.dto.GoogleTokenRequest;
 import com.hoang.basis.yukihon.system.auth.dto.LoginRequest;
+import com.hoang.basis.yukihon.system.auth.dto.RefreshTokenRequest;
 import com.hoang.basis.yukihon.system.auth.dto.RegisterRequest;
 import com.hoang.basis.yukihon.system.user.dto.UserDto;
 import com.hoang.basis.yukihon.system.auth.service.AuthService;
@@ -36,6 +37,14 @@ public class AuthController {
             @Valid @RequestBody LoginRequest request
     ) {
         AuthResponse response = authService.login(request);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponse> refresh(
+            @Valid @RequestBody RefreshTokenRequest request
+    ) {
+        AuthResponse response = authService.refreshToken(request.getRefreshToken());
         return ResponseEntity.ok(response);
     }
 

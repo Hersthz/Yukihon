@@ -23,7 +23,7 @@ public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
         String body = String.format(
-                "{\"status\":401,\"error\":\"UNAUTHORIZED\",\"message\":\"Authentication required\",\"path\":\"%s\"}",
+            "{\"status\":401,\"error\":\"AUTHENTICATION_REQUIRED\",\"message\":\"Authentication required\",\"path\":\"%s\"}",
                 request.getRequestURI()
         );
         response.getWriter().write(body);
