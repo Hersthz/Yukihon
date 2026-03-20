@@ -1,4 +1,4 @@
-import { Link, useNavigate, useParams } from "react-router-dom";
+﻿import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, BookOpen, CheckCircle2, Clock, Lock, Play } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
@@ -81,7 +81,7 @@ const CourseDetail = () => {
       <div className="mx-auto max-w-[1380px]">
         <PageHeader
           action={
-            <Button className="rounded-2xl border-white/80 bg-white/90 text-slate-700 hover:bg-white" onClick={() => navigate("/courses")} variant="outline">
+            <Button className="rounded-2xl border-border bg-card text-foreground/80 hover:bg-card" onClick={() => navigate("/courses")} variant="outline">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Quay lại khóa học
             </Button>
@@ -101,27 +101,27 @@ const CourseDetail = () => {
         <div className="grid gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
           <PageSection title="Tổng quan khóa học" description="Phần tóm tắt ngắn gọn để bạn nắm bố cục toàn khóa mà không cần lướt nhiều.">
             <Badge className="rounded-full border border-sky-200 bg-sky-50 text-sky-700">{course.level}</Badge>
-            <div className="mt-4 rounded-[20px] border border-slate-200 bg-white p-4">
+            <div className="mt-4 rounded-[20px] border border-border bg-card p-4">
               <div className="mb-2 flex items-center justify-between text-sm">
-                <span className="text-slate-500">Đã hoàn thành</span>
+                <span className="text-muted-foreground">Đã hoàn thành</span>
                 <span className="font-medium text-sky-700">
                   {completedLessons}/{course.lessons.length} bài
                 </span>
               </div>
-              <div className="h-2.5 overflow-hidden rounded-full bg-slate-200">
+              <div className="h-2.5 overflow-hidden rounded-full bg-muted">
                 <div className="h-full rounded-full bg-[linear-gradient(90deg,#60a5fa,#22d3ee)]" style={{ width: `${progress}%` }} />
               </div>
             </div>
             <div className="mt-4 rounded-[20px] border border-emerald-200 bg-emerald-50/70 p-4">
               <p className="text-sm font-semibold text-emerald-800">Nhịp học gợi ý</p>
-              <p className="mt-1 text-sm leading-6 text-slate-700">Học 1 bài mới và review 1 bài cũ mỗi phiên để giữ trải nghiệm gọn và không bị ngợp.</p>
+              <p className="mt-1 text-sm leading-6 text-foreground/80">Học 1 bài mới và review 1 bài cũ mỗi phiên để giữ trải nghiệm gọn và không bị ngợp.</p>
             </div>
           </PageSection>
 
           <PageSection title="Danh sách bài" description="Bài học được trình bày thấp hơn và liền mạch hơn để bạn thấy toàn bộ roadmap rõ ràng.">
             <div className="space-y-3">
               {course.lessons.map((lesson, index) => (
-                <div key={lesson.id} className="rounded-[22px] border border-white bg-white p-4 shadow-[0_10px_24px_rgba(148,163,184,0.10)]">
+                <div key={lesson.id} className="rounded-[22px] border border-white bg-card p-4 shadow-[0_10px_24px_rgba(148,163,184,0.10)]">
                   <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                     <div className="flex min-w-0 items-center gap-4">
                       <div
@@ -129,7 +129,7 @@ const CourseDetail = () => {
                           lesson.completed
                             ? "bg-emerald-50 text-emerald-600"
                             : lesson.locked
-                              ? "bg-slate-100 text-slate-400"
+                              ? "bg-muted text-muted-foreground"
                               : "bg-sky-50 text-sky-600"
                         }`}
                       >
@@ -137,8 +137,8 @@ const CourseDetail = () => {
                       </div>
 
                       <div className="min-w-0">
-                        <p className="truncate text-base font-semibold text-slate-900">{lesson.title}</p>
-                        <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-slate-500">
+                        <p className="truncate text-base font-semibold text-foreground">{lesson.title}</p>
+                        <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
                           <span>{lesson.duration}</span>
                           <span>{lesson.vocabCount} từ vựng</span>
                         </div>
@@ -147,13 +147,13 @@ const CourseDetail = () => {
 
                     {!lesson.locked ? (
                       <Link to={`/lessons/${lesson.id}`}>
-                        <Button className={lesson.completed ? "rounded-2xl border-slate-200 bg-white text-slate-700" : "rounded-2xl bg-slate-900 text-white hover:bg-slate-800"} variant={lesson.completed ? "outline" : "default"}>
+                        <Button className={lesson.completed ? "rounded-2xl border-border bg-white text-foreground/80" : "rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90"} variant={lesson.completed ? "outline" : "default"}>
                           <Play className="mr-2 h-4 w-4" />
                           {lesson.completed ? "Ôn lại" : "Bắt đầu"}
                         </Button>
                       </Link>
                     ) : (
-                      <Button className="rounded-2xl border-slate-200 bg-slate-100 text-slate-400" disabled variant="outline">
+                      <Button className="rounded-2xl border-border bg-muted text-muted-foreground" disabled variant="outline">
                         <Lock className="mr-2 h-4 w-4" />
                         Khoá
                       </Button>

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+﻿import { useCallback, useEffect, useState } from "react";
 import { Bell, BookOpen, Globe, Palette, RotateCcw, Save, Target, Volume2 } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
@@ -99,7 +99,7 @@ const Settings = () => {
         <PageHeader
           action={
             <div className="flex gap-2">
-              <Button className="rounded-2xl border-white/80 bg-white/90 text-slate-700 hover:bg-white" onClick={handleReset} variant="outline">
+              <Button className="rounded-2xl border-border bg-card text-foreground/80 hover:bg-card" onClick={handleReset} variant="outline">
                 <RotateCcw className="mr-2 h-4 w-4" />
                 Reset
               </Button>
@@ -124,16 +124,16 @@ const Settings = () => {
         <div className="grid gap-4 xl:grid-cols-2">
           <PageSection title="Giao diện và ngôn ngữ" description="Các lựa chọn hiển thị chính được gom lại để đổi nhanh hơn.">
             <div className="space-y-4">
-              <div className="flex items-center justify-between rounded-[18px] border border-slate-200 bg-white p-4">
+              <div className="flex items-center justify-between rounded-[18px] border border-border bg-card p-4">
                 <div className="flex items-center gap-3">
                   <Palette className="h-5 w-5 text-violet-500" />
                   <div>
-                    <p className="text-sm font-semibold text-slate-900">Theme</p>
-                    <p className="mt-1 text-sm text-slate-500">Chuyển giữa chế độ sáng, tối hoặc theo hệ thống.</p>
+                    <p className="text-sm font-semibold text-foreground">Theme</p>
+                    <p className="mt-1 text-sm text-muted-foreground">Chuyển giữa chế độ sáng, tối hoặc theo hệ thống.</p>
                   </div>
                 </div>
                 <Select onValueChange={(value) => update("theme", value)} value={settings.theme}>
-                  <SelectTrigger className="h-11 w-[140px] rounded-2xl border-white/80 bg-white/90 text-slate-700">
+                  <SelectTrigger className="h-11 w-[140px] rounded-2xl border-border bg-card text-foreground/80">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -144,16 +144,16 @@ const Settings = () => {
                 </Select>
               </div>
 
-              <div className="flex items-center justify-between rounded-[18px] border border-slate-200 bg-white p-4">
+              <div className="flex items-center justify-between rounded-[18px] border border-border bg-card p-4">
                 <div className="flex items-center gap-3">
                   <Globe className="h-5 w-5 text-sky-500" />
                   <div>
-                    <p className="text-sm font-semibold text-slate-900">Ngôn ngữ giao diện</p>
-                    <p className="mt-1 text-sm text-slate-500">Đổi ngôn ngữ hiển thị tổng thể của ứng dụng.</p>
+                    <p className="text-sm font-semibold text-foreground">Ngôn ngữ giao diện</p>
+                    <p className="mt-1 text-sm text-muted-foreground">Đổi ngôn ngữ hiển thị tổng thể của ứng dụng.</p>
                   </div>
                 </div>
                 <Select onValueChange={(value) => update("language", value)} value={settings.language}>
-                  <SelectTrigger className="h-11 w-[160px] rounded-2xl border-white/80 bg-white/90 text-slate-700">
+                  <SelectTrigger className="h-11 w-[160px] rounded-2xl border-border bg-card text-foreground/80">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -173,10 +173,10 @@ const Settings = () => {
                 { key: "showRomaji", title: "Hiện romaji", description: "Hiện phiên âm Latin khi phù hợp." },
                 { key: "autoPlayAudio", title: "Tự phát âm", description: "Phát audio khi xem từ vựng hoặc ví dụ." },
               ].map((item) => (
-                <div key={item.key} className="flex items-center justify-between rounded-[18px] border border-slate-200 bg-white p-4">
+                <div key={item.key} className="flex items-center justify-between rounded-[18px] border border-border bg-card p-4">
                   <div>
-                    <p className="text-sm font-semibold text-slate-900">{item.title}</p>
-                    <p className="mt-1 text-sm text-slate-500">{item.description}</p>
+                    <p className="text-sm font-semibold text-foreground">{item.title}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
                   </div>
                   <Switch
                     checked={settings[item.key as keyof UserSettingsData] as boolean}
@@ -189,13 +189,13 @@ const Settings = () => {
 
           <PageSection title="Mục tiêu và độ khó" description="Các slider và selector được làm thấp hơn để không kéo trang quá dài.">
             <div className="space-y-5">
-              <div className="rounded-[18px] border border-slate-200 bg-white p-4">
+              <div className="rounded-[18px] border border-border bg-card p-4">
                 <div className="mb-3 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Target className="h-5 w-5 text-amber-500" />
                     <div>
-                      <Label className="text-sm font-semibold text-slate-900">Mục tiêu hằng ngày</Label>
-                      <p className="mt-1 text-sm text-slate-500">Điều chỉnh số phút học bạn muốn giữ đều mỗi ngày.</p>
+                      <Label className="text-sm font-semibold text-foreground">Mục tiêu hằng ngày</Label>
+                      <p className="mt-1 text-sm text-muted-foreground">Điều chỉnh số phút học bạn muốn giữ đều mỗi ngày.</p>
                     </div>
                   </div>
                   <span className="text-sm font-semibold text-amber-700">{settings.dailyGoalMinutes} phút</span>
@@ -211,10 +211,10 @@ const Settings = () => {
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
-                <div className="rounded-[18px] border border-slate-200 bg-white p-4">
-                  <Label className="mb-2 block text-sm font-semibold text-slate-900">Mục tiêu JLPT</Label>
+                <div className="rounded-[18px] border border-border bg-card p-4">
+                  <Label className="mb-2 block text-sm font-semibold text-foreground">Mục tiêu JLPT</Label>
                   <Select onValueChange={(value) => update("targetJlptLevel", value)} value={settings.targetJlptLevel}>
-                    <SelectTrigger className="h-11 rounded-2xl border-white/80 bg-white/90 text-slate-700">
+                    <SelectTrigger className="h-11 rounded-2xl border-border bg-card text-foreground/80">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -227,10 +227,10 @@ const Settings = () => {
                   </Select>
                 </div>
 
-                <div className="rounded-[18px] border border-slate-200 bg-white p-4">
-                  <Label className="mb-2 block text-sm font-semibold text-slate-900">Độ khó quiz</Label>
+                <div className="rounded-[18px] border border-border bg-card p-4">
+                  <Label className="mb-2 block text-sm font-semibold text-foreground">Độ khó quiz</Label>
                   <Select onValueChange={(value) => update("quizDifficulty", value)} value={settings.quizDifficulty}>
-                    <SelectTrigger className="h-11 rounded-2xl border-white/80 bg-white/90 text-slate-700">
+                    <SelectTrigger className="h-11 rounded-2xl border-border bg-card text-foreground/80">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -245,12 +245,12 @@ const Settings = () => {
           </PageSection>
 
           <PageSection title="Thông báo" description="Không đẩy thành một màn hình riêng nữa, chỉ giữ phần thực sự cần thiết.">
-            <div className="flex items-center justify-between rounded-[18px] border border-slate-200 bg-white p-4">
+            <div className="flex items-center justify-between rounded-[18px] border border-border bg-card p-4">
               <div className="flex items-center gap-3">
                 <Volume2 className="h-5 w-5 text-sky-500" />
                 <div>
-                  <p className="text-sm font-semibold text-slate-900">Nhắc học mỗi ngày</p>
-                  <p className="mt-1 text-sm text-slate-500">Bật để nhận nhắc nhở giữ nhịp học đều.</p>
+                  <p className="text-sm font-semibold text-foreground">Nhắc học mỗi ngày</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Bật để nhận nhắc nhở giữ nhịp học đều.</p>
                 </div>
               </div>
               <Switch checked={settings.notificationsEnabled} onCheckedChange={(value) => update("notificationsEnabled", value)} />

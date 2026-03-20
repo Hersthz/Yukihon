@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+﻿import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Brain, Search, ChevronRight, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -62,12 +62,12 @@ const Grammar = () => {
         <PageSection className="mb-4">
           <div className="flex flex-col gap-3 lg:flex-row">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Tìm mẫu ngữ pháp..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-10 rounded-2xl border-white/80 bg-white/85 pl-10 text-slate-800 placeholder:text-slate-400"
+                className="h-10 rounded-2xl border-border bg-white/85 pl-10 text-foreground placeholder:text-muted-foreground"
               />
             </div>
             <div className="flex flex-wrap gap-2">
@@ -78,7 +78,7 @@ const Grammar = () => {
                   className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
                     selectedLevel === level
                       ? "border-sky-200 bg-sky-100 text-sky-800"
-                      : "border-white/70 bg-white/75 text-slate-600 hover:bg-white"
+                      : "border-border bg-card text-muted-foreground hover:bg-card"
                   }`}
                 >
                   {level === "all" ? "Tất cả" : level}
@@ -121,14 +121,14 @@ const Grammar = () => {
                   key={item.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="rounded-[20px] border border-white bg-white/90 p-5 shadow-[0_8px_18px_rgba(148,163,184,0.08)]"
+                  className="rounded-[20px] border border-white bg-card p-5 shadow-[0_8px_18px_rgba(148,163,184,0.08)]"
                 >
                   <div className="mb-4 flex items-start justify-between gap-4">
                     <div>
-                      <h3 className="text-xl font-semibold text-slate-900">{item.pattern}</h3>
-                      <p className="mt-1 text-sm text-slate-500">{item.title}</p>
+                      <h3 className="text-xl font-semibold text-foreground">{item.pattern}</h3>
+                      <p className="mt-1 text-sm text-muted-foreground">{item.title}</p>
                     </div>
-                    <Badge className={`border ${levelColors[item.jlptLevel] || "bg-slate-100 text-slate-700 border-slate-200"}`}>
+                    <Badge className={`border ${levelColors[item.jlptLevel] || "bg-muted text-foreground/80 border-border"}`}>
                       {item.jlptLevel}
                     </Badge>
                   </div>
@@ -139,7 +139,7 @@ const Grammar = () => {
                         <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-violet-500">
                           Giải thích
                         </p>
-                        <p className="text-sm leading-6 text-slate-700">{item.explanation}</p>
+                        <p className="text-sm leading-6 text-foreground/80">{item.explanation}</p>
                       </div>
 
                       {item.usage && (
@@ -147,7 +147,7 @@ const Grammar = () => {
                           <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-violet-500">
                             Cách dùng
                           </p>
-                          <p className="text-sm leading-6 text-slate-700">{item.usage}</p>
+                          <p className="text-sm leading-6 text-foreground/80">{item.usage}</p>
                         </div>
                       )}
 
@@ -156,17 +156,17 @@ const Grammar = () => {
                           <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-violet-500">
                             Liên quan
                           </p>
-                          <p className="text-sm leading-6 text-slate-600">{item.relatedPatterns}</p>
+                          <p className="text-sm leading-6 text-muted-foreground">{item.relatedPatterns}</p>
                         </div>
                       )}
                     </div>
 
-                    <div className="rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-4">
+                    <div className="rounded-[18px] border border-border bg-muted px-4 py-4">
                       <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-violet-500">
                         Ví dụ
                       </p>
-                      <p className="text-sm font-medium text-slate-900">{item.exampleJP}</p>
-                      {item.exampleEN && <p className="mt-2 text-sm text-slate-500">{item.exampleEN}</p>}
+                      <p className="text-sm font-medium text-foreground">{item.exampleJP}</p>
+                      {item.exampleEN && <p className="mt-2 text-sm text-muted-foreground">{item.exampleEN}</p>}
                       <Button className="mt-4 h-10 w-full rounded-2xl bg-violet-500 text-white hover:bg-violet-400">
                         <BookOpen className="mr-2 h-4 w-4" />
                         Học mẫu này

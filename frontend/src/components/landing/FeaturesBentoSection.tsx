@@ -1,4 +1,4 @@
-import { BookOpen, Brain, Headphones, Sparkles, TrendingUp } from "lucide-react";
+﻿import { BookOpen, Brain, Headphones, Sparkles, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
 import { fadeUp } from "@/data/landing";
 

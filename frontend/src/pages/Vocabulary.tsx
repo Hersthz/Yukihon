@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+﻿import { useState, useMemo } from "react";
 import { motion, Variants } from "framer-motion";
 import { BookOpen, Filter, Search, Star, TrendingUp } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -87,19 +87,19 @@ const Vocabulary = () => {
         <PageSection className="mb-4">
           <div className="flex flex-col gap-3 sm:flex-row">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Tìm theo kanji, nghĩa hoặc romaji..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-10 rounded-2xl border-white/80 bg-white/85 pl-10 text-slate-800 placeholder:text-slate-400"
+                className="h-10 rounded-2xl border-border bg-white/85 pl-10 text-foreground placeholder:text-muted-foreground"
               />
             </div>
 
             <div className="flex items-center gap-2">
               <Filter className="h-4 w-4 text-sky-500" />
               <Select value={selectedLevel} onValueChange={setSelectedLevel}>
-                <SelectTrigger className="w-40 rounded-2xl border-white/80 bg-white/85 text-slate-800">
+                <SelectTrigger className="w-40 rounded-2xl border-border bg-white/85 text-foreground">
                   <SelectValue placeholder="Tất cả cấp độ" />
                 </SelectTrigger>
                 <SelectContent>

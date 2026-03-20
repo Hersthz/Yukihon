@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type KeyboardEvent } from "react";
+﻿import { useCallback, useEffect, useState, type KeyboardEvent } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   AlertCircle,
@@ -225,7 +225,7 @@ const Translation = () => {
           action={
             <>
               <Button
-                className="rounded-2xl border-white/80 bg-white/90 text-slate-700 hover:bg-white"
+                className="rounded-2xl border-border bg-card text-foreground/80 hover:bg-card"
                 onClick={() => setShowHistory((prev) => !prev)}
                 variant="outline"
               >
@@ -251,7 +251,7 @@ const Translation = () => {
             <PageSection title="Khung dịch" description="Hai ô dịch đặt ngang để dễ so sánh và tránh mất nhịp đọc.">
               <div className="mb-3 flex flex-wrap items-center gap-3">
                 <Select onValueChange={setSourceLang} value={sourceLang}>
-                  <SelectTrigger className="h-11 w-[180px] rounded-2xl border-white/80 bg-white/90 text-slate-700">
+                  <SelectTrigger className="h-11 w-[180px] rounded-2xl border-border bg-card text-foreground/80">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -263,12 +263,12 @@ const Translation = () => {
                   </SelectContent>
                 </Select>
 
-                <Button className="rounded-2xl border-slate-200 bg-white text-slate-700" onClick={swapLanguages} size="icon" variant="outline">
+                <Button className="rounded-2xl border-border bg-white text-foreground/80" onClick={swapLanguages} size="icon" variant="outline">
                   <ArrowRightLeft className="h-4 w-4" />
                 </Button>
 
                 <Select onValueChange={setTargetLang} value={targetLang}>
-                  <SelectTrigger className="h-11 w-[180px] rounded-2xl border-white/80 bg-white/90 text-slate-700">
+                  <SelectTrigger className="h-11 w-[180px] rounded-2xl border-border bg-card text-foreground/80">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -282,16 +282,16 @@ const Translation = () => {
               </div>
 
               <div className="grid gap-3 lg:grid-cols-2">
-                <div className="rounded-[22px] border border-slate-200 bg-white p-3">
+                <div className="rounded-[22px] border border-border bg-card p-3">
                   <Textarea
-                    className="min-h-[220px] resize-none rounded-[18px] border-none bg-slate-50 text-base text-slate-900 shadow-none placeholder:text-slate-400 focus-visible:ring-0"
+                    className="min-h-[220px] resize-none rounded-[18px] border-none bg-muted text-base text-foreground shadow-none placeholder:text-muted-foreground focus-visible:ring-0"
                     maxLength={MAX_CHARS}
                     onChange={(e) => setSourceText(e.target.value)}
                     onKeyDown={handleKeyDown}
                     placeholder="Nhập văn bản cần dịch..."
                     value={sourceText}
                   />
-                  <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
+                  <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
                     <span>{sourceText.length} / {MAX_CHARS} ký tự</span>
                     {sourceText.length > MAX_CHARS * 0.9 && (
                       <span className="inline-flex items-center gap-1 text-amber-600">
@@ -302,16 +302,16 @@ const Translation = () => {
                   </div>
                 </div>
 
-                <div className="relative rounded-[22px] border border-slate-200 bg-white p-3">
+                <div className="relative rounded-[22px] border border-border bg-card p-3">
                   <Textarea
-                    className="min-h-[220px] resize-none rounded-[18px] border-none bg-sky-50/65 text-base text-slate-900 shadow-none placeholder:text-slate-400 focus-visible:ring-0"
+                    className="min-h-[220px] resize-none rounded-[18px] border-none bg-sky-50/65 text-base text-foreground shadow-none placeholder:text-muted-foreground focus-visible:ring-0"
                     placeholder="Bản dịch sẽ hiển thị ở đây..."
                     readOnly
                     value={translatedText}
                   />
                   {translatedText && (
                     <Button className="absolute right-5 top-5 rounded-xl" onClick={copyToClipboard} size="icon" variant="ghost">
-                      {copied ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4 text-slate-500" />}
+                      {copied ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4 text-muted-foreground" />}
                     </Button>
                   )}
                 </div>
@@ -323,7 +323,7 @@ const Translation = () => {
                 {QUICK_PHRASES.map((phrase) => (
                   <button
                     key={phrase.ja}
-                    className="rounded-[20px] border border-slate-200 bg-white p-4 text-left transition hover:-translate-y-1 hover:bg-sky-50/60"
+                    className="rounded-[20px] border border-border bg-card p-4 text-left transition hover:-translate-y-1 hover:bg-sky-50/60"
                     onClick={() => {
                       setSourceText(phrase.ja);
                       setSourceLang("ja");
@@ -332,9 +332,9 @@ const Translation = () => {
                     }}
                     type="button"
                   >
-                    <p className="text-base font-semibold text-slate-900">{phrase.ja}</p>
+                    <p className="text-base font-semibold text-foreground">{phrase.ja}</p>
                     <p className="mt-1 text-sm text-violet-600">{phrase.romaji}</p>
-                    <p className="mt-2 text-sm text-slate-600">{phrase.vi}</p>
+                    <p className="mt-2 text-sm text-muted-foreground">{phrase.vi}</p>
                   </button>
                 ))}
               </div>
@@ -359,7 +359,7 @@ const Translation = () => {
                   >
                     <div className="mb-3 flex gap-2">
                       <Button
-                        className={historyTab === "all" ? "rounded-xl bg-slate-900 text-white hover:bg-slate-800" : "rounded-xl border-slate-200 bg-white text-slate-600"}
+                        className={historyTab === "all" ? "rounded-xl bg-primary text-primary-foreground hover:bg-primary/90" : "rounded-xl border-border bg-white text-muted-foreground"}
                         onClick={() => setHistoryTab("all")}
                         size="sm"
                         variant={historyTab === "all" ? "default" : "outline"}
@@ -368,7 +368,7 @@ const Translation = () => {
                         Tất cả
                       </Button>
                       <Button
-                        className={historyTab === "bookmarks" ? "rounded-xl bg-amber-500 text-white hover:bg-amber-400" : "rounded-xl border-slate-200 bg-white text-slate-600"}
+                        className={historyTab === "bookmarks" ? "rounded-xl bg-amber-500 text-white hover:bg-amber-400" : "rounded-xl border-border bg-white text-muted-foreground"}
                         onClick={() => setHistoryTab("bookmarks")}
                         size="sm"
                         variant={historyTab === "bookmarks" ? "default" : "outline"}
@@ -393,25 +393,25 @@ const Translation = () => {
                         {visibleHistory.map((item) => (
                           <button
                             key={item.id}
-                            className="w-full rounded-[18px] border border-slate-200 bg-white p-3 text-left transition hover:bg-slate-50"
+                            className="w-full rounded-[18px] border border-border bg-card p-3 text-left transition hover:bg-muted"
                             onClick={() => fillFromHistory(item)}
                             type="button"
                           >
                             <div className="flex items-start justify-between gap-3">
                               <div className="min-w-0 flex-1">
-                                <div className="mb-1 flex items-center gap-2 text-xs text-slate-500">
+                                <div className="mb-1 flex items-center gap-2 text-xs text-muted-foreground">
                                   <span>
                                     {langLabel(item.sourceLang)} → {langLabel(item.targetLang)}
                                   </span>
                                   <span>•</span>
                                   <span>{timeAgo(item.createdAt)}</span>
                                 </div>
-                                <p className="truncate text-sm text-slate-800">{item.sourceText}</p>
+                                <p className="truncate text-sm text-foreground">{item.sourceText}</p>
                                 <p className="mt-1 truncate text-sm text-sky-700">{item.translatedText}</p>
                               </div>
                               <div className="flex shrink-0 items-center gap-1" onClick={(e) => e.stopPropagation()}>
                                 <Button className="h-8 w-8 rounded-xl" onClick={() => handleToggleBookmark(item.id)} size="icon" variant="ghost">
-                                  {item.bookmarked ? <BookmarkCheck className="h-4 w-4 text-amber-500" /> : <Bookmark className="h-4 w-4 text-slate-400" />}
+                                  {item.bookmarked ? <BookmarkCheck className="h-4 w-4 text-amber-500" /> : <Bookmark className="h-4 w-4 text-muted-foreground" />}
                                 </Button>
                                 <Button className="h-8 w-8 rounded-xl" onClick={() => handleDeleteHistory(item.id)} size="icon" variant="ghost">
                                   <X className="h-4 w-4 text-rose-500" />
@@ -428,7 +428,7 @@ const Translation = () => {
                         <Button className="rounded-xl" disabled={historyPage === 0} onClick={() => loadHistory(historyPage - 1)} size="sm" variant="outline">
                           Trước
                         </Button>
-                        <span className="text-xs text-slate-500">
+                        <span className="text-xs text-muted-foreground">
                           {historyPage + 1} / {historyTotalPages}
                         </span>
                         <Button
@@ -451,17 +451,17 @@ const Translation = () => {
               <div className="space-y-3">
                 <div className="rounded-[18px] border border-violet-200 bg-violet-50/70 p-4">
                   <p className="text-sm font-semibold text-violet-800">Ctrl/Cmd + Enter</p>
-                  <p className="mt-1 text-sm text-slate-600">Dịch ngay mà không cần rê chuột xuống nút bấm.</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Dịch ngay mà không cần rê chuột xuống nút bấm.</p>
                 </div>
                 <div className="rounded-[18px] border border-sky-200 bg-sky-50/70 p-4">
                   <p className="text-sm font-semibold text-sky-800">Swap ngôn ngữ</p>
-                  <p className="mt-1 text-sm text-slate-600">Đảo chiều dịch khi cần đối chiếu nhanh hai chiều Việt - Nhật.</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Đảo chiều dịch khi cần đối chiếu nhanh hai chiều Việt - Nhật.</p>
                 </div>
                 <div className="rounded-[18px] border border-amber-200 bg-amber-50/70 p-4">
                   <p className="text-sm font-semibold text-amber-800">Lưu bản dịch tốt</p>
-                  <p className="mt-1 text-sm text-slate-600">Bookmark những câu bạn muốn ôn lại sau để biến lịch sử thành tài liệu học.</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Bookmark những câu bạn muốn ôn lại sau để biến lịch sử thành tài liệu học.</p>
                 </div>
-                <Button className="w-full rounded-2xl border-slate-200 bg-white text-slate-700" variant="outline">
+                <Button className="w-full rounded-2xl border-border bg-white text-foreground/80" variant="outline">
                   <Volume2 className="mr-2 h-4 w-4" />
                   Phát âm văn bản sau khi dịch
                 </Button>

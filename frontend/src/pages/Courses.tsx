@@ -18,12 +18,12 @@ interface Course {
 }
 
 const levelTone: Record<string, string> = {
-  "JLPT N5": "border-emerald-200 bg-emerald-50 text-emerald-700",
-  "JLPT N4": "border-sky-200 bg-sky-50 text-sky-700",
-  "JLPT N3": "border-violet-200 bg-violet-50 text-violet-700",
-  "JLPT N2": "border-amber-200 bg-amber-50 text-amber-700",
-  "JLPT N1": "border-rose-200 bg-rose-50 text-rose-700",
-  "N3-N2": "border-slate-200 bg-slate-50 text-slate-700",
+  "JLPT N5": "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+  "JLPT N4": "border-sky-500/30 bg-sky-500/10 text-sky-600 dark:text-sky-400",
+  "JLPT N3": "border-violet-500/30 bg-violet-500/10 text-violet-600 dark:text-violet-400",
+  "JLPT N2": "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400",
+  "JLPT N1": "border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400",
+  "N3-N2": "border-border bg-muted text-foreground",
 };
 
 const courses: Course[] = [
@@ -102,29 +102,29 @@ const Courses = () => {
     <DashboardLayout>
       <div className="mx-auto max-w-[1420px]">
         <PageHeader
-          icon={<GraduationCap className="h-6 w-6 text-violet-600" />}
+          icon={<GraduationCap className="h-6 w-6 text-primary" />}
           title="Khóa học"
-          description="Danh mục khóa học được nén gọn để bạn nhìn rõ nhiều lựa chọn cùng lúc, không còn cảm giác như landing page."
+          description="Danh mục khóa học được nén gọn để bạn nhìn rõ nhiều lựa chọn cùng lúc."
           eyebrow="Courses"
         />
 
         <div className="mb-4 grid gap-3 md:grid-cols-3">
           <MetricCard hint="Toàn bộ lộ trình hiện có" icon={<BookOpen className="h-4 w-4 text-sky-500" />} label="Khóa học" value={courses.length} />
-          <MetricCard hint="Bộ lọc đang mở" icon={<Layers className="h-4 w-4 text-violet-500" />} label="Mức JLPT" value={selectedLevel === "all" ? "Tất cả" : selectedLevel} />
+          <MetricCard hint="Bộ lọc đang mở" icon={<Layers className="h-4 w-4 text-primary" />} label="Mức JLPT" value={selectedLevel === "all" ? "Tất cả" : selectedLevel} />
           <MetricCard hint="Có thể tiếp tục học ngay" icon={<Sparkles className="h-4 w-4 text-emerald-500" />} label="Đang theo học" value={courses.filter((course) => course.progress > 0).length} />
         </div>
 
-        <PageSection className="mb-4" title="Bộ lọc level" description="Thanh chọn thấp, nhẹ và không đẩy content chính xuống quá nhiều.">
+        <PageSection className="mb-4" title="Bộ lọc level" description="Chọn cấp JLPT để lọc danh sách.">
           <div className="flex flex-wrap gap-2">
             {levels.map((level) => {
               const active = selectedLevel === level;
               return (
                 <button
                   key={level}
-                  className={`rounded-2xl border px-4 py-2 text-sm font-medium transition ${
+                  className={`rounded-2xl border-2 px-4 py-2 text-sm font-medium transition cursor-pointer ${
                     active
-                      ? `${level === "all" ? "border-slate-200 bg-slate-100 text-slate-800" : levelTone[level]} shadow-[0_10px_20px_rgba(148,163,184,0.10)]`
-                      : "border-white/80 bg-white/90 text-slate-600 hover:bg-slate-50"
+                      ? `${level === "all" ? "border-primary bg-primary/10 text-primary" : levelTone[level]}`
+                      : "border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground"
                   }`}
                   onClick={() => setSelectedLevel(level)}
                   type="button"
@@ -142,32 +142,32 @@ const Courses = () => {
           ) : (
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               {filteredCourses.map((course) => (
-                <div key={course.id} className="rounded-[22px] border border-white bg-white p-4 shadow-[0_10px_24px_rgba(148,163,184,0.10)]">
+                <div key={course.id} className="yukihon-card-flat p-4 cursor-default">
                   <div className="mb-3 flex items-start justify-between gap-3">
                     <div>
-                      <h3 className="text-lg font-semibold text-slate-900">{course.title}</h3>
-                      <Badge className={`mt-2 rounded-full border ${levelTone[course.level] || "border-slate-200 bg-slate-50 text-slate-700"}`}>
+                      <h3 className="text-lg font-semibold text-foreground">{course.title}</h3>
+                      <Badge className={`mt-2 rounded-full border ${levelTone[course.level] || "border-border bg-muted text-foreground"}`}>
                         {course.level}
                       </Badge>
                     </div>
                     {course.progress > 0 && (
-                      <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                      <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
                         {course.progress}%
                       </span>
                     )}
                   </div>
 
-                  <p className="text-sm leading-6 text-slate-600">{course.description}</p>
+                  <p className="text-sm leading-6 text-muted-foreground">{course.description}</p>
 
                   <div className="mt-4 flex flex-wrap gap-2">
                     {course.skills.map((skill) => (
-                      <span key={skill} className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-600">
+                      <span key={skill} className="rounded-full border border-border bg-muted px-3 py-1 text-xs text-muted-foreground">
                         {skill}
                       </span>
                     ))}
                   </div>
 
-                  <div className="mt-4 flex items-center gap-4 text-sm text-slate-500">
+                  <div className="mt-4 flex items-center gap-4 text-sm text-muted-foreground">
                     <span className="inline-flex items-center gap-1">
                       <BookOpen className="h-4 w-4" />
                       {course.lessons} bài
@@ -180,18 +180,18 @@ const Courses = () => {
 
                   {course.progress > 0 && (
                     <div className="mt-4">
-                      <div className="mb-2 flex items-center justify-between text-xs text-slate-500">
+                      <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
                         <span>Tiến độ</span>
                         <span>{course.progress}%</span>
                       </div>
-                      <div className="h-2.5 overflow-hidden rounded-full bg-slate-200">
-                        <div className="h-full rounded-full bg-[linear-gradient(90deg,#60a5fa,#22d3ee)]" style={{ width: `${course.progress}%` }} />
+                      <div className="h-2.5 overflow-hidden rounded-full bg-muted">
+                        <div className="h-full rounded-full bg-gradient-to-r from-primary to-secondary" style={{ width: `${course.progress}%` }} />
                       </div>
                     </div>
                   )}
 
                   <Link to={`/courses/${course.id}`}>
-                    <Button className="mt-4 w-full rounded-2xl bg-slate-900 text-white hover:bg-slate-800">
+                    <Button className="mt-4 w-full rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90">
                       {course.progress > 0 ? "Tiếp tục học" : "Xem khóa học"}
                       <ChevronRight className="ml-2 h-4 w-4" />
                     </Button>
