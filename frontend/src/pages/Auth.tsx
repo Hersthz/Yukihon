@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+﻿import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
@@ -23,7 +23,22 @@ const Auth = () => {
   const [typingKanji, setTypingKanji] = useState("");
 
   const navigate = useNavigate();
-  const { login, register } = useAuth();
+  const { login, loginWithGoogleCode, register } = useAuth();
+
+  const authenticateWithGoogle = useCallback(async (code: string) => {
+    setIsSubmitting(true);
+    try {
+      await loginWithGoogleCode(code);
+      setSuccessMsg("Signed in with Google successfully!");
+      setTimeout(() => navigate("/dashboard"), 500);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Google authentication failed.";
+      setErrorMsg(message);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [loginWithGoogleCode, navigate]);
 
   useEffect(() => {
     let index = 0;
@@ -45,6 +60,13 @@ const Auth = () => {
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code");
     const error = params.get("error");
+    const reason = params.get("reason");
+
+    if (reason === "session_expired") {
+      setErrorMsg("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+      window.history.replaceState({}, document.title, window.location.pathname);
+      return;
+    }
 
     if (error) {
       const description = params.get("error_description");
@@ -56,7 +78,7 @@ const Auth = () => {
     if (code) {
       void authenticateWithGoogle(code);
     }
-  }, []);
+  }, [authenticateWithGoogle]);
 
   const resetMessages = () => {
     setErrorMsg(null);
@@ -67,22 +89,6 @@ const Auth = () => {
     if (nextMode === mode) return;
     resetMessages();
     setMode(nextMode);
-  };
-
-  const authenticateWithGoogle = async (code: string) => {
-    setIsSubmitting(true);
-    try {
-      const response = await authApi.googleAuth(code);
-      authApi.storeAuthData(response);
-      setSuccessMsg("Signed in with Google successfully!");
-      setTimeout(() => navigate("/dashboard"), 500);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Google authentication failed.";
-      setErrorMsg(message);
-      window.history.replaceState({}, document.title, window.location.pathname);
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   const handleGoogleLogin = () => {

@@ -44,7 +44,12 @@ export const apiClient = {
 
       if (response.status === 401) {
         this.clearAuthData();
-        window.location.href = "/auth";
+        const isAuthRoute = window.location.pathname.startsWith("/auth");
+        if (!isAuthRoute) {
+          const reason = encodeURIComponent("session_expired");
+          const from = encodeURIComponent(window.location.pathname + window.location.search);
+          window.location.href = `/auth?reason=${reason}&from=${from}`;
+        }
       }
 
       if (!response.ok) {

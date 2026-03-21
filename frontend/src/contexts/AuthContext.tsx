@@ -8,6 +8,7 @@ interface AuthContextType {
   isLoading: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
+  loginWithGoogleCode: (code: string) => Promise<void>;
   register: (email: string, password: string, displayName: string, jlptTargetLevel?: string) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
@@ -97,6 +98,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     []
   );
 
+  const loginWithGoogleCode = useCallback(async (code: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response: AuthResponse = await authApi.googleAuth(code);
+      apiClient.setAuthData(response.accessToken, response.user);
+      setUser(response.user);
+      setIsAuthenticated(true);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Google authentication failed";
+      setError(message);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   const logout = useCallback(() => {
     apiClient.clearAuthData();
     setUser(null);
@@ -118,6 +136,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isLoading,
     error,
     login,
+    loginWithGoogleCode,
     register,
     logout,
     refreshUser,
