@@ -34,3 +34,22 @@ All business modules are placed under `com.hoang.basis.yukihon.system` and shoul
 ./mvnw test
 ./mvnw spring-boot:run
 ```
+
+## Seed Data On Startup
+
+Backend now initializes base data at startup (idempotent, no duplicate insert if table already has data):
+
+- Demo accounts and roles:
+	- `admin@yukihon.local` / `Admin@123` with `ADMIN`, `USER`
+	- `learner@yukihon.local` / `User@123` with `USER`
+- User artifacts:
+	- `user_settings`
+	- `user_learning_stats`
+- Learning content:
+	- Lessons
+	- Vocabulary
+	- Grammar
+	- Quizzes
+
+Implementation file:
+- `src/main/java/com/hoang/basis/yukihon/config/DataInitializer.java`
