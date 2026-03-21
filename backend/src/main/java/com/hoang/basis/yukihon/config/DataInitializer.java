@@ -6,8 +6,12 @@ import com.hoang.basis.yukihon.system.lesson.entity.Lesson;
 import com.hoang.basis.yukihon.system.lesson.repository.LessonRepository;
 import com.hoang.basis.yukihon.system.quiz.entity.Quiz;
 import com.hoang.basis.yukihon.system.quiz.repository.QuizRepository;
+import com.hoang.basis.yukihon.system.user.entity.Permission;
 import com.hoang.basis.yukihon.system.user.entity.RoleName;
+import com.hoang.basis.yukihon.system.user.entity.RolePermission;
 import com.hoang.basis.yukihon.system.user.entity.User;
+import com.hoang.basis.yukihon.system.user.repository.PermissionRepository;
+import com.hoang.basis.yukihon.system.user.repository.RolePermissionRepository;
 import com.hoang.basis.yukihon.system.user.repository.UserRepository;
 import com.hoang.basis.yukihon.system.userlearningstats.repository.UserLearningStatsRepository;
 import com.hoang.basis.yukihon.system.usersettings.repository.UserSettingsRepository;
@@ -30,6 +34,8 @@ import java.util.Set;
 public class DataInitializer implements CommandLineRunner {
 
     private final UserRepository userRepository;
+        private final PermissionRepository permissionRepository;
+        private final RolePermissionRepository rolePermissionRepository;
     private final UserSettingsRepository userSettingsRepository;
     private final UserLearningStatsRepository userLearningStatsRepository;
 
@@ -43,12 +49,80 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
+        initializePermissions();
         initializeUsers();
         initializeLessons();
         initializeVocabulary();
         initializeGrammar();
         initializeQuizzes();
         log.info("Data initialization completed");
+    }
+
+    private void initializePermissions() {
+        Permission userReadProfile = ensurePermission(
+                "USER_READ_PROFILE",
+                "Read Profile",
+                "View own account and profile information"
+        );
+        Permission userUpdateProfile = ensurePermission(
+                "USER_UPDATE_PROFILE",
+                "Update Profile",
+                "Update own profile and account settings"
+        );
+        Permission contentRead = ensurePermission(
+                "CONTENT_READ",
+                "Read Learning Content",
+                "Read lessons, grammar, vocabulary, and quizzes"
+        );
+        Permission contentManage = ensurePermission(
+                "CONTENT_MANAGE",
+                "Manage Learning Content",
+                "Create, edit, and delete lessons, grammar, vocabulary, and quizzes"
+        );
+        Permission communityInteract = ensurePermission(
+                "COMMUNITY_INTERACT",
+                "Community Interactions",
+                "Create posts, comment, and react in community"
+        );
+        Permission translationUse = ensurePermission(
+                "TRANSLATION_USE",
+                "Use Translation",
+                "Use translation APIs and access translation history"
+        );
+        Permission adminDashboardRead = ensurePermission(
+                "ADMIN_DASHBOARD_READ",
+                "Read Admin Dashboard",
+                "Access system stats and admin dashboard overview"
+        );
+        Permission adminUsersManage = ensurePermission(
+                "ADMIN_USERS_MANAGE",
+                "Manage Users",
+                "Manage user status, roles, and account state"
+        );
+        Permission adminRolesManage = ensurePermission(
+                "ADMIN_ROLES_MANAGE",
+                "Manage Roles",
+                "Assign and revoke roles for users"
+        );
+
+        ensureRolePermission(RoleName.USER, userReadProfile);
+        ensureRolePermission(RoleName.USER, userUpdateProfile);
+        ensureRolePermission(RoleName.USER, contentRead);
+        ensureRolePermission(RoleName.USER, communityInteract);
+        ensureRolePermission(RoleName.USER, translationUse);
+
+        ensureRolePermission(RoleName.ADMIN, userReadProfile);
+        ensureRolePermission(RoleName.ADMIN, userUpdateProfile);
+        ensureRolePermission(RoleName.ADMIN, contentRead);
+        ensureRolePermission(RoleName.ADMIN, contentManage);
+        ensureRolePermission(RoleName.ADMIN, communityInteract);
+        ensureRolePermission(RoleName.ADMIN, translationUse);
+        ensureRolePermission(RoleName.ADMIN, adminDashboardRead);
+        ensureRolePermission(RoleName.ADMIN, adminUsersManage);
+        ensureRolePermission(RoleName.ADMIN, adminRolesManage);
+
+        log.info("Initialized permissions: {} records", permissionRepository.count());
+        log.info("Initialized role-permission mappings: {} records", rolePermissionRepository.count());
     }
 
     private void initializeUsers() {
@@ -103,6 +177,31 @@ public class DataInitializer implements CommandLineRunner {
                     return userRepository.save(created);
                 });
     }
+
+        private Permission ensurePermission(String code, String name, String description) {
+                return permissionRepository.findByCode(code)
+                                .orElseGet(() -> permissionRepository.save(
+                                                Permission.builder()
+                                                                .code(code)
+                                                                .name(name)
+                                                                .description(description)
+                                                                .build()
+                                ));
+        }
+
+        private void ensureRolePermission(RoleName role, Permission permission) {
+                boolean exists = rolePermissionRepository.existsByRoleAndPermission(role, permission);
+                if (exists) {
+                        return;
+                }
+
+                rolePermissionRepository.save(
+                                RolePermission.builder()
+                                                .role(role)
+                                                .permission(permission)
+                                                .build()
+                );
+        }
 
     private void ensureUserArtifacts(User user) {
         userSettingsRepository.findByUserId(user.getId())

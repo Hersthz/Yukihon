@@ -39,6 +39,9 @@ All business modules are placed under `com.hoang.basis.yukihon.system` and shoul
 
 Backend now initializes base data at startup (idempotent, no duplicate insert if table already has data):
 
+- Permission model:
+	- `permissions` table
+	- `role_permissions` mapping table (RoleName enum -> Permission)
 - Demo accounts and roles:
 	- `admin@yukihon.local` / `Admin@123` with `ADMIN`, `USER`
 	- `learner@yukihon.local` / `User@123` with `USER`
@@ -53,3 +56,6 @@ Backend now initializes base data at startup (idempotent, no duplicate insert if
 
 Implementation file:
 - `src/main/java/com/hoang/basis/yukihon/config/DataInitializer.java`
+
+Default seeded permissions include profile access, content read/manage, community interaction,
+translation usage, and admin dashboard/user/role management.
