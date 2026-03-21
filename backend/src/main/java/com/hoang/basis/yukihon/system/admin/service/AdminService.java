@@ -19,7 +19,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Locale;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -112,9 +111,7 @@ public class AdminService {
         
         long totalUsers = userRepository.count();
         long activeUsers = userRepository.countByEnabled(true);
-        long adminUsers = userRepository.findAll().stream()
-                .filter(user -> user.getRoles().contains(RoleName.ADMIN))
-                .count();
+        long adminUsers = userRepository.countUsersByRole(RoleName.ADMIN);
         long totalLessons = lessonRepository.count();
         long totalVocabulary = vocabularyRepository.count();
         long totalGrammar = grammarRepository.count();
@@ -136,16 +133,18 @@ public class AdminService {
      */
     public List<UserManagementDto> searchUsers(String query) {
         log.info("Searching users with query: {}", query);
-        
-        String normalizedQuery = query == null ? "" : query.toLowerCase(Locale.ROOT);
 
-        List<User> users = userRepository.findAll().stream()
-                .filter(user -> {
-                    String email = user.getEmail() == null ? "" : user.getEmail().toLowerCase(Locale.ROOT);
-                    String displayName = user.getDisplayName() == null ? "" : user.getDisplayName().toLowerCase(Locale.ROOT);
-                    return email.contains(normalizedQuery) || displayName.contains(normalizedQuery);
-                })
-                .toList();
+        String normalizedQuery = query == null ? "" : query.trim();
+
+        if (normalizedQuery.isEmpty()) {
+            return List.of();
+        }
+
+        List<User> users = userRepository
+            .findTop100ByEmailContainingIgnoreCaseOrDisplayNameContainingIgnoreCaseOrderByCreatedAtDesc(
+                normalizedQuery,
+                normalizedQuery
+            );
 
         return users.stream()
                 .map(UserManagementDto::fromEntity)

@@ -5,6 +5,7 @@ import com.hoang.basis.yukihon.system.vocabulary.entity.Vocabulary;
 import com.hoang.basis.yukihon.system.vocabulary.repository.VocabularyRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,16 +23,13 @@ public class DictionaryService {
      */
     public List<VocabularyDto> search(String query) {
         log.info("Dictionary search: {}", query);
-        String q = query.trim().toLowerCase();
+        String q = query == null ? "" : query.trim();
 
-        return vocabularyRepository.findAll().stream()
-                .filter(v ->
-                        (v.getKanji() != null && v.getKanji().contains(q)) ||
-                        (v.getHiragana() != null && v.getHiragana().contains(q)) ||
-                        (v.getRomaji() != null && v.getRomaji().toLowerCase().contains(q)) ||
-                        (v.getMeaning() != null && v.getMeaning().toLowerCase().contains(q))
-                )
-                .limit(50)
+        if (q.isEmpty()) {
+            return List.of();
+        }
+
+        return vocabularyRepository.searchForDictionary(q, PageRequest.of(0, 50)).stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
