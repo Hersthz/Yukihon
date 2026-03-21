@@ -10,6 +10,8 @@ import java.util.Optional;
 
 public interface UserProgressRepository extends JpaRepository<UserProgress, Long> {
 
+    Optional<UserProgress> findByIdAndUserId(Long id, Long userId);
+
     List<UserProgress> findByUserId(Long userId);
 
     @Query("SELECT up FROM UserProgress up WHERE up.userId = :userId AND up.status = :status")
