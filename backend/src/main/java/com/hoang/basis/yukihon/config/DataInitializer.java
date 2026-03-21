@@ -19,6 +19,7 @@ import com.hoang.basis.yukihon.system.vocabulary.entity.Vocabulary;
 import com.hoang.basis.yukihon.system.vocabulary.repository.VocabularyRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -29,6 +30,7 @@ import java.util.List;
 import java.util.Set;
 
 @Component
+@ConditionalOnProperty(name = "app.seed.enabled", havingValue = "true", matchIfMissing = true)
 @RequiredArgsConstructor
 @Slf4j
 public class DataInitializer implements CommandLineRunner {
@@ -178,30 +180,30 @@ public class DataInitializer implements CommandLineRunner {
                 });
     }
 
-        private Permission ensurePermission(String code, String name, String description) {
-                return permissionRepository.findByCode(code)
-                                .orElseGet(() -> permissionRepository.save(
-                                                Permission.builder()
-                                                                .code(code)
-                                                                .name(name)
-                                                                .description(description)
-                                                                .build()
-                                ));
+    private Permission ensurePermission(String code, String name, String description) {
+        return permissionRepository.findByCode(code)
+                .orElseGet(() -> permissionRepository.save(
+                        Permission.builder()
+                                .code(code)
+                                .name(name)
+                                .description(description)
+                                .build()
+                ));
+    }
+
+    private void ensureRolePermission(RoleName role, Permission permission) {
+        boolean exists = rolePermissionRepository.existsByRoleAndPermission(role, permission);
+        if (exists) {
+            return;
         }
 
-        private void ensureRolePermission(RoleName role, Permission permission) {
-                boolean exists = rolePermissionRepository.existsByRoleAndPermission(role, permission);
-                if (exists) {
-                        return;
-                }
-
-                rolePermissionRepository.save(
-                                RolePermission.builder()
-                                                .role(role)
-                                                .permission(permission)
-                                                .build()
-                );
-        }
+        rolePermissionRepository.save(
+                RolePermission.builder()
+                        .role(role)
+                        .permission(permission)
+                        .build()
+        );
+    }
 
     private void ensureUserArtifacts(User user) {
         userSettingsRepository.findByUserId(user.getId())
