@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -19,22 +19,7 @@ import {
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-
-interface AuthUser {
-  id: number;
-  email: string;
-  displayName: string;
-  roles: string[];
-}
-
-interface MeResponse {
-  id: number;
-  email: string;
-  displayName: string;
-  roles: string[];
-}
-
-const API_BASE_URL = "http://localhost:8080";
+import { useAuth } from "@/hooks/use-auth";
 
 const quickStats = [
   { label: "Streak", value: "12", icon: Flame, color: "text-amber-500" },
@@ -74,14 +59,7 @@ const activity = [
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<AuthUser | null>(() => {
-    try {
-      const raw = localStorage.getItem("yukihon_user");
-      return raw ? (JSON.parse(raw) as AuthUser) : null;
-    } catch {
-      return null;
-    }
-  });
+  const { user, isAuthenticated, refreshUser } = useAuth();
 
   const nextLesson = {
     title: "Daily Conversations: Greetings",
@@ -92,46 +70,15 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem("yukihon_token");
-    if (!token) {
+    if (!isAuthenticated) {
       navigate("/auth");
       return;
     }
 
-    const fetchMe = async () => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/auth/me`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (res.status === 401 || res.status === 403) {
-          localStorage.removeItem("yukihon_token");
-          localStorage.removeItem("yukihon_user");
-          navigate("/auth");
-          return;
-        }
-
-        if (!res.ok) return;
-
-        const data = (await res.json()) as MeResponse;
-        const mapped = {
-          id: data.id,
-          email: data.email,
-          displayName: data.displayName,
-          roles: data.roles,
-        };
-
-        setUser(mapped);
-        localStorage.setItem("yukihon_user", JSON.stringify(mapped));
-      } catch {
-        // Keep cached user silently.
-      }
-    };
-
-    fetchMe();
-  }, [navigate]);
+    if (!user) {
+      void refreshUser();
+    }
+  }, [isAuthenticated, user, refreshUser, navigate]);
 
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
