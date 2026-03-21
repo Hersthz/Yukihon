@@ -31,6 +31,7 @@ public class AdminController {
      * Get all users with pagination
      */
     @GetMapping("/users")
+    @PreAuthorize("hasAuthority('ADMIN_USERS_MANAGE')")
     public ResponseEntity<Page<UserManagementDto>> getAllUsers(
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
             Pageable pageable
@@ -43,6 +44,7 @@ public class AdminController {
      * Get user by ID
      */
     @GetMapping("/users/{userId}")
+    @PreAuthorize("hasAuthority('ADMIN_USERS_MANAGE')")
     public ResponseEntity<UserManagementDto> getUserById(@PathVariable Long userId) {
         log.info("Admin request: Get user by id: {}", userId);
         return ResponseEntity.ok(adminService.getUserById(userId));
@@ -52,6 +54,7 @@ public class AdminController {
      * Search users
      */
     @GetMapping("/users/search")
+    @PreAuthorize("hasAuthority('ADMIN_USERS_MANAGE')")
     public ResponseEntity<List<UserManagementDto>> searchUsers(@RequestParam String query) {
         log.info("Admin request: Search users with query: {}", query);
         return ResponseEntity.ok(adminService.searchUsers(query));
@@ -61,6 +64,7 @@ public class AdminController {
      * Update user roles
      */
     @PutMapping("/users/{userId}/roles")
+    @PreAuthorize("hasAuthority('ADMIN_ROLES_MANAGE')")
     public ResponseEntity<UserManagementDto> updateUserRoles(
             @PathVariable Long userId,
             @Valid @RequestBody UpdateUserRolesRequest request
@@ -73,6 +77,7 @@ public class AdminController {
      * Update user status (enable/disable)
      */
     @PutMapping("/users/{userId}/status")
+    @PreAuthorize("hasAuthority('ADMIN_USERS_MANAGE')")
     public ResponseEntity<UserManagementDto> updateUserStatus(
             @PathVariable Long userId,
             @Valid @RequestBody UpdateUserStatusRequest request
@@ -85,6 +90,7 @@ public class AdminController {
      * Promote user to admin
      */
     @PostMapping("/users/{userId}/promote")
+    @PreAuthorize("hasAuthority('ADMIN_ROLES_MANAGE')")
     public ResponseEntity<UserManagementDto> promoteToAdmin(@PathVariable Long userId) {
         log.info("Admin request: Promote user {} to admin", userId);
         return ResponseEntity.ok(adminService.promoteToAdmin(userId));
@@ -94,6 +100,7 @@ public class AdminController {
      * Demote admin to user
      */
     @PostMapping("/users/{userId}/demote")
+    @PreAuthorize("hasAuthority('ADMIN_ROLES_MANAGE')")
     public ResponseEntity<UserManagementDto> demoteFromAdmin(@PathVariable Long userId) {
         log.info("Admin request: Demote user {} from admin", userId);
         return ResponseEntity.ok(adminService.demoteFromAdmin(userId));
@@ -103,6 +110,7 @@ public class AdminController {
      * Delete user (soft delete)
      */
     @DeleteMapping("/users/{userId}")
+    @PreAuthorize("hasAuthority('ADMIN_USERS_MANAGE')")
     public ResponseEntity<Void> deleteUser(@PathVariable Long userId) {
         log.info("Admin request: Delete user {}", userId);
         adminService.deleteUser(userId);
@@ -113,6 +121,7 @@ public class AdminController {
      * Get system statistics
      */
     @GetMapping("/stats")
+    @PreAuthorize("hasAuthority('ADMIN_DASHBOARD_READ')")
     public ResponseEntity<SystemStatsDto> getSystemStats() {
         log.info("Admin request: Get system statistics");
         return ResponseEntity.ok(adminService.getSystemStats());

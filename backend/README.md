@@ -59,3 +59,22 @@ Implementation file:
 
 Default seeded permissions include profile access, content read/manage, community interaction,
 translation usage, and admin dashboard/user/role management.
+
+## Profiles and Production Safety
+
+- Active profile defaults to `dev` (`SPRING_PROFILES_ACTIVE` to override)
+- `application-prod.yml` is configured with:
+	- `app.seed.enabled=false`
+	- `spring.jpa.hibernate.ddl-auto=validate`
+	- SQL logging disabled
+
+## Database Migration
+
+- Flyway is enabled for versioned schema changes.
+- Current migration file:
+	- `src/main/resources/db/migration/V1__create_permissions_tables.sql`
+
+## Runtime Performance Defaults
+
+- SQL logging is disabled by default (`JPA_SHOW_SQL=false`) to reduce I/O overhead.
+- Hikari pool is configurable via env vars (`DB_POOL_MAX_SIZE`, `DB_POOL_MIN_IDLE`, etc.).
