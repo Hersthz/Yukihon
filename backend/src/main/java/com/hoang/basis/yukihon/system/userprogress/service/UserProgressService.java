@@ -6,6 +6,7 @@ import com.hoang.basis.yukihon.system.user.entity.User;
 import com.hoang.basis.yukihon.system.userprogress.entity.UserProgress;
 import com.hoang.basis.yukihon.system.userprogress.repository.UserProgressRepository;
 import com.hoang.basis.yukihon.system.user.repository.UserRepository;
+import com.hoang.basis.yukihon.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -103,12 +104,52 @@ public class UserProgressService {
         return convertToDto(updated);
     }
 
+    public UserProgressDto getProgressByIdForUser(Long id, Long actorUserId, boolean isAdmin) {
+        UserProgress progress = findProgressForActor(id, actorUserId, isAdmin);
+        return convertToDto(progress);
+    }
+
+    public UserProgressDto updateProgressForUser(Long id, UserProgressRequest request, Long actorUserId, boolean isAdmin) {
+        UserProgress progress = findProgressForActor(id, actorUserId, isAdmin);
+
+        progress.setScore(request.getScore());
+        progress.setTotalScore(request.getTotalScore());
+        if (request.getStatus() != null) {
+            progress.setStatus(UserProgress.ProgressStatus.valueOf(request.getStatus()));
+            if (request.getStatus().equals("COMPLETED")) {
+                progress.setCompletedAt(Instant.now());
+            }
+        }
+        progress.setNotes(request.getNotes());
+        progress.setAttemptCount(progress.getAttemptCount() + 1);
+
+        UserProgress updated = userProgressRepository.save(progress);
+        log.info("Updated progress: {} by actorUserId={}", updated.getId(), actorUserId);
+        return convertToDto(updated);
+    }
+
+    public void deleteProgressForUser(Long id, Long actorUserId, boolean isAdmin) {
+        UserProgress progress = findProgressForActor(id, actorUserId, isAdmin);
+        userProgressRepository.delete(progress);
+        log.info("Deleted progress with id: {} by actorUserId={}", id, actorUserId);
+    }
+
     public void deleteProgress(Long id) {
         if (!userProgressRepository.existsById(id)) {
             throw new RuntimeException("Progress not found with id: " + id);
         }
         userProgressRepository.deleteById(id);
         log.info("Deleted progress with id: {}", id);
+    }
+
+    private UserProgress findProgressForActor(Long id, Long actorUserId, boolean isAdmin) {
+        if (isAdmin) {
+            return userProgressRepository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException("Progress not found with id: " + id));
+        }
+
+        return userProgressRepository.findByIdAndUserId(id, actorUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Progress not found with id: " + id));
     }
 
     private UserProgressDto convertToDto(UserProgress progress) {
