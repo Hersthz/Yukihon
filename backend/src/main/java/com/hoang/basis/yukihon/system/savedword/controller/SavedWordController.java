@@ -1,7 +1,9 @@
 package com.hoang.basis.yukihon.system.savedword.controller;
 
+import com.hoang.basis.yukihon.system.savedword.dto.ReviewSavedWordRequest;
 import com.hoang.basis.yukihon.system.savedword.dto.SaveWordRequest;
 import com.hoang.basis.yukihon.system.savedword.dto.SavedWordDto;
+import com.hoang.basis.yukihon.system.savedword.dto.SavedWordStatsDto;
 import com.hoang.basis.yukihon.system.user.entity.User;
 import com.hoang.basis.yukihon.system.user.repository.UserRepository;
 import com.hoang.basis.yukihon.system.savedword.service.SavedWordService;
@@ -50,6 +52,16 @@ public class SavedWordController {
         return ResponseEntity.ok(savedWordService.getMasteredWords(userId, mastered));
     }
 
+    @GetMapping("/review")
+    public ResponseEntity<List<SavedWordDto>> getReviewQueue(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(defaultValue = "ALL") String mode,
+            @RequestParam(defaultValue = "true") boolean dueOnly
+    ) {
+        Long userId = getUserId(userDetails);
+        return ResponseEntity.ok(savedWordService.getReviewQueue(userId, mode, dueOnly));
+    }
+
     @PostMapping
     public ResponseEntity<SavedWordDto> saveWord(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -66,6 +78,16 @@ public class SavedWordController {
     ) {
         Long userId = getUserId(userDetails);
         return ResponseEntity.ok(savedWordService.toggleMastered(id, userId));
+    }
+
+    @PostMapping("/{id}/review")
+    public ResponseEntity<SavedWordDto> reviewWord(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails,
+            @Valid @RequestBody ReviewSavedWordRequest request
+    ) {
+        Long userId = getUserId(userDetails);
+        return ResponseEntity.ok(savedWordService.reviewWord(id, userId, request));
     }
 
     @PutMapping("/{id}/note")
@@ -98,13 +120,10 @@ public class SavedWordController {
     }
 
     @GetMapping("/stats")
-    public ResponseEntity<Map<String, Long>> getStats(
+    public ResponseEntity<SavedWordStatsDto> getStats(
             @AuthenticationPrincipal UserDetails userDetails
     ) {
         Long userId = getUserId(userDetails);
-        return ResponseEntity.ok(Map.of(
-                "total", savedWordService.getCount(userId),
-                "mastered", savedWordService.getMasteredCount(userId)
-        ));
+        return ResponseEntity.ok(savedWordService.getStats(userId));
     }
 }

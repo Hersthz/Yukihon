@@ -26,13 +26,25 @@ public class SavedWordDto {
     private String folderName;
     private String personalNote;
     private boolean mastered;
+    private Integer reviewIntervalDays;
+    private Double easeFactor;
+    private Integer repetitionCount;
+    private Integer reviewCount;
+    private Instant lastReviewedAt;
+    private Instant nextReviewAt;
+    private boolean dueForReview;
+    private String studyFocus;
     private Instant createdAt;
 
     public static SavedWordDto fromEntity(SavedWord saved) {
+        String kanji = saved.getVocabulary().getKanji();
+        String studyFocus = kanji != null && !kanji.isBlank() ? "KANJI" : "VOCABULARY";
+        Instant nextReviewAt = saved.getNextReviewAt();
+
         return SavedWordDto.builder()
                 .id(saved.getId())
                 .vocabularyId(saved.getVocabulary().getId())
-                .kanji(saved.getVocabulary().getKanji())
+                .kanji(kanji)
                 .hiragana(saved.getVocabulary().getHiragana())
                 .romaji(saved.getVocabulary().getRomaji())
                 .meaning(saved.getVocabulary().getMeaning())
@@ -42,6 +54,14 @@ public class SavedWordDto {
                 .folderName(saved.getFolderName())
                 .personalNote(saved.getPersonalNote())
                 .mastered(saved.isMastered())
+                .reviewIntervalDays(saved.getReviewIntervalDays())
+                .easeFactor(saved.getEaseFactor())
+                .repetitionCount(saved.getRepetitionCount())
+                .reviewCount(saved.getReviewCount())
+                .lastReviewedAt(saved.getLastReviewedAt())
+                .nextReviewAt(nextReviewAt)
+                .dueForReview(nextReviewAt == null || !nextReviewAt.isAfter(Instant.now()))
+                .studyFocus(studyFocus)
                 .createdAt(saved.getCreatedAt())
                 .build();
     }

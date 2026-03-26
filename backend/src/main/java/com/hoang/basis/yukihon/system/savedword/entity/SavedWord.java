@@ -44,11 +44,36 @@ public class SavedWord {
     @Column(nullable = false)
     private boolean mastered = false;
 
+    @Builder.Default
+    @Column(nullable = false)
+    private Integer reviewIntervalDays = 0;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private Double easeFactor = 2.5;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private Integer repetitionCount = 0;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private Integer reviewCount = 0;
+
+    @Column
+    private Instant lastReviewedAt;
+
+    @Column
+    private Instant nextReviewAt;
+
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
     @PrePersist
     public void prePersist() {
         createdAt = Instant.now();
+        if (nextReviewAt == null) {
+            nextReviewAt = createdAt;
+        }
     }
 }

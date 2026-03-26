@@ -1,7 +1,9 @@
 package com.hoang.basis.yukihon.system.savedword.service;
 
+import com.hoang.basis.yukihon.system.savedword.dto.ReviewSavedWordRequest;
 import com.hoang.basis.yukihon.system.savedword.dto.SaveWordRequest;
 import com.hoang.basis.yukihon.system.savedword.dto.SavedWordDto;
+import com.hoang.basis.yukihon.system.savedword.dto.SavedWordStatsDto;
 import com.hoang.basis.yukihon.exception.ResourceNotFoundException;
 import com.hoang.basis.yukihon.system.user.entity.User;
 import com.hoang.basis.yukihon.system.vocabulary.entity.Vocabulary;
@@ -15,6 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Locale;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
@@ -22,12 +26,14 @@ import java.util.stream.Collectors;
 @Slf4j
 public class SavedWordService {
 
+    private static final Pattern HAN_PATTERN = Pattern.compile("\\p{IsHan}");
+
     private final SavedWordRepository savedWordRepository;
     private final UserRepository userRepository;
     private final VocabularyRepository vocabularyRepository;
 
     public List<SavedWordDto> getUserSavedWords(Long userId) {
-        return savedWordRepository.findByUserIdOrderByCreatedAtDesc(userId).stream()
+        return savedWordRepository.findByUserIdOrderByNextReviewAtAscCreatedAtDesc(userId).stream()
                 .map(SavedWordDto::fromEntity)
                 .collect(Collectors.toList());
     }
@@ -40,6 +46,17 @@ public class SavedWordService {
 
     public List<SavedWordDto> getMasteredWords(Long userId, boolean mastered) {
         return savedWordRepository.findByUserIdAndMasteredOrderByCreatedAtDesc(userId, mastered).stream()
+                .map(SavedWordDto::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    public List<SavedWordDto> getReviewQueue(Long userId, String mode, boolean dueOnly) {
+        List<SavedWord> savedWords = dueOnly
+                ? savedWordRepository.findByUserIdAndNextReviewAtLessThanEqualOrderByNextReviewAtAscCreatedAtDesc(userId, java.time.Instant.now())
+                : savedWordRepository.findByUserIdOrderByNextReviewAtAscCreatedAtDesc(userId);
+
+        return savedWords.stream()
+                .filter(savedWord -> matchesMode(savedWord, mode))
                 .map(SavedWordDto::fromEntity)
                 .collect(Collectors.toList());
     }
@@ -58,6 +75,11 @@ public class SavedWordService {
                 .vocabulary(vocab)
                 .folderName(request.getFolderName() != null ? request.getFolderName() : "Default")
                 .personalNote(request.getPersonalNote())
+                .reviewIntervalDays(0)
+                .easeFactor(2.5)
+                .repetitionCount(0)
+                .reviewCount(0)
+                .nextReviewAt(java.time.Instant.now())
                 .build();
 
         SavedWord saved = savedWordRepository.save(savedWord);
@@ -70,6 +92,62 @@ public class SavedWordService {
         SavedWord saved = findOwnedSavedWordOrThrow(savedWordId, userId);
 
         saved.setMastered(!saved.isMastered());
+        SavedWord updated = savedWordRepository.save(saved);
+        return SavedWordDto.fromEntity(updated);
+    }
+
+    @Transactional
+    public SavedWordDto reviewWord(Long savedWordId, Long userId, ReviewSavedWordRequest request) {
+        SavedWord saved = findOwnedSavedWordOrThrow(savedWordId, userId);
+        ReviewRating rating = ReviewRating.from(request.getRating());
+        java.time.Instant now = java.time.Instant.now();
+
+        double easeFactor = saved.getEaseFactor() != null ? saved.getEaseFactor() : 2.5;
+        int intervalDays = saved.getReviewIntervalDays() != null ? saved.getReviewIntervalDays() : 0;
+        int repetitionCount = saved.getRepetitionCount() != null ? saved.getRepetitionCount() : 0;
+
+        switch (rating) {
+            case AGAIN -> {
+                repetitionCount = 0;
+                intervalDays = 1;
+                easeFactor = Math.max(1.3, easeFactor - 0.2);
+            }
+            case HARD -> {
+                repetitionCount = Math.max(1, repetitionCount);
+                intervalDays = Math.max(1, intervalDays <= 1 ? 2 : (int) Math.round(intervalDays * 1.2));
+                easeFactor = Math.max(1.3, easeFactor - 0.15);
+            }
+            case GOOD -> {
+                repetitionCount += 1;
+                if (repetitionCount <= 1) {
+                    intervalDays = 1;
+                } else if (repetitionCount == 2) {
+                    intervalDays = 3;
+                } else {
+                    intervalDays = Math.max(4, (int) Math.round(intervalDays * easeFactor));
+                }
+            }
+            case EASY -> {
+                repetitionCount += 1;
+                if (repetitionCount <= 1) {
+                    intervalDays = 2;
+                } else if (repetitionCount == 2) {
+                    intervalDays = 5;
+                } else {
+                    intervalDays = Math.max(6, (int) Math.round(intervalDays * (easeFactor + 0.25)));
+                }
+                easeFactor += 0.15;
+            }
+        }
+
+        saved.setEaseFactor(easeFactor);
+        saved.setReviewIntervalDays(intervalDays);
+        saved.setRepetitionCount(repetitionCount);
+        saved.setReviewCount((saved.getReviewCount() != null ? saved.getReviewCount() : 0) + 1);
+        saved.setLastReviewedAt(now);
+        saved.setNextReviewAt(now.plusSeconds(intervalDays * 24L * 60L * 60L));
+        saved.setMastered(intervalDays >= 21 || repetitionCount >= 5);
+
         SavedWord updated = savedWordRepository.save(saved);
         return SavedWordDto.fromEntity(updated);
     }
@@ -95,12 +173,33 @@ public class SavedWordService {
         return savedWordRepository.existsByUserIdAndVocabularyId(userId, vocabularyId);
     }
 
-    public long getCount(Long userId) {
-        return savedWordRepository.countByUserId(userId);
-    }
+    public SavedWordStatsDto getStats(Long userId) {
+        List<SavedWord> allWords = savedWordRepository.findByUserIdOrderByNextReviewAtAscCreatedAtDesc(userId);
+        java.time.Instant now = java.time.Instant.now();
 
-    public long getMasteredCount(Long userId) {
-        return savedWordRepository.countByUserIdAndMastered(userId, true);
+        long dueTodayCount = allWords.stream()
+                .filter(savedWord -> savedWord.getNextReviewAt() == null || !savedWord.getNextReviewAt().isAfter(now))
+                .count();
+        long kanjiDueTodayCount = allWords.stream()
+                .filter(savedWord -> matchesMode(savedWord, "KANJI"))
+                .filter(savedWord -> savedWord.getNextReviewAt() == null || !savedWord.getNextReviewAt().isAfter(now))
+                .count();
+
+        List<String> folders = allWords.stream()
+                .map(SavedWord::getFolderName)
+                .filter(folder -> folder != null && !folder.isBlank())
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+
+        return SavedWordStatsDto.builder()
+                .totalSaved(allWords.size())
+                .masteredCount(savedWordRepository.countByUserIdAndMastered(userId, true))
+                .dueTodayCount(dueTodayCount)
+                .kanjiDueTodayCount(kanjiDueTodayCount)
+                .vocabularyDueTodayCount(Math.max(0, dueTodayCount - kanjiDueTodayCount))
+                .folders(folders)
+                .build();
     }
 
     private User findUserByIdOrThrow(Long userId) {
@@ -121,5 +220,36 @@ public class SavedWordService {
             throw new IllegalArgumentException("Not your saved word");
         }
         return saved;
+    }
+
+    private boolean matchesMode(SavedWord savedWord, String mode) {
+        String normalizedMode = mode == null || mode.isBlank() ? "ALL" : mode.trim().toUpperCase(Locale.ROOT);
+        if ("ALL".equals(normalizedMode)) {
+            return true;
+        }
+
+        boolean hasKanji = savedWord.getVocabulary().getKanji() != null
+                && HAN_PATTERN.matcher(savedWord.getVocabulary().getKanji()).find();
+
+        if ("KANJI".equals(normalizedMode)) {
+            return hasKanji;
+        }
+
+        if ("VOCABULARY".equals(normalizedMode)) {
+            return !hasKanji;
+        }
+
+        return true;
+    }
+
+    private enum ReviewRating {
+        AGAIN,
+        HARD,
+        GOOD,
+        EASY;
+
+        private static ReviewRating from(String value) {
+            return ReviewRating.valueOf(value.trim().toUpperCase(Locale.ROOT));
+        }
     }
 }
