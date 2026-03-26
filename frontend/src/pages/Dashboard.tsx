@@ -114,7 +114,7 @@ const Dashboard = () => {
                 Chỉnh mục tiêu
               </Button>
             </Link>
-            <Link to="/jlpt-lessons">
+            <Link to={nextLesson ? `/lessons/${nextLesson.id}` : "/jlpt-lessons"}>
               <Button className="h-10 rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90">
                 <ArrowRight className="mr-2 h-4 w-4" />
                 {nextLesson ? "Học tiếp" : "Mở lộ trình"}
@@ -149,7 +149,7 @@ const Dashboard = () => {
                       {nextLesson?.estimatedMinutes ?? learningPath?.dailyGoalMinutes ?? 15} phút
                     </span>
                   </div>
-                  <Link to="/jlpt-lessons">
+                  <Link to={nextLesson ? `/lessons/${nextLesson.id}` : "/jlpt-lessons"}>
                     <Button className="mt-5 h-10 w-full rounded-2xl bg-white text-primary hover:bg-white/90">
                       {nextLesson ? "Mở bài học" : "Xem lộ trình"}
                     </Button>
@@ -255,7 +255,7 @@ const Dashboard = () => {
                     recommendedLessons.map((lesson) => (
                       <Link
                         key={lesson.id}
-                        to="/jlpt-lessons"
+                        to={`/lessons/${lesson.id}`}
                         className="block yukihon-card-flat px-4 py-4 transition-colors hover:bg-muted/70"
                       >
                         <div className="flex items-start justify-between gap-3">

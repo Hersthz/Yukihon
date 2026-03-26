@@ -146,8 +146,6 @@ public class SavedWordService {
         saved.setReviewCount((saved.getReviewCount() != null ? saved.getReviewCount() : 0) + 1);
         saved.setLastReviewedAt(now);
         saved.setNextReviewAt(now.plusSeconds(intervalDays * 24L * 60L * 60L));
-        saved.setMastered(intervalDays >= 21 || repetitionCount >= 5);
-
         SavedWord updated = savedWordRepository.save(saved);
         return SavedWordDto.fromEntity(updated);
     }
