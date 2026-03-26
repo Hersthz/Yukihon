@@ -1,5 +1,6 @@
 package com.hoang.basis.yukihon.system.admin.controller;
 
+import com.hoang.basis.yukihon.system.admin.dto.ContentOverviewDto;
 import com.hoang.basis.yukihon.system.admin.dto.SystemStatsDto;
 import com.hoang.basis.yukihon.system.admin.dto.UpdateUserRolesRequest;
 import com.hoang.basis.yukihon.system.admin.dto.UpdateUserStatusRequest;
@@ -125,5 +126,12 @@ public class AdminController {
     public ResponseEntity<SystemStatsDto> getSystemStats() {
         log.info("Admin request: Get system statistics");
         return ResponseEntity.ok(adminService.getSystemStats());
+    }
+
+    @GetMapping("/content/overview")
+    @PreAuthorize("hasAuthority('CONTENT_MANAGE')")
+    public ResponseEntity<ContentOverviewDto> getContentOverview() {
+        log.info("Admin request: Get content overview");
+        return ResponseEntity.ok(adminService.getContentOverview());
     }
 }
