@@ -1,10 +1,11 @@
-﻿import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Award, BookOpen, GraduationCap, PlayCircle, Target, TrendingUp } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import LessonCard2 from "@/components/learning/LessonCard2";
 import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
 import { Button } from "@/components/ui/button";
+import { useLearningPath } from "@/hooks/learning/useLearningPath";
 import { usePublishedLessons } from "@/hooks/learning/useLessons";
 
 const LEVELS = ["N5", "N4", "N3", "N2", "N1"];
@@ -28,6 +29,13 @@ const levelTone: Record<string, string> = {
 const JLPTLessons = () => {
   const [selectedLevel, setSelectedLevel] = useState("N4");
   const { data: allLessons = [], isLoading } = usePublishedLessons();
+  const { data: learningPath } = useLearningPath();
+
+  useEffect(() => {
+    if (learningPath?.targetJlptLevel) {
+      setSelectedLevel(learningPath.targetJlptLevel);
+    }
+  }, [learningPath?.targetJlptLevel]);
 
   const lessonsByLevel = useMemo(() => {
     return (allLessons as LessonSummary[]).reduce((acc: Record<string, LessonSummary[]>, lesson) => {
@@ -89,7 +97,9 @@ const JLPTLessons = () => {
             <div className="space-y-4">
               <div className="rounded-[20px] border border-sky-200 bg-sky-50/80 p-4">
                 <p className="text-xs uppercase tracking-[0.18em] text-sky-700">Tập trung hôm nay</p>
-                <p className="mt-2 text-sm leading-6 text-foreground/80">Học 1 bài mới, ôn 10 từ và giữ nhịp đều thay vì mở quá nhiều module cùng lúc.</p>
+                <p className="mt-2 text-sm leading-6 text-foreground/80">
+                  {learningPath?.recommendationSummary || "Học 1 bài mới, ôn 10 từ và giữ nhịp đều thay vì mở quá nhiều module cùng lúc."}
+                </p>
               </div>
               <div className="rounded-[20px] border border-border bg-card p-4">
                 <div className="mb-2 flex items-center justify-between text-sm">
@@ -110,7 +120,11 @@ const JLPTLessons = () => {
                   <Target className="mt-1 h-5 w-5 text-violet-500" />
                   <div>
                     <p className="text-sm font-semibold text-foreground">Nhịp học đề xuất</p>
-                    <p className="mt-1 text-sm text-muted-foreground">15 đến 20 phút một phiên để nhìn được toàn bộ lộ trình mà không bị quá tải.</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {learningPath?.dailyGoalMinutes
+                        ? `${learningPath.dailyGoalMinutes} phút mỗi phiên để bám sát mục tiêu ${learningPath.targetJlptLevel}.`
+                        : "15 đến 20 phút một phiên để nhìn được toàn bộ lộ trình mà không bị quá tải."}
+                    </p>
                   </div>
                 </div>
               </div>
