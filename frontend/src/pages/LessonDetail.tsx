@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, BookOpen, CheckCircle2, Clock3, PlayCircle, Target } from "lucide-react";
@@ -6,8 +6,10 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { progressApi } from "@/api";
 import { useMyProgress } from "@/hooks/learning/useProgress";
+import { useLearningPath } from "@/hooks/learning/useLearningPath";
 import { useLesson } from "@/hooks/learning/useLessons";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -37,9 +39,11 @@ const LessonDetail = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const parsedLessonId = Number(lessonId);
+  const [noteText, setNoteText] = useState("");
 
   const { data: lesson, isLoading } = useLesson(Number.isFinite(parsedLessonId) ? parsedLessonId : undefined);
   const { data: progress = [], isLoading: isProgressLoading } = useMyProgress();
+  const { data: learningPath } = useLearningPath();
 
   const lessonProgress = useMemo(
     () => progress.find((item) => item.lessonId === parsedLessonId) ?? null,
@@ -55,6 +59,15 @@ const LessonDetail = () => {
     return lessonProgress.status === "IN_PROGRESS" ? 55 : 0;
   }, [lessonProgress]);
 
+  const upcomingLesson = useMemo(() => {
+    if (!learningPath?.recommendedLessons?.length) return null;
+    return learningPath.recommendedLessons.find((item) => item.id !== parsedLessonId) ?? null;
+  }, [learningPath?.recommendedLessons, parsedLessonId]);
+
+  useEffect(() => {
+    setNoteText(lessonProgress?.notes ?? "");
+  }, [lessonProgress?.notes]);
+
   const saveProgress = async (status: "IN_PROGRESS" | "COMPLETED") => {
     if (!lesson || !user) return;
 
@@ -63,7 +76,7 @@ const LessonDetail = () => {
       score: status === "COMPLETED" ? 100 : lessonProgress?.score ?? 0,
       totalScore: 100,
       status,
-      notes: lessonProgress?.notes ?? "",
+      notes: noteText.trim(),
     } as const;
 
     try {
@@ -84,6 +97,24 @@ const LessonDetail = () => {
       });
     } catch {
       toast({ title: "Khong luu duoc tien do", description: "Vui long thu lai.", variant: "destructive" });
+    }
+  };
+
+  const saveNote = async () => {
+    if (!lesson || !user || !lessonProgress?.id) return;
+
+    try {
+      await progressApi.update(lessonProgress.id, {
+        lessonId: lesson.id,
+        score: lessonProgress.score ?? 0,
+        totalScore: lessonProgress.totalScore ?? 100,
+        status: lessonProgress.status,
+        notes: noteText.trim(),
+      });
+      await queryClient.invalidateQueries({ queryKey: ["progress", "me"] });
+      toast({ title: "Da luu ghi chu", description: "Ghi chu hoc bai da duoc cap nhat." });
+    } catch {
+      toast({ title: "Khong luu duoc ghi chu", description: "Vui long thu lai.", variant: "destructive" });
     }
   };
 
@@ -160,9 +191,40 @@ const LessonDetail = () => {
                   </p>
                 </div>
 
+                {(lesson.audioUrl || lesson.videoUrl || lesson.imageUrl) && (
+                  <div className="rounded-[20px] border border-border bg-card p-4">
+                    <p className="text-sm font-semibold text-foreground">Tai nguyen di kem</p>
+                    <div className="mt-3 space-y-3">
+                      {lesson.imageUrl ? <img alt={lesson.title} className="w-full rounded-2xl border border-border object-cover" src={lesson.imageUrl} /> : null}
+                      {lesson.audioUrl ? <audio className="w-full" controls src={lesson.audioUrl} /> : null}
+                      {lesson.videoUrl ? <video className="w-full rounded-2xl border border-border" controls src={lesson.videoUrl} /> : null}
+                    </div>
+                  </div>
+                )}
+
+                <div className="rounded-[20px] border border-border bg-card p-4">
+                  <p className="text-sm font-semibold text-foreground">Ghi chu ca nhan</p>
+                  <Textarea
+                    className="mt-3 min-h-[120px] rounded-[18px] border-border bg-background/60"
+                    disabled={!lessonProgress}
+                    onChange={(event) => setNoteText(event.target.value)}
+                    placeholder={lessonProgress ? "Tom tat diem can nho, tu moi, hoac cau can on lai." : "Bat dau lesson truoc de luu ghi chu hoc bai."}
+                    value={noteText}
+                  />
+                  <Button className="mt-3 rounded-2xl" disabled={!lessonProgress} onClick={() => void saveNote()}>
+                    Luu ghi chu
+                  </Button>
+                </div>
+
                 <Link to="/my-words" className="block rounded-[20px] border border-amber-200 bg-amber-50/70 p-4 text-sm text-foreground/80">
                   Sau khi hoc xong, ban co the quay sang so tay tu vung de review bang spaced repetition.
                 </Link>
+
+                {upcomingLesson ? (
+                  <Link to={`/lessons/${upcomingLesson.id}`} className="block rounded-[20px] border border-sky-200 bg-sky-50/70 p-4 text-sm text-foreground/80">
+                    Bai tiep theo goi y: <span className="font-semibold text-sky-700">{upcomingLesson.title}</span>
+                  </Link>
+                ) : null}
               </div>
             </PageSection>
 

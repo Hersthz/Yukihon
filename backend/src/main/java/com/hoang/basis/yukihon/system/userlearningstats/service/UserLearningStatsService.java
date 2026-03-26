@@ -123,6 +123,43 @@ public class UserLearningStatsService {
         return convertToDto(updated);
     }
 
+    public UserLearningStatsDto recordLessonActivity(Long userId, boolean newlyCompleted, int xpGained, int learningMinutes) {
+        UserLearningStats stats = userLearningStatsRepository.findByUserId(userId)
+                .orElseGet(() -> {
+                    initializeStatsForNewUser(userId);
+                    return userLearningStatsRepository.findByUserId(userId)
+                            .orElseThrow(() -> new RuntimeException("Stats not found for user id: " + userId));
+                });
+
+        LocalDate today = LocalDate.now();
+        LocalDate lastLearning = stats.getLastLearningDate();
+
+        if (lastLearning == null) {
+            stats.setCurrentStreak(1);
+            stats.setLongestStreak(Math.max(1, stats.getLongestStreak()));
+        } else if (lastLearning.equals(today.minusDays(1))) {
+            stats.setCurrentStreak(stats.getCurrentStreak() + 1);
+            if (stats.getCurrentStreak() > stats.getLongestStreak()) {
+                stats.setLongestStreak(stats.getCurrentStreak());
+            }
+        } else if (!lastLearning.equals(today)) {
+            stats.setCurrentStreak(1);
+            stats.setLongestStreak(Math.max(stats.getLongestStreak(), stats.getCurrentStreak()));
+        }
+
+        stats.setLastLearningDate(today);
+
+        if (newlyCompleted) {
+            stats.setLessonsCompleted(stats.getLessonsCompleted() + 1);
+            stats.setTotalXP(stats.getTotalXP() + Math.max(0, xpGained));
+            stats.setTotalLearningMinutes(stats.getTotalLearningMinutes() + Math.max(0, learningMinutes));
+        }
+
+        UserLearningStats updated = userLearningStatsRepository.save(stats);
+        log.info("Recorded lesson activity for user: {}, completed={}, xp={}, minutes={}", userId, newlyCompleted, xpGained, learningMinutes);
+        return convertToDto(updated);
+    }
+
     private UserLearningStatsDto convertToDto(UserLearningStats stats) {
         return UserLearningStatsDto.builder()
                 .id(stats.getId())
