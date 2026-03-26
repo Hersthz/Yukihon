@@ -2,7 +2,10 @@ package com.hoang.basis.yukihon.system.userprogress.service;
 
 import com.hoang.basis.yukihon.system.userprogress.dto.UserProgressDto;
 import com.hoang.basis.yukihon.system.userprogress.dto.UserProgressRequest;
+import com.hoang.basis.yukihon.system.lesson.entity.Lesson;
+import com.hoang.basis.yukihon.system.lesson.repository.LessonRepository;
 import com.hoang.basis.yukihon.system.user.entity.User;
+import com.hoang.basis.yukihon.system.userlearningstats.service.UserLearningStatsService;
 import com.hoang.basis.yukihon.system.userprogress.entity.UserProgress;
 import com.hoang.basis.yukihon.system.userprogress.repository.UserProgressRepository;
 import com.hoang.basis.yukihon.system.user.repository.UserRepository;
@@ -24,6 +27,8 @@ public class UserProgressService {
 
     private final UserProgressRepository userProgressRepository;
     private final UserRepository userRepository;
+    private final LessonRepository lessonRepository;
+    private final UserLearningStatsService userLearningStatsService;
 
     @Transactional(readOnly = true)
     public UserProgressDto getProgressById(Long id) {
@@ -157,6 +162,7 @@ public class UserProgressService {
     }
 
     private UserProgressDto updateEntity(UserProgress progress, UserProgressRequest request) {
+        UserProgress.ProgressStatus previousStatus = progress.getStatus();
         progress.setLessonId(request.getLessonId() != null ? request.getLessonId() : progress.getLessonId());
         progress.setQuizId(request.getQuizId() != null ? request.getQuizId() : progress.getQuizId());
         progress.setVocabularyId(request.getVocabularyId() != null ? request.getVocabularyId() : progress.getVocabularyId());
@@ -176,8 +182,58 @@ public class UserProgressService {
         progress.setAttemptCount((progress.getAttemptCount() != null ? progress.getAttemptCount() : 0) + 1);
 
         UserProgress updated = userProgressRepository.save(progress);
+        syncLearningStats(updated, previousStatus);
         log.info("Updated progress: {}", updated.getId());
         return convertToDto(updated);
+    }
+
+    private void syncLearningStats(UserProgress progress, UserProgress.ProgressStatus previousStatus) {
+        if (progress.getUserId() == null || progress.getLessonId() == null || progress.getStatus() == null) {
+            return;
+        }
+
+        boolean activeLearningStatus = progress.getStatus() == UserProgress.ProgressStatus.IN_PROGRESS
+                || progress.getStatus() == UserProgress.ProgressStatus.COMPLETED;
+        if (!activeLearningStatus) {
+            return;
+        }
+
+        boolean newlyCompleted = progress.getStatus() == UserProgress.ProgressStatus.COMPLETED
+                && previousStatus != UserProgress.ProgressStatus.COMPLETED;
+
+        int xpGained = newlyCompleted ? estimateLessonXp(progress) : 0;
+        int learningMinutes = newlyCompleted ? estimateLessonMinutes(progress.getLessonId()) : 0;
+
+        userLearningStatsService.recordLessonActivity(progress.getUserId(), newlyCompleted, xpGained, learningMinutes);
+    }
+
+    private int estimateLessonXp(UserProgress progress) {
+        if (progress.getTotalScore() != null && progress.getTotalScore() > 0) {
+            return Math.max(20, Math.min(60, Math.round(progress.getTotalScore() / 2.0f)));
+        }
+        return 25;
+    }
+
+    private int estimateLessonMinutes(Long lessonId) {
+        Lesson lesson = lessonRepository.findById(lessonId).orElse(null);
+        if (lesson == null) {
+            return 15;
+        }
+
+        int estimated = 12;
+        int contentLength = lesson.getContent() != null ? lesson.getContent().length() : 0;
+
+        if (contentLength > 5000) {
+            estimated += 8;
+        } else if (contentLength > 2000) {
+            estimated += 4;
+        }
+
+        if (lesson.getAudioUrl() != null || lesson.getVideoUrl() != null) {
+            estimated += 3;
+        }
+
+        return Math.max(10, estimated);
     }
 
     private UserProgressDto convertToDto(UserProgress progress) {
