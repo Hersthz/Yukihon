@@ -9,8 +9,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class CommunityMapper {
 
-    public PostDto toPostDto(CommunityPost post, boolean likedByCurrentUser) {
-        return PostDto.fromEntity(post, likedByCurrentUser);
+    public PostDto toPostDto(CommunityPost post, boolean likedByCurrentUser, boolean bookmarkedByCurrentUser) {
+        return PostDto.fromEntity(post, likedByCurrentUser, bookmarkedByCurrentUser);
     }
 
     public CommentDto toCommentDto(PostComment comment) {

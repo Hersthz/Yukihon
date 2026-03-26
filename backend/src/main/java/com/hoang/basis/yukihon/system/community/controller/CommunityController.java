@@ -33,11 +33,17 @@ public class CommunityController {
     public ResponseEntity<Page<PostDto>> getAllPosts(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(required = false) String category,
+            @RequestParam(required = false) String jlptLevel,
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "false") boolean bookmarkedOnly,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         Long userId = getUserId(userDetails);
-        if (category != null && !category.isEmpty()) {
-            return ResponseEntity.ok(communityService.getPostsByCategory(category, userId, pageable));
+        if ((category != null && !category.isEmpty())
+                || (jlptLevel != null && !jlptLevel.isEmpty())
+                || (search != null && !search.isEmpty())
+                || bookmarkedOnly) {
+            return ResponseEntity.ok(communityService.searchPosts(category, jlptLevel, search, bookmarkedOnly, userId, pageable));
         }
         return ResponseEntity.ok(communityService.getAllPosts(userId, pageable));
     }
@@ -89,6 +95,15 @@ public class CommunityController {
         return ResponseEntity.ok(communityService.toggleLike(postId, userId));
     }
 
+    @PostMapping("/posts/{postId}/bookmark")
+    public ResponseEntity<PostDto> toggleBookmark(
+            @PathVariable Long postId,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        Long userId = getUserId(userDetails);
+        return ResponseEntity.ok(communityService.toggleBookmark(postId, userId));
+    }
+
     @GetMapping("/posts/{postId}/comments")
     public ResponseEntity<Page<CommentDto>> getComments(
             @PathVariable Long postId,
@@ -115,5 +130,15 @@ public class CommunityController {
         Long userId = getUserId(userDetails);
         communityService.deleteComment(commentId, userId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/stats")
+    public ResponseEntity<CommunityStatsDto> getStats() {
+        return ResponseEntity.ok(communityService.getStats());
+    }
+
+    @GetMapping("/leaderboard")
+    public ResponseEntity<java.util.List<CommunityLeaderboardEntryDto>> getLeaderboard() {
+        return ResponseEntity.ok(communityService.getLeaderboard());
     }
 }
