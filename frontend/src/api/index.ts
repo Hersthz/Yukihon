@@ -9,3 +9,4 @@ export * from "./lessonApi";
 export * from "./grammarApi";
 export * from "./quizApi";
 export * from "./translationApi";
+export * from "./learningPathApi";
