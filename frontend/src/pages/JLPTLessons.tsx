@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Award, BookOpen, GraduationCap, PlayCircle, Target, TrendingUp } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -7,6 +8,7 @@ import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/la
 import { Button } from "@/components/ui/button";
 import { useLearningPath } from "@/hooks/learning/useLearningPath";
 import { usePublishedLessons } from "@/hooks/learning/useLessons";
+import { useMyProgress } from "@/hooks/learning/useProgress";
 
 const LEVELS = ["N5", "N4", "N3", "N2", "N1"];
 
@@ -27,9 +29,11 @@ const levelTone: Record<string, string> = {
 };
 
 const JLPTLessons = () => {
+  const navigate = useNavigate();
   const [selectedLevel, setSelectedLevel] = useState("N4");
   const { data: allLessons = [], isLoading } = usePublishedLessons();
   const { data: learningPath } = useLearningPath();
+  const { data: progressItems = [] } = useMyProgress();
 
   useEffect(() => {
     if (learningPath?.targetJlptLevel) {
@@ -47,8 +51,17 @@ const JLPTLessons = () => {
   }, [allLessons]);
 
   const currentLevelLessons = lessonsByLevel[selectedLevel] || [];
-  const completedCount = 0;
+  const progressByLessonId = useMemo(() => {
+    return new Map(
+      progressItems
+        .filter((item) => item.lessonId != null)
+        .map((item) => [item.lessonId as number, item])
+    );
+  }, [progressItems]);
+
+  const completedCount = currentLevelLessons.filter((lesson) => progressByLessonId.get(lesson.id)?.status === "COMPLETED").length;
   const progress = currentLevelLessons.length ? Math.round((completedCount / currentLevelLessons.length) * 100) : 0;
+  const nextLessonId = learningPath?.nextLesson?.id;
 
   return (
     <DashboardLayout>
@@ -59,9 +72,9 @@ const JLPTLessons = () => {
           description="Rút gọn bố cục để bạn nhìn được level, tiến độ và danh sách bài ngay trong một vùng gọn hơn."
           eyebrow="JLPT Path"
           action={
-            <Button className="rounded-2xl bg-sky-500 text-white hover:bg-sky-400">
+            <Button className="rounded-2xl bg-sky-500 text-white hover:bg-sky-400" onClick={() => navigate(nextLessonId ? `/lessons/${nextLessonId}` : "/jlpt-lessons")}>
               <PlayCircle className="mr-2 h-4 w-4" />
-              Bắt đầu lộ trình
+              {nextLessonId ? "Hoc tiep bai goi y" : "Bat dau lo trinh"}
             </Button>
           }
         />
@@ -145,7 +158,13 @@ const JLPTLessons = () => {
             ) : (
               <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                 {currentLevelLessons.map((lesson) => (
-                  <LessonCard2 estimatedTime={20} key={lesson.id} lesson={lesson} onStart={() => undefined} />
+                  <LessonCard2
+                    estimatedTime={20}
+                    key={lesson.id}
+                    lesson={lesson}
+                    isCompleted={progressByLessonId.get(lesson.id)?.status === "COMPLETED"}
+                    onStart={(id) => navigate(`/lessons/${id}`)}
+                  />
                 ))}
               </div>
             )}

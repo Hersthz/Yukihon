@@ -216,7 +216,14 @@ const Community = () => {
   const handleBookmark = async (postId: number) => {
     try {
       const updated = (await communityApi.toggleBookmark(postId)) as Post;
-      setPosts((prev) => prev.map((post) => (post.id === postId ? updated : post)));
+      if (showBookmarkedOnly && !updated.bookmarkedByCurrentUser) {
+        setPosts((prev) => prev.filter((post) => post.id !== postId));
+        if (posts.length === 1 && page > 0) {
+          await fetchPosts(page - 1);
+        }
+      } else {
+        setPosts((prev) => prev.map((post) => (post.id === postId ? updated : post)));
+      }
     } catch {
       toast({ title: "Khong the bookmark", description: "Vui long thu lai.", variant: "destructive" });
     }
@@ -596,7 +603,7 @@ const Community = () => {
                 );
               })}
 
-              {totalPages > 1 && !showBookmarkedOnly && (
+              {totalPages > 1 && (
                 <div className="flex items-center justify-center gap-2 pt-2">
                   <Button className="rounded-xl" disabled={page === 0} onClick={() => void fetchPosts(page - 1)} size="sm" variant="outline">
                     Truoc

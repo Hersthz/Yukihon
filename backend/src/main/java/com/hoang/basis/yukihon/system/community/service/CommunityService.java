@@ -219,10 +219,14 @@ public class CommunityService {
         List<PostComment> comments = commentRepository.findAll();
         Instant oneWeekAgo = Instant.now().minus(7, ChronoUnit.DAYS);
 
-        long totalContributors = posts.stream()
+        Set<Long> contributorIds = new HashSet<>();
+        posts.stream()
                 .map(post -> post.getUser().getId())
-                .distinct()
-                .count();
+                .forEach(contributorIds::add);
+        comments.stream()
+                .map(comment -> comment.getUser().getId())
+                .forEach(contributorIds::add);
+        long totalContributors = contributorIds.size();
 
         Map<String, Long> tagCounts = posts.stream()
                 .map(CommunityPost::getTags)

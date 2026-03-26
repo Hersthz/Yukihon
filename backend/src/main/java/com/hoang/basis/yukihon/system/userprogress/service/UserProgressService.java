@@ -67,6 +67,11 @@ public class UserProgressService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
 
+        UserProgress existing = findExistingProgress(userId, request).orElse(null);
+        if (existing != null) {
+            return updateEntity(existing, request);
+        }
+
         UserProgress progress = UserProgress.builder()
                 .user(user)
                 .userId(userId)
@@ -74,6 +79,7 @@ public class UserProgressService {
                 .quizId(request.getQuizId())
                 .vocabularyId(request.getVocabularyId())
                 .status(UserProgress.ProgressStatus.valueOf(request.getStatus() != null ? request.getStatus() : "NOT_STARTED"))
+                .progressType(resolveProgressType(request))
                 .score(request.getScore())
                 .totalScore(request.getTotalScore())
                 .notes(request.getNotes())
@@ -87,21 +93,7 @@ public class UserProgressService {
     public UserProgressDto updateProgress(Long id, UserProgressRequest request) {
         UserProgress progress = userProgressRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Progress not found with id: " + id));
-
-        progress.setScore(request.getScore());
-        progress.setTotalScore(request.getTotalScore());
-        if (request.getStatus() != null) {
-            progress.setStatus(UserProgress.ProgressStatus.valueOf(request.getStatus()));
-            if (request.getStatus().equals("COMPLETED")) {
-                progress.setCompletedAt(Instant.now());
-            }
-        }
-        progress.setNotes(request.getNotes());
-        progress.setAttemptCount(progress.getAttemptCount() + 1);
-
-        UserProgress updated = userProgressRepository.save(progress);
-        log.info("Updated progress: {}", updated.getId());
-        return convertToDto(updated);
+        return updateEntity(progress, request);
     }
 
     public UserProgressDto getProgressByIdForUser(Long id, Long actorUserId, boolean isAdmin) {
@@ -111,21 +103,7 @@ public class UserProgressService {
 
     public UserProgressDto updateProgressForUser(Long id, UserProgressRequest request, Long actorUserId, boolean isAdmin) {
         UserProgress progress = findProgressForActor(id, actorUserId, isAdmin);
-
-        progress.setScore(request.getScore());
-        progress.setTotalScore(request.getTotalScore());
-        if (request.getStatus() != null) {
-            progress.setStatus(UserProgress.ProgressStatus.valueOf(request.getStatus()));
-            if (request.getStatus().equals("COMPLETED")) {
-                progress.setCompletedAt(Instant.now());
-            }
-        }
-        progress.setNotes(request.getNotes());
-        progress.setAttemptCount(progress.getAttemptCount() + 1);
-
-        UserProgress updated = userProgressRepository.save(progress);
-        log.info("Updated progress: {} by actorUserId={}", updated.getId(), actorUserId);
-        return convertToDto(updated);
+        return updateEntity(progress, request);
     }
 
     public void deleteProgressForUser(Long id, Long actorUserId, boolean isAdmin) {
@@ -150,6 +128,56 @@ public class UserProgressService {
 
         return userProgressRepository.findByIdAndUserId(id, actorUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("Progress not found with id: " + id));
+    }
+
+    private java.util.Optional<UserProgress> findExistingProgress(Long userId, UserProgressRequest request) {
+        if (request.getLessonId() != null) {
+            return userProgressRepository.findByUserIdAndLessonId(userId, request.getLessonId());
+        }
+        if (request.getQuizId() != null) {
+            return userProgressRepository.findByUserIdAndQuizId(userId, request.getQuizId());
+        }
+        if (request.getVocabularyId() != null) {
+            return userProgressRepository.findByUserIdAndVocabularyId(userId, request.getVocabularyId());
+        }
+        return java.util.Optional.empty();
+    }
+
+    private String resolveProgressType(UserProgressRequest request) {
+        if (request.getLessonId() != null) {
+            return "lesson";
+        }
+        if (request.getQuizId() != null) {
+            return "quiz";
+        }
+        if (request.getVocabularyId() != null) {
+            return "vocabulary";
+        }
+        return "general";
+    }
+
+    private UserProgressDto updateEntity(UserProgress progress, UserProgressRequest request) {
+        progress.setLessonId(request.getLessonId() != null ? request.getLessonId() : progress.getLessonId());
+        progress.setQuizId(request.getQuizId() != null ? request.getQuizId() : progress.getQuizId());
+        progress.setVocabularyId(request.getVocabularyId() != null ? request.getVocabularyId() : progress.getVocabularyId());
+        String resolvedType = resolveProgressType(request);
+        progress.setProgressType("general".equals(resolvedType) ? progress.getProgressType() : resolvedType);
+        progress.setScore(request.getScore());
+        progress.setTotalScore(request.getTotalScore());
+        if (request.getStatus() != null) {
+            progress.setStatus(UserProgress.ProgressStatus.valueOf(request.getStatus()));
+            if ("COMPLETED".equals(request.getStatus())) {
+                progress.setCompletedAt(Instant.now());
+            } else {
+                progress.setCompletedAt(null);
+            }
+        }
+        progress.setNotes(request.getNotes());
+        progress.setAttemptCount((progress.getAttemptCount() != null ? progress.getAttemptCount() : 0) + 1);
+
+        UserProgress updated = userProgressRepository.save(progress);
+        log.info("Updated progress: {}", updated.getId());
+        return convertToDto(updated);
     }
 
     private UserProgressDto convertToDto(UserProgress progress) {
