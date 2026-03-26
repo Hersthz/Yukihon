@@ -1,16 +1,22 @@
 package com.hoang.basis.yukihon.system.admin.service;
 
+import com.hoang.basis.yukihon.system.admin.dto.ContentLevelBreakdownDto;
+import com.hoang.basis.yukihon.system.admin.dto.ContentOverviewDto;
 import com.hoang.basis.yukihon.system.admin.dto.SystemStatsDto;
 import com.hoang.basis.yukihon.system.admin.dto.UpdateUserRolesRequest;
 import com.hoang.basis.yukihon.system.admin.dto.UpdateUserStatusRequest;
 import com.hoang.basis.yukihon.system.admin.dto.UserManagementDto;
 import com.hoang.basis.yukihon.exception.ResourceNotFoundException;
+import com.hoang.basis.yukihon.system.grammar.entity.Grammar;
 import com.hoang.basis.yukihon.system.grammar.repository.GrammarRepository;
+import com.hoang.basis.yukihon.system.lesson.entity.Lesson;
 import com.hoang.basis.yukihon.system.lesson.repository.LessonRepository;
+import com.hoang.basis.yukihon.system.quiz.entity.Quiz;
 import com.hoang.basis.yukihon.system.quiz.repository.QuizRepository;
 import com.hoang.basis.yukihon.system.user.entity.RoleName;
 import com.hoang.basis.yukihon.system.user.entity.User;
 import com.hoang.basis.yukihon.system.user.repository.UserRepository;
+import com.hoang.basis.yukihon.system.vocabulary.entity.Vocabulary;
 import com.hoang.basis.yukihon.system.vocabulary.repository.VocabularyRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +26,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -128,6 +137,57 @@ public class AdminService {
                 .build();
     }
 
+    public ContentOverviewDto getContentOverview() {
+        log.info("Fetching admin content overview");
+
+        long totalLessons = lessonRepository.count();
+        long publishedLessons = lessonRepository.countByStatus(Lesson.LessonStatus.PUBLISHED);
+        long draftLessons = lessonRepository.countByStatus(Lesson.LessonStatus.DRAFT);
+        long archivedLessons = lessonRepository.countByStatus(Lesson.LessonStatus.ARCHIVED);
+        long totalVocabulary = vocabularyRepository.count();
+        long totalGrammar = grammarRepository.count();
+        long totalQuizzes = quizRepository.count();
+
+        Map<String, ContentLevelAccumulator> levelMap = new LinkedHashMap<>();
+        initializeLevelMap(levelMap);
+
+        lessonRepository.findAll().forEach(lesson -> levelMap
+                .computeIfAbsent(normalizeLevel(lesson.getJlptLevel()), ignored -> new ContentLevelAccumulator())
+                .lessons++);
+        vocabularyRepository.findAll().forEach(vocabulary -> levelMap
+                .computeIfAbsent(normalizeLevel(vocabulary.getJlptLevel()), ignored -> new ContentLevelAccumulator())
+                .vocabulary++);
+        grammarRepository.findAll().forEach(grammar -> levelMap
+                .computeIfAbsent(normalizeLevel(grammar.getJlptLevel()), ignored -> new ContentLevelAccumulator())
+                .grammar++);
+        quizRepository.findAll().forEach(quiz -> levelMap
+                .computeIfAbsent(normalizeLevel(quiz.getJlptLevel()), ignored -> new ContentLevelAccumulator())
+                .quizzes++);
+
+        List<ContentLevelBreakdownDto> levelBreakdown = levelMap.entrySet().stream()
+                .map(entry -> ContentLevelBreakdownDto.builder()
+                        .jlptLevel(entry.getKey())
+                        .lessons(entry.getValue().lessons)
+                        .vocabulary(entry.getValue().vocabulary)
+                        .grammar(entry.getValue().grammar)
+                        .quizzes(entry.getValue().quizzes)
+                        .total(entry.getValue().total())
+                        .build())
+                .collect(Collectors.toList());
+
+        return ContentOverviewDto.builder()
+                .totalLessons(totalLessons)
+                .publishedLessons(publishedLessons)
+                .draftLessons(draftLessons)
+                .archivedLessons(archivedLessons)
+                .totalVocabulary(totalVocabulary)
+                .totalGrammar(totalGrammar)
+                .totalQuizzes(totalQuizzes)
+                .totalContentItems(totalLessons + totalVocabulary + totalGrammar + totalQuizzes)
+                .levelBreakdown(levelBreakdown)
+                .build();
+    }
+
     /**
      * Search users by email or display name
      */
@@ -195,5 +255,34 @@ public class AdminService {
     private User findUserByIdOrThrow(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+    }
+
+    private void initializeLevelMap(Map<String, ContentLevelAccumulator> levelMap) {
+        levelMap.put("N5", new ContentLevelAccumulator());
+        levelMap.put("N4", new ContentLevelAccumulator());
+        levelMap.put("N3", new ContentLevelAccumulator());
+        levelMap.put("N2", new ContentLevelAccumulator());
+        levelMap.put("N1", new ContentLevelAccumulator());
+        levelMap.put("OTHER", new ContentLevelAccumulator());
+    }
+
+    private String normalizeLevel(String level) {
+        if (level == null || level.isBlank()) {
+            return "OTHER";
+        }
+
+        String normalized = level.trim().toUpperCase(Locale.ROOT);
+        return Set.of("N5", "N4", "N3", "N2", "N1").contains(normalized) ? normalized : "OTHER";
+    }
+
+    private static final class ContentLevelAccumulator {
+        private long lessons;
+        private long vocabulary;
+        private long grammar;
+        private long quizzes;
+
+        private long total() {
+            return lessons + vocabulary + grammar + quizzes;
+        }
     }
 }

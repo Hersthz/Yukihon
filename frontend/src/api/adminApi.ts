@@ -27,4 +27,5 @@ export const adminApi = {
       method: "DELETE",
     }),
   getSystemStats: () => apiClient.request("/api/admin/stats"),
+  getContentOverview: () => apiClient.request("/api/admin/content/overview"),
 };

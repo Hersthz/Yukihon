@@ -89,7 +89,13 @@ public class GrammarService {
         Grammar grammar = grammarRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Grammar not found with id: " + id));
 
+        if (!grammar.getPattern().equals(request.getPattern())
+                && grammarRepository.findByPattern(request.getPattern()).isPresent()) {
+            throw new RuntimeException("Grammar with pattern '" + request.getPattern() + "' already exists");
+        }
+
         grammar.setTitle(request.getTitle());
+        grammar.setPattern(request.getPattern());
         grammar.setExplanation(request.getExplanation());
         grammar.setUsage(request.getUsage());
         grammar.setExampleJP(request.getExampleJP());

@@ -150,7 +150,7 @@ const DynamicTable = ({
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
-        <h3 className="text-lg font-semibold text-white">{title}</h3>
+        <h3 className="text-lg font-semibold text-foreground">{title}</h3>
         {searchFields.length > 0 && (
           <div className="relative flex-1 max-w-xs">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />

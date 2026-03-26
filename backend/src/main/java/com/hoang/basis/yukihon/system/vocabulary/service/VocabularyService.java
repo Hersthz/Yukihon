@@ -97,6 +97,12 @@ public class VocabularyService {
         Vocabulary vocabulary = vocabularyRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Vocabulary not found with id: " + id));
 
+        if (!vocabulary.getKanji().equals(request.getKanji())
+                && vocabularyRepository.findByKanji(request.getKanji()).isPresent()) {
+            throw new RuntimeException("Vocabulary with kanji '" + request.getKanji() + "' already exists");
+        }
+
+        vocabulary.setKanji(request.getKanji());
         vocabulary.setHiragana(request.getHiragana());
         vocabulary.setRomaji(request.getRomaji());
         vocabulary.setMeaning(request.getMeaning());
