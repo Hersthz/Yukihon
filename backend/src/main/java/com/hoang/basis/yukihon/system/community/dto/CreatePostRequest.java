@@ -13,6 +13,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CreatePostRequest {
 
+    @Size(max = 200, message = "Title must be under 200 characters")
+    private String title;
+
     @NotBlank(message = "Content is required")
     @Size(max = 5000, message = "Content must be under 5000 characters")
     private String content;
@@ -22,4 +25,6 @@ public class CreatePostRequest {
     private String jlptLevel;
 
     private String imageUrl;
+
+    private String tags;
 }

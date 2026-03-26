@@ -27,6 +27,9 @@ public class CommunityPost {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Column(length = 200)
+    private String title;
+
     @Column(nullable = false, columnDefinition = "NVARCHAR(MAX)")
     private String content;
 
@@ -46,6 +49,9 @@ public class CommunityPost {
 
     @Column(length = 500)
     private String imageUrl;
+
+    @Column(length = 500)
+    private String tags;
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
