@@ -143,6 +143,7 @@ public class AdminService {
         long totalLessons = lessonRepository.count();
         long publishedLessons = lessonRepository.countByStatus(Lesson.LessonStatus.PUBLISHED);
         long draftLessons = lessonRepository.countByStatus(Lesson.LessonStatus.DRAFT);
+        long reviewLessons = lessonRepository.countByStatus(Lesson.LessonStatus.REVIEW);
         long archivedLessons = lessonRepository.countByStatus(Lesson.LessonStatus.ARCHIVED);
         long totalVocabulary = vocabularyRepository.count();
         long totalGrammar = grammarRepository.count();
@@ -179,6 +180,7 @@ public class AdminService {
                 .totalLessons(totalLessons)
                 .publishedLessons(publishedLessons)
                 .draftLessons(draftLessons)
+                .reviewLessons(reviewLessons)
                 .archivedLessons(archivedLessons)
                 .totalVocabulary(totalVocabulary)
                 .totalGrammar(totalGrammar)

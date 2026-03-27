@@ -127,7 +127,7 @@ public class LessonService {
         if (request.getStatus() != null) {
             lesson.setStatus(Lesson.LessonStatus.valueOf(request.getStatus()));
         }
-        lesson.setOrderIndex(request.getOrderIndex());
+        lesson.setOrderIndex(request.getOrderIndex() != null ? request.getOrderIndex() : 0);
         lesson.setAudioUrl(request.getAudioUrl());
         lesson.setVideoUrl(request.getVideoUrl());
         lesson.setImageUrl(request.getImageUrl());

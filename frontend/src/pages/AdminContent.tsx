@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { motion } from "framer-motion";
-import { BookOpen, FileText, Filter, GraduationCap, HelpCircle, Layers3, PenTool, Plus, RefreshCw, Save } from "lucide-react";
+import { BookOpen, Download, FileUp, Filter, GraduationCap, HelpCircle, Layers3, PenTool, Plus, RefreshCw, Save } from "lucide-react";
 import { adminApi, grammarApi, lessonApi, quizApi, vocabularyApi } from "@/api";
 import DynamicTable from "@/components/admin/DynamicTable";
 import WinterNightBackground from "@/components/WinterNightBackground";
@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import AdminContentForm from "@/pages/admin-content/AdminContentForm";
+import { getCsvTemplate, parseBulkImportCsv } from "@/pages/admin-content/csvImport";
 import {
   LEVEL_FILTERS,
   LESSON_STATUSES,
@@ -27,11 +28,12 @@ import {
 import {
   normalizeGrammar,
   normalizeLesson,
+  normalizeLessonVersion,
   normalizeQuiz,
   normalizeVocabulary,
   toApiPayload,
 } from "@/pages/admin-content/contentTransforms";
-import { AdminTab, ContentOverview, EditableItem, GrammarItem, Lesson, QuizItem, VocabItem } from "@/pages/admin-content/types";
+import { AdminTab, ContentOverview, EditableItem, GrammarItem, Lesson, LessonVersion, MediaUploadResult, QuizItem, VocabItem } from "@/pages/admin-content/types";
 
 interface PagedResponse<T> {
   content: T[];
@@ -60,6 +62,7 @@ const normalizeList = <T,>(value: unknown): T[] => {
 
 const AdminContent = () => {
   const { toast } = useToast();
+  const importInputRef = useRef<HTMLInputElement | null>(null);
 
   const [activeTab, setActiveTab] = useState<AdminTab>("lessons");
   const [lessons, setLessons] = useState<Lesson[]>([]);
@@ -67,9 +70,11 @@ const AdminContent = () => {
   const [grammar, setGrammar] = useState<GrammarItem[]>([]);
   const [quizzes, setQuizzes] = useState<QuizItem[]>([]);
   const [overview, setOverview] = useState<ContentOverview | null>(null);
+  const [lessonVersions, setLessonVersions] = useState<LessonVersion[]>([]);
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<EditableItem | null>(null);
   const [levelFilter, setLevelFilter] = useState<string>("ALL");
@@ -103,10 +108,21 @@ const AdminContent = () => {
     void loadContent();
   }, [loadContent]);
 
+  const loadLessonVersions = useCallback(async (lessonId: number) => {
+    try {
+      const versionData = await lessonApi.getVersions(lessonId);
+      setLessonVersions(normalizeList<Record<string, unknown>>(versionData).map(normalizeLessonVersion));
+    } catch {
+      setLessonVersions([]);
+      toast({ title: "Version history unavailable", description: "Could not load lesson snapshots right now.", variant: "destructive" });
+    }
+  }, [toast]);
+
   const currentTabLabel = useMemo(
     () => TABS.find((tab) => tab.value === activeTab)?.label ?? "Content",
     [activeTab]
   );
+
   const singularLabels: Record<AdminTab, string> = {
     lessons: "Lesson",
     vocabulary: "Vocabulary item",
@@ -204,13 +220,28 @@ const AdminContent = () => {
     }
   }, [currentTabLabel, loadContent, toast]);
 
-  const handleOpenCreate = useCallback((tab: AdminTab) => {
+  const openEditor = useCallback(async (tab: AdminTab, item?: EditableItem) => {
+    setActiveTab(tab);
+
+    if (item) {
+      setEditItem(item);
+      setDialogOpen(true);
+
+      if (tab === "lessons" && item.id) {
+        await loadLessonVersions(item.id);
+      } else {
+        setLessonVersions([]);
+      }
+      return;
+    }
+
     if (tab === "lessons") setEditItem(createEmptyLesson());
     if (tab === "vocabulary") setEditItem(createEmptyVocab());
     if (tab === "grammar") setEditItem(createEmptyGrammar());
     if (tab === "quizzes") setEditItem(createEmptyQuiz());
+    setLessonVersions([]);
     setDialogOpen(true);
-  }, []);
+  }, [loadLessonVersions]);
 
   const handleSave = useCallback(async () => {
     if (!editItem) {
@@ -222,6 +253,8 @@ const AdminContent = () => {
       await saveItem(activeTab, editItem);
       toast({ title: "Saved", description: `${currentTabLabel} item saved successfully.` });
       setDialogOpen(false);
+      setEditItem(null);
+      setLessonVersions([]);
       await loadContent();
     } catch {
       toast({ title: "Save failed", description: "Please review the form and try again.", variant: "destructive" });
@@ -229,6 +262,92 @@ const AdminContent = () => {
       setSaving(false);
     }
   }, [activeTab, currentTabLabel, editItem, loadContent, saveItem, toast]);
+
+  const handleMediaUpload = useCallback(async (file: File): Promise<MediaUploadResult> => {
+    try {
+      const result = await adminApi.uploadMedia(file);
+      toast({ title: "Upload complete", description: `${file.name} is now available in the CMS.` });
+      return result as MediaUploadResult;
+    } catch {
+      toast({ title: "Upload failed", description: "Could not upload this media file.", variant: "destructive" });
+      throw new Error("Upload failed");
+    }
+  }, [toast]);
+
+  const handleRestoreLessonVersion = useCallback((version: LessonVersion) => {
+    setEditItem({
+      id: version.lessonId,
+      title: version.title,
+      description: version.description,
+      content: version.content,
+      jlptLevel: version.jlptLevel,
+      category: version.category,
+      status: version.status as Lesson["status"],
+      orderIndex: version.orderIndex,
+      audioUrl: version.audioUrl,
+      videoUrl: version.videoUrl,
+      imageUrl: version.imageUrl,
+      relatedVocabularyIds: version.relatedVocabularyIds,
+      relatedGrammarIds: version.relatedGrammarIds,
+      relatedQuizIds: version.relatedQuizIds,
+    } satisfies Lesson);
+
+    toast({
+      title: "Snapshot loaded",
+      description: `Version ${version.versionNumber} is now loaded in the editor. Save to create a new revision.`,
+    });
+  }, [toast]);
+
+  const handleTemplateDownload = useCallback(() => {
+    const blob = new Blob([getCsvTemplate(activeTab)], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `${activeTab}-template.csv`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }, [activeTab]);
+
+  const handleImportRequest = useCallback(() => {
+    importInputRef.current?.click();
+  }, []);
+
+  const handleImportFile = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    try {
+      setImporting(true);
+      const text = await file.text();
+      const items = parseBulkImportCsv(activeTab, text, { lessons });
+
+      if (items.length === 0) {
+        toast({ title: "No rows imported", description: "The CSV did not contain any valid data rows.", variant: "destructive" });
+        return;
+      }
+
+      const results = await Promise.allSettled(items.map((item) => saveItem(activeTab, item)));
+      const successCount = results.filter((result) => result.status === "fulfilled").length;
+      const failedCount = results.length - successCount;
+
+      await loadContent();
+
+      toast({
+        title: "CSV import finished",
+        description: failedCount > 0
+          ? `${successCount} item(s) imported, ${failedCount} failed.`
+          : `${successCount} item(s) imported successfully.`,
+        variant: failedCount > 0 ? "destructive" : "default",
+      });
+    } catch {
+      toast({ title: "Import failed", description: "Could not parse or import this CSV file.", variant: "destructive" });
+    } finally {
+      setImporting(false);
+      event.target.value = "";
+    }
+  }, [activeTab, lessons, loadContent, saveItem, toast]);
 
   const tableConfig = useMemo(() => ({
     lessons: {
@@ -243,7 +362,7 @@ const AdminContent = () => {
       data: filteredData as VocabItem[],
       searchFields: ["kanji", "hiragana", "meaning", "wordType"],
       title: "Vocabulary",
-      icon: FileText,
+      icon: PenTool,
     },
     grammar: {
       columns: grammarColumns,
@@ -263,10 +382,12 @@ const AdminContent = () => {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen relative">
+      <div className="relative min-h-screen">
         <WinterNightBackground snowCount={15} sparkleCount={8} intensity="light" />
 
         <div className="relative z-10 container mx-auto max-w-7xl px-4 py-8">
+          <input ref={importInputRef} type="file" accept=".csv,text/csv" className="hidden" onChange={(event) => void handleImportFile(event)} />
+
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
               <div className="flex items-center gap-3">
@@ -274,11 +395,11 @@ const AdminContent = () => {
                   <GraduationCap className="h-8 w-8 text-red-300" />
                 </div>
                 <div>
-                  <h1 className="text-4xl font-bold bg-gradient-to-r from-red-300 via-orange-300 to-amber-300 bg-clip-text text-transparent">
+                  <h1 className="bg-gradient-to-r from-red-300 via-orange-300 to-amber-300 bg-clip-text text-4xl font-bold text-transparent">
                     Learning Content CMS
                   </h1>
                   <p className="text-muted-foreground">
-                    Manage lessons, vocabulary, grammar, and quizzes from one place with overview, filters, and editor-safe payloads.
+                    Production-ready workflow for lesson publishing, CSV import, media upload, linked learning assets, and revision history.
                   </p>
                 </div>
               </div>
@@ -288,7 +409,15 @@ const AdminContent = () => {
                   <RefreshCw className="mr-2 h-4 w-4" />
                   Refresh
                 </Button>
-                <Button onClick={() => handleOpenCreate(activeTab)}>
+                <Button variant="outline" onClick={handleTemplateDownload} className="border-border/70 bg-card/70">
+                  <Download className="mr-2 h-4 w-4" />
+                  CSV Template
+                </Button>
+                <Button variant="outline" onClick={handleImportRequest} disabled={importing} className="border-border/70 bg-card/70">
+                  <FileUp className="mr-2 h-4 w-4" />
+                  {importing ? "Importing..." : "Import CSV"}
+                </Button>
+                <Button onClick={() => void openEditor(activeTab)}>
                   <Plus className="mr-2 h-4 w-4" />
                   New {singularLabels[activeTab]}
                 </Button>
@@ -307,19 +436,19 @@ const AdminContent = () => {
               {
                 label: "Lessons",
                 value: overview?.totalLessons ?? 0,
-                hint: `${overview?.publishedLessons ?? 0} published • ${overview?.draftLessons ?? 0} draft`,
+                hint: `${overview?.publishedLessons ?? 0} published · ${overview?.reviewLessons ?? 0} in review`,
                 icon: BookOpen,
               },
               {
                 label: "Vocabulary + Grammar",
                 value: (overview?.totalVocabulary ?? 0) + (overview?.totalGrammar ?? 0),
-                hint: `${overview?.totalVocabulary ?? 0} vocab • ${overview?.totalGrammar ?? 0} grammar`,
+                hint: `${overview?.totalVocabulary ?? 0} vocab · ${overview?.totalGrammar ?? 0} grammar`,
                 icon: PenTool,
               },
               {
                 label: "Quizzes",
                 value: overview?.totalQuizzes ?? 0,
-                hint: "Assessment bank ready for learning flow",
+                hint: "Lesson checkpoints and quiz bank",
                 icon: HelpCircle,
               },
             ].map((card) => {
@@ -414,27 +543,32 @@ const AdminContent = () => {
                 <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-border/50 bg-card/60 p-4 backdrop-blur">
                   <div>
                     <p className="text-sm text-muted-foreground">Current view</p>
-                    <h3 className="text-xl font-semibold text-foreground">
-                      {tableConfig[tab].title}
-                    </h3>
+                    <h3 className="text-xl font-semibold text-foreground">{tableConfig[tab].title}</h3>
                     <p className="text-sm text-muted-foreground">
                       Showing {tableConfig[tab].data.length} item(s) after filters.
                     </p>
                   </div>
 
-                  <Button onClick={() => handleOpenCreate(tab)}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    New {singularLabels[tab]}
-                  </Button>
+                  <div className="flex flex-wrap gap-2">
+                    <Button variant="outline" onClick={handleTemplateDownload} className="border-border/70 bg-card/70">
+                      <Download className="mr-2 h-4 w-4" />
+                      Template
+                    </Button>
+                    <Button variant="outline" onClick={handleImportRequest} disabled={importing} className="border-border/70 bg-card/70">
+                      <FileUp className="mr-2 h-4 w-4" />
+                      Import CSV
+                    </Button>
+                    <Button onClick={() => void openEditor(tab)}>
+                      <Plus className="mr-2 h-4 w-4" />
+                      New {singularLabels[tab]}
+                    </Button>
+                  </div>
                 </div>
 
                 <DynamicTable
                   columns={tableConfig[tab].columns}
                   data={tableConfig[tab].data}
-                  onEdit={(row) => {
-                    setEditItem(row as EditableItem);
-                    setDialogOpen(true);
-                  }}
+                  onEdit={(row) => void openEditor(tab, row as EditableItem)}
                   onDelete={(id) => deleteItem(tab, id)}
                   loading={loading}
                   pageSize={8}
@@ -446,18 +580,44 @@ const AdminContent = () => {
             ))}
           </Tabs>
 
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogContent className="max-h-[88vh] max-w-3xl overflow-y-auto bg-card/95 backdrop-blur">
+          <Dialog
+            open={dialogOpen}
+            onOpenChange={(open) => {
+              setDialogOpen(open);
+              if (!open) {
+                setEditItem(null);
+                setLessonVersions([]);
+              }
+            }}
+          >
+            <DialogContent className="max-h-[90vh] max-w-5xl overflow-y-auto bg-card/95 backdrop-blur">
               <DialogHeader>
-                <DialogTitle>{editItem?.id ? "Edit" : "Create"} {singularLabels[activeTab]}</DialogTitle>
+                <DialogTitle>
+                  {editItem?.id ? "Edit" : "Create"} {singularLabels[activeTab]}
+                </DialogTitle>
               </DialogHeader>
 
               <div className="space-y-4 py-2">
-                <AdminContentForm activeTab={activeTab} editItem={editItem} setEditItem={setEditItem} />
+                <AdminContentForm
+                  activeTab={activeTab}
+                  editItem={editItem}
+                  setEditItem={setEditItem}
+                  lessonVersions={lessonVersions}
+                  contentOptions={{ lessons, vocabulary, grammar, quizzes }}
+                  uploadMedia={handleMediaUpload}
+                  onRestoreLessonVersion={handleRestoreLessonVersion}
+                />
               </div>
 
               <DialogFooter>
-                <Button variant="ghost" onClick={() => setDialogOpen(false)}>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setDialogOpen(false);
+                    setEditItem(null);
+                    setLessonVersions([]);
+                  }}
+                >
                   Cancel
                 </Button>
                 <Button onClick={() => void handleSave()} disabled={saving || !editItem}>

@@ -1,4 +1,4 @@
-import { EditableItem, GrammarItem, Lesson, QuizItem, VocabItem } from "./types";
+import { EditableItem, GrammarItem, Lesson, LessonVersion, QuizItem, VocabItem } from "./types";
 
 const safeString = (value: unknown): string => (typeof value === "string" ? value : value == null ? "" : String(value));
 const parseIdList = (value: unknown): number[] => {
@@ -55,6 +55,27 @@ export const normalizeLesson = (row: Record<string, unknown>): Lesson => ({
   category: safeString(row.category),
   content: safeString(row.content),
   status: (safeString(row.status) || "DRAFT") as Lesson["status"],
+  orderIndex: Number(row.orderIndex ?? 0),
+  audioUrl: safeString(row.audioUrl),
+  videoUrl: safeString(row.videoUrl),
+  imageUrl: safeString(row.imageUrl),
+  relatedVocabularyIds: parseIdList(row.relatedVocabularyIds),
+  relatedGrammarIds: parseIdList(row.relatedGrammarIds),
+  relatedQuizIds: parseIdList(row.relatedQuizIds),
+  createdAt: safeString(row.createdAt),
+});
+
+export const normalizeLessonVersion = (row: Record<string, unknown>): LessonVersion => ({
+  id: Number(row.id),
+  lessonId: Number(row.lessonId),
+  versionNumber: Number(row.versionNumber ?? 0),
+  changeAction: safeString(row.changeAction),
+  title: safeString(row.title),
+  description: safeString(row.description),
+  content: safeString(row.content),
+  jlptLevel: safeString(row.jlptLevel) || "N5",
+  category: safeString(row.category),
+  status: safeString(row.status) || "DRAFT",
   orderIndex: Number(row.orderIndex ?? 0),
   audioUrl: safeString(row.audioUrl),
   videoUrl: safeString(row.videoUrl),
