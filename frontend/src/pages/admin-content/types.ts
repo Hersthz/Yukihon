@@ -7,11 +7,14 @@ export interface Lesson {
   jlptLevel: string;
   category: string;
   content: string;
-  status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
+  status: "DRAFT" | "REVIEW" | "PUBLISHED" | "ARCHIVED";
   orderIndex: number;
   audioUrl: string;
   videoUrl: string;
   imageUrl: string;
+  relatedVocabularyIds: number[];
+  relatedGrammarIds: number[];
+  relatedQuizIds: number[];
   createdAt?: string;
 }
 
@@ -79,6 +82,16 @@ export interface ContentOverview {
   totalQuizzes: number;
   totalContentItems: number;
   levelBreakdown: ContentLevelBreakdown[];
+}
+
+export interface LessonVersion {
+  id: number;
+  lessonId: number;
+  versionNumber: number;
+  changeAction: string;
+  title: string;
+  status: string;
+  createdAt: string;
 }
 
 export type EditableItem = Lesson | VocabItem | GrammarItem | QuizItem;

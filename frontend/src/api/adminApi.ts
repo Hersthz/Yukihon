@@ -26,6 +26,23 @@ export const adminApi = {
     apiClient.request(`/api/admin/users/${userId}`, {
       method: "DELETE",
     }),
+  uploadMedia: async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    return fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8080"}/api/admin/media/upload`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("yukihon_token") || ""}`,
+      },
+      body: formData,
+    }).then(async (response) => {
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+      return response.json();
+    });
+  },
   getSystemStats: () => apiClient.request("/api/admin/stats"),
   getContentOverview: () => apiClient.request("/api/admin/content/overview"),
 };

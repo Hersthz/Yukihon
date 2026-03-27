@@ -1,6 +1,22 @@
 import { EditableItem, GrammarItem, Lesson, QuizItem, VocabItem } from "./types";
 
 const safeString = (value: unknown): string => (typeof value === "string" ? value : value == null ? "" : String(value));
+const parseIdList = (value: unknown): number[] => {
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => Number(item))
+      .filter((item) => Number.isFinite(item));
+  }
+
+  if (typeof value !== "string" || !value.trim()) {
+    return [];
+  }
+
+  return value
+    .split(",")
+    .map((item) => Number(item.trim()))
+    .filter((item) => Number.isFinite(item));
+};
 
 const parseOptions = (value: unknown): string[] => {
   if (Array.isArray(value)) {
@@ -43,6 +59,9 @@ export const normalizeLesson = (row: Record<string, unknown>): Lesson => ({
   audioUrl: safeString(row.audioUrl),
   videoUrl: safeString(row.videoUrl),
   imageUrl: safeString(row.imageUrl),
+  relatedVocabularyIds: parseIdList(row.relatedVocabularyIds),
+  relatedGrammarIds: parseIdList(row.relatedGrammarIds),
+  relatedQuizIds: parseIdList(row.relatedQuizIds),
   createdAt: safeString(row.createdAt),
 });
 
@@ -108,6 +127,9 @@ export const toLessonPayload = (item: Lesson): Record<string, unknown> => ({
   audioUrl: item.audioUrl || null,
   videoUrl: item.videoUrl || null,
   imageUrl: item.imageUrl || null,
+  relatedVocabularyIds: item.relatedVocabularyIds,
+  relatedGrammarIds: item.relatedGrammarIds,
+  relatedQuizIds: item.relatedQuizIds,
 });
 
 export const toVocabularyPayload = (item: VocabItem): Record<string, unknown> => ({

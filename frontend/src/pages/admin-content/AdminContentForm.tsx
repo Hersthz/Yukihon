@@ -1,24 +1,193 @@
+import { useMemo, useState } from "react";
+import { History, Link2, UploadCloud } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { JLPT_LEVELS, LESSON_STATUSES, QUIZ_DIFFICULTIES, QUIZ_TYPES, WORD_TYPES } from "./constants";
-import { AdminTab, EditableItem, GrammarItem, Lesson, QuizItem, VocabItem } from "./types";
+import { AdminTab, EditableItem, GrammarItem, Lesson, LessonVersion, QuizItem, VocabItem } from "./types";
+
+interface SelectableContent {
+  id?: number;
+  title?: string;
+  kanji?: string;
+  meaning?: string;
+  pattern?: string;
+}
 
 interface AdminContentFormProps {
   activeTab: AdminTab;
   editItem: EditableItem | null;
   setEditItem: (item: EditableItem) => void;
+  lessonVersions: LessonVersion[];
+  contentOptions: {
+    vocabulary: VocabItem[];
+    grammar: GrammarItem[];
+    quizzes: QuizItem[];
+  };
+  uploadMedia: (file: File) => Promise<string>;
 }
 
-const AdminContentForm = ({ activeTab, editItem, setEditItem }: AdminContentFormProps) => {
+const normalizeSearch = (value: string) => value.trim().toLowerCase();
+
+const OptionPicker = ({
+  label,
+  description,
+  options,
+  selectedIds,
+  onToggle,
+}: {
+  label: string;
+  description: string;
+  options: SelectableContent[];
+  selectedIds: number[];
+  onToggle: (id: number) => void;
+}) => {
+  const [query, setQuery] = useState("");
+
+  const filtered = useMemo(() => {
+    const normalized = normalizeSearch(query);
+    return options
+      .filter((item) => item.id != null)
+      .filter((item) => {
+        if (!normalized) return true;
+        return [item.title, item.kanji, item.meaning, item.pattern]
+          .filter(Boolean)
+          .some((value) => String(value).toLowerCase().includes(normalized));
+      })
+      .slice(0, 16);
+  }, [options, query]);
+
+  return (
+    <div className="rounded-[20px] border border-border bg-card/60 p-4">
+      <div className="mb-3">
+        <p className="text-sm font-semibold text-foreground">{label}</p>
+        <p className="text-sm text-muted-foreground">{description}</p>
+      </div>
+
+      <Input
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+        className="bg-background/50"
+        placeholder={`Tim ${label.toLowerCase()}...`}
+      />
+
+      <div className="mt-3 flex flex-wrap gap-2">
+        {selectedIds.length === 0 ? <span className="text-xs text-muted-foreground">Chua chon noi dung nao.</span> : null}
+        {selectedIds.map((id) => {
+          const item = options.find((option) => option.id === id);
+          const text = item?.title || item?.kanji || item?.pattern || item?.meaning || `#${id}`;
+          return (
+            <button
+              key={id}
+              type="button"
+              onClick={() => onToggle(id)}
+              className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs text-primary transition hover:bg-primary/20"
+            >
+              {text} ×
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="mt-3 max-h-44 overflow-y-auto rounded-[18px] border border-border bg-background/40 p-3">
+        <div className="flex flex-wrap gap-2">
+          {filtered.map((item) => {
+            const id = item.id as number;
+            const active = selectedIds.includes(id);
+            const text = item.title || item.kanji || item.pattern || item.meaning || `#${id}`;
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => onToggle(id)}
+                className={`rounded-full border px-3 py-1 text-xs transition ${
+                  active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-muted-foreground hover:bg-muted"
+                }`}
+              >
+                {text}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const MediaField = ({
+  label,
+  value,
+  accept,
+  uploading,
+  onChange,
+  onUpload,
+}: {
+  label: string;
+  value: string;
+  accept: string;
+  uploading: boolean;
+  onChange: (value: string) => void;
+  onUpload: (file: File) => Promise<void>;
+}) => (
+  <div className="space-y-2">
+    <Label>{label}</Label>
+    <Input value={value} onChange={(event) => onChange(event.target.value)} className="bg-background/50" />
+    <div className="flex items-center gap-3">
+      <Input
+        type="file"
+        accept={accept}
+        className="bg-background/50"
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          if (file) {
+            void onUpload(file);
+          }
+          event.currentTarget.value = "";
+        }}
+      />
+      <Button disabled={uploading} size="sm" variant="outline" className="rounded-xl">
+        <UploadCloud className="mr-2 h-4 w-4" />
+        {uploading ? "Uploading..." : "Upload"}
+      </Button>
+    </div>
+  </div>
+);
+
+const AdminContentForm = ({
+  activeTab,
+  editItem,
+  setEditItem,
+  lessonVersions,
+  contentOptions,
+  uploadMedia,
+}: AdminContentFormProps) => {
+  const [uploadingField, setUploadingField] = useState<string | null>(null);
+
   if (!editItem) {
     return null;
   }
 
+  const uploadToField = async (field: string, file: File) => {
+    try {
+      setUploadingField(field);
+      const response = (await uploadMedia(file)) as { url: string };
+      setEditItem({ ...(editItem as Record<string, unknown>), [field]: response.url } as EditableItem);
+    } finally {
+      setUploadingField(null);
+    }
+  };
+
   switch (activeTab) {
     case "lessons": {
       const item = editItem as Lesson;
+
+      const toggleRelation = (field: "relatedVocabularyIds" | "relatedGrammarIds" | "relatedQuizIds", id: number) => {
+        const current = item[field];
+        const next = current.includes(id) ? current.filter((value) => value !== id) : [...current, id];
+        setEditItem({ ...item, [field]: next });
+      };
 
       return (
         <div className="space-y-4">
@@ -47,7 +216,7 @@ const AdminContentForm = ({ activeTab, editItem, setEditItem }: AdminContentForm
               </Select>
             </div>
             <div>
-              <Label>Status</Label>
+              <Label>Workflow Stage</Label>
               <Select value={item.status} onValueChange={(value) => setEditItem({ ...item, status: value as Lesson["status"] })}>
                 <SelectTrigger className="bg-background/50">
                   <SelectValue />
@@ -62,6 +231,22 @@ const AdminContentForm = ({ activeTab, editItem, setEditItem }: AdminContentForm
               </Select>
             </div>
           </div>
+
+          <div className="flex flex-wrap gap-2 rounded-[20px] border border-border bg-card/60 p-3">
+            {LESSON_STATUSES.map((status) => (
+              <button
+                key={status}
+                type="button"
+                onClick={() => setEditItem({ ...item, status })}
+                className={`rounded-full border px-3 py-2 text-xs font-medium transition ${
+                  item.status === status ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-muted-foreground hover:bg-muted"
+                }`}
+              >
+                {status}
+              </button>
+            ))}
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>Category</Label>
@@ -81,20 +266,97 @@ const AdminContentForm = ({ activeTab, editItem, setEditItem }: AdminContentForm
             <Label>Content</Label>
             <Textarea value={item.content} onChange={(e) => setEditItem({ ...item, content: e.target.value })} className="bg-background/50 min-h-[180px]" />
           </div>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div>
-              <Label>Audio URL</Label>
-              <Input value={item.audioUrl} onChange={(e) => setEditItem({ ...item, audioUrl: e.target.value })} className="bg-background/50" />
+
+          <div className="grid gap-4 md:grid-cols-3">
+            <MediaField
+              label="Audio URL"
+              value={item.audioUrl}
+              accept="audio/*"
+              uploading={uploadingField === "audioUrl"}
+              onChange={(value) => setEditItem({ ...item, audioUrl: value })}
+              onUpload={(file) => uploadToField("audioUrl", file)}
+            />
+            <MediaField
+              label="Video URL"
+              value={item.videoUrl}
+              accept="video/*"
+              uploading={uploadingField === "videoUrl"}
+              onChange={(value) => setEditItem({ ...item, videoUrl: value })}
+              onUpload={(file) => uploadToField("videoUrl", file)}
+            />
+            <MediaField
+              label="Image URL"
+              value={item.imageUrl}
+              accept="image/*"
+              uploading={uploadingField === "imageUrl"}
+              onChange={(value) => setEditItem({ ...item, imageUrl: value })}
+              onUpload={(file) => uploadToField("imageUrl", file)}
+            />
+          </div>
+
+          <div className="rounded-[22px] border border-border bg-card/60 p-4">
+            <div className="mb-4 flex items-center gap-2">
+              <Link2 className="h-4 w-4 text-primary" />
+              <div>
+                <p className="text-sm font-semibold text-foreground">Related content builder</p>
+                <p className="text-sm text-muted-foreground">Lien ket lesson voi vocab, grammar va quiz bang picker thay vi nhap ID tay.</p>
+              </div>
             </div>
-            <div>
-              <Label>Video URL</Label>
-              <Input value={item.videoUrl} onChange={(e) => setEditItem({ ...item, videoUrl: e.target.value })} className="bg-background/50" />
-            </div>
-            <div>
-              <Label>Image URL</Label>
-              <Input value={item.imageUrl} onChange={(e) => setEditItem({ ...item, imageUrl: e.target.value })} className="bg-background/50" />
+
+            <div className="space-y-4">
+              <OptionPicker
+                label="Vocabulary"
+                description="Chon tu vung nen hien trong lesson."
+                options={contentOptions.vocabulary}
+                selectedIds={item.relatedVocabularyIds}
+                onToggle={(id) => toggleRelation("relatedVocabularyIds", id)}
+              />
+              <OptionPicker
+                label="Grammar"
+                description="Gom cac mau ngu phap lien quan vao mot lesson."
+                options={contentOptions.grammar}
+                selectedIds={item.relatedGrammarIds}
+                onToggle={(id) => toggleRelation("relatedGrammarIds", id)}
+              />
+              <OptionPicker
+                label="Quizzes"
+                description="Chon cac checkpoint quiz can hien thi theo lesson."
+                options={contentOptions.quizzes}
+                selectedIds={item.relatedQuizIds}
+                onToggle={(id) => toggleRelation("relatedQuizIds", id)}
+              />
             </div>
           </div>
+
+          {item.id ? (
+            <div className="rounded-[22px] border border-border bg-card/60 p-4">
+              <div className="mb-4 flex items-center gap-2">
+                <History className="h-4 w-4 text-primary" />
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Lesson version history</p>
+                  <p className="text-sm text-muted-foreground">Moi lan luu lesson se tao snapshot de de doi chieu thay doi.</p>
+                </div>
+              </div>
+
+              {lessonVersions.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Chua co version history.</p>
+              ) : (
+                <div className="space-y-2">
+                  {lessonVersions.map((version) => (
+                    <div key={version.id} className="rounded-[18px] border border-border bg-background/50 p-3 text-sm">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="font-medium text-foreground">
+                          v{version.versionNumber} • {version.changeAction}
+                        </p>
+                        <span className="text-xs text-muted-foreground">{new Date(version.createdAt).toLocaleString("vi-VN")}</span>
+                      </div>
+                      <p className="mt-1 text-muted-foreground">{version.title} • {version.status}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : null}
         </div>
       );
     }
@@ -343,15 +605,23 @@ const AdminContentForm = ({ activeTab, editItem, setEditItem }: AdminContentForm
             <Label>Explanation</Label>
             <Textarea value={item.explanation} onChange={(e) => setEditItem({ ...item, explanation: e.target.value })} className="bg-background/50" />
           </div>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div>
-              <Label>Audio URL</Label>
-              <Input value={item.audioUrl} onChange={(e) => setEditItem({ ...item, audioUrl: e.target.value })} className="bg-background/50" />
-            </div>
-            <div>
-              <Label>Image URL</Label>
-              <Input value={item.imageUrl} onChange={(e) => setEditItem({ ...item, imageUrl: e.target.value })} className="bg-background/50" />
-            </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <MediaField
+              label="Audio URL"
+              value={item.audioUrl}
+              accept="audio/*"
+              uploading={uploadingField === "quiz-audioUrl"}
+              onChange={(value) => setEditItem({ ...item, audioUrl: value })}
+              onUpload={(file) => uploadToField("audioUrl", file)}
+            />
+            <MediaField
+              label="Image URL"
+              value={item.imageUrl}
+              accept="image/*"
+              uploading={uploadingField === "quiz-imageUrl"}
+              onChange={(value) => setEditItem({ ...item, imageUrl: value })}
+              onUpload={(file) => uploadToField("imageUrl", file)}
+            />
           </div>
         </div>
       );
