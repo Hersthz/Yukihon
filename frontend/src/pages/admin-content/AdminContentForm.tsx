@@ -260,6 +260,16 @@ const AdminContentForm = ({ activeTab, editItem, setEditItem }: AdminContentForm
             <Label>Description</Label>
             <Textarea value={item.description} onChange={(e) => setEditItem({ ...item, description: e.target.value })} className="bg-background/50" />
           </div>
+          <div>
+            <Label>Linked Lesson ID</Label>
+            <Input
+              type="number"
+              value={item.lessonId ?? ""}
+              onChange={(e) => setEditItem({ ...item, lessonId: e.target.value ? Number.parseInt(e.target.value, 10) : undefined })}
+              className="bg-background/50"
+              placeholder="De trong neu khong gan vao lesson cu the"
+            />
+          </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
               <Label>Quiz Type</Label>

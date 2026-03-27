@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, BookOpen, CheckCircle2, Clock3, PlayCircle, Target } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { progressApi } from "@/api";
+import { progressApi, quizApi } from "@/api";
 import { useMyProgress } from "@/hooks/learning/useProgress";
 import { useLearningPath } from "@/hooks/learning/useLearningPath";
 import { useLesson } from "@/hooks/learning/useLessons";
@@ -32,6 +32,28 @@ const estimateMinutes = (content?: string | null) => {
   return 12;
 };
 
+const parseQuizOptions = (value?: string | null): string[] => {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed.map((item) => String(item)) : [];
+  } catch {
+    return [];
+  }
+};
+
+interface LessonQuiz {
+  id: number;
+  lessonId?: number | null;
+  title: string;
+  description?: string;
+  question: string;
+  options?: string;
+  correctAnswer: string;
+  explanation?: string;
+  jlptLevel?: string;
+}
+
 const LessonDetail = () => {
   const { lessonId } = useParams();
   const navigate = useNavigate();
@@ -44,11 +66,39 @@ const LessonDetail = () => {
   const { data: lesson, isLoading } = useLesson(Number.isFinite(parsedLessonId) ? parsedLessonId : undefined);
   const { data: progress = [], isLoading: isProgressLoading } = useMyProgress();
   const { data: learningPath } = useLearningPath();
+  const [quizAnswers, setQuizAnswers] = useState<Record<number, string>>({});
+  const [quizScore, setQuizScore] = useState<number | null>(null);
+  const [quizPassed, setQuizPassed] = useState<boolean | null>(null);
+  const [gradingQuiz, setGradingQuiz] = useState(false);
 
   const lessonProgress = useMemo(
     () => progress.find((item) => item.lessonId === parsedLessonId) ?? null,
     [parsedLessonId, progress]
   );
+
+  const quizProgressByQuizId = useMemo(
+    () =>
+      new Map(
+        progress
+          .filter((item) => item.quizId != null)
+          .map((item) => [item.quizId as number, item])
+      ),
+    [progress]
+  );
+
+  const { data: relatedQuizzes = [], isLoading: isQuizLoading } = useQuery({
+    queryKey: ["lesson-quizzes", parsedLessonId],
+    queryFn: async () => {
+      if (!Number.isFinite(parsedLessonId) || !lesson) return [];
+
+      const linked = (await quizApi.getByLesson(parsedLessonId)) as LessonQuiz[];
+      if (linked.length > 0) return linked;
+
+      const fallback = (await quizApi.getByLevel(lesson.jlptLevel || "N5")) as LessonQuiz[];
+      return fallback.slice(0, 3);
+    },
+    enabled: Number.isFinite(parsedLessonId) && !!lesson,
+  });
 
   const progressPercent = useMemo(() => {
     if (!lessonProgress) return 0;
@@ -68,12 +118,15 @@ const LessonDetail = () => {
     setNoteText(lessonProgress?.notes ?? "");
   }, [lessonProgress?.notes]);
 
-  const saveProgress = async (status: "IN_PROGRESS" | "COMPLETED") => {
+  const saveProgress = async (
+    status: "IN_PROGRESS" | "COMPLETED",
+    options?: { score?: number; silent?: boolean }
+  ) => {
     if (!lesson || !user) return;
 
     const payload = {
       lessonId: lesson.id,
-      score: status === "COMPLETED" ? 100 : lessonProgress?.score ?? 0,
+      score: options?.score ?? (status === "COMPLETED" ? 100 : lessonProgress?.score ?? 0),
       totalScore: 100,
       status,
       notes: noteText.trim(),
@@ -91,10 +144,12 @@ const LessonDetail = () => {
         queryClient.invalidateQueries({ queryKey: ["learning-path"] }),
       ]);
 
-      toast({
-        title: status === "COMPLETED" ? "Da hoan thanh bai hoc" : "Da bat dau bai hoc",
-        description: status === "COMPLETED" ? "Tien do va goi y hoc da duoc cap nhat." : "Ban co the quay lai hoc tiep bat cu luc nao.",
-      });
+      if (!options?.silent) {
+        toast({
+          title: status === "COMPLETED" ? "Da hoan thanh bai hoc" : "Da bat dau bai hoc",
+          description: status === "COMPLETED" ? "Tien do va goi y hoc da duoc cap nhat." : "Ban co the quay lai hoc tiep bat cu luc nao.",
+        });
+      }
     } catch {
       toast({ title: "Khong luu duoc tien do", description: "Vui long thu lai.", variant: "destructive" });
     }
@@ -115,6 +170,61 @@ const LessonDetail = () => {
       toast({ title: "Da luu ghi chu", description: "Ghi chu hoc bai da duoc cap nhat." });
     } catch {
       toast({ title: "Khong luu duoc ghi chu", description: "Vui long thu lai.", variant: "destructive" });
+    }
+  };
+
+  const submitCheckpointQuiz = async () => {
+    if (!lesson || !user || relatedQuizzes.length === 0) return;
+
+    const unanswered = relatedQuizzes.some((quiz) => !quizAnswers[quiz.id]);
+    if (unanswered) {
+      toast({ title: "Chua hoan thanh checkpoint", description: "Hay chon dap an cho tat ca cau hoi truoc khi cham." });
+      return;
+    }
+
+    setGradingQuiz(true);
+    try {
+      const correctCount = relatedQuizzes.filter((quiz) => quizAnswers[quiz.id] === quiz.correctAnswer).length;
+      const score = Math.round((correctCount / relatedQuizzes.length) * 100);
+      const passed = score >= 70;
+
+      await Promise.all(
+        relatedQuizzes.map(async (quiz) => {
+          const existing = quizProgressByQuizId.get(quiz.id);
+          const payload = {
+            quizId: quiz.id,
+            score: quizAnswers[quiz.id] === quiz.correctAnswer ? 100 : 0,
+            totalScore: 100,
+            status: passed ? "COMPLETED" : "IN_PROGRESS",
+            notes: `Lesson checkpoint score: ${score}%`,
+          } as const;
+
+          if (existing?.id) {
+            await progressApi.update(existing.id, payload);
+          } else {
+            await progressApi.createForUser(user.id, payload);
+          }
+        })
+      );
+
+      setQuizScore(score);
+      setQuizPassed(passed);
+
+      if (passed) {
+        await saveProgress("COMPLETED", { score, silent: true });
+      } else {
+        await saveProgress("IN_PROGRESS", { score, silent: true });
+      }
+
+      await queryClient.invalidateQueries({ queryKey: ["progress", "me"] });
+      toast({
+        title: passed ? "Checkpoint dat yeu cau" : "Checkpoint chua dat",
+        description: passed ? `Ban dat ${score}%. Lesson da duoc hoan thanh.` : `Ban dat ${score}%. Hay doc lai bai va thu lai quiz.`,
+      });
+    } catch {
+      toast({ title: "Khong cham duoc checkpoint", description: "Vui long thu lai.", variant: "destructive" });
+    } finally {
+      setGradingQuiz(false);
     }
   };
 
@@ -230,11 +340,86 @@ const LessonDetail = () => {
 
             <PageSection title="Noi dung bai hoc" description="Phien ban doc nhanh cho flow hoc co the tiep tuc ngay trong du an hien tai.">
               {lesson.content ? (
-                <div className="rounded-[22px] border border-border bg-card p-5">
-                  <div className="mb-4 h-2.5 overflow-hidden rounded-full bg-muted">
-                    <div className="h-full rounded-full bg-[linear-gradient(90deg,#60a5fa,#22d3ee)]" style={{ width: `${progressPercent}%` }} />
+                <div className="space-y-4">
+                  <div className="rounded-[22px] border border-border bg-card p-5">
+                    <div className="mb-4 h-2.5 overflow-hidden rounded-full bg-muted">
+                      <div className="h-full rounded-full bg-[linear-gradient(90deg,#60a5fa,#22d3ee)]" style={{ width: `${progressPercent}%` }} />
+                    </div>
+                    <div className="whitespace-pre-wrap text-sm leading-7 text-foreground/85">{lesson.content}</div>
                   </div>
-                  <div className="whitespace-pre-wrap text-sm leading-7 text-foreground/85">{lesson.content}</div>
+
+                  <div className="rounded-[22px] border border-amber-200 bg-amber-50/70 p-5">
+                    <div className="mb-4 flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="text-lg font-semibold text-foreground">Lesson checkpoint quiz</h3>
+                        <p className="mt-1 text-sm text-foreground/75">Hoan thanh quiz nay de he thong tu dong chot completion cho lesson.</p>
+                      </div>
+                      {quizScore != null ? (
+                        <Badge className={quizPassed ? "rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700" : "rounded-full border border-rose-200 bg-rose-50 text-rose-700"}>
+                          {quizScore}%
+                        </Badge>
+                      ) : null}
+                    </div>
+
+                    {isQuizLoading ? (
+                      <div className="flex items-center justify-center py-12">
+                        <div className="h-10 w-10 animate-spin rounded-full border-4 border-amber-100 border-t-amber-500" />
+                      </div>
+                    ) : relatedQuizzes.length === 0 ? (
+                      <EmptyState title="Chua co checkpoint quiz" description="Hay lien ket quiz voi lesson trong CMS de flow completion day du hon." icon={<Target className="h-6 w-6" />} />
+                    ) : (
+                      <div className="space-y-4">
+                        {relatedQuizzes.map((quiz, index) => {
+                          const options = parseQuizOptions(quiz.options);
+                          const selected = quizAnswers[quiz.id];
+
+                          return (
+                            <div key={quiz.id} className="rounded-[20px] border border-amber-200 bg-white/80 p-4">
+                              <p className="text-sm font-semibold text-foreground">
+                                Cau {index + 1}: {quiz.title}
+                              </p>
+                              <p className="mt-2 text-sm text-foreground/80">{quiz.question}</p>
+
+                              <div className="mt-3 grid gap-2">
+                                {options.map((option) => {
+                                  const active = selected === option;
+                                  return (
+                                    <button
+                                      key={`${quiz.id}-${option}`}
+                                      type="button"
+                                      onClick={() => setQuizAnswers((prev) => ({ ...prev, [quiz.id]: option }))}
+                                      className={`rounded-2xl border px-4 py-3 text-left text-sm transition ${
+                                        active ? "border-amber-300 bg-amber-100 text-amber-900" : "border-border bg-card text-foreground/80 hover:bg-muted"
+                                      }`}
+                                    >
+                                      {option}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+
+                              {quizScore != null ? (
+                                <p className="mt-3 text-xs text-muted-foreground">
+                                  Dap an dung: {quiz.correctAnswer}. {quiz.explanation || "Khong co giai thich bo sung."}
+                                </p>
+                              ) : null}
+                            </div>
+                          );
+                        })}
+
+                        <div className="flex flex-wrap gap-2">
+                          <Button className="rounded-2xl bg-amber-500 text-white hover:bg-amber-400" disabled={gradingQuiz} onClick={() => void submitCheckpointQuiz()}>
+                            Cham checkpoint
+                          </Button>
+                          {quizPassed === false ? (
+                            <Button className="rounded-2xl" disabled={gradingQuiz} onClick={() => { setQuizAnswers({}); setQuizScore(null); setQuizPassed(null); }} variant="outline">
+                              Lam lai
+                            </Button>
+                          ) : null}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               ) : (
                 <EmptyState title="Noi dung dang trong" description="Lesson da ton tai nhung chua co content de hoc." icon={<BookOpen className="h-6 w-6" />} />
