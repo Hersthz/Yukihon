@@ -15,6 +15,7 @@ public class ContentOverviewDto {
     private long totalLessons;
     private long publishedLessons;
     private long draftLessons;
+    private long reviewLessons;
     private long archivedLessons;
     private long totalVocabulary;
     private long totalGrammar;

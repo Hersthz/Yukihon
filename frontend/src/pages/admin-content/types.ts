@@ -7,11 +7,14 @@ export interface Lesson {
   jlptLevel: string;
   category: string;
   content: string;
-  status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
+  status: "DRAFT" | "REVIEW" | "PUBLISHED" | "ARCHIVED";
   orderIndex: number;
   audioUrl: string;
   videoUrl: string;
   imageUrl: string;
+  relatedVocabularyIds: number[];
+  relatedGrammarIds: number[];
+  relatedQuizIds: number[];
   createdAt?: string;
 }
 
@@ -73,12 +76,41 @@ export interface ContentOverview {
   totalLessons: number;
   publishedLessons: number;
   draftLessons: number;
+  reviewLessons: number;
   archivedLessons: number;
   totalVocabulary: number;
   totalGrammar: number;
   totalQuizzes: number;
   totalContentItems: number;
   levelBreakdown: ContentLevelBreakdown[];
+}
+
+export interface LessonVersion {
+  id: number;
+  lessonId: number;
+  versionNumber: number;
+  changeAction: string;
+  title: string;
+  description: string;
+  content: string;
+  jlptLevel: string;
+  category: string;
+  status: string;
+  orderIndex: number;
+  audioUrl: string;
+  videoUrl: string;
+  imageUrl: string;
+  relatedVocabularyIds: number[];
+  relatedGrammarIds: number[];
+  relatedQuizIds: number[];
+  createdAt: string;
+}
+
+export interface MediaUploadResult {
+  url: string;
+  filename: string;
+  contentType: string;
+  size: number;
 }
 
 export type EditableItem = Lesson | VocabItem | GrammarItem | QuizItem;

@@ -2,14 +2,19 @@ package com.hoang.basis.yukihon.system.lesson.service;
 
 import com.hoang.basis.yukihon.system.lesson.dto.LessonDto;
 import com.hoang.basis.yukihon.system.lesson.dto.LessonRequest;
+import com.hoang.basis.yukihon.system.lesson.dto.LessonVersionDto;
 import com.hoang.basis.yukihon.system.lesson.entity.Lesson;
+import com.hoang.basis.yukihon.system.lesson.entity.LessonVersion;
 import com.hoang.basis.yukihon.system.lesson.repository.LessonRepository;
+import com.hoang.basis.yukihon.system.lesson.repository.LessonVersionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
 import java.util.stream.Collectors;
 
 @Service
@@ -19,6 +24,7 @@ import java.util.stream.Collectors;
 public class LessonService {
 
     private final LessonRepository lessonRepository;
+    private final LessonVersionRepository lessonVersionRepository;
 
     @Transactional(readOnly = true)
     public LessonDto getLessonById(Long id) {
@@ -75,6 +81,17 @@ public class LessonService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public List<LessonVersionDto> getLessonVersions(Long lessonId) {
+        if (!lessonRepository.existsById(lessonId)) {
+            throw new RuntimeException("Lesson not found with id: " + lessonId);
+        }
+
+        return lessonVersionRepository.findByLessonIdOrderByVersionNumberDesc(lessonId).stream()
+                .map(this::convertVersionToDto)
+                .collect(Collectors.toList());
+    }
+
     public LessonDto createLesson(LessonRequest request) {
         Lesson lesson = Lesson.builder()
                 .title(request.getTitle())
@@ -87,9 +104,13 @@ public class LessonService {
                 .audioUrl(request.getAudioUrl())
                 .videoUrl(request.getVideoUrl())
                 .imageUrl(request.getImageUrl())
+                .relatedVocabularyIds(joinIds(request.getRelatedVocabularyIds()))
+                .relatedGrammarIds(joinIds(request.getRelatedGrammarIds()))
+                .relatedQuizIds(joinIds(request.getRelatedQuizIds()))
                 .build();
 
         Lesson saved = lessonRepository.save(lesson);
+        createVersionSnapshot(saved, "CREATED");
         log.info("Created lesson: {} with title: {}", saved.getId(), saved.getTitle());
         return convertToDto(saved);
     }
@@ -106,12 +127,16 @@ public class LessonService {
         if (request.getStatus() != null) {
             lesson.setStatus(Lesson.LessonStatus.valueOf(request.getStatus()));
         }
-        lesson.setOrderIndex(request.getOrderIndex());
+        lesson.setOrderIndex(request.getOrderIndex() != null ? request.getOrderIndex() : 0);
         lesson.setAudioUrl(request.getAudioUrl());
         lesson.setVideoUrl(request.getVideoUrl());
         lesson.setImageUrl(request.getImageUrl());
+        lesson.setRelatedVocabularyIds(joinIds(request.getRelatedVocabularyIds()));
+        lesson.setRelatedGrammarIds(joinIds(request.getRelatedGrammarIds()));
+        lesson.setRelatedQuizIds(joinIds(request.getRelatedQuizIds()));
 
         Lesson updated = lessonRepository.save(lesson);
+        createVersionSnapshot(updated, "UPDATED");
         log.info("Updated lesson: {}", updated.getId());
         return convertToDto(updated);
     }
@@ -137,7 +162,82 @@ public class LessonService {
                 .audioUrl(lesson.getAudioUrl())
                 .videoUrl(lesson.getVideoUrl())
                 .imageUrl(lesson.getImageUrl())
+                .relatedVocabularyIds(parseIds(lesson.getRelatedVocabularyIds()))
+                .relatedGrammarIds(parseIds(lesson.getRelatedGrammarIds()))
+                .relatedQuizIds(parseIds(lesson.getRelatedQuizIds()))
                 .createdAt(lesson.getCreatedAt().toString())
                 .build();
+    }
+
+    private LessonVersionDto convertVersionToDto(LessonVersion version) {
+        return LessonVersionDto.builder()
+                .id(version.getId())
+                .lessonId(version.getLessonId())
+                .versionNumber(version.getVersionNumber())
+                .changeAction(version.getChangeAction())
+                .title(version.getTitle())
+                .description(version.getDescription())
+                .content(version.getContent())
+                .jlptLevel(version.getJlptLevel())
+                .category(version.getCategory())
+                .status(version.getStatus())
+                .orderIndex(version.getOrderIndex())
+                .audioUrl(version.getAudioUrl())
+                .videoUrl(version.getVideoUrl())
+                .imageUrl(version.getImageUrl())
+                .relatedVocabularyIds(parseIds(version.getRelatedVocabularyIds()))
+                .relatedGrammarIds(parseIds(version.getRelatedGrammarIds()))
+                .relatedQuizIds(parseIds(version.getRelatedQuizIds()))
+                .createdAt(version.getCreatedAt().toString())
+                .build();
+    }
+
+    private void createVersionSnapshot(Lesson lesson, String action) {
+        int nextVersion = lessonVersionRepository.findMaxVersionNumberByLessonId(lesson.getId()) + 1;
+
+        LessonVersion snapshot = LessonVersion.builder()
+                .lessonId(lesson.getId())
+                .versionNumber(nextVersion)
+                .changeAction(action)
+                .title(lesson.getTitle())
+                .description(lesson.getDescription())
+                .content(lesson.getContent())
+                .jlptLevel(lesson.getJlptLevel())
+                .category(lesson.getCategory())
+                .status(lesson.getStatus().name())
+                .orderIndex(lesson.getOrderIndex())
+                .audioUrl(lesson.getAudioUrl())
+                .videoUrl(lesson.getVideoUrl())
+                .imageUrl(lesson.getImageUrl())
+                .relatedVocabularyIds(lesson.getRelatedVocabularyIds())
+                .relatedGrammarIds(lesson.getRelatedGrammarIds())
+                .relatedQuizIds(lesson.getRelatedQuizIds())
+                .build();
+
+        lessonVersionRepository.save(snapshot);
+    }
+
+    private String joinIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return null;
+        }
+
+        return ids.stream()
+                .filter(java.util.Objects::nonNull)
+                .distinct()
+                .map(String::valueOf)
+                .collect(Collectors.joining(","));
+    }
+
+    private List<Long> parseIds(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return Collections.emptyList();
+        }
+
+        return Stream.of(raw.split(","))
+                .map(String::trim)
+                .filter(value -> !value.isBlank())
+                .map(Long::valueOf)
+                .collect(Collectors.toList());
     }
 }

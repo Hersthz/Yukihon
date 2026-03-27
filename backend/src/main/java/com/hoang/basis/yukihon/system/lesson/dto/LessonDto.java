@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -21,5 +23,8 @@ public class LessonDto {
     private String audioUrl;
     private String videoUrl;
     private String imageUrl;
+    private List<Long> relatedVocabularyIds;
+    private List<Long> relatedGrammarIds;
+    private List<Long> relatedQuizIds;
     private String createdAt;
 }

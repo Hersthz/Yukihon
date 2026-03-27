@@ -56,6 +56,15 @@ public class Lesson {
     @Column(columnDefinition = "TEXT")
     private String imageUrl;
 
+    @Column(name = "related_vocabulary_ids", columnDefinition = "TEXT")
+    private String relatedVocabularyIds;
+
+    @Column(name = "related_grammar_ids", columnDefinition = "TEXT")
+    private String relatedGrammarIds;
+
+    @Column(name = "related_quiz_ids", columnDefinition = "TEXT")
+    private String relatedQuizIds;
+
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -79,6 +88,7 @@ public class Lesson {
 
     public enum LessonStatus {
         DRAFT,
+        REVIEW,
         PUBLISHED,
         ARCHIVED
     }

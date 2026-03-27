@@ -2,6 +2,7 @@ package com.hoang.basis.yukihon.system.lesson.controller;
 
 import com.hoang.basis.yukihon.system.lesson.dto.LessonDto;
 import com.hoang.basis.yukihon.system.lesson.dto.LessonRequest;
+import com.hoang.basis.yukihon.system.lesson.dto.LessonVersionDto;
 import com.hoang.basis.yukihon.system.lesson.service.LessonService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -52,6 +53,12 @@ public class LessonController {
     @PreAuthorize("hasAnyAuthority('CONTENT_READ','CONTENT_MANAGE')")
     public ResponseEntity<LessonDto> getLessonById(@PathVariable Long id) {
         return ResponseEntity.ok(lessonService.getLessonById(id));
+    }
+
+    @GetMapping("/{id}/versions")
+    @PreAuthorize("hasAnyAuthority('CONTENT_READ','CONTENT_MANAGE')")
+    public ResponseEntity<List<LessonVersionDto>> getLessonVersions(@PathVariable Long id) {
+        return ResponseEntity.ok(lessonService.getLessonVersions(id));
     }
 
     @GetMapping("/level/{jlptLevel}")

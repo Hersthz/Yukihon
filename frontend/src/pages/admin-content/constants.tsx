@@ -18,7 +18,7 @@ export const TABS: TabConfig[] = [
 
 export const JLPT_LEVELS = ["N5", "N4", "N3", "N2", "N1"] as const;
 export const LEVEL_FILTERS = ["ALL", ...JLPT_LEVELS] as const;
-export const LESSON_STATUSES = ["DRAFT", "PUBLISHED", "ARCHIVED"] as const;
+export const LESSON_STATUSES = ["DRAFT", "REVIEW", "PUBLISHED", "ARCHIVED"] as const;
 export const QUIZ_TYPES = ["MULTIPLE_CHOICE", "FILL_IN_BLANK", "MATCHING", "LISTENING", "WRITING", "TRANSLATION"] as const;
 export const QUIZ_DIFFICULTIES = ["BEGINNER", "INTERMEDIATE", "ADVANCED"] as const;
 export const WORD_TYPES = ["noun", "verb", "adjective", "adverb", "expression", "phrase"] as const;
@@ -27,7 +27,7 @@ export const lessonColumns: ColumnDef[] = [
   { key: "title", label: "Title", sortable: true, render: (val) => <span className="font-medium">{String(val)}</span> },
   { key: "jlptLevel", label: "JLPT", type: "badge", badgeColor: () => "bg-cyan-500/20 text-cyan-300 border-cyan-500/30" },
   { key: "category", label: "Category", sortable: true },
-  { key: "status", label: "Status", type: "badge", badgeColor: (value) => value === "PUBLISHED" ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" : value === "DRAFT" ? "bg-amber-500/20 text-amber-300 border-amber-500/30" : "bg-slate-500/20 text-slate-300 border-slate-500/30" },
+  { key: "status", label: "Status", type: "badge", badgeColor: (value) => value === "PUBLISHED" ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" : value === "REVIEW" ? "bg-violet-500/20 text-violet-300 border-violet-500/30" : value === "DRAFT" ? "bg-amber-500/20 text-amber-300 border-amber-500/30" : "bg-slate-500/20 text-slate-300 border-slate-500/30" },
   { key: "orderIndex", label: "Order", type: "number", sortable: true },
 ];
 
@@ -65,6 +65,9 @@ export const createEmptyLesson = (): Lesson => ({
   audioUrl: "",
   videoUrl: "",
   imageUrl: "",
+  relatedVocabularyIds: [],
+  relatedGrammarIds: [],
+  relatedQuizIds: [],
 });
 
 export const createEmptyVocab = (): VocabItem => ({

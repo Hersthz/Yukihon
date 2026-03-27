@@ -1,7 +1,5 @@
 package com.hoang.basis.yukihon.system.lesson.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,12 +11,12 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class LessonRequest {
-    
-    @NotBlank(message = "Title is required")
-    @Size(min = 1, max = 200)
+public class LessonVersionDto {
+    private Long id;
+    private Long lessonId;
+    private Integer versionNumber;
+    private String changeAction;
     private String title;
-    
     private String description;
     private String content;
     private String jlptLevel;
@@ -31,4 +29,5 @@ public class LessonRequest {
     private List<Long> relatedVocabularyIds;
     private List<Long> relatedGrammarIds;
     private List<Long> relatedQuizIds;
+    private String createdAt;
 }
