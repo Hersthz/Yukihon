@@ -3,6 +3,7 @@ import apiClient from "@/lib/apiClient";
 export const quizApi = {
   getAll: () => apiClient.request("/api/quizzes"),
   getById: (id: number) => apiClient.request(`/api/quizzes/${id}`),
+  getByLesson: (lessonId: number) => apiClient.request(`/api/quizzes/lesson/${lessonId}`),
   getByLevel: (level: string) => apiClient.request(`/api/quizzes/level/${level}`),
   getByDifficulty: (difficulty: string) => apiClient.request(`/api/quizzes/difficulty/${difficulty}`),
   create: (data: Record<string, unknown>) => apiClient.request("/api/quizzes", { method: "POST", body: JSON.stringify(data) }),

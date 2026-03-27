@@ -48,6 +48,7 @@ export interface QuizItem {
   quizType: string;
   difficultyLevel: string;
   jlptLevel: string;
+  lessonId?: number;
   question: string;
   optionA: string;
   optionB: string;

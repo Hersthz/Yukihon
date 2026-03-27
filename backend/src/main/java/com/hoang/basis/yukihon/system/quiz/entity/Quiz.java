@@ -41,6 +41,9 @@ public class Quiz {
     @Column(length = 5)
     private String jlptLevel; // N1, N2, N3, N4, N5
 
+    @Column(name = "lesson_id")
+    private Long lessonId;
+
     @Column(columnDefinition = "TEXT")
     private String question;
 

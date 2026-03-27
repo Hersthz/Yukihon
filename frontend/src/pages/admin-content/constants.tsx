@@ -47,6 +47,7 @@ export const grammarColumns: ColumnDef[] = [
 
 export const quizColumns: ColumnDef[] = [
   { key: "title", label: "Title", sortable: true, render: (val) => <span className="font-medium">{String(val)}</span> },
+  { key: "lessonId", label: "Lesson", sortable: true, render: (val) => <span>{val ? `#${String(val)}` : "General"}</span> },
   { key: "quizType", label: "Type", sortable: true },
   { key: "difficultyLevel", label: "Difficulty", sortable: true },
   { key: "correctAnswer", label: "Correct", type: "badge", badgeColor: () => "bg-green-500/20 text-green-300 border-green-500/30" },
@@ -96,6 +97,7 @@ export const createEmptyQuiz = (): QuizItem => ({
   quizType: "MULTIPLE_CHOICE",
   difficultyLevel: "BEGINNER",
   jlptLevel: "N5",
+  lessonId: undefined,
   question: "",
   optionA: "",
   optionB: "",

@@ -60,6 +60,14 @@ public class QuizService {
     }
 
     @Transactional(readOnly = true)
+    public List<QuizDto> getByLessonId(Long lessonId) {
+        return quizRepository.findByLessonIdOrderByCreatedAtAsc(lessonId)
+                .stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
     public List<QuizDto> getByLevelAndDifficulty(String level, String difficulty) {
         return quizRepository.findByLevelAndDifficulty(level, difficulty)
                 .stream()
@@ -79,6 +87,7 @@ public class QuizService {
                 .quizType(Quiz.QuizType.valueOf(request.getQuizType()))
                 .difficultyLevel(request.getDifficultyLevel())
                 .jlptLevel(request.getJlptLevel())
+                .lessonId(request.getLessonId())
                 .question(request.getQuestion())
                 .options(request.getOptions())
                 .correctAnswer(request.getCorrectAnswer())
@@ -101,6 +110,7 @@ public class QuizService {
         quiz.setQuizType(Quiz.QuizType.valueOf(request.getQuizType()));
         quiz.setDifficultyLevel(request.getDifficultyLevel());
         quiz.setJlptLevel(request.getJlptLevel());
+        quiz.setLessonId(request.getLessonId());
         quiz.setQuestion(request.getQuestion());
         quiz.setOptions(request.getOptions());
         quiz.setCorrectAnswer(request.getCorrectAnswer());
@@ -129,6 +139,7 @@ public class QuizService {
                 .quizType(quiz.getQuizType().toString())
                 .difficultyLevel(quiz.getDifficultyLevel())
                 .jlptLevel(quiz.getJlptLevel())
+                .lessonId(quiz.getLessonId())
                 .question(quiz.getQuestion())
                 .options(quiz.getOptions())
                 .correctAnswer(quiz.getCorrectAnswer())

@@ -21,6 +21,7 @@ public class QuizRequest {
     private String quizType;
     private String difficultyLevel;
     private String jlptLevel;
+    private Long lessonId;
     
     @NotBlank(message = "Question is required")
     private String question;

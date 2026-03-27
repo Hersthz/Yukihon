@@ -15,6 +15,8 @@ public interface QuizRepository extends JpaRepository<Quiz, Long> {
 
     List<Quiz> findByJlptLevel(String jlptLevel);
 
+    List<Quiz> findByLessonIdOrderByCreatedAtAsc(Long lessonId);
+
     @Query("SELECT q FROM Quiz q WHERE q.jlptLevel = :level AND q.difficultyLevel = :difficulty")
     List<Quiz> findByLevelAndDifficulty(@Param("level") String level, @Param("difficulty") String difficulty);
 

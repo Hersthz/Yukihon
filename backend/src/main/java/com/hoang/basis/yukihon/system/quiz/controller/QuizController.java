@@ -54,6 +54,12 @@ public class QuizController {
         return ResponseEntity.ok(quizzes);
     }
 
+    @GetMapping("/lesson/{lessonId}")
+    @PreAuthorize("hasAnyAuthority('CONTENT_READ','CONTENT_MANAGE')")
+    public ResponseEntity<List<QuizDto>> getByLessonId(@PathVariable Long lessonId) {
+        return ResponseEntity.ok(quizService.getByLessonId(lessonId));
+    }
+
     @GetMapping("/level/{level}/difficulty/{difficulty}")
     @PreAuthorize("hasAnyAuthority('CONTENT_READ','CONTENT_MANAGE')")
     public ResponseEntity<List<QuizDto>> getByLevelAndDifficulty(

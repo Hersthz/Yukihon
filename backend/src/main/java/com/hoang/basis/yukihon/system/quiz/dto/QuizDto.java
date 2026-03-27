@@ -16,6 +16,7 @@ public class QuizDto {
     private String quizType;
     private String difficultyLevel;
     private String jlptLevel;
+    private Long lessonId;
     private String question;
     private String options;
     private String correctAnswer;
