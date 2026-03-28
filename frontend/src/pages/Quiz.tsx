@@ -2,11 +2,13 @@
 import { motion } from "framer-motion";
 import { Filter, Target, Trophy, Zap } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { quizApi } from "@/api";
+import { useMistakeDna } from "@/hooks/learning/useMistakeDna";
 
 interface QuizItem {
   id: number;
@@ -27,6 +29,7 @@ const difficultyTone: Record<string, string> = {
 const Quiz = () => {
   const [selectedDifficulty, setSelectedDifficulty] = useState("all");
   const [selectedLevel, setSelectedLevel] = useState("all");
+  const { data: mistakeDna } = useMistakeDna();
 
   const { data: quizzes = [], isLoading } = useQuery({
     queryKey: ["quizzes"],
@@ -65,6 +68,36 @@ const Quiz = () => {
           <MetricCard hint="Theo bộ lọc hiện tại" icon={<Trophy className="h-4 w-4 text-emerald-500" />} label="Đang hiển thị" value={stats.visible} />
           <MetricCard hint="Mục tiêu giữ nhịp đều" icon={<Target className="h-4 w-4 text-violet-500" />} label="Điểm mục tiêu" value={`${stats.score}%`} />
         </div>
+
+        {mistakeDna && (
+          <PageSection
+            className="mb-4"
+            title="AI Mistake DNA"
+            description="Read the repeated weak spots behind your quiz history before jumping into the next set."
+            action={
+              <Link to="/mistake-dna">
+                <Button className="rounded-2xl bg-rose-500 text-white hover:bg-rose-400">Open profile</Button>
+              </Link>
+            }
+          >
+            <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_260px_260px]">
+              <div className="rounded-[22px] border border-border bg-background px-4 py-4">
+                <p className="text-base font-semibold text-foreground">{mistakeDna.dominantPatternTitle}</p>
+                <p className="mt-2 text-sm text-muted-foreground">{mistakeDna.summary}</p>
+              </div>
+              <div className="rounded-[22px] border border-border bg-background px-4 py-4">
+                <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Quiz accuracy</p>
+                <p className="mt-2 text-3xl font-semibold text-foreground">{mistakeDna.averageQuizAccuracy}%</p>
+                <p className="mt-1 text-sm text-muted-foreground">Average across recent checkpoint attempts</p>
+              </div>
+              <div className="rounded-[22px] border border-border bg-background px-4 py-4">
+                <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Risk score</p>
+                <p className="mt-2 text-3xl font-semibold text-foreground">{mistakeDna.overallRiskScore}%</p>
+                <p className="mt-1 text-sm text-muted-foreground">Mixes quiz slips, open lessons, and due reviews</p>
+              </div>
+            </div>
+          </PageSection>
+        )}
 
         <PageSection className="mb-4" title="Bộ lọc" description="Ưu tiên quét nhanh thay vì đẩy người dùng vào một hero quá cao.">
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_240px_240px]">
