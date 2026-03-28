@@ -1,4 +1,3 @@
-import { Trophy } from "lucide-react";
 import { PageSection } from "@/components/layout/UserPage";
 import { Badge } from "@/components/ui/badge";
 import { CommunityStats, LeaderboardEntry } from "./types";

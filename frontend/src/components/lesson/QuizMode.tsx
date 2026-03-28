@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import KaorukoMascot from "@/components/KaorukoMascot";
-import { CheckCircle2, XCircle, RotateCcw, Trophy, Sparkles } from "lucide-react";
+import { CheckCircle2, RotateCcw, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface QuizQuestion {
