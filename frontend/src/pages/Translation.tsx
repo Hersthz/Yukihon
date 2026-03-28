@@ -226,15 +226,16 @@ const Translation = () => {
             <>
               <Button
                 className="rounded-2xl border-border bg-card text-foreground/80 hover:bg-card"
+                disabled={loading}
                 onClick={() => setShowHistory((prev) => !prev)}
                 variant="outline"
               >
                 <History className="mr-2 h-4 w-4" />
                 {showHistory ? "Ẩn lịch sử" : "Mở lịch sử"}
               </Button>
-              <Button className="rounded-2xl bg-violet-500 text-white hover:bg-violet-400" onClick={handleTranslate}>
+              <Button className="rounded-2xl bg-violet-500 text-white hover:bg-violet-400" disabled={loading} onClick={handleTranslate}>
                 <Languages className="mr-2 h-4 w-4" />
-                Dịch ngay
+                {loading ? "Dang dich..." : "Dịch ngay"}
               </Button>
             </>
           }

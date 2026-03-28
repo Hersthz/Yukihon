@@ -25,6 +25,7 @@ const Community = () => {
   const [activeCategory, setActiveCategory] = useState("");
   const [jlptFilter, setJlptFilter] = useState<(typeof JLPT_OPTIONS)[number]>("ALL");
   const [search, setSearch] = useState("");
+  const [appliedSearch, setAppliedSearch] = useState("");
   const [stats, setStats] = useState<CommunityStats | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [showBookmarkedOnly, setShowBookmarkedOnly] = useState(false);
@@ -62,7 +63,7 @@ const Community = () => {
         const data = (await communityApi.getPosts(pageNum, 20, {
           category: activeCategory || undefined,
           jlptLevel: jlptFilter === "ALL" ? undefined : jlptFilter,
-          search: search.trim() || undefined,
+          search: appliedSearch.trim() || undefined,
           bookmarkedOnly: showBookmarkedOnly,
         })) as PagedPosts;
 
@@ -75,7 +76,7 @@ const Community = () => {
         setLoading(false);
       }
     },
-    [activeCategory, jlptFilter, search, showBookmarkedOnly, toast]
+    [activeCategory, appliedSearch, jlptFilter, showBookmarkedOnly, toast]
   );
 
   useEffect(() => {
@@ -219,7 +220,13 @@ const Community = () => {
             onActiveCategoryChange={setActiveCategory}
             onJlptFilterChange={setJlptFilter}
             onSearchChange={setSearch}
-            onSearchSubmit={() => void fetchPosts(0)}
+            onSearchSubmit={() => {
+              if (search === appliedSearch) {
+                void fetchPosts(0);
+                return;
+              }
+              setAppliedSearch(search);
+            }}
             onToggleBookmarked={() => setShowBookmarkedOnly((prev) => !prev)}
           />
           <CommunityLeaderboard leaderboard={leaderboard} stats={stats} />

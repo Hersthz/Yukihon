@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
+import React, { createContext, useCallback, useEffect, useState } from "react";
 import { authApi, type AuthResponse, type AuthUser } from "@/api";
 import apiClient from "@/lib/apiClient";
 
@@ -35,7 +35,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.getItem("yukihon_token") || "",
         response
       );
-    } catch (err) {
+    } catch {
       // Silent fail, just logout
       apiClient.clearAuthData();
       setUser(null);

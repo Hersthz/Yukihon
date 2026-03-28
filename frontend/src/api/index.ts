@@ -11,3 +11,4 @@ export * from "./quizApi";
 export * from "./translationApi";
 export * from "./learningPathApi";
 export * from "./progressApi";
+export * from "./mistakeDnaApi";

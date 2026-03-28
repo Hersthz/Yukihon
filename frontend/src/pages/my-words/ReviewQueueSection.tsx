@@ -1,4 +1,4 @@
-import { Brain, KanbanSquare } from "lucide-react";
+import { Brain } from "lucide-react";
 import { EmptyState, PageSection } from "@/components/layout/UserPage";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

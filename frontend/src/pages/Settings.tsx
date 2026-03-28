@@ -1,5 +1,5 @@
 ﻿import { useCallback, useEffect, useState } from "react";
-import { Bell, BookOpen, Globe, Palette, RotateCcw, Save, Target, Volume2 } from "lucide-react";
+import { Bell, Globe, Palette, RotateCcw, Save, Target, Volume2 } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
 import { Button } from "@/components/ui/button";

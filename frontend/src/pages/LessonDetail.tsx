@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, BookOpen, CheckCircle2, Clock3, PlayCircle, Target } from "lucide-react";
 import { progressApi, quizApi } from "@/api";
@@ -65,11 +65,7 @@ const LessonDetail = () => {
     queryFn: async () => {
       if (!Number.isFinite(parsedLessonId) || !lesson) return [];
 
-      const linked = (await quizApi.getByLesson(parsedLessonId)) as LessonQuiz[];
-      if (linked.length > 0) return linked;
-
-      const fallback = (await quizApi.getByLevel(lesson.jlptLevel || "N5")) as LessonQuiz[];
-      return fallback.slice(0, 3);
+      return (await quizApi.getByLesson(parsedLessonId)) as LessonQuiz[];
     },
     enabled: Number.isFinite(parsedLessonId) && !!lesson,
   });

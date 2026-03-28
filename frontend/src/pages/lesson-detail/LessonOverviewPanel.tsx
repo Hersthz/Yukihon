@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { BookOpen, Target } from "lucide-react";
 import { PageSection } from "@/components/layout/UserPage";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
