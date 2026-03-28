@@ -2,45 +2,18 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, BookOpen, CheckCircle2, Clock3, PlayCircle, Target } from "lucide-react";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { progressApi, quizApi } from "@/api";
-import { useMyProgress } from "@/hooks/learning/useProgress";
-import { useLearningPath } from "@/hooks/learning/useLearningPath";
-import { useLesson } from "@/hooks/learning/useLessons";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { EmptyState, MetricCard, PageHeader } from "@/components/layout/UserPage";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
+import { useLesson } from "@/hooks/learning/useLessons";
+import { useLearningPath } from "@/hooks/learning/useLearningPath";
+import { useMyProgress } from "@/hooks/learning/useProgress";
 import { useToast } from "@/hooks/use-toast";
-
-const formatStatus = (status?: string | null) => {
-  switch (status) {
-    case "COMPLETED":
-      return "Da hoan thanh";
-    case "IN_PROGRESS":
-      return "Dang hoc";
-    default:
-      return "Chua bat dau";
-  }
-};
-
-const estimateMinutes = (content?: string | null) => {
-  const length = content?.length ?? 0;
-  if (length > 5000) return 20;
-  if (length > 2500) return 16;
-  return 12;
-};
-
-const parseQuizOptions = (value?: string | null): string[] => {
-  if (!value) return [];
-  try {
-    const parsed = JSON.parse(value);
-    return Array.isArray(parsed) ? parsed.map((item) => String(item)) : [];
-  } catch {
-    return [];
-  }
-};
+import LessonContentPanel from "@/pages/lesson-detail/LessonContentPanel";
+import LessonOverviewPanel from "@/pages/lesson-detail/LessonOverviewPanel";
+import { estimateMinutes, formatStatus } from "@/pages/lesson-detail/utils";
 
 interface LessonQuiz {
   id: number;
@@ -60,16 +33,17 @@ const LessonDetail = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const { toast } = useToast();
+
   const parsedLessonId = Number(lessonId);
   const [noteText, setNoteText] = useState("");
-
-  const { data: lesson, isLoading } = useLesson(Number.isFinite(parsedLessonId) ? parsedLessonId : undefined);
-  const { data: progress = [], isLoading: isProgressLoading } = useMyProgress();
-  const { data: learningPath } = useLearningPath();
   const [quizAnswers, setQuizAnswers] = useState<Record<number, string>>({});
   const [quizScore, setQuizScore] = useState<number | null>(null);
   const [quizPassed, setQuizPassed] = useState<boolean | null>(null);
   const [gradingQuiz, setGradingQuiz] = useState(false);
+
+  const { data: lesson, isLoading } = useLesson(Number.isFinite(parsedLessonId) ? parsedLessonId : undefined);
+  const { data: progress = [], isLoading: isProgressLoading } = useMyProgress();
+  const { data: learningPath } = useLearningPath();
 
   const lessonProgress = useMemo(
     () => progress.find((item) => item.lessonId === parsedLessonId) ?? null,
@@ -272,159 +246,40 @@ const LessonDetail = () => {
         </div>
 
         {isLoading ? (
-          <PageSection title="Dang tai">
+          <div className="rounded-[28px] border border-white bg-card/70 p-10">
             <div className="flex items-center justify-center py-20">
               <div className="h-12 w-12 animate-spin rounded-full border-4 border-sky-100 border-t-sky-500" />
             </div>
-          </PageSection>
+          </div>
         ) : !lesson ? (
           <EmptyState title="Khong tim thay bai hoc" description="Bai hoc nay co the da bi xoa hoac chua duoc xuat ban." icon={<BookOpen className="h-6 w-6" />} />
         ) : (
           <div className="grid gap-4 xl:grid-cols-[300px_minmax(0,1fr)]">
-            <PageSection title="Tong quan bai hoc" description="Day la noi ban co the bat dau, tiep tuc va danh dau hoan thanh bai hoc.">
-              <div className="space-y-4">
-                <div className="rounded-[20px] border border-border bg-card p-4">
-                  <div className="flex flex-wrap gap-2">
-                    <Badge className="rounded-full border border-sky-200 bg-sky-50 text-sky-700">{lesson.jlptLevel || "N5"}</Badge>
-                    {lesson.category ? <Badge className="rounded-full border border-border bg-muted text-muted-foreground">{lesson.category}</Badge> : null}
-                    {lesson.status ? <Badge className="rounded-full border border-border bg-white text-foreground/70">{lesson.status}</Badge> : null}
-                  </div>
-                  <p className="mt-4 text-sm leading-6 text-foreground/80">
-                    {lesson.description || "Bai hoc nay chua co mo ta ngan. Ban co the vao thang noi dung ben phai de hoc ngay."}
-                  </p>
-                </div>
-
-                <div className="rounded-[20px] border border-emerald-200 bg-emerald-50/70 p-4">
-                  <p className="text-sm font-semibold text-emerald-800">Nhip hoc goi y</p>
-                  <p className="mt-1 text-sm text-foreground/80">
-                    Bat dau bai hoc de dua no vao luong ca nhan hoa, va danh dau hoan thanh khi hoc xong de dashboard cap nhat bai tiep theo.
-                  </p>
-                </div>
-
-                {(lesson.audioUrl || lesson.videoUrl || lesson.imageUrl) && (
-                  <div className="rounded-[20px] border border-border bg-card p-4">
-                    <p className="text-sm font-semibold text-foreground">Tai nguyen di kem</p>
-                    <div className="mt-3 space-y-3">
-                      {lesson.imageUrl ? <img alt={lesson.title} className="w-full rounded-2xl border border-border object-cover" src={lesson.imageUrl} /> : null}
-                      {lesson.audioUrl ? <audio className="w-full" controls src={lesson.audioUrl} /> : null}
-                      {lesson.videoUrl ? <video className="w-full rounded-2xl border border-border" controls src={lesson.videoUrl} /> : null}
-                    </div>
-                  </div>
-                )}
-
-                <div className="rounded-[20px] border border-border bg-card p-4">
-                  <p className="text-sm font-semibold text-foreground">Ghi chu ca nhan</p>
-                  <Textarea
-                    className="mt-3 min-h-[120px] rounded-[18px] border-border bg-background/60"
-                    disabled={!lessonProgress}
-                    onChange={(event) => setNoteText(event.target.value)}
-                    placeholder={lessonProgress ? "Tom tat diem can nho, tu moi, hoac cau can on lai." : "Bat dau lesson truoc de luu ghi chu hoc bai."}
-                    value={noteText}
-                  />
-                  <Button className="mt-3 rounded-2xl" disabled={!lessonProgress} onClick={() => void saveNote()}>
-                    Luu ghi chu
-                  </Button>
-                </div>
-
-                <Link to="/my-words" className="block rounded-[20px] border border-amber-200 bg-amber-50/70 p-4 text-sm text-foreground/80">
-                  Sau khi hoc xong, ban co the quay sang so tay tu vung de review bang spaced repetition.
-                </Link>
-
-                {upcomingLesson ? (
-                  <Link to={`/lessons/${upcomingLesson.id}`} className="block rounded-[20px] border border-sky-200 bg-sky-50/70 p-4 text-sm text-foreground/80">
-                    Bai tiep theo goi y: <span className="font-semibold text-sky-700">{upcomingLesson.title}</span>
-                  </Link>
-                ) : null}
-              </div>
-            </PageSection>
-
-            <PageSection title="Noi dung bai hoc" description="Phien ban doc nhanh cho flow hoc co the tiep tuc ngay trong du an hien tai.">
-              {lesson.content ? (
-                <div className="space-y-4">
-                  <div className="rounded-[22px] border border-border bg-card p-5">
-                    <div className="mb-4 h-2.5 overflow-hidden rounded-full bg-muted">
-                      <div className="h-full rounded-full bg-[linear-gradient(90deg,#60a5fa,#22d3ee)]" style={{ width: `${progressPercent}%` }} />
-                    </div>
-                    <div className="whitespace-pre-wrap text-sm leading-7 text-foreground/85">{lesson.content}</div>
-                  </div>
-
-                  <div className="rounded-[22px] border border-amber-200 bg-amber-50/70 p-5">
-                    <div className="mb-4 flex items-start justify-between gap-3">
-                      <div>
-                        <h3 className="text-lg font-semibold text-foreground">Lesson checkpoint quiz</h3>
-                        <p className="mt-1 text-sm text-foreground/75">Hoan thanh quiz nay de he thong tu dong chot completion cho lesson.</p>
-                      </div>
-                      {quizScore != null ? (
-                        <Badge className={quizPassed ? "rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700" : "rounded-full border border-rose-200 bg-rose-50 text-rose-700"}>
-                          {quizScore}%
-                        </Badge>
-                      ) : null}
-                    </div>
-
-                    {isQuizLoading ? (
-                      <div className="flex items-center justify-center py-12">
-                        <div className="h-10 w-10 animate-spin rounded-full border-4 border-amber-100 border-t-amber-500" />
-                      </div>
-                    ) : relatedQuizzes.length === 0 ? (
-                      <EmptyState title="Chua co checkpoint quiz" description="Hay lien ket quiz voi lesson trong CMS de flow completion day du hon." icon={<Target className="h-6 w-6" />} />
-                    ) : (
-                      <div className="space-y-4">
-                        {relatedQuizzes.map((quiz, index) => {
-                          const options = parseQuizOptions(quiz.options);
-                          const selected = quizAnswers[quiz.id];
-
-                          return (
-                            <div key={quiz.id} className="rounded-[20px] border border-amber-200 bg-white/80 p-4">
-                              <p className="text-sm font-semibold text-foreground">
-                                Cau {index + 1}: {quiz.title}
-                              </p>
-                              <p className="mt-2 text-sm text-foreground/80">{quiz.question}</p>
-
-                              <div className="mt-3 grid gap-2">
-                                {options.map((option) => {
-                                  const active = selected === option;
-                                  return (
-                                    <button
-                                      key={`${quiz.id}-${option}`}
-                                      type="button"
-                                      onClick={() => setQuizAnswers((prev) => ({ ...prev, [quiz.id]: option }))}
-                                      className={`rounded-2xl border px-4 py-3 text-left text-sm transition ${
-                                        active ? "border-amber-300 bg-amber-100 text-amber-900" : "border-border bg-card text-foreground/80 hover:bg-muted"
-                                      }`}
-                                    >
-                                      {option}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-
-                              {quizScore != null ? (
-                                <p className="mt-3 text-xs text-muted-foreground">
-                                  Dap an dung: {quiz.correctAnswer}. {quiz.explanation || "Khong co giai thich bo sung."}
-                                </p>
-                              ) : null}
-                            </div>
-                          );
-                        })}
-
-                        <div className="flex flex-wrap gap-2">
-                          <Button className="rounded-2xl bg-amber-500 text-white hover:bg-amber-400" disabled={gradingQuiz} onClick={() => void submitCheckpointQuiz()}>
-                            Cham checkpoint
-                          </Button>
-                          {quizPassed === false ? (
-                            <Button className="rounded-2xl" disabled={gradingQuiz} onClick={() => { setQuizAnswers({}); setQuizScore(null); setQuizPassed(null); }} variant="outline">
-                              Lam lai
-                            </Button>
-                          ) : null}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <EmptyState title="Noi dung dang trong" description="Lesson da ton tai nhung chua co content de hoc." icon={<BookOpen className="h-6 w-6" />} />
-              )}
-            </PageSection>
+            <LessonOverviewPanel
+              lesson={lesson}
+              lessonProgress={lessonProgress}
+              noteText={noteText}
+              upcomingLesson={upcomingLesson}
+              onNoteChange={setNoteText}
+              onSaveNote={() => void saveNote()}
+            />
+            <LessonContentPanel
+              lesson={lesson}
+              progressPercent={progressPercent}
+              relatedQuizzes={relatedQuizzes}
+              isQuizLoading={isQuizLoading}
+              quizAnswers={quizAnswers}
+              quizScore={quizScore}
+              quizPassed={quizPassed}
+              gradingQuiz={gradingQuiz}
+              onAnswerChange={(quizId, value) => setQuizAnswers((prev) => ({ ...prev, [quizId]: value }))}
+              onSubmitCheckpoint={() => void submitCheckpointQuiz()}
+              onResetQuiz={() => {
+                setQuizAnswers({});
+                setQuizScore(null);
+                setQuizPassed(null);
+              }}
+            />
           </div>
         )}
       </div>
