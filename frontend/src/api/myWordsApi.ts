@@ -10,6 +10,15 @@ type SavedStatusResponse = Record<string, boolean>;
 
 type ReviewRating = "AGAIN" | "HARD" | "GOOD" | "EASY";
 
+export interface MyWordsStats {
+  totalSaved: number;
+  masteredCount: number;
+  dueTodayCount: number;
+  kanjiDueTodayCount: number;
+  vocabularyDueTodayCount: number;
+  folders: string[];
+}
+
 export const myWordsApi = {
   getAll: (folder?: string) => {
     const params = folder ? `?folder=${encodeURIComponent(folder)}` : "";
@@ -43,5 +52,5 @@ export const myWordsApi = {
     const params = vocabularyIds.map((id) => `vocabularyIds=${encodeURIComponent(String(id))}`).join("&");
     return apiClient.request<SavedStatusResponse>(`/api/my-words/check?${params}`);
   },
-  getStats: () => apiClient.request("/api/my-words/stats"),
+  getStats: () => apiClient.request<MyWordsStats>("/api/my-words/stats"),
 };

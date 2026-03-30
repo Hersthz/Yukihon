@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -15,10 +16,14 @@ import {
   Zap,
 } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import LiveStudyAuraPanel from "@/components/dashboard/LiveStudyAuraPanel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { myWordsApi } from "@/api";
 import { useAuth } from "@/hooks/use-auth";
 import { useLearningPath } from "@/hooks/learning/useLearningPath";
+import { useMistakeDna } from "@/hooks/learning/useMistakeDna";
+import { buildStudyAura } from "@/lib/studyAura";
 import type { LearningPathLesson } from "@/api";
 
 const quickActions = [
@@ -49,6 +54,12 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, refreshUser } = useAuth();
   const { data: learningPath, isLoading: isLearningPathLoading } = useLearningPath();
+  const { data: mistakeDna, isLoading: isMistakeDnaLoading } = useMistakeDna();
+  const { data: wordStats, isLoading: isWordStatsLoading } = useQuery({
+    queryKey: ["my-words-stats"],
+    queryFn: () => myWordsApi.getStats(),
+    staleTime: 1000 * 60 * 5,
+  });
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -71,6 +82,11 @@ const Dashboard = () => {
   const greetingName = user?.displayName || "bạn";
   const nextLesson = learningPath?.nextLesson ?? null;
   const recommendedLessons = learningPath?.recommendedLessons ?? [];
+  const studyAura = useMemo(
+    () => buildStudyAura({ learningPath, mistakeDna, wordStats }),
+    [learningPath, mistakeDna, wordStats]
+  );
+  const isStudyAuraLoading = isLearningPathLoading || isMistakeDnaLoading || isWordStatsLoading;
   const todayGoals = learningPath?.todayGoals ?? [
     "Thiết lập mục tiêu JLPT trong phần Settings để hệ thống cá nhân hóa sâu hơn.",
     "Chọn một bài trọng tâm và giữ nhịp học đều trong hôm nay.",
@@ -328,6 +344,8 @@ const Dashboard = () => {
           </div>
 
           <div className="space-y-4">
+            <LiveStudyAuraPanel aura={studyAura} loading={isStudyAuraLoading} />
+
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
