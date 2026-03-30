@@ -50,6 +50,7 @@ const PRIMARY_GROUPS: NavGroup[] = [
     items: [
       { label: "Tổng quan", path: "/dashboard", icon: LayoutDashboard },
       { label: "Tra cứu", path: "/dictionary", icon: Search },
+      { label: "Story Mode", path: "/story-mode", icon: BookOpen, badge: "New" },
       { label: "Dịch", path: "/translation", icon: Globe2 },
       { label: "Cộng đồng", path: "/community", icon: Users },
       { label: "Mistake DNA", path: "/mistake-dna", icon: Sparkles },
@@ -77,6 +78,7 @@ const SECONDARY_ITEMS: NavItem[] = [
 const PAGE_META: Record<string, string> = {
   "/dashboard": "Không gian học tập",
   "/dictionary": "Tra cứu",
+  "/story-mode": "Story Mode",
   "/translation": "Dịch",
   "/community": "Cộng đồng",
   "/mistake-dna": "Mistake DNA",

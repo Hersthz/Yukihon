@@ -6,6 +6,8 @@ interface SaveWordPayload {
   personalNote?: string;
 }
 
+type SavedStatusResponse = Record<string, boolean>;
+
 type ReviewRating = "AGAIN" | "HARD" | "GOOD" | "EASY";
 
 export const myWordsApi = {
@@ -34,5 +36,12 @@ export const myWordsApi = {
     }),
   removeWord: (id: number) => apiClient.request(`/api/my-words/${id}`, { method: "DELETE" }),
   isWordSaved: (vocabularyId: number) => apiClient.request(`/api/my-words/check/${vocabularyId}`),
+  getSavedStatuses: (vocabularyIds: number[]) => {
+    if (vocabularyIds.length === 0) {
+      return Promise.resolve({});
+    }
+    const params = vocabularyIds.map((id) => `vocabularyIds=${encodeURIComponent(String(id))}`).join("&");
+    return apiClient.request<SavedStatusResponse>(`/api/my-words/check?${params}`);
+  },
   getStats: () => apiClient.request("/api/my-words/stats"),
 };

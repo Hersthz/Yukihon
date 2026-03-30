@@ -24,6 +24,7 @@ const NotFound = lazy(() => import("@/pages/NotFound"));
 const Profile = lazy(() => import("@/pages/Profile"));
 const Quiz = lazy(() => import("@/pages/Quiz"));
 const Settings = lazy(() => import("@/pages/Settings"));
+const StoryMode = lazy(() => import("@/pages/StoryMode"));
 const Translation = lazy(() => import("@/pages/Translation"));
 const Vocabulary = lazy(() => import("@/pages/Vocabulary"));
 
@@ -54,6 +55,7 @@ export const AppRoutes = () => {
         <Route path="/kanji-library/:character" element={withProtectedRoute(<KanjiDetail />)} />
         <Route path="/profile" element={withProtectedRoute(<Profile />)} />
         <Route path="/dictionary" element={withProtectedRoute(<Dictionary />)} />
+        <Route path="/story-mode" element={withProtectedRoute(<StoryMode />)} />
         <Route path="/translation" element={withProtectedRoute(<Translation />)} />
         <Route path="/community" element={withProtectedRoute(<Community />)} />
         <Route path="/my-words" element={withProtectedRoute(<MyWords />)} />
