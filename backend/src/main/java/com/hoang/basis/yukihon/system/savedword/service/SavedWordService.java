@@ -16,8 +16,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -63,8 +65,10 @@ public class SavedWordService {
 
     @Transactional
     public SavedWordDto saveWord(Long userId, SaveWordRequest request) {
-        if (savedWordRepository.existsByUserIdAndVocabularyId(userId, request.getVocabularyId())) {
-            throw new IllegalArgumentException("Word already saved");
+        SavedWord existing = savedWordRepository.findByUserIdAndVocabularyId(userId, request.getVocabularyId())
+                .orElse(null);
+        if (existing != null) {
+            return SavedWordDto.fromEntity(existing);
         }
 
         User user = findUserByIdOrThrow(userId);
@@ -169,6 +173,28 @@ public class SavedWordService {
 
     public boolean isWordSaved(Long userId, Long vocabularyId) {
         return savedWordRepository.existsByUserIdAndVocabularyId(userId, vocabularyId);
+    }
+
+    public Map<Long, Boolean> getSavedStatuses(Long userId, List<Long> vocabularyIds) {
+        if (vocabularyIds == null || vocabularyIds.isEmpty()) {
+            return Map.of();
+        }
+
+        List<Long> normalizedIds = vocabularyIds.stream()
+                .filter(id -> id != null && id > 0)
+                .distinct()
+                .collect(Collectors.toList());
+        if (normalizedIds.isEmpty()) {
+            return Map.of();
+        }
+
+        java.util.Set<Long> savedIds = savedWordRepository.findByUserIdAndVocabularyIdIn(userId, normalizedIds).stream()
+                .map(savedWord -> savedWord.getVocabulary().getId())
+                .collect(Collectors.toSet());
+
+        Map<Long, Boolean> statuses = new LinkedHashMap<>();
+        normalizedIds.forEach(vocabularyId -> statuses.put(vocabularyId, savedIds.contains(vocabularyId)));
+        return statuses;
     }
 
     public SavedWordStatsDto getStats(Long userId) {

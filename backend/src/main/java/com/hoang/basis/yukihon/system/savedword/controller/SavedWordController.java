@@ -119,6 +119,15 @@ public class SavedWordController {
         return ResponseEntity.ok(Map.of("saved", savedWordService.isWordSaved(userId, vocabularyId)));
     }
 
+    @GetMapping("/check")
+    public ResponseEntity<Map<Long, Boolean>> getSavedStatuses(
+            @RequestParam List<Long> vocabularyIds,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        Long userId = getUserId(userDetails);
+        return ResponseEntity.ok(savedWordService.getSavedStatuses(userId, vocabularyIds));
+    }
+
     @GetMapping("/stats")
     public ResponseEntity<SavedWordStatsDto> getStats(
             @AuthenticationPrincipal UserDetails userDetails

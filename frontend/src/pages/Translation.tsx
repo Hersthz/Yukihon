@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useState, type KeyboardEvent } from "react";
+import { useCallback, useEffect, useState, type KeyboardEvent } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   AlertCircle,
@@ -10,16 +10,18 @@ import {
   Copy,
   History,
   Languages,
+  Plus,
   Trash2,
   Volume2,
   X,
 } from "lucide-react";
+import { dictionaryApi, myWordsApi, translationApi, type DictionaryEntry, type TranslationHistoryItem } from "@/api";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { translationApi, type TranslationHistoryItem } from "@/api";
 import { useToast } from "@/hooks/use-toast";
 
 const LANGUAGES = [
@@ -52,6 +54,29 @@ const timeAgo = (dateStr: string) => {
   return `${days} ngày trước`;
 };
 
+const normalizeSavedStatuses = (statuses: Record<string, boolean>) =>
+  Object.fromEntries(Object.entries(statuses).map(([id, saved]) => [Number(id), saved])) as Record<number, boolean>;
+
+const splitSuggestionCandidates = (text: string) => {
+  const normalized = text.trim();
+  if (!normalized) return [];
+
+  const tokens = normalized
+    .replace(/[\r\n]+/g, " ")
+    .split(/[\s,.;!?、。！？]+/)
+    .map((token) => token.trim())
+    .filter((token) => token.length >= 2);
+
+  return Array.from(new Set([normalized, ...tokens])).slice(0, 4);
+};
+
+const buildSuggestionQueries = (sourceLang: string, targetLang: string, sourceText: string, translatedText: string) => {
+  const japaneseCandidate = sourceLang === "ja" ? sourceText : targetLang === "ja" ? translatedText : "";
+  const meaningCandidate = sourceLang === "ja" ? translatedText : targetLang === "ja" ? sourceText : "";
+
+  return Array.from(new Set([...splitSuggestionCandidates(japaneseCandidate), ...splitSuggestionCandidates(meaningCandidate)])).slice(0, 5);
+};
+
 const Translation = () => {
   const { toast } = useToast();
   const [sourceLang, setSourceLang] = useState("vi");
@@ -68,6 +93,71 @@ const Translation = () => {
   const [historyPage, setHistoryPage] = useState(0);
   const [historyTotalPages, setHistoryTotalPages] = useState(0);
   const [stats, setStats] = useState<{ totalTranslations: number; totalBookmarks: number } | null>(null);
+  const [suggestions, setSuggestions] = useState<DictionaryEntry[]>([]);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+  const [savedStatuses, setSavedStatuses] = useState<Record<number, boolean>>({});
+  const [savingWordId, setSavingWordId] = useState<number | null>(null);
+  const [hasSuggestionLookup, setHasSuggestionLookup] = useState(false);
+
+  const clearSuggestions = useCallback(() => {
+    setSuggestions([]);
+    setSavedStatuses({});
+    setHasSuggestionLookup(false);
+  }, []);
+
+  const loadSavedStatuses = useCallback(async (vocabularyIds: number[]) => {
+    if (vocabularyIds.length === 0) {
+      setSavedStatuses({});
+      return;
+    }
+
+    try {
+      const response = await myWordsApi.getSavedStatuses(vocabularyIds);
+      setSavedStatuses(normalizeSavedStatuses(response));
+    } catch {
+      setSavedStatuses({});
+    }
+  }, []);
+
+  const loadSuggestionWords = useCallback(
+    async (nextSourceLang: string, nextTargetLang: string, nextSourceText: string, nextTranslatedText: string) => {
+      const queries = buildSuggestionQueries(nextSourceLang, nextTargetLang, nextSourceText, nextTranslatedText);
+      setHasSuggestionLookup(true);
+
+      if (queries.length === 0) {
+        setSuggestions([]);
+        setSavedStatuses({});
+        return;
+      }
+
+      setSuggestionsLoading(true);
+      try {
+        const collected = new Map<number, DictionaryEntry>();
+
+        for (const query of queries) {
+          const matches = await dictionaryApi.search(query);
+          matches.forEach((item) => {
+            if (!collected.has(item.id) && collected.size < 6) {
+              collected.set(item.id, item);
+            }
+          });
+          if (collected.size >= 6) {
+            break;
+          }
+        }
+
+        const nextSuggestions = Array.from(collected.values());
+        setSuggestions(nextSuggestions);
+        await loadSavedStatuses(nextSuggestions.map((item) => item.id));
+      } catch {
+        setSuggestions([]);
+        setSavedStatuses({});
+      } finally {
+        setSuggestionsLoading(false);
+      }
+    },
+    [loadSavedStatuses]
+  );
 
   const loadStats = useCallback(async () => {
     try {
@@ -123,20 +213,22 @@ const Translation = () => {
         text: sourceText.trim(),
       });
       setTranslatedText(response.translatedText);
-      loadStats();
+      void loadStats();
+      void loadSuggestionWords(response.sourceLang, response.targetLang, response.sourceText, response.translatedText);
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : "Không thể dịch lúc này.";
       setTranslatedText("");
+      clearSuggestions();
       toast({ title: "Dịch chưa thành công", description: message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
-  }, [loadStats, sourceLang, sourceText, targetLang, toast]);
+  }, [clearSuggestions, loadStats, loadSuggestionWords, sourceLang, sourceText, targetLang, toast]);
 
   const handleKeyDown = (event: KeyboardEvent) => {
     if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
       event.preventDefault();
-      handleTranslate();
+      void handleTranslate();
     }
   };
 
@@ -145,6 +237,7 @@ const Translation = () => {
     setTargetLang(sourceLang);
     setSourceText(translatedText);
     setTranslatedText(sourceText);
+    clearSuggestions();
   };
 
   const copyToClipboard = async () => {
@@ -155,15 +248,15 @@ const Translation = () => {
   };
 
   useEffect(() => {
-    loadStats();
+    void loadStats();
   }, [loadStats]);
 
   useEffect(() => {
     if (!showHistory) return;
     if (historyTab === "all") {
-      loadHistory(0);
+      void loadHistory(0);
     } else {
-      loadBookmarks();
+      void loadBookmarks();
     }
   }, [historyTab, loadBookmarks, loadHistory, showHistory]);
 
@@ -175,7 +268,7 @@ const Translation = () => {
         if (updated.bookmarked) return [updated, ...prev.filter((item) => item.id !== id)];
         return prev.filter((item) => item.id !== id);
       });
-      loadStats();
+      void loadStats();
     } catch {
       toast({ title: "Không cập nhật được bookmark", description: "Vui lòng thử lại.", variant: "destructive" });
     }
@@ -186,7 +279,7 @@ const Translation = () => {
       await translationApi.deleteHistory(id);
       setHistory((prev) => prev.filter((item) => item.id !== id));
       setBookmarks((prev) => prev.filter((item) => item.id !== id));
-      loadStats();
+      void loadStats();
     } catch {
       toast({ title: "Không xoá được mục này", description: "Vui lòng thử lại.", variant: "destructive" });
     }
@@ -197,7 +290,7 @@ const Translation = () => {
       await translationApi.clearHistory();
       setHistory([]);
       setBookmarks([]);
-      loadStats();
+      void loadStats();
       toast({ title: "Đã xoá lịch sử", description: "Lịch sử dịch đã được làm trống." });
     } catch {
       toast({ title: "Không thể xoá lịch sử", description: "Vui lòng thử lại.", variant: "destructive" });
@@ -210,9 +303,29 @@ const Translation = () => {
     setSourceText(item.sourceText);
     setTranslatedText(item.translatedText);
     setShowHistory(false);
+    void loadSuggestionWords(item.sourceLang, item.targetLang, item.sourceText, item.translatedText);
+  };
+
+  const handleSaveSuggestedWord = async (word: DictionaryEntry) => {
+    if (savedStatuses[word.id]) {
+      toast({ title: "Đã có trong sổ tay", description: `${word.kanji || word.hiragana} đang nằm trong My Words rồi.` });
+      return;
+    }
+
+    try {
+      setSavingWordId(word.id);
+      await myWordsApi.saveWord({ vocabularyId: word.id });
+      setSavedStatuses((prev) => ({ ...prev, [word.id]: true }));
+      toast({ title: "Đã lưu", description: `${word.kanji || word.hiragana} đã được thêm vào My Words.` });
+    } catch {
+      toast({ title: "Lưu chưa thành công", description: "Vui lòng thử lại.", variant: "destructive" });
+    } finally {
+      setSavingWordId(null);
+    }
   };
 
   const visibleHistory = historyTab === "all" ? history : bookmarks;
+  const canSuggestVocabulary = sourceLang === "ja" || targetLang === "ja";
 
   return (
     <DashboardLayout>
@@ -233,7 +346,7 @@ const Translation = () => {
                 <History className="mr-2 h-4 w-4" />
                 {showHistory ? "Ẩn lịch sử" : "Mở lịch sử"}
               </Button>
-              <Button className="rounded-2xl bg-violet-500 text-white hover:bg-violet-400" disabled={loading} onClick={handleTranslate}>
+              <Button className="rounded-2xl bg-violet-500 text-white hover:bg-violet-400" disabled={loading} onClick={() => void handleTranslate()}>
                 <Languages className="mr-2 h-4 w-4" />
                 {loading ? "Dang dich..." : "Dịch ngay"}
               </Button>
@@ -287,7 +400,7 @@ const Translation = () => {
                   <Textarea
                     className="min-h-[220px] resize-none rounded-[18px] border-none bg-muted text-base text-foreground shadow-none placeholder:text-muted-foreground focus-visible:ring-0"
                     maxLength={MAX_CHARS}
-                    onChange={(e) => setSourceText(e.target.value)}
+                    onChange={(event) => setSourceText(event.target.value)}
                     onKeyDown={handleKeyDown}
                     placeholder="Nhập văn bản cần dịch..."
                     value={sourceText}
@@ -319,6 +432,62 @@ const Translation = () => {
               </div>
             </PageSection>
 
+            {translatedText && canSuggestVocabulary && (
+              <PageSection
+                title="Gợi ý lưu vào My Words"
+                description="Sau khi dịch xong, mình thử dò các mục từ điển gần nhất để bạn lưu thẳng vào sổ tay."
+              >
+                {suggestionsLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="h-10 w-10 rounded-full border-4 border-violet-100 border-t-violet-500 animate-spin" />
+                  </div>
+                ) : suggestions.length === 0 && hasSuggestionLookup ? (
+                  <EmptyState
+                    icon={<Languages className="h-6 w-6" />}
+                    title="Chưa tìm thấy vocab phù hợp"
+                    description="Nếu đây là cả một câu dài, bạn có thể rút ngắn từ khóa hoặc mở trang Dictionary để tra kỹ hơn."
+                  />
+                ) : (
+                  <div className="grid gap-3 md:grid-cols-2">
+                    {suggestions.map((word) => {
+                      const isSaved = !!savedStatuses[word.id];
+                      const isSaving = savingWordId === word.id;
+
+                      return (
+                        <div key={word.id} className="rounded-[20px] border border-border bg-card p-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="text-lg font-semibold text-foreground">{word.kanji || word.hiragana}</p>
+                              <p className="mt-1 text-sm text-sky-700">
+                                {word.hiragana} · {word.romaji}
+                              </p>
+                            </div>
+                            {word.jlptLevel ? <Badge className="rounded-full border border-violet-200 bg-violet-50 text-violet-700">{word.jlptLevel}</Badge> : null}
+                          </div>
+
+                          <p className="mt-3 text-sm text-muted-foreground">{word.meaning}</p>
+
+                          <div className="mt-4 flex items-center justify-between gap-3">
+                            <span className="text-xs text-muted-foreground">{word.wordType || "Vocabulary"}</span>
+                            <Button
+                              className="rounded-xl bg-violet-50 text-violet-700 hover:bg-violet-100 disabled:bg-emerald-50 disabled:text-emerald-700"
+                              onClick={() => void handleSaveSuggestedWord(word)}
+                              size="sm"
+                              variant="ghost"
+                              disabled={isSaved || isSaving}
+                            >
+                              {isSaved ? <Check className="mr-1 h-4 w-4" /> : <Plus className="mr-1 h-4 w-4" />}
+                              {isSaved ? "Đã lưu" : isSaving ? "Đang lưu..." : "Lưu vào My Words"}
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </PageSection>
+            )}
+
             <PageSection title="Cụm mẫu thường dùng" description="Giữ sẵn vài cụm ngắn để dịch nhanh và học bằng ví dụ thật.">
               <div className="grid gap-3 md:grid-cols-2">
                 {QUICK_PHRASES.map((phrase) => (
@@ -330,6 +499,7 @@ const Translation = () => {
                       setSourceLang("ja");
                       setTargetLang("vi");
                       setTranslatedText(phrase.vi);
+                      clearSuggestions();
                     }}
                     type="button"
                   >
@@ -410,11 +580,11 @@ const Translation = () => {
                                 <p className="truncate text-sm text-foreground">{item.sourceText}</p>
                                 <p className="mt-1 truncate text-sm text-sky-700">{item.translatedText}</p>
                               </div>
-                              <div className="flex shrink-0 items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                                <Button className="h-8 w-8 rounded-xl" onClick={() => handleToggleBookmark(item.id)} size="icon" variant="ghost">
+                              <div className="flex shrink-0 items-center gap-1" onClick={(event) => event.stopPropagation()}>
+                                <Button className="h-8 w-8 rounded-xl" onClick={() => void handleToggleBookmark(item.id)} size="icon" variant="ghost">
                                   {item.bookmarked ? <BookmarkCheck className="h-4 w-4 text-amber-500" /> : <Bookmark className="h-4 w-4 text-muted-foreground" />}
                                 </Button>
-                                <Button className="h-8 w-8 rounded-xl" onClick={() => handleDeleteHistory(item.id)} size="icon" variant="ghost">
+                                <Button className="h-8 w-8 rounded-xl" onClick={() => void handleDeleteHistory(item.id)} size="icon" variant="ghost">
                                   <X className="h-4 w-4 text-rose-500" />
                                 </Button>
                               </div>
@@ -426,7 +596,7 @@ const Translation = () => {
 
                     {historyTab === "all" && historyTotalPages > 1 && (
                       <div className="mt-3 flex items-center justify-center gap-2">
-                        <Button className="rounded-xl" disabled={historyPage === 0} onClick={() => loadHistory(historyPage - 1)} size="sm" variant="outline">
+                        <Button className="rounded-xl" disabled={historyPage === 0} onClick={() => void loadHistory(historyPage - 1)} size="sm" variant="outline">
                           Trước
                         </Button>
                         <span className="text-xs text-muted-foreground">
@@ -435,7 +605,7 @@ const Translation = () => {
                         <Button
                           className="rounded-xl"
                           disabled={historyPage >= historyTotalPages - 1}
-                          onClick={() => loadHistory(historyPage + 1)}
+                          onClick={() => void loadHistory(historyPage + 1)}
                           size="sm"
                           variant="outline"
                         >

@@ -1,26 +1,13 @@
-﻿import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { BookOpen, Plus, Search, Star, Volume2, X } from "lucide-react";
+import { BookOpen, Check, Plus, Search, Star, Volume2, X } from "lucide-react";
+import { dictionaryApi, myWordsApi, type DictionaryEntry } from "@/api";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { dictionaryApi, myWordsApi } from "@/api";
 import { useToast } from "@/hooks/use-toast";
-
-interface VocabResult {
-  id: number;
-  kanji: string;
-  hiragana: string;
-  romaji: string;
-  meaning: string;
-  exampleSentenceJP: string;
-  exampleSentenceEN: string;
-  wordType: string;
-  jlptLevel: string;
-  additionalNotes: string;
-}
 
 const levelClass: Record<string, string> = {
   N5: "border-emerald-200 bg-emerald-50 text-emerald-700",
@@ -30,13 +17,32 @@ const levelClass: Record<string, string> = {
   N1: "border-rose-200 bg-rose-50 text-rose-700",
 };
 
+const normalizeSavedStatuses = (statuses: Record<string, boolean>) =>
+  Object.fromEntries(Object.entries(statuses).map(([id, saved]) => [Number(id), saved])) as Record<number, boolean>;
+
 const Dictionary = () => {
   const { toast } = useToast();
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<VocabResult[]>([]);
+  const [results, setResults] = useState<DictionaryEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
-  const [selectedWord, setSelectedWord] = useState<VocabResult | null>(null);
+  const [selectedWord, setSelectedWord] = useState<DictionaryEntry | null>(null);
+  const [savedStatuses, setSavedStatuses] = useState<Record<number, boolean>>({});
+  const [savingWordId, setSavingWordId] = useState<number | null>(null);
+
+  const loadSavedStatuses = useCallback(async (vocabularyIds: number[]) => {
+    if (vocabularyIds.length === 0) {
+      setSavedStatuses({});
+      return;
+    }
+
+    try {
+      const response = await myWordsApi.getSavedStatuses(vocabularyIds);
+      setSavedStatuses(normalizeSavedStatuses(response));
+    } catch {
+      setSavedStatuses({});
+    }
+  }, []);
 
   const handleSearch = useCallback(async () => {
     if (!query.trim()) return;
@@ -45,8 +51,9 @@ const Dictionary = () => {
     setSearched(true);
 
     try {
-      const data = (await dictionaryApi.search(query.trim())) as VocabResult[];
+      const data = await dictionaryApi.search(query.trim());
       setResults(data);
+      await loadSavedStatuses(data.map((item) => item.id));
     } catch (error) {
       console.error("Dictionary search failed", error);
       toast({
@@ -57,14 +64,23 @@ const Dictionary = () => {
     } finally {
       setLoading(false);
     }
-  }, [query, toast]);
+  }, [loadSavedStatuses, query, toast]);
 
-  const handleSaveWord = async (vocabId: number) => {
+  const handleSaveWord = async (word: DictionaryEntry) => {
+    if (savedStatuses[word.id]) {
+      toast({ title: "Đã có trong sổ tay", description: `${word.kanji || word.hiragana} đang nằm trong My Words rồi.` });
+      return;
+    }
+
     try {
-      await myWordsApi.saveWord({ vocabularyId: vocabId });
-      toast({ title: "Đã lưu", description: "Từ vựng đã được thêm vào sổ tay." });
+      setSavingWordId(word.id);
+      await myWordsApi.saveWord({ vocabularyId: word.id });
+      setSavedStatuses((prev) => ({ ...prev, [word.id]: true }));
+      toast({ title: "Đã lưu", description: `${word.kanji || word.hiragana} đã được thêm vào My Words.` });
     } catch {
-      toast({ title: "Lưu chưa thành công", description: "Từ này có thể đã tồn tại trong sổ tay.", variant: "destructive" });
+      toast({ title: "Lưu chưa thành công", description: "Vui lòng thử lại sau ít phút.", variant: "destructive" });
+    } finally {
+      setSavingWordId(null);
     }
   };
 
@@ -106,7 +122,7 @@ const Dictionary = () => {
               <Input
                 className="h-12 rounded-2xl border-border bg-card pl-11 text-base text-foreground placeholder:text-muted-foreground"
                 onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                onKeyDown={(e) => e.key === "Enter" && void handleSearch()}
                 placeholder="Ví dụ: 勉強, benkyou, học tập..."
                 value={query}
               />
@@ -132,55 +148,61 @@ const Dictionary = () => {
           ) : (
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               <AnimatePresence>
-                {results.map((word, index) => (
-                  <motion.button
-                    key={word.id}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="rounded-[22px] border border-white bg-card p-4 text-left shadow-[0_10px_24px_rgba(148,163,184,0.10)] transition hover:-translate-y-1 hover:shadow-[0_16px_30px_rgba(148,163,184,0.16)]"
-                    exit={{ opacity: 0, y: -10 }}
-                    initial={{ opacity: 0, y: 10 }}
-                    onClick={() => setSelectedWord(word)}
-                    transition={{ delay: index * 0.03 }}
-                    type="button"
-                  >
-                    <div className="mb-3 flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-[1.65rem] font-semibold text-foreground">{word.kanji || word.hiragana}</p>
-                        <p className="text-sm text-sky-700">
-                          {word.hiragana} · {word.romaji}
-                        </p>
+                {results.map((word, index) => {
+                  const isSaved = !!savedStatuses[word.id];
+                  const isSaving = savingWordId === word.id;
+
+                  return (
+                    <motion.button
+                      key={word.id}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="rounded-[22px] border border-white bg-card p-4 text-left shadow-[0_10px_24px_rgba(148,163,184,0.10)] transition hover:-translate-y-1 hover:shadow-[0_16px_30px_rgba(148,163,184,0.16)]"
+                      exit={{ opacity: 0, y: -10 }}
+                      initial={{ opacity: 0, y: 10 }}
+                      onClick={() => setSelectedWord(word)}
+                      transition={{ delay: index * 0.03 }}
+                      type="button"
+                    >
+                      <div className="mb-3 flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-[1.65rem] font-semibold text-foreground">{word.kanji || word.hiragana}</p>
+                          <p className="text-sm text-sky-700">
+                            {word.hiragana} · {word.romaji}
+                          </p>
+                        </div>
+                        {word.jlptLevel && (
+                          <Badge className={`rounded-full border ${levelClass[word.jlptLevel] || "border-border bg-muted text-foreground/80"}`}>
+                            {word.jlptLevel}
+                          </Badge>
+                        )}
                       </div>
-                      {word.jlptLevel && (
-                        <Badge className={`rounded-full border ${levelClass[word.jlptLevel] || "border-border bg-muted text-foreground/80"}`}>
-                          {word.jlptLevel}
-                        </Badge>
-                      )}
-                    </div>
 
-                    <p className="line-clamp-2 text-sm text-foreground/80">{word.meaning}</p>
+                      <p className="line-clamp-2 text-sm text-foreground/80">{word.meaning}</p>
 
-                    <div className="mt-3 flex items-center justify-between gap-2">
-                      {word.wordType ? (
-                        <Badge className="rounded-full border border-border bg-muted text-muted-foreground">{word.wordType}</Badge>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">Nhấn để xem ví dụ</span>
-                      )}
+                      <div className="mt-3 flex items-center justify-between gap-2">
+                        {word.wordType ? (
+                          <Badge className="rounded-full border border-border bg-muted text-muted-foreground">{word.wordType}</Badge>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">Nhấn để xem ví dụ</span>
+                        )}
 
-                      <Button
-                        className="rounded-xl bg-sky-50 text-sky-700 hover:bg-sky-100"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleSaveWord(word.id);
-                        }}
-                        size="sm"
-                        variant="ghost"
-                      >
-                        <Plus className="mr-1 h-4 w-4" />
-                        Lưu
-                      </Button>
-                    </div>
-                  </motion.button>
-                ))}
+                        <Button
+                          className="rounded-xl bg-sky-50 text-sky-700 hover:bg-sky-100 disabled:bg-emerald-50 disabled:text-emerald-700"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            void handleSaveWord(word);
+                          }}
+                          size="sm"
+                          variant="ghost"
+                          disabled={isSaved || isSaving}
+                        >
+                          {isSaved ? <Check className="mr-1 h-4 w-4" /> : <Plus className="mr-1 h-4 w-4" />}
+                          {isSaved ? "Đã lưu" : isSaving ? "Đang lưu..." : "Lưu"}
+                        </Button>
+                      </div>
+                    </motion.button>
+                  );
+                })}
               </AnimatePresence>
             </div>
           )}
@@ -200,7 +222,7 @@ const Dictionary = () => {
                 className="w-full max-w-xl rounded-[28px] border border-border bg-card p-6 shadow-[0_24px_60px_rgba(15,23,42,0.18)]"
                 exit={{ opacity: 0, scale: 0.96 }}
                 initial={{ opacity: 0, scale: 0.96 }}
-                onClick={(e) => e.stopPropagation()}
+                onClick={(event) => event.stopPropagation()}
               >
                 <div className="mb-5 flex items-start justify-between gap-4">
                   <div>
@@ -236,9 +258,13 @@ const Dictionary = () => {
                   )}
 
                   <div className="flex flex-wrap gap-2">
-                    <Button className="rounded-2xl bg-sky-500 text-white hover:bg-sky-400" onClick={() => handleSaveWord(selectedWord.id)}>
-                      <Star className="mr-2 h-4 w-4" />
-                      Thêm vào sổ tay
+                    <Button
+                      className="rounded-2xl bg-sky-500 text-white hover:bg-sky-400 disabled:bg-emerald-500"
+                      onClick={() => void handleSaveWord(selectedWord)}
+                      disabled={!!savedStatuses[selectedWord.id] || savingWordId === selectedWord.id}
+                    >
+                      {savedStatuses[selectedWord.id] ? <Check className="mr-2 h-4 w-4" /> : <Star className="mr-2 h-4 w-4" />}
+                      {savedStatuses[selectedWord.id] ? "Đã có trong sổ tay" : savingWordId === selectedWord.id ? "Đang lưu..." : "Thêm vào sổ tay"}
                     </Button>
                     <Button className="rounded-2xl border-border bg-white text-foreground/80" variant="outline">
                       <Volume2 className="mr-2 h-4 w-4" />
