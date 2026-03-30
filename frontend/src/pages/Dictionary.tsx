@@ -2,11 +2,13 @@ import { useCallback, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { BookOpen, Check, Plus, Search, Star, Volume2, X } from "lucide-react";
 import { dictionaryApi, myWordsApi, type DictionaryEntry } from "@/api";
+import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ToastAction } from "@/components/ui/toast";
 import { useToast } from "@/hooks/use-toast";
 
 const levelClass: Record<string, string> = {
@@ -22,6 +24,7 @@ const normalizeSavedStatuses = (statuses: Record<string, boolean>) =>
 
 const Dictionary = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<DictionaryEntry[]>([]);
   const [loading, setLoading] = useState(false);
@@ -74,9 +77,17 @@ const Dictionary = () => {
 
     try {
       setSavingWordId(word.id);
-      await myWordsApi.saveWord({ vocabularyId: word.id });
+      await myWordsApi.saveWord({ vocabularyId: word.id, folderName: "Dictionary" });
       setSavedStatuses((prev) => ({ ...prev, [word.id]: true }));
-      toast({ title: "Đã lưu", description: `${word.kanji || word.hiragana} đã được thêm vào My Words.` });
+      toast({
+        title: "Đã lưu",
+        description: `${word.kanji || word.hiragana} đã được thêm vào My Words.`,
+        action: (
+          <ToastAction altText="Mở My Words" onClick={() => navigate("/my-words")}>
+            Mở My Words
+          </ToastAction>
+        ),
+      });
     } catch {
       toast({ title: "Lưu chưa thành công", description: "Vui lòng thử lại sau ít phút.", variant: "destructive" });
     } finally {

@@ -16,12 +16,14 @@ import {
   X,
 } from "lucide-react";
 import { dictionaryApi, myWordsApi, translationApi, type DictionaryEntry, type TranslationHistoryItem } from "@/api";
+import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { ToastAction } from "@/components/ui/toast";
 import { useToast } from "@/hooks/use-toast";
 
 const LANGUAGES = [
@@ -57,6 +59,35 @@ const timeAgo = (dateStr: string) => {
 const normalizeSavedStatuses = (statuses: Record<string, boolean>) =>
   Object.fromEntries(Object.entries(statuses).map(([id, saved]) => [Number(id), saved])) as Record<number, boolean>;
 
+const JAPANESE_GROUP_REGEX = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}ー]+/gu;
+const HAN_GROUP_REGEX = /\p{Script=Han}+/gu;
+
+const extractJapaneseFragments = (text: string) => {
+  const fragments: string[] = [];
+  const groups = text.match(JAPANESE_GROUP_REGEX) ?? [];
+
+  groups.forEach((group) => {
+    if (group.length >= 2) {
+      fragments.push(group);
+    }
+
+    const hanGroups = group.match(HAN_GROUP_REGEX) ?? [];
+    hanGroups.forEach((hanGroup) => {
+      fragments.push(hanGroup);
+
+      if (hanGroup.length > 1) {
+        for (let size = Math.min(4, hanGroup.length); size >= 2; size -= 1) {
+          for (let index = 0; index <= hanGroup.length - size; index += 1) {
+            fragments.push(hanGroup.slice(index, index + size));
+          }
+        }
+      }
+    });
+  });
+
+  return Array.from(new Set(fragments.map((item) => item.trim()).filter((item) => item.length >= 2))).slice(0, 12);
+};
+
 const splitSuggestionCandidates = (text: string) => {
   const normalized = text.trim();
   if (!normalized) return [];
@@ -67,7 +98,7 @@ const splitSuggestionCandidates = (text: string) => {
     .map((token) => token.trim())
     .filter((token) => token.length >= 2);
 
-  return Array.from(new Set([normalized, ...tokens])).slice(0, 4);
+  return Array.from(new Set([normalized, ...extractJapaneseFragments(normalized), ...tokens])).slice(0, 8);
 };
 
 const buildSuggestionQueries = (sourceLang: string, targetLang: string, sourceText: string, translatedText: string) => {
@@ -79,6 +110,7 @@ const buildSuggestionQueries = (sourceLang: string, targetLang: string, sourceTe
 
 const Translation = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [sourceLang, setSourceLang] = useState("vi");
   const [targetLang, setTargetLang] = useState("ja");
   const [sourceText, setSourceText] = useState("");
@@ -314,9 +346,28 @@ const Translation = () => {
 
     try {
       setSavingWordId(word.id);
-      await myWordsApi.saveWord({ vocabularyId: word.id });
+      const trimmedSource = sourceText.trim();
+      const trimmedTranslation = translatedText.trim();
+      const personalNote =
+        trimmedSource && trimmedTranslation
+          ? `Từ bản dịch: ${trimmedSource.slice(0, 120)} -> ${trimmedTranslation.slice(0, 120)}`
+          : undefined;
+
+      await myWordsApi.saveWord({
+        vocabularyId: word.id,
+        folderName: "Translation",
+        personalNote,
+      });
       setSavedStatuses((prev) => ({ ...prev, [word.id]: true }));
-      toast({ title: "Đã lưu", description: `${word.kanji || word.hiragana} đã được thêm vào My Words.` });
+      toast({
+        title: "Đã lưu",
+        description: `${word.kanji || word.hiragana} đã được thêm vào My Words.`,
+        action: (
+          <ToastAction altText="Mở My Words" onClick={() => navigate("/my-words")}>
+            Mở My Words
+          </ToastAction>
+        ),
+      });
     } catch {
       toast({ title: "Lưu chưa thành công", description: "Vui lòng thử lại.", variant: "destructive" });
     } finally {
