@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { BookOpen, BookmarkPlus, Brain, Check, ChevronRight, Lock, Sparkles } from "lucide-react";
+import { BookOpen, BookmarkPlus, Brain, Check, ChevronRight, Lock, RotateCcw, Sparkles } from "lucide-react";
 import { dictionaryApi, myWordsApi, type DictionaryEntry } from "@/api";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
@@ -8,26 +8,42 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { ToastAction } from "@/components/ui/toast";
+import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { storyModeStories, type StoryModeStory, type StorySegment } from "@/data/storyMode";
 
 const normalizeSavedStatuses = (statuses: Record<string, boolean>) =>
   Object.fromEntries(Object.entries(statuses).map(([id, saved]) => [Number(id), saved])) as Record<number, boolean>;
 
+interface StoryModeSnapshot {
+  activeStoryId: string;
+  activeSegmentIndex: number;
+  unlockedCounts: Record<string, number>;
+  selectedAnswers: Record<string, string>;
+  submittedSegments: Record<string, boolean>;
+}
+
+const buildInitialUnlockedCounts = () => Object.fromEntries(storyModeStories.map((story) => [story.id, 1]));
+
 const StoryMode = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [activeStoryId, setActiveStoryId] = useState(storyModeStories[0]?.id ?? "");
   const [activeSegmentIndex, setActiveSegmentIndex] = useState(0);
-  const [unlockedCounts, setUnlockedCounts] = useState<Record<string, number>>(
-    Object.fromEntries(storyModeStories.map((story) => [story.id, 1]))
-  );
+  const [unlockedCounts, setUnlockedCounts] = useState<Record<string, number>>(buildInitialUnlockedCounts);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
   const [submittedSegments, setSubmittedSegments] = useState<Record<string, boolean>>({});
   const [segmentVocab, setSegmentVocab] = useState<DictionaryEntry[]>([]);
   const [segmentVocabLoading, setSegmentVocabLoading] = useState(false);
   const [savedStatuses, setSavedStatuses] = useState<Record<number, boolean>>({});
   const [savingWordId, setSavingWordId] = useState<number | null>(null);
+  const [hasHydratedProgress, setHasHydratedProgress] = useState(false);
+
+  const progressStorageKey = useMemo(
+    () => `yukihon_story_mode_progress_${user?.id ?? "guest"}`,
+    [user?.id]
+  );
 
   const activeStory = useMemo(
     () => storyModeStories.find((story) => story.id === activeStoryId) ?? storyModeStories[0],
@@ -53,6 +69,51 @@ const StoryMode = () => {
       setSavedStatuses({});
     }
   };
+
+  useEffect(() => {
+    const initialUnlockedCounts = buildInitialUnlockedCounts();
+
+    try {
+      const raw = localStorage.getItem(progressStorageKey);
+      if (!raw) {
+        setUnlockedCounts(initialUnlockedCounts);
+        setHasHydratedProgress(true);
+        return;
+      }
+
+      const snapshot = JSON.parse(raw) as Partial<StoryModeSnapshot>;
+      const nextStory = storyModeStories.find((story) => story.id === snapshot.activeStoryId) ?? storyModeStories[0];
+      const mergedUnlockedCounts = {
+        ...initialUnlockedCounts,
+        ...(snapshot.unlockedCounts ?? {}),
+      };
+      const nextUnlockedCount = Math.max(1, Math.min(nextStory.segments.length, mergedUnlockedCounts[nextStory.id] ?? 1));
+
+      setActiveStoryId(nextStory.id);
+      setUnlockedCounts(mergedUnlockedCounts);
+      setActiveSegmentIndex(Math.max(0, Math.min(nextUnlockedCount - 1, snapshot.activeSegmentIndex ?? 0)));
+      setSelectedAnswers(snapshot.selectedAnswers ?? {});
+      setSubmittedSegments(snapshot.submittedSegments ?? {});
+    } catch {
+      setUnlockedCounts(initialUnlockedCounts);
+    } finally {
+      setHasHydratedProgress(true);
+    }
+  }, [progressStorageKey]);
+
+  useEffect(() => {
+    if (!hasHydratedProgress) return;
+
+    const snapshot: StoryModeSnapshot = {
+      activeStoryId,
+      activeSegmentIndex,
+      unlockedCounts,
+      selectedAnswers,
+      submittedSegments,
+    };
+
+    localStorage.setItem(progressStorageKey, JSON.stringify(snapshot));
+  }, [activeSegmentIndex, activeStoryId, hasHydratedProgress, progressStorageKey, selectedAnswers, submittedSegments, unlockedCounts]);
 
   useEffect(() => {
     if (!activeStory || !activeSegment) return;
@@ -100,6 +161,16 @@ const StoryMode = () => {
   const handleSelectStory = (storyId: string) => {
     setActiveStoryId(storyId);
     setActiveSegmentIndex(0);
+  };
+
+  const handleResetProgress = () => {
+    localStorage.removeItem(progressStorageKey);
+    setActiveStoryId(storyModeStories[0]?.id ?? "");
+    setActiveSegmentIndex(0);
+    setUnlockedCounts(buildInitialUnlockedCounts());
+    setSelectedAnswers({});
+    setSubmittedSegments({});
+    toast({ title: "Đã reset Story Mode", description: "Tiến độ đọc truyện trên máy này đã quay về từ đầu." });
   };
 
   const handleSubmitCheckpoint = () => {
@@ -178,12 +249,18 @@ const StoryMode = () => {
           title="Hoc theo truyen ngan"
           description="Moi doan mo khoa vocab, grammar va checkpoint rieng, giup viec hoc co nhip va co boi canh hon."
           action={
-            <Link to="/dictionary">
-              <Button className="rounded-2xl border-border bg-card text-foreground/80 hover:bg-card" variant="outline">
-                <BookmarkPlus className="mr-2 h-4 w-4" />
-                Mo Dictionary
+            <>
+              <Button className="rounded-2xl border-border bg-card text-foreground/80 hover:bg-card" variant="outline" onClick={handleResetProgress}>
+                <RotateCcw className="mr-2 h-4 w-4" />
+                Hoc lai tu dau
               </Button>
-            </Link>
+              <Link to="/dictionary">
+                <Button className="rounded-2xl border-border bg-card text-foreground/80 hover:bg-card" variant="outline">
+                  <BookmarkPlus className="mr-2 h-4 w-4" />
+                  Mo Dictionary
+                </Button>
+              </Link>
+            </>
           }
         />
 
