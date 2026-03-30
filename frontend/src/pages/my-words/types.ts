@@ -1,5 +1,6 @@
 export type ReviewRating = "AGAIN" | "HARD" | "GOOD" | "EASY";
 export type ReviewMode = "ALL" | "KANJI" | "VOCABULARY";
+export type WordSourceFilter = "ALL" | "DICTIONARY" | "TRANSLATION" | "OTHER";
 
 export interface SavedWord {
   id: number;

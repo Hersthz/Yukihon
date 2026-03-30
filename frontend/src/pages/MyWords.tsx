@@ -7,7 +7,25 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import NotebookSection from "@/pages/my-words/NotebookSection";
 import ReviewQueueSection from "@/pages/my-words/ReviewQueueSection";
-import { ReviewMode, ReviewRating, SavedWord, WordStats } from "@/pages/my-words/types";
+import { ReviewMode, ReviewRating, SavedWord, WordSourceFilter, WordStats } from "@/pages/my-words/types";
+
+const DICTIONARY_FOLDER = "Dictionary";
+const TRANSLATION_FOLDER = "Translation";
+
+const matchesSourceFilter = (word: SavedWord, sourceFilter: WordSourceFilter) => {
+  const folderName = word.folderName?.trim();
+
+  switch (sourceFilter) {
+    case "DICTIONARY":
+      return folderName === DICTIONARY_FOLDER;
+    case "TRANSLATION":
+      return folderName === TRANSLATION_FOLDER;
+    case "OTHER":
+      return folderName !== DICTIONARY_FOLDER && folderName !== TRANSLATION_FOLDER;
+    default:
+      return true;
+  }
+};
 
 const MyWords = () => {
   const { toast } = useToast();
@@ -19,6 +37,7 @@ const MyWords = () => {
   const [search, setSearch] = useState("");
   const [filterFolder, setFilterFolder] = useState<string>("");
   const [filterMastered, setFilterMastered] = useState<string>("");
+  const [sourceFilter, setSourceFilter] = useState<WordSourceFilter>("ALL");
   const [reviewMode, setReviewMode] = useState<ReviewMode>("ALL");
   const [stats, setStats] = useState<WordStats>({
     totalSaved: 0,
@@ -136,13 +155,14 @@ const MyWords = () => {
   };
 
   const filteredWords = useMemo(() => {
-    if (!search.trim()) return words;
+    const sourceFilteredWords = words.filter((word) => matchesSourceFilter(word, sourceFilter));
+    if (!search.trim()) return sourceFilteredWords;
 
     const normalized = search.toLowerCase();
-    return words.filter((word) =>
+    return sourceFilteredWords.filter((word) =>
       [word.kanji, word.hiragana, word.romaji, word.meaning].some((value) => value?.toLowerCase().includes(normalized))
     );
-  }, [search, words]);
+  }, [search, sourceFilter, words]);
 
   const masteredPercent = stats.totalSaved ? Math.round((stats.masteredCount / stats.totalSaved) * 100) : 0;
 
@@ -185,6 +205,7 @@ const MyWords = () => {
           search={search}
           filterFolder={filterFolder}
           filterMastered={filterMastered}
+          sourceFilter={sourceFilter}
           editingNote={editingNote}
           noteText={noteText}
           onSearchChange={setSearch}
@@ -196,6 +217,7 @@ const MyWords = () => {
             setFilterMastered(value);
             setFilterFolder("");
           }}
+          onSourceFilterChange={setSourceFilter}
           onStartEditingNote={(wordId, note) => {
             setEditingNote(wordId);
             setNoteText(note);
