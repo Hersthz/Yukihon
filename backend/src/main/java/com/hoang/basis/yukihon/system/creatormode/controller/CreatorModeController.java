@@ -82,7 +82,7 @@ public class CreatorModeController {
     }
 
     @PostMapping("/templates/{id}/review")
-    @PreAuthorize("hasAuthority('CONTENT_MANAGE')")
+    @PreAuthorize("hasRole('ADMIN') and hasAuthority('CONTENT_MANAGE')")
     public ResponseEntity<CreatorTemplateDto> reviewTemplate(
             @PathVariable Long id,
             @Valid @RequestBody CreatorTemplateReviewRequest request,
@@ -115,7 +115,7 @@ public class CreatorModeController {
     }
 
     @GetMapping("/review-queue")
-    @PreAuthorize("hasAuthority('CONTENT_MANAGE')")
+    @PreAuthorize("hasRole('ADMIN') and hasAuthority('CONTENT_MANAGE')")
     public ResponseEntity<List<CreatorTemplateDto>> getReviewQueue() {
         return ResponseEntity.ok(creatorModeService.getTemplates("PENDING_REVIEW", null));
     }

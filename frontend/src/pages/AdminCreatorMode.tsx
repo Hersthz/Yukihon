@@ -23,6 +23,7 @@ import {
   serializeCreatorDocument,
 } from "@/features/creator-mode/builder";
 import type { CreatorBlock } from "@/features/creator-mode/types";
+import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 
 interface EditorMeta {
@@ -52,6 +53,7 @@ const STATUS_STYLES: Record<CreatorTemplateStatus, string> = {
 };
 
 const AdminCreatorMode = () => {
+  const { isAdmin } = useAuth();
   const { toast } = useToast();
 
   const [templates, setTemplates] = useState<CreatorTemplate[]>([]);
@@ -108,15 +110,20 @@ const AdminCreatorMode = () => {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [templatesData, queueData, analyticsData] = await Promise.all([
+      const [templatesData, analyticsData] = await Promise.all([
         creatorModeApi.getTemplates(),
-        creatorModeApi.getReviewQueue(),
         creatorModeApi.getAnalytics(),
       ]);
 
       setTemplates(templatesData);
-      setReviewQueue(queueData);
       setAnalytics(analyticsData);
+
+      if (isAdmin()) {
+        const queueData = await creatorModeApi.getReviewQueue();
+        setReviewQueue(queueData);
+      } else {
+        setReviewQueue([]);
+      }
     } catch {
       toast({
         title: "Creator mode load failed",
@@ -126,7 +133,13 @@ const AdminCreatorMode = () => {
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, [isAdmin, toast]);
+
+  useEffect(() => {
+    if (!isAdmin() && selectedTab === "review") {
+      setSelectedTab("studio");
+    }
+  }, [isAdmin, selectedTab]);
 
   useEffect(() => {
     void loadData();
@@ -275,9 +288,9 @@ const AdminCreatorMode = () => {
           </div>
 
           <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3 bg-card/70">
+            <TabsList className={`grid w-full ${isAdmin() ? "grid-cols-3" : "grid-cols-2"} bg-card/70`}>
               <TabsTrigger value="studio">Studio</TabsTrigger>
-              <TabsTrigger value="review">Review Queue</TabsTrigger>
+              {isAdmin() && <TabsTrigger value="review">Review Queue</TabsTrigger>}
               <TabsTrigger value="analytics">Analytics</TabsTrigger>
             </TabsList>
 
@@ -460,7 +473,8 @@ const AdminCreatorMode = () => {
               </Card>
             </TabsContent>
 
-            <TabsContent value="review" className="space-y-4">
+            {isAdmin() && (
+              <TabsContent value="review" className="space-y-4">
               <Card className="border-border/70 bg-card/70">
                 <CardHeader>
                   <CardTitle className="text-base">Pending Review Queue</CardTitle>
@@ -508,7 +522,8 @@ const AdminCreatorMode = () => {
                   ))}
                 </CardContent>
               </Card>
-            </TabsContent>
+              </TabsContent>
+            )}
 
             <TabsContent value="analytics" className="space-y-6">
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

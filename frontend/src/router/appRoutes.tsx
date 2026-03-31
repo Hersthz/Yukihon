@@ -1,4 +1,5 @@
 import AdminRoute from "@/components/AdminRoute";
+import CreatorModeRoute from "@/components/CreatorModeRoute";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { Suspense, lazy } from "react";
 import { Route, Routes } from "react-router-dom";
@@ -61,12 +62,12 @@ export const AppRoutes = () => {
         <Route path="/community" element={withProtectedRoute(<Community />)} />
         <Route path="/my-words" element={withProtectedRoute(<MyWords />)} />
         <Route path="/settings" element={withProtectedRoute(<Settings />)} />
+        <Route path="/admin/creator-mode" element={withProtectedRoute(<CreatorModeRoute><AdminCreatorMode /></CreatorModeRoute>)} />
 
         <Route element={<AdminRoute />}>
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/users" element={<AdminUsers />} />
           <Route path="/admin/content" element={<AdminContent />} />
-          <Route path="/admin/creator-mode" element={<AdminCreatorMode />} />
         </Route>
 
         <Route path="*" element={<NotFound />} />

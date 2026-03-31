@@ -46,6 +46,8 @@ public class SecurityConfig {
                     .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/google", "/api/auth/refresh").permitAll()
                     .requestMatchers("/api/auth/me").authenticated()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        // Creator mode endpoints - allow ADMIN and TEACHER roles
+                        .requestMatchers("/api/admin/creator-mode/**").hasAnyRole("ADMIN", "TEACHER")
                         // Admin endpoints - require ADMIN role
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         // User endpoints - require authenticated users

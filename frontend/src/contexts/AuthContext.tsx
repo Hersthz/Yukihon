@@ -13,6 +13,8 @@ interface AuthContextType {
   logout: () => void;
   refreshUser: () => Promise<void>;
   isAdmin: () => boolean;
+  isTeacher: () => boolean;
+  canAccessCreatorMode: () => boolean;
   hasRole: (role: string) => boolean;
 }
 
@@ -126,6 +128,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return user?.roles?.includes("ADMIN") || false;
   }, [user]);
 
+  const isTeacher = useCallback(() => {
+    return user?.roles?.includes("TEACHER") || false;
+  }, [user]);
+
+  const canAccessCreatorMode = useCallback(() => {
+    return isAdmin() || isTeacher();
+  }, [isAdmin, isTeacher]);
+
   const hasRole = useCallback((role: string) => {
     return user?.roles?.includes(role.toUpperCase()) || false;
   }, [user]);
@@ -141,6 +151,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     logout,
     refreshUser,
     isAdmin,
+    isTeacher,
+    canAccessCreatorMode,
     hasRole,
   };
 
