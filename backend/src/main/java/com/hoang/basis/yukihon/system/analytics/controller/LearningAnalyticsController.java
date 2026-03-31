@@ -44,9 +44,14 @@ public class LearningAnalyticsController {
     public ResponseEntity<LearningFunnelDto> getLearningFunnel(
             @RequestParam(defaultValue = "30") int days,
             @RequestParam(defaultValue = "10") int limit,
-            @RequestParam(defaultValue = "LESSON") String contentType
+            @RequestParam(defaultValue = "LESSON") String contentType,
+            @RequestParam(required = false) String jlptLevel,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate
     ) {
-        return ResponseEntity.ok(learningAnalyticsService.getLearningFunnel(days, limit, contentType));
+        return ResponseEntity.ok(
+                learningAnalyticsService.getLearningFunnel(days, limit, contentType, jlptLevel, startDate, endDate)
+        );
     }
 
     private Long resolveCurrentUserId(UserDetails userDetails) {

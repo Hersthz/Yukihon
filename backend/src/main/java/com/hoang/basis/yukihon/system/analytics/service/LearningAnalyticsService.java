@@ -17,6 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -52,7 +54,14 @@ public class LearningAnalyticsService {
     }
 
     @Transactional(readOnly = true)
-    public LearningFunnelDto getLearningFunnel(int days, int limit, String contentType) {
+        public LearningFunnelDto getLearningFunnel(
+            int days,
+            int limit,
+            String contentType,
+            String jlptLevel,
+            String startDate,
+            String endDate
+        ) {
         int safeDays = Math.max(1, Math.min(days, 365));
         int safeLimit = Math.max(1, Math.min(limit, 50));
 
@@ -60,10 +69,14 @@ public class LearningAnalyticsService {
                 ? LearningAnalyticsEvent.ContentType.LESSON
                 : parseContentType(contentType);
 
-        Instant since = Instant.now().minus(safeDays, ChronoUnit.DAYS);
+        String normalizedJlptLevel = normalizeJlptFilter(jlptLevel);
+        DateRangeFilter dateRangeFilter = resolveDateRangeFilter(safeDays, startDate, endDate);
+
         List<LearningFunnelAggregateProjection> aggregates = learningAnalyticsEventRepository.aggregateFunnel(
-                since,
+            dateRangeFilter.getSince(),
+            dateRangeFilter.getUntil(),
                 filterType,
+            normalizedJlptLevel,
                 LearningAnalyticsEvent.EventType.START_LEARNING,
                 LearningAnalyticsEvent.EventType.COMPLETE_LESSON,
                 LearningAnalyticsEvent.EventType.ABANDON_LESSON,
@@ -87,8 +100,11 @@ public class LearningAnalyticsService {
         long totalQuizCorrected = breakdown.stream().mapToLong(item -> safeLong(item.getQuizCorrectedCount())).sum();
 
         return LearningFunnelDto.builder()
-                .windowDays(safeDays)
+            .windowDays(dateRangeFilter.getWindowDays())
                 .contentType(filterType.name())
+            .jlptLevel(normalizedJlptLevel)
+            .startDate(dateRangeFilter.getStartDate())
+            .endDate(dateRangeFilter.getEndDate())
                 .totalStarted(totalStarted)
                 .totalCompleted(totalCompleted)
                 .totalAbandoned(totalAbandoned)
@@ -199,6 +215,59 @@ public class LearningAnalyticsService {
         return normalized;
     }
 
+    private String normalizeJlptFilter(String jlptLevel) {
+        if (jlptLevel == null || jlptLevel.isBlank()) {
+            return null;
+        }
+
+        String normalized = jlptLevel.trim().toUpperCase();
+        return switch (normalized) {
+            case "N5", "N4", "N3", "N2", "N1" -> normalized;
+            default -> throw new IllegalArgumentException("Invalid jlptLevel: " + jlptLevel);
+        };
+    }
+
+    private DateRangeFilter resolveDateRangeFilter(int fallbackDays, String startDate, String endDate) {
+        LocalDate parsedStart = parseDate(startDate, "startDate");
+        LocalDate parsedEnd = parseDate(endDate, "endDate");
+
+        if (parsedStart == null && parsedEnd == null) {
+            Instant since = Instant.now().minus(fallbackDays, ChronoUnit.DAYS);
+            return new DateRangeFilter(since, null, fallbackDays, null, null);
+        }
+
+        LocalDate effectiveStart = parsedStart != null ? parsedStart : parsedEnd;
+        LocalDate effectiveEnd = parsedEnd != null ? parsedEnd : parsedStart;
+
+        if (effectiveStart == null || effectiveEnd == null) {
+            throw new IllegalArgumentException("Invalid date range");
+        }
+
+        if (effectiveEnd.isBefore(effectiveStart)) {
+            LocalDate temp = effectiveStart;
+            effectiveStart = effectiveEnd;
+            effectiveEnd = temp;
+        }
+
+        Instant since = effectiveStart.atStartOfDay(ZoneOffset.UTC).toInstant();
+        Instant until = effectiveEnd.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant();
+        int windowDays = (int) ChronoUnit.DAYS.between(effectiveStart, effectiveEnd) + 1;
+
+        return new DateRangeFilter(since, until, windowDays, effectiveStart.toString(), effectiveEnd.toString());
+    }
+
+    private LocalDate parseDate(String rawValue, String fieldName) {
+        if (rawValue == null || rawValue.isBlank()) {
+            return null;
+        }
+
+        try {
+            return LocalDate.parse(rawValue.trim());
+        } catch (Exception ex) {
+            throw new IllegalArgumentException("Invalid " + fieldName + ": " + rawValue);
+        }
+    }
+
     private LearningAnalyticsEvent.EventType parseEventType(String value) {
         try {
             return LearningAnalyticsEvent.EventType.valueOf(value.trim().toUpperCase());
@@ -238,5 +307,41 @@ public class LearningAnalyticsService {
             case COURSE -> "Course";
         };
         return prefix + " #" + contentId;
+    }
+
+    private static final class DateRangeFilter {
+        private final Instant since;
+        private final Instant until;
+        private final int windowDays;
+        private final String startDate;
+        private final String endDate;
+
+        private DateRangeFilter(Instant since, Instant until, int windowDays, String startDate, String endDate) {
+            this.since = since;
+            this.until = until;
+            this.windowDays = windowDays;
+            this.startDate = startDate;
+            this.endDate = endDate;
+        }
+
+        private Instant getSince() {
+            return since;
+        }
+
+        private Instant getUntil() {
+            return until;
+        }
+
+        private int getWindowDays() {
+            return windowDays;
+        }
+
+        private String getStartDate() {
+            return startDate;
+        }
+
+        private String getEndDate() {
+            return endDate;
+        }
     }
 }
