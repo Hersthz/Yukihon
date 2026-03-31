@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -23,6 +25,7 @@ public class UserSettingsDto {
     private boolean autoPlayAudio;
     private String quizDifficulty;
     private String targetJlptLevel;
+    private LocalDate jlptDeadlineDate;
 
     public static UserSettingsDto fromEntity(UserSettings settings) {
         return UserSettingsDto.builder()
@@ -37,6 +40,7 @@ public class UserSettingsDto {
                 .autoPlayAudio(settings.isAutoPlayAudio())
                 .quizDifficulty(settings.getQuizDifficulty())
                 .targetJlptLevel(settings.getTargetJlptLevel())
+                .jlptDeadlineDate(settings.getJlptDeadlineDate())
                 .build();
     }
 }

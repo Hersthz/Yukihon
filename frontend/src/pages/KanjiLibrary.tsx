@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { BookOpen, BrushCleaning, Search, Sparkles } from "lucide-react";
+import { BookOpen, Brush, Search, Sparkles } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
 import { Badge } from "@/components/ui/badge";
@@ -50,7 +50,7 @@ const KanjiLibrary = () => {
           <MetricCard hint="Cap dang xem" icon={<BookOpen className="h-4 w-4 text-sky-500" />} label="Level" value={selectedLevel} />
           <MetricCard hint="So kanji hop bo loc" icon={<Search className="h-4 w-4 text-violet-500" />} label="Hien thi" value={filteredKanji.length} />
           <MetricCard hint="Can review trong deck rieng" icon={<Sparkles className="h-4 w-4 text-amber-500" />} label="Due today" value={dueToday.length} />
-          <MetricCard hint="Kanji da vao SRS" icon={<BrushCleaning className="h-4 w-4 text-emerald-500" />} label="Trong deck" value={`${deck.length} / ${masteredCount} mastered`} />
+          <MetricCard hint="Kanji da vao SRS" icon={<Brush className="h-4 w-4 text-emerald-500" />} label="Trong deck" value={`${deck.length} / ${masteredCount} mastered`} />
         </div>
 
         <PageSection className="mb-4" title="Tim kiem va loc" description="Loc nhanh theo JLPT, meaning va tag de vao detail page nhanh hon.">

@@ -21,4 +21,5 @@ public class UpdateSettingsRequest {
     private Boolean autoPlayAudio;
     private String quizDifficulty;
     private String targetJlptLevel;
+    private String jlptDeadlineDate;
 }

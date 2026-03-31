@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "user_settings",
@@ -63,6 +64,9 @@ public class UserSettings {
     @Builder.Default
     @Column(length = 10)
     private String targetJlptLevel = "N5";
+
+    @Column(name = "jlpt_deadline_date")
+    private LocalDate jlptDeadlineDate;
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt;

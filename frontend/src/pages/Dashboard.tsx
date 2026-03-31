@@ -50,6 +50,21 @@ const formatCategory = (category: string | null | undefined) => {
   return category.charAt(0).toUpperCase() + category.slice(1).toLowerCase();
 };
 
+const formatPlanStatus = (status: "NO_DEADLINE" | "ON_TRACK" | "AT_RISK" | "OFF_TRACK" | "COMPLETED") => {
+  switch (status) {
+    case "ON_TRACK":
+      return "Đúng tiến độ";
+    case "AT_RISK":
+      return "Cần tăng nhịp";
+    case "OFF_TRACK":
+      return "Chậm tiến độ";
+    case "COMPLETED":
+      return "Hoàn thành";
+    default:
+      return "Chưa đặt deadline";
+  }
+};
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, refreshUser } = useAuth();
@@ -91,6 +106,7 @@ const Dashboard = () => {
     "Thiết lập mục tiêu JLPT trong phần Settings để hệ thống cá nhân hóa sâu hơn.",
     "Chọn một bài trọng tâm và giữ nhịp học đều trong hôm nay.",
   ];
+  const deadlinePlan = learningPath?.deadlinePlan ?? null;
 
   const quickStats = [
     { label: "Streak", value: String(learningPath?.currentStreak ?? 0), icon: Flame, color: "text-amber-500" },
@@ -329,6 +345,20 @@ const Dashboard = () => {
                     { title: "Daily goal", value: `${learningPath?.dailyGoalMinutes ?? 15} phút` },
                     { title: "Bài trong track", value: String(learningPath?.totalLessonsInTrack ?? 0) },
                     { title: "Bài đang học dở", value: String(learningPath?.inProgressLessons ?? 0) },
+                    {
+                      title: "Deadline",
+                      value:
+                        deadlinePlan?.hasDeadline && deadlinePlan.deadlineDate
+                          ? `${deadlinePlan.deadlineDate} (${Math.max(0, deadlinePlan.daysRemaining)} ngày)`
+                          : "Chưa đặt",
+                    },
+                    {
+                      title: "Nhịp cần thiết",
+                      value:
+                        deadlinePlan?.hasDeadline && deadlinePlan.requiredMinutesPerDay > 0
+                          ? `${deadlinePlan.requiredMinutesPerDay} phút/ngày`
+                          : `${learningPath?.dailyGoalMinutes ?? 15} phút/ngày`,
+                    },
                   ].map((item) => (
                     <div
                       key={item.title}
@@ -339,6 +369,15 @@ const Dashboard = () => {
                     </div>
                   ))}
                 </div>
+
+                {deadlinePlan && (
+                  <div className="mt-3 rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3">
+                    <p className="text-sm font-semibold text-foreground">
+                      {formatPlanStatus(deadlinePlan.planStatus)}
+                    </p>
+                    <p className="mt-1 text-sm text-muted-foreground">{deadlinePlan.insight}</p>
+                  </div>
+                )}
               </motion.div>
             </div>
           </div>
@@ -356,7 +395,9 @@ const Dashboard = () => {
                 <div>
                   <h3 className="text-lg font-semibold text-foreground">Mục tiêu hôm nay</h3>
                   <p className="text-sm text-muted-foreground">
-                    {learningPath?.dailyGoalMinutes ?? 15} phút tập trung cho lộ trình {learningPath?.targetJlptLevel || "N5"}
+                    {deadlinePlan?.hasDeadline
+                      ? `Deadline ${deadlinePlan.deadlineDate} • cần ${deadlinePlan.requiredMinutesPerDay} phút/ngày`
+                      : `${learningPath?.dailyGoalMinutes ?? 15} phút tập trung cho lộ trình ${learningPath?.targetJlptLevel || "N5"}`}
                   </p>
                 </div>
                 <Zap className="h-5 w-5 text-muted-foreground" />
@@ -395,6 +436,7 @@ const Dashboard = () => {
                   `${learningPath?.completionRate ?? 0}% hoàn thành`,
                   `${learningPath?.currentStreak ?? 0} ngày streak`,
                   `${learningPath?.inProgressLessons ?? 0} bài đang học`,
+                  deadlinePlan ? formatPlanStatus(deadlinePlan.planStatus) : "Chưa có trạng thái kế hoạch",
                 ].map((signal) => (
                   <span
                     key={signal}

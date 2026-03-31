@@ -12,6 +12,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -41,10 +44,23 @@ public class UserSettingsService {
         if (request.getAutoPlayAudio() != null) settings.setAutoPlayAudio(request.getAutoPlayAudio());
         if (request.getQuizDifficulty() != null) settings.setQuizDifficulty(request.getQuizDifficulty());
         if (request.getTargetJlptLevel() != null) settings.setTargetJlptLevel(request.getTargetJlptLevel());
+        if (request.getJlptDeadlineDate() != null) settings.setJlptDeadlineDate(parseDeadlineDate(request.getJlptDeadlineDate()));
 
         UserSettings saved = settingsRepository.save(settings);
         log.info("Updated settings for user {}", userId);
         return UserSettingsDto.fromEntity(saved);
+    }
+
+    private LocalDate parseDeadlineDate(String rawValue) {
+        if (rawValue == null || rawValue.isBlank()) {
+            return null;
+        }
+
+        try {
+            return LocalDate.parse(rawValue.trim());
+        } catch (DateTimeParseException exception) {
+            throw new IllegalArgumentException("Invalid jlptDeadlineDate format. Expected yyyy-MM-dd");
+        }
     }
 
     @Transactional

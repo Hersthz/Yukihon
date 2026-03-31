@@ -1,38 +1,50 @@
-﻿import { useCallback, useEffect, useState } from "react";
-import { Bell, Globe, Palette, RotateCcw, Save, Target, Volume2 } from "lucide-react";
+﻿import { useCallback, useEffect, useMemo, useState } from "react";
+import { Bell, CalendarClock, Globe, Palette, RotateCcw, Save, Target, Volume2 } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { settingsApi } from "@/api";
+import { settingsApi, type UpdateUserSettingsPayload, type UserSettingsResponse } from "@/api";
 import { useToast } from "@/hooks/use-toast";
 
 interface UserSettingsData {
   theme: string;
   language: string;
   dailyGoalMinutes: number;
-  notificationsEnabled: boolean;
+  emailNotifications: boolean;
+  pushNotifications: boolean;
   showFurigana: boolean;
   showRomaji: boolean;
   autoPlayAudio: boolean;
   quizDifficulty: string;
   targetJlptLevel: string;
+  jlptDeadlineDate: string | null;
 }
 
 const DEFAULT_SETTINGS: UserSettingsData = {
   theme: "light",
   language: "vi",
   dailyGoalMinutes: 30,
-  notificationsEnabled: true,
+  emailNotifications: true,
+  pushNotifications: true,
   showFurigana: true,
   showRomaji: true,
   autoPlayAudio: false,
-  quizDifficulty: "MEDIUM",
+  quizDifficulty: "normal",
   targetJlptLevel: "N5",
+  jlptDeadlineDate: null,
 };
+
+const normalizeSettings = (data: UserSettingsResponse): UserSettingsData => ({
+  ...DEFAULT_SETTINGS,
+  ...data,
+  quizDifficulty: (data.quizDifficulty || DEFAULT_SETTINGS.quizDifficulty).toLowerCase(),
+  jlptDeadlineDate: data.jlptDeadlineDate ?? null,
+});
 
 const Settings = () => {
   const { toast } = useToast();
@@ -43,9 +55,10 @@ const Settings = () => {
 
   const fetchSettings = useCallback(async () => {
     try {
-      const data = (await settingsApi.get()) as UserSettingsData;
-      setSettings(data);
-      setOriginal(data);
+      const data = await settingsApi.get();
+      const normalized = normalizeSettings(data);
+      setSettings(normalized);
+      setOriginal(normalized);
     } catch {
       setSettings(DEFAULT_SETTINGS);
       setOriginal(DEFAULT_SETTINGS);
@@ -58,16 +71,21 @@ const Settings = () => {
     fetchSettings();
   }, [fetchSettings]);
 
-  const update = (key: keyof UserSettingsData, value: string | number | boolean) => {
+  const update = (key: keyof UserSettingsData, value: string | number | boolean | null) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      const updated = (await settingsApi.update(settings as unknown as Record<string, unknown>)) as UserSettingsData;
-      setSettings(updated);
-      setOriginal(updated);
+      const payload: UpdateUserSettingsPayload = {
+        ...settings,
+        jlptDeadlineDate: settings.jlptDeadlineDate ? settings.jlptDeadlineDate : "",
+      };
+      const updated = await settingsApi.update(payload);
+      const normalized = normalizeSettings(updated);
+      setSettings(normalized);
+      setOriginal(normalized);
       toast({ title: "Đã lưu cài đặt", description: "Tùy chọn học tập đã được cập nhật." });
     } catch {
       toast({ title: "Không thể lưu cài đặt", description: "Vui lòng thử lại.", variant: "destructive" });
@@ -82,6 +100,25 @@ const Settings = () => {
   };
 
   const hasChanges = JSON.stringify(settings) !== JSON.stringify(original);
+  const notificationsEnabled = settings.emailNotifications || settings.pushNotifications;
+  const deadlineMeta = useMemo(() => {
+    if (!settings.jlptDeadlineDate) {
+      return null;
+    }
+
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const deadline = new Date(`${settings.jlptDeadlineDate}T00:00:00`);
+    if (Number.isNaN(deadline.getTime())) {
+      return null;
+    }
+
+    const daysRemaining = Math.floor((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    return {
+      daysRemaining,
+      isPast: daysRemaining <= 0,
+    };
+  }, [settings.jlptDeadlineDate]);
 
   if (loading) {
     return (
@@ -118,7 +155,7 @@ const Settings = () => {
         <div className="mb-4 grid gap-3 md:grid-cols-3">
           <MetricCard hint="Theme hiện tại" icon={<Palette className="h-4 w-4 text-violet-500" />} label="Giao diện" value={settings.theme} />
           <MetricCard hint="Mục tiêu cá nhân" icon={<Target className="h-4 w-4 text-amber-500" />} label="Daily goal" value={`${settings.dailyGoalMinutes} phút`} />
-          <MetricCard hint="Trạng thái hệ thống" icon={<Bell className="h-4 w-4 text-sky-500" />} label="Thông báo" value={settings.notificationsEnabled ? "Bật" : "Tắt"} />
+          <MetricCard hint="Trạng thái hệ thống" icon={<Bell className="h-4 w-4 text-sky-500" />} label="Thông báo" value={notificationsEnabled ? "Bật" : "Tắt"} />
         </div>
 
         <div className="grid gap-4 xl:grid-cols-2">
@@ -228,15 +265,43 @@ const Settings = () => {
                 </div>
 
                 <div className="rounded-[18px] border border-border bg-card p-4">
+                  <Label className="mb-2 block text-sm font-semibold text-foreground">Deadline JLPT</Label>
+                  <Input
+                    type="date"
+                    className="h-11 rounded-2xl border-border bg-card text-foreground/80"
+                    value={settings.jlptDeadlineDate ?? ""}
+                    onChange={(event) => update("jlptDeadlineDate", event.target.value || null)}
+                  />
+                  <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+                    <span>
+                      {deadlineMeta
+                        ? deadlineMeta.isPast
+                          ? "Deadline đã qua. Hãy dời lịch mới để tính kế hoạch chính xác."
+                          : `Còn ${deadlineMeta.daysRemaining} ngày đến hạn.`
+                        : "Chưa đặt deadline. Kế hoạch sẽ chỉ dựa trên daily goal."}
+                    </span>
+                    {settings.jlptDeadlineDate && (
+                      <button
+                        type="button"
+                        className="font-medium text-primary"
+                        onClick={() => update("jlptDeadlineDate", null)}
+                      >
+                        Xóa
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="rounded-[18px] border border-border bg-card p-4">
                   <Label className="mb-2 block text-sm font-semibold text-foreground">Độ khó quiz</Label>
                   <Select onValueChange={(value) => update("quizDifficulty", value)} value={settings.quizDifficulty}>
                     <SelectTrigger className="h-11 rounded-2xl border-border bg-card text-foreground/80">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="EASY">Easy</SelectItem>
-                      <SelectItem value="MEDIUM">Medium</SelectItem>
-                      <SelectItem value="HARD">Hard</SelectItem>
+                      <SelectItem value="easy">Easy</SelectItem>
+                      <SelectItem value="normal">Normal</SelectItem>
+                      <SelectItem value="hard">Hard</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -244,16 +309,29 @@ const Settings = () => {
             </div>
           </PageSection>
 
-          <PageSection title="Thông báo" description="Không đẩy thành một màn hình riêng nữa, chỉ giữ phần thực sự cần thiết.">
-            <div className="flex items-center justify-between rounded-[18px] border border-border bg-card p-4">
-              <div className="flex items-center gap-3">
-                <Volume2 className="h-5 w-5 text-sky-500" />
-                <div>
-                  <p className="text-sm font-semibold text-foreground">Nhắc học mỗi ngày</p>
-                  <p className="mt-1 text-sm text-muted-foreground">Bật để nhận nhắc nhở giữ nhịp học đều.</p>
+          <PageSection title="Thông báo" description="Tách riêng thông báo theo kênh để bạn kiểm soát tốt hơn.">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between rounded-[18px] border border-border bg-card p-4">
+                <div className="flex items-center gap-3">
+                  <Volume2 className="h-5 w-5 text-sky-500" />
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">Email notifications</p>
+                    <p className="mt-1 text-sm text-muted-foreground">Nhận tổng kết học tập và nhắc nhở qua email.</p>
+                  </div>
                 </div>
+                <Switch checked={settings.emailNotifications} onCheckedChange={(value) => update("emailNotifications", value)} />
               </div>
-              <Switch checked={settings.notificationsEnabled} onCheckedChange={(value) => update("notificationsEnabled", value)} />
+
+              <div className="flex items-center justify-between rounded-[18px] border border-border bg-card p-4">
+                <div className="flex items-center gap-3">
+                  <CalendarClock className="h-5 w-5 text-amber-500" />
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">Push notifications</p>
+                    <p className="mt-1 text-sm text-muted-foreground">Nhắc giờ học hằng ngày trực tiếp trên thiết bị.</p>
+                  </div>
+                </div>
+                <Switch checked={settings.pushNotifications} onCheckedChange={(value) => update("pushNotifications", value)} />
+              </div>
             </div>
           </PageSection>
         </div>

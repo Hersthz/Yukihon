@@ -1,6 +1,7 @@
 package com.hoang.basis.yukihon.system.learningpath.service;
 
 import com.hoang.basis.yukihon.system.learningpath.dto.LearningPathDto;
+import com.hoang.basis.yukihon.system.learningpath.dto.LearningDeadlinePlanDto;
 import com.hoang.basis.yukihon.system.learningpath.dto.LearningPathLessonDto;
 import com.hoang.basis.yukihon.system.lesson.entity.Lesson;
 import com.hoang.basis.yukihon.system.lesson.repository.LessonRepository;
@@ -15,6 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -72,6 +75,13 @@ public class LearningPathService {
                 dailyGoalMinutes
         );
 
+        LearningDeadlinePlanDto deadlinePlan = buildDeadlinePlan(
+            settings.getJlptDeadlineDate(),
+            trackLessons,
+            progressByLessonId,
+            dailyGoalMinutes
+        );
+
         LearningPathLessonDto nextLesson = recommendedLessons.isEmpty() ? null : recommendedLessons.get(0);
         int completionRate = trackLessons.isEmpty()
                 ? 0
@@ -82,6 +92,7 @@ public class LearningPathService {
         return LearningPathDto.builder()
                 .targetJlptLevel(targetLevel)
                 .dailyGoalMinutes(dailyGoalMinutes)
+                .deadlinePlan(deadlinePlan)
                 .totalLessonsInTrack(trackLessons.size())
                 .completedLessonsInTrack((int) completedLessonsInTrack)
                 .inProgressLessons((int) inProgressLessons)
@@ -90,9 +101,117 @@ public class LearningPathService {
                 .totalXP(stats != null && stats.getTotalXP() != null ? stats.getTotalXP() : 0)
                 .nextLesson(nextLesson)
                 .recommendedLessons(recommendedLessons)
-                .todayGoals(buildTodayGoals(nextLesson, dailyGoalMinutes, targetLevel, inProgressLessons))
-                .recommendationSummary(buildRecommendationSummary(nextLesson, completionRate, targetLevel))
+                .todayGoals(buildTodayGoals(nextLesson, dailyGoalMinutes, targetLevel, inProgressLessons, deadlinePlan))
+                .recommendationSummary(buildRecommendationSummary(nextLesson, completionRate, targetLevel, deadlinePlan))
                 .build();
+    }
+
+    private LearningDeadlinePlanDto buildDeadlinePlan(
+            LocalDate deadlineDate,
+            List<Lesson> trackLessons,
+            Map<Long, UserProgress> progressByLessonId,
+            int dailyGoalMinutes
+    ) {
+        LocalDate today = LocalDate.now();
+
+        List<Lesson> remainingLessons = trackLessons.stream()
+                .filter(lesson -> !isCompleted(progressByLessonId.get(lesson.getId())))
+                .toList();
+
+        int remainingLessonsCount = remainingLessons.size();
+        int remainingMinutes = remainingLessons.stream()
+                .mapToInt(lesson -> estimateMinutes(lesson, dailyGoalMinutes))
+                .sum();
+
+        int projectedDays = remainingMinutes <= 0
+                ? 0
+                : (int) Math.ceil(remainingMinutes / (double) Math.max(1, dailyGoalMinutes));
+        LocalDate projectedCompletionDate = projectedDays <= 0 ? today : today.plusDays(projectedDays - 1L);
+
+        if (remainingLessonsCount == 0) {
+            return LearningDeadlinePlanDto.builder()
+                    .hasDeadline(deadlineDate != null)
+                    .planStatus("COMPLETED")
+                    .deadlineDate(deadlineDate)
+                    .projectedCompletionDate(today)
+                    .daysRemaining(deadlineDate != null ? Math.max(0, (int) ChronoUnit.DAYS.between(today, deadlineDate) + 1) : 0)
+                    .remainingLessons(0)
+                    .remainingEstimatedMinutes(0)
+                    .requiredMinutesPerDay(0)
+                    .requiredLessonsPerWeek(0)
+                    .insight("Bạn đã hoàn thành lộ trình hiện tại. Có thể nâng mục tiêu JLPT để mở kế hoạch mới.")
+                    .build();
+        }
+
+        if (deadlineDate == null) {
+            return LearningDeadlinePlanDto.builder()
+                    .hasDeadline(false)
+                    .planStatus("NO_DEADLINE")
+                    .deadlineDate(null)
+                    .projectedCompletionDate(projectedCompletionDate)
+                    .daysRemaining(0)
+                    .remainingLessons(remainingLessonsCount)
+                    .remainingEstimatedMinutes(remainingMinutes)
+                    .requiredMinutesPerDay(0)
+                    .requiredLessonsPerWeek(0)
+                    .insight("Bạn chưa đặt deadline. Hãy chọn ngày thi JLPT để hệ thống tính nhịp học tối ưu.")
+                    .build();
+        }
+
+        int daysRemaining = Math.max(0, (int) ChronoUnit.DAYS.between(today, deadlineDate) + 1);
+        int requiredMinutesPerDay = daysRemaining > 0
+                ? (int) Math.ceil(remainingMinutes / (double) daysRemaining)
+                : remainingMinutes;
+        int requiredLessonsPerWeek = daysRemaining > 0
+                ? (int) Math.ceil((remainingLessonsCount * 7.0) / daysRemaining)
+                : remainingLessonsCount;
+
+        String planStatus = resolvePlanStatus(daysRemaining, dailyGoalMinutes, requiredMinutesPerDay);
+
+        return LearningDeadlinePlanDto.builder()
+                .hasDeadline(true)
+                .planStatus(planStatus)
+                .deadlineDate(deadlineDate)
+                .projectedCompletionDate(projectedCompletionDate)
+                .daysRemaining(daysRemaining)
+                .remainingLessons(remainingLessonsCount)
+                .remainingEstimatedMinutes(remainingMinutes)
+                .requiredMinutesPerDay(requiredMinutesPerDay)
+                .requiredLessonsPerWeek(requiredLessonsPerWeek)
+                .insight(buildDeadlineInsight(planStatus, daysRemaining, requiredMinutesPerDay, dailyGoalMinutes))
+                .build();
+    }
+
+    private String resolvePlanStatus(int daysRemaining, int dailyGoalMinutes, int requiredMinutesPerDay) {
+        if (daysRemaining <= 0) {
+            return "OFF_TRACK";
+        }
+
+        if (requiredMinutesPerDay <= 0 || dailyGoalMinutes >= requiredMinutesPerDay) {
+            return "ON_TRACK";
+        }
+
+        if (dailyGoalMinutes >= Math.ceil(requiredMinutesPerDay * 0.75)) {
+            return "AT_RISK";
+        }
+
+        return "OFF_TRACK";
+    }
+
+    private String buildDeadlineInsight(String status, int daysRemaining, int requiredMinutesPerDay, int dailyGoalMinutes) {
+        if ("ON_TRACK".equals(status)) {
+            return "Bạn đang đúng tiến độ. Giữ nhịp " + dailyGoalMinutes + " phút/ngày để kịp deadline.";
+        }
+
+        if ("AT_RISK".equals(status)) {
+            return "Bạn gần kịp tiến độ. Tăng nhẹ lên khoảng " + requiredMinutesPerDay + " phút/ngày để an toàn hơn.";
+        }
+
+        if (daysRemaining <= 0) {
+            return "Deadline đã qua. Hãy dời deadline mới và ưu tiên hoàn thành các bài nền trước.";
+        }
+
+        return "Tiến độ hiện tại chưa đủ. Nên tăng lên khoảng " + requiredMinutesPerDay + " phút/ngày thay vì " + dailyGoalMinutes + " phút.";
     }
 
     private List<LearningPathLessonDto> buildRecommendedLessons(
@@ -190,7 +309,8 @@ public class LearningPathService {
             LearningPathLessonDto nextLesson,
             int dailyGoalMinutes,
             String targetLevel,
-            long inProgressLessons
+            long inProgressLessons,
+            LearningDeadlinePlanDto deadlinePlan
     ) {
         List<String> goals = new ArrayList<>();
 
@@ -199,6 +319,10 @@ public class LearningPathService {
         }
 
         goals.add("Dành ít nhất " + dailyGoalMinutes + " phút cho mục tiêu " + targetLevel);
+
+        if (deadlinePlan != null && deadlinePlan.isHasDeadline()) {
+            goals.add("Deadline " + deadlinePlan.getDeadlineDate() + ": cần khoảng " + deadlinePlan.getRequiredMinutesPerDay() + " phút/ngày để kịp tiến độ");
+        }
 
         if (inProgressLessons > 1) {
             goals.add("Chốt bớt bài đang học dở để giữ nhịp học ổn định");
@@ -212,10 +336,15 @@ public class LearningPathService {
     private String buildRecommendationSummary(
             LearningPathLessonDto nextLesson,
             int completionRate,
-            String targetLevel
+            String targetLevel,
+            LearningDeadlinePlanDto deadlinePlan
     ) {
         if (nextLesson == null) {
             return "Chưa có bài phù hợp trong lộ trình hiện tại. Bạn có thể thêm lesson xuất bản để hệ thống gợi ý chính xác hơn.";
+        }
+
+        if (deadlinePlan != null && deadlinePlan.isHasDeadline() && "OFF_TRACK".equals(deadlinePlan.getPlanStatus())) {
+            return "Bạn đang chậm so với deadline JLPT. Nên tăng thời lượng học mỗi ngày để kịp tiến độ.";
         }
 
         if ("IN_PROGRESS".equals(nextLesson.getProgressStatus())) {
