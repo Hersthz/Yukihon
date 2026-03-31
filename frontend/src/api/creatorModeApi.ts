@@ -31,6 +31,21 @@ export interface CreatorTemplate {
   lastPublishedAt: string | null;
 }
 
+export type CreatorAuditStage = "AUTHORING" | "REVIEW_SUBMISSION" | "REVIEWER_REVIEW" | "ADMIN_APPROVAL";
+export type CreatorAuditAction = "CREATED" | "UPDATED_DRAFT" | "SUBMITTED_FOR_REVIEW" | "REVIEW_DECISION" | "ADMIN_DECISION";
+
+export interface CreatorTemplateAuditEvent {
+  id: number;
+  templateId: number;
+  actorUserId: number | null;
+  actorDisplayName: string | null;
+  stage: CreatorAuditStage;
+  action: CreatorAuditAction;
+  decision: string | null;
+  note: string | null;
+  createdAt: string;
+}
+
 export interface CreatorTemplateUpsertPayload {
   title: string;
   summary?: string;
@@ -134,6 +149,8 @@ export const creatorModeApi = {
     apiClient.request<void>(`/api/admin/creator-mode/templates/${id}`, {
       method: "DELETE",
     }),
+  getTemplateAuditTimeline: (id: number) =>
+    apiClient.request<CreatorTemplateAuditEvent[]>(`/api/admin/creator-mode/templates/${id}/audit-timeline`),
   getReviewerQueue: () => apiClient.request<CreatorTemplate[]>("/api/admin/creator-mode/review-queue/reviewer"),
   getAdminQueue: () => apiClient.request<CreatorTemplate[]>("/api/admin/creator-mode/review-queue/admin"),
   getAnalytics: () => apiClient.request<CreatorAnalytics>("/api/admin/creator-mode/analytics"),

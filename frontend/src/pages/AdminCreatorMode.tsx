@@ -1,11 +1,19 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { BarChart3, CheckCircle2, ClipboardCheck, PlusCircle, Sparkles, XCircle } from "lucide-react";
-import { creatorModeApi, type CreatorAnalytics, type CreatorContentType, type CreatorTemplate, type CreatorTemplateStatus } from "@/api";
+import {
+  creatorModeApi,
+  type CreatorAnalytics,
+  type CreatorContentType,
+  type CreatorTemplate,
+  type CreatorTemplateAuditEvent,
+  type CreatorTemplateStatus,
+} from "@/api";
 import WinterNightBackground from "@/components/WinterNightBackground";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -14,6 +22,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import CreatorBlockEditor from "@/features/creator-mode/components/CreatorBlockEditor";
 import CreatorCanvas from "@/features/creator-mode/components/CreatorCanvas";
+import CreatorAuditTimeline from "@/features/creator-mode/components/CreatorAuditTimeline";
 import CreatorMetricCard from "@/features/creator-mode/components/CreatorMetricCard";
 import {
   createDefaultBlock,
@@ -77,6 +86,9 @@ const AdminCreatorMode = () => {
   const [blocks, setBlocks] = useState<CreatorBlock[]>(createDefaultDocument().blocks);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(blocks[0]?.id ?? null);
   const [reviewNotes, setReviewNotes] = useState<Record<number, string>>({});
+  const [auditTimelineByTemplate, setAuditTimelineByTemplate] = useState<Record<number, CreatorTemplateAuditEvent[]>>({});
+  const [loadingAuditTemplateId, setLoadingAuditTemplateId] = useState<number | null>(null);
+  const [auditDialogTemplate, setAuditDialogTemplate] = useState<CreatorTemplate | null>(null);
 
   const [templateFilter, setTemplateFilter] = useState<CreatorTemplateStatus | "ALL">("ALL");
 
@@ -114,6 +126,29 @@ const AdminCreatorMode = () => {
     setBlocks(parsed.blocks);
     setSelectedBlockId(parsed.blocks[0]?.id ?? null);
   }, []);
+
+  const loadTemplateTimeline = useCallback(async (templateId: number, forceReload = false) => {
+    if (!forceReload && auditTimelineByTemplate[templateId]) {
+      return;
+    }
+
+    try {
+      setLoadingAuditTemplateId(templateId);
+      const events = await creatorModeApi.getTemplateAuditTimeline(templateId);
+      setAuditTimelineByTemplate((previous) => ({
+        ...previous,
+        [templateId]: events,
+      }));
+    } catch {
+      toast({
+        title: "Audit timeline unavailable",
+        description: "Could not load the review history for this template.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingAuditTemplateId((current) => (current === templateId ? null : current));
+    }
+  }, [auditTimelineByTemplate, toast]);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -216,12 +251,13 @@ const AdminCreatorMode = () => {
       setActiveTemplateId(saved.id);
       toast({ title: "Draft saved", description: "Creator template has been saved." });
       await loadData();
+      await loadTemplateTimeline(saved.id, true);
     } catch {
       toast({ title: "Save failed", description: "Could not save this creator draft.", variant: "destructive" });
     } finally {
       setSaving(false);
     }
-  }, [activeTemplateId, buildPayload, editorMeta.title, loadData, toast]);
+  }, [activeTemplateId, buildPayload, editorMeta.title, loadData, loadTemplateTimeline, toast]);
 
   const submitCurrentTemplate = useCallback(async () => {
     try {
@@ -237,10 +273,11 @@ const AdminCreatorMode = () => {
       await creatorModeApi.submitForReview(templateId);
       toast({ title: "Submitted", description: "Template is now in review queue." });
       await loadData();
+      await loadTemplateTimeline(templateId, true);
     } catch {
       toast({ title: "Submit failed", description: "Could not submit template for review.", variant: "destructive" });
     }
-  }, [activeTemplateId, buildPayload, loadData, toast]);
+  }, [activeTemplateId, buildPayload, loadData, loadTemplateTimeline, toast]);
 
   const reviewAsReviewer = useCallback(async (templateId: number, decision: "APPROVED" | "REJECTED") => {
     try {
@@ -250,10 +287,11 @@ const AdminCreatorMode = () => {
       });
       toast({ title: "Reviewer decision saved", description: `Template status changed to ${decision}.` });
       await loadData();
+      await loadTemplateTimeline(templateId, true);
     } catch {
       toast({ title: "Reviewer action failed", description: "Could not update reviewer decision.", variant: "destructive" });
     }
-  }, [loadData, reviewNotes, toast]);
+  }, [loadData, loadTemplateTimeline, reviewNotes, toast]);
 
   const reviewAsAdmin = useCallback(async (templateId: number, decision: "PUBLISHED" | "REJECTED") => {
     try {
@@ -263,10 +301,11 @@ const AdminCreatorMode = () => {
       });
       toast({ title: "Admin decision saved", description: `Template status changed to ${decision}.` });
       await loadData();
+      await loadTemplateTimeline(templateId, true);
     } catch {
       toast({ title: "Admin action failed", description: "Could not update admin decision.", variant: "destructive" });
     }
-  }, [loadData, reviewNotes, toast]);
+  }, [loadData, loadTemplateTimeline, reviewNotes, toast]);
 
   const logPlaytest = useCallback(async () => {
     if (!activeTemplateId) {
@@ -489,7 +528,10 @@ const AdminCreatorMode = () => {
                     <button
                       key={template.id}
                       type="button"
-                      onClick={() => hydrateFromTemplate(template)}
+                      onClick={() => {
+                        hydrateFromTemplate(template);
+                        void loadTemplateTimeline(template.id);
+                      }}
                       className="flex w-full items-center justify-between rounded-lg border border-border bg-background/50 px-3 py-3 text-left hover:bg-background/70"
                     >
                       <div>
@@ -505,6 +547,29 @@ const AdminCreatorMode = () => {
                   ))}
                 </CardContent>
               </Card>
+
+              {activeTemplateId && (
+                <Card className="border-border/70 bg-card/70">
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle className="text-base">Audit Timeline</CardTitle>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => void loadTemplateTimeline(activeTemplateId, true)}
+                      disabled={loadingAuditTemplateId === activeTemplateId}
+                    >
+                      Refresh
+                    </Button>
+                  </CardHeader>
+                  <CardContent>
+                    <CreatorAuditTimeline
+                      events={auditTimelineByTemplate[activeTemplateId] ?? []}
+                      loading={loadingAuditTemplateId === activeTemplateId}
+                      emptyMessage="No audit events for this template yet."
+                    />
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
             )}
 
@@ -545,6 +610,16 @@ const AdminCreatorMode = () => {
                       />
 
                       <div className="flex flex-wrap gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setAuditDialogTemplate(template);
+                            void loadTemplateTimeline(template.id);
+                          }}
+                        >
+                          Audit Timeline
+                        </Button>
                         {canReviewAsAdmin ? (
                           <>
                             <Button size="sm" variant="secondary" onClick={() => void reviewAsAdmin(template.id, "PUBLISHED")}>
@@ -574,6 +649,21 @@ const AdminCreatorMode = () => {
               </Card>
               </TabsContent>
             )}
+
+            <Dialog open={!!auditDialogTemplate} onOpenChange={(open) => !open && setAuditDialogTemplate(null)}>
+              <DialogContent className="max-w-2xl border-border/70 bg-card/95">
+                <DialogHeader>
+                  <DialogTitle>
+                    Audit Timeline{auditDialogTemplate ? ` - ${auditDialogTemplate.title}` : ""}
+                  </DialogTitle>
+                </DialogHeader>
+                <CreatorAuditTimeline
+                  events={auditDialogTemplate ? (auditTimelineByTemplate[auditDialogTemplate.id] ?? []) : []}
+                  loading={auditDialogTemplate ? loadingAuditTemplateId === auditDialogTemplate.id : false}
+                  emptyMessage="No audit history found for this template."
+                />
+              </DialogContent>
+            </Dialog>
 
             <TabsContent value="analytics" className="space-y-6">
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

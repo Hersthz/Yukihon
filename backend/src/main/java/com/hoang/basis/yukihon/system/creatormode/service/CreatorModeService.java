@@ -3,11 +3,14 @@ package com.hoang.basis.yukihon.system.creatormode.service;
 import com.hoang.basis.yukihon.exception.ResourceNotFoundException;
 import com.hoang.basis.yukihon.system.creatormode.dto.CreatorTemplateAnalyticsDto;
 import com.hoang.basis.yukihon.system.creatormode.dto.CreatorTemplateAnalyticsItemDto;
+import com.hoang.basis.yukihon.system.creatormode.dto.CreatorTemplateAuditEventDto;
 import com.hoang.basis.yukihon.system.creatormode.dto.CreatorTemplateDto;
 import com.hoang.basis.yukihon.system.creatormode.dto.CreatorTemplateMetricsRequest;
 import com.hoang.basis.yukihon.system.creatormode.dto.CreatorTemplateReviewRequest;
 import com.hoang.basis.yukihon.system.creatormode.dto.CreatorTemplateUpsertRequest;
+import com.hoang.basis.yukihon.system.creatormode.entity.CreatorTemplateAuditEvent;
 import com.hoang.basis.yukihon.system.creatormode.entity.CreatorTemplate;
+import com.hoang.basis.yukihon.system.creatormode.repository.CreatorTemplateAuditEventRepository;
 import com.hoang.basis.yukihon.system.creatormode.repository.CreatorTemplateRepository;
 import com.hoang.basis.yukihon.system.user.entity.User;
 import com.hoang.basis.yukihon.system.user.repository.UserRepository;
@@ -33,6 +36,7 @@ public class CreatorModeService {
     private static final Set<String> VALID_JLPT_LEVELS = Set.of("N5", "N4", "N3", "N2", "N1");
 
     private final CreatorTemplateRepository creatorTemplateRepository;
+    private final CreatorTemplateAuditEventRepository creatorTemplateAuditEventRepository;
     private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
@@ -60,6 +64,17 @@ public class CreatorModeService {
                 .orElseThrow(() -> new ResourceNotFoundException("Creator template not found with id: " + id));
         return CreatorTemplateDto.fromEntity(template);
     }
+
+        @Transactional(readOnly = true)
+        public List<CreatorTemplateAuditEventDto> getTemplateAuditTimeline(Long id) {
+        creatorTemplateRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Creator template not found with id: " + id));
+
+        return creatorTemplateAuditEventRepository.findByTemplateIdOrderByCreatedAtAscIdAsc(id)
+            .stream()
+            .map(CreatorTemplateAuditEventDto::fromEntity)
+            .toList();
+        }
 
     @Transactional(readOnly = true)
     public List<CreatorTemplateDto> getReviewerQueue() {
@@ -93,12 +108,15 @@ public class CreatorModeService {
                 .build();
 
         CreatorTemplate saved = creatorTemplateRepository.save(template);
+        appendAuditEvent(saved, actor, CreatorTemplateAuditEvent.AuditStage.AUTHORING,
+            CreatorTemplateAuditEvent.AuditAction.CREATED, null, "Template draft created");
         log.info("Creator template created: id={}, actorUserId={}", saved.getId(), actorUserId);
         return CreatorTemplateDto.fromEntity(saved);
     }
 
     public CreatorTemplateDto updateTemplate(Long id, CreatorTemplateUpsertRequest request, Long actorUserId, boolean isAdmin) {
         CreatorTemplate template = findEditableTemplate(id, actorUserId, isAdmin);
+        User actor = findUserByIdOrThrow(actorUserId);
 
         template.setTitle(request.getTitle().trim());
         template.setSummary(trimToNull(request.getSummary()));
@@ -113,12 +131,15 @@ public class CreatorModeService {
         }
 
         CreatorTemplate updated = creatorTemplateRepository.save(template);
+    appendAuditEvent(updated, actor, CreatorTemplateAuditEvent.AuditStage.AUTHORING,
+        CreatorTemplateAuditEvent.AuditAction.UPDATED_DRAFT, null, null);
         log.info("Creator template updated: id={}, actorUserId={}", id, actorUserId);
         return CreatorTemplateDto.fromEntity(updated);
     }
 
     public CreatorTemplateDto submitForReview(Long id, Long actorUserId, boolean isAdmin) {
         CreatorTemplate template = findEditableTemplate(id, actorUserId, isAdmin);
+        User actor = findUserByIdOrThrow(actorUserId);
 
         if (template.getStatus() == CreatorTemplate.TemplateStatus.PUBLISHED) {
             throw new IllegalStateException("Published template cannot be submitted for review");
@@ -131,6 +152,9 @@ public class CreatorModeService {
         clearAdminReview(template);
 
         CreatorTemplate saved = creatorTemplateRepository.save(template);
+    appendAuditEvent(saved, actor, CreatorTemplateAuditEvent.AuditStage.REVIEW_SUBMISSION,
+        CreatorTemplateAuditEvent.AuditAction.SUBMITTED_FOR_REVIEW,
+        CreatorTemplate.TemplateStatus.PENDING_REVIEW.name(), null);
         log.info("Creator template submitted for review: id={}, actorUserId={}", id, actorUserId);
         return CreatorTemplateDto.fromEntity(saved);
     }
@@ -158,6 +182,8 @@ public class CreatorModeService {
         clearAdminReview(template);
 
         CreatorTemplate saved = creatorTemplateRepository.save(template);
+    appendAuditEvent(saved, reviewer, CreatorTemplateAuditEvent.AuditStage.REVIEWER_REVIEW,
+        CreatorTemplateAuditEvent.AuditAction.REVIEW_DECISION, decision.name(), request.getReviewNote());
         log.info("Creator template reviewer decision: id={}, decision={}, reviewerUserId={}", id, decision, reviewerUserId);
         return CreatorTemplateDto.fromEntity(saved);
     }
@@ -188,6 +214,8 @@ public class CreatorModeService {
         }
 
         CreatorTemplate saved = creatorTemplateRepository.save(template);
+    appendAuditEvent(saved, adminReviewer, CreatorTemplateAuditEvent.AuditStage.ADMIN_APPROVAL,
+        CreatorTemplateAuditEvent.AuditAction.ADMIN_DECISION, decision.name(), request.getReviewNote());
         log.info("Creator template admin decision: id={}, decision={}, adminUserId={}", id, decision, adminUserId);
         return CreatorTemplateDto.fromEntity(saved);
     }
@@ -379,5 +407,24 @@ public class CreatorModeService {
         template.setAdminReviewedBy(null);
         template.setAdminReviewNote(null);
         template.setAdminReviewedAt(null);
+    }
+
+    private void appendAuditEvent(
+            CreatorTemplate template,
+            User actor,
+            CreatorTemplateAuditEvent.AuditStage stage,
+            CreatorTemplateAuditEvent.AuditAction action,
+            String decision,
+            String note
+    ) {
+        CreatorTemplateAuditEvent event = CreatorTemplateAuditEvent.builder()
+                .template(template)
+                .actor(actor)
+                .stage(stage)
+                .action(action)
+                .decision(trimToNull(decision))
+                .note(trimToNull(note))
+                .build();
+        creatorTemplateAuditEventRepository.save(event);
     }
 }

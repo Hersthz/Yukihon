@@ -2,6 +2,7 @@ package com.hoang.basis.yukihon.system.creatormode.controller;
 
 import com.hoang.basis.yukihon.exception.ResourceNotFoundException;
 import com.hoang.basis.yukihon.system.creatormode.dto.CreatorTemplateAnalyticsDto;
+import com.hoang.basis.yukihon.system.creatormode.dto.CreatorTemplateAuditEventDto;
 import com.hoang.basis.yukihon.system.creatormode.dto.CreatorTemplateDto;
 import com.hoang.basis.yukihon.system.creatormode.dto.CreatorTemplateMetricsRequest;
 import com.hoang.basis.yukihon.system.creatormode.dto.CreatorTemplateReviewRequest;
@@ -45,6 +46,12 @@ public class CreatorModeController {
     @PreAuthorize("hasAnyAuthority('CONTENT_READ','CONTENT_MANAGE')")
     public ResponseEntity<CreatorTemplateDto> getTemplate(@PathVariable Long id) {
         return ResponseEntity.ok(creatorModeService.getTemplate(id));
+    }
+
+    @GetMapping("/templates/{id}/audit-timeline")
+    @PreAuthorize("hasAnyAuthority('CONTENT_READ','CONTENT_MANAGE','CONTENT_REVIEW')")
+    public ResponseEntity<List<CreatorTemplateAuditEventDto>> getTemplateAuditTimeline(@PathVariable Long id) {
+        return ResponseEntity.ok(creatorModeService.getTemplateAuditTimeline(id));
     }
 
     @PostMapping("/templates")
