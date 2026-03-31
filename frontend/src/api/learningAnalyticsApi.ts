@@ -39,6 +39,9 @@ export interface LearningFunnelItem {
 export interface LearningFunnelResponse {
   windowDays: number;
   contentType: LearningContentType;
+  jlptLevel?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
   totalStarted: number;
   totalCompleted: number;
   totalAbandoned: number;
@@ -55,6 +58,9 @@ interface LearningFunnelQuery {
   days?: number;
   limit?: number;
   contentType?: LearningContentType;
+  jlptLevel?: string;
+  startDate?: string;
+  endDate?: string;
 }
 
 const buildQuery = (query: LearningFunnelQuery) => {
@@ -63,6 +69,9 @@ const buildQuery = (query: LearningFunnelQuery) => {
   if (query.days != null) params.set("days", String(query.days));
   if (query.limit != null) params.set("limit", String(query.limit));
   if (query.contentType) params.set("contentType", query.contentType);
+  if (query.jlptLevel) params.set("jlptLevel", query.jlptLevel);
+  if (query.startDate) params.set("startDate", query.startDate);
+  if (query.endDate) params.set("endDate", query.endDate);
 
   const serialized = params.toString();
   return serialized ? `?${serialized}` : "";

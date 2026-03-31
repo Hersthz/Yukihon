@@ -11,6 +11,9 @@ import java.util.List;
 public class LearningFunnelDto {
     private int windowDays;
     private String contentType;
+    private String jlptLevel;
+    private String startDate;
+    private String endDate;
     private Long totalStarted;
     private Long totalCompleted;
     private Long totalAbandoned;

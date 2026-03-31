@@ -22,12 +22,16 @@ public interface LearningAnalyticsEventRepository extends JpaRepository<Learning
                 MAX(e.createdAt) AS lastEventAt
             FROM LearningAnalyticsEvent e
             WHERE (:since IS NULL OR e.createdAt >= :since)
+              AND (:until IS NULL OR e.createdAt < :until)
               AND (:contentType IS NULL OR e.contentType = :contentType)
+              AND (:jlptLevel IS NULL OR UPPER(e.jlptLevel) = :jlptLevel)
             GROUP BY e.contentType, e.contentId
             """)
     List<LearningFunnelAggregateProjection> aggregateFunnel(
             @Param("since") Instant since,
+            @Param("until") Instant until,
             @Param("contentType") LearningAnalyticsEvent.ContentType contentType,
+            @Param("jlptLevel") String jlptLevel,
             @Param("startEvent") LearningAnalyticsEvent.EventType startEvent,
             @Param("completeEvent") LearningAnalyticsEvent.EventType completeEvent,
             @Param("abandonEvent") LearningAnalyticsEvent.EventType abandonEvent,

@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import {
@@ -12,6 +12,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import WinterNightBackground from "@/components/WinterNightBackground";
 import { adminApi, learningAnalyticsApi, type LearningFunnelResponse } from "@/api";
@@ -34,34 +35,61 @@ const AdminDashboard = () => {
   const [funnel, setFunnel] = useState<LearningFunnelResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [funnelLoading, setFunnelLoading] = useState(true);
+  const [funnelDays, setFunnelDays] = useState("30");
+  const [funnelJlpt, setFunnelJlpt] = useState("ALL");
+  const [funnelStartDate, setFunnelStartDate] = useState("");
+  const [funnelEndDate, setFunnelEndDate] = useState("");
+
+  const jlptFilter = funnelJlpt === "ALL" ? undefined : funnelJlpt;
+  const hasCustomDateRange = Boolean(funnelStartDate || funnelEndDate);
+
+  const funnelQuery = useMemo(
+    () => ({
+      days: hasCustomDateRange ? undefined : Number(funnelDays),
+      limit: 8,
+      contentType: "LESSON" as const,
+      jlptLevel: jlptFilter,
+      startDate: funnelStartDate || undefined,
+      endDate: funnelEndDate || undefined,
+    }),
+    [funnelDays, hasCustomDateRange, jlptFilter, funnelStartDate, funnelEndDate]
+  );
+
+  const clearDateFilter = () => {
+    setFunnelStartDate("");
+    setFunnelEndDate("");
+  };
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    const fetchStats = async () => {
       try {
-        const [statsResult, funnelResult] = await Promise.allSettled([
-          adminApi.getSystemStats() as Promise<SystemStats>,
-          learningAnalyticsApi.getFunnel({ days: 30, limit: 8, contentType: "LESSON" }),
-        ]);
-
-        if (statsResult.status === "fulfilled") {
-          setStats(statsResult.value);
-        } else {
-          console.error("Failed to fetch system stats:", statsResult.reason);
-        }
-
-        if (funnelResult.status === "fulfilled") {
-          setFunnel(funnelResult.value);
-        } else {
-          console.error("Failed to fetch learning funnel:", funnelResult.reason);
-        }
+        const statsResult = await adminApi.getSystemStats() as SystemStats;
+        setStats(statsResult);
+      } catch (error) {
+        console.error("Failed to fetch system stats:", error);
       } finally {
         setLoading(false);
-        setFunnelLoading(false);
       }
     };
 
-    fetchDashboardData();
+    fetchStats();
   }, []);
+
+  const fetchFunnel = useCallback(async () => {
+    setFunnelLoading(true);
+    try {
+      const result = await learningAnalyticsApi.getFunnel(funnelQuery);
+      setFunnel(result);
+    } catch (error) {
+      console.error("Failed to fetch learning funnel:", error);
+    } finally {
+      setFunnelLoading(false);
+    }
+  }, [funnelQuery]);
+
+  useEffect(() => {
+    void fetchFunnel();
+  }, [fetchFunnel]);
 
   if (!isAdmin()) {
     return <Navigate to="/dashboard" replace />;
@@ -192,12 +220,63 @@ const AdminDashboard = () => {
         >
           <Card className="bg-card/40 backdrop-blur-md border-border/50">
             <CardHeader>
-              <CardTitle>Learning Funnel (30 days)</CardTitle>
+              <CardTitle>Learning Funnel</CardTitle>
               <CardDescription>
                 Track start, completion, abandonment, and quiz recovery to identify high-retention lessons.
               </CardDescription>
             </CardHeader>
             <CardContent>
+              <div className="mb-5 grid grid-cols-1 gap-3 border border-border/60 bg-background/30 p-4 md:grid-cols-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Window</label>
+                  <select
+                    className="h-9 w-full rounded-md border border-border bg-background px-2 text-sm"
+                    value={funnelDays}
+                    onChange={(e) => setFunnelDays(e.target.value)}
+                    disabled={hasCustomDateRange}
+                  >
+                    <option value="7">Last 7 days</option>
+                    <option value="30">Last 30 days</option>
+                    <option value="90">Last 90 days</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">JLPT Cohort</label>
+                  <select
+                    className="h-9 w-full rounded-md border border-border bg-background px-2 text-sm"
+                    value={funnelJlpt}
+                    onChange={(e) => setFunnelJlpt(e.target.value)}
+                  >
+                    <option value="ALL">All levels</option>
+                    <option value="N5">N5</option>
+                    <option value="N4">N4</option>
+                    <option value="N3">N3</option>
+                    <option value="N2">N2</option>
+                    <option value="N1">N1</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">From date</label>
+                  <Input type="date" value={funnelStartDate} onChange={(e) => setFunnelStartDate(e.target.value)} />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">To date</label>
+                  <Input type="date" value={funnelEndDate} onChange={(e) => setFunnelEndDate(e.target.value)} />
+                  {hasCustomDateRange && (
+                    <button
+                      type="button"
+                      onClick={clearDateFilter}
+                      className="text-xs text-primary hover:underline"
+                    >
+                      Clear date filter
+                    </button>
+                  )}
+                </div>
+              </div>
+
               {funnelLoading ? (
                 <div className="flex items-center justify-center py-16">
                   <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
@@ -208,6 +287,12 @@ const AdminDashboard = () => {
                 </div>
               ) : (
                 <div className="space-y-6">
+                  <div className="rounded-lg border border-border/60 bg-background/30 p-3 text-xs text-muted-foreground">
+                    Cohort: <span className="font-medium text-foreground">{funnel.jlptLevel ?? "All JLPT"}</span>
+                    {" • "}
+                    Range: <span className="font-medium text-foreground">{funnel.startDate && funnel.endDate ? `${funnel.startDate} to ${funnel.endDate}` : `Last ${funnel.windowDays} days`}</span>
+                  </div>
+
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
                     <div className="rounded-lg border border-border/60 bg-background/40 p-4">
                       <p className="text-xs uppercase tracking-wide text-muted-foreground">Started</p>
