@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, BookOpen, CheckCircle2, Clock3, PlayCircle, Target } from "lucide-react";
-import { progressApi, quizApi } from "@/api";
+import { learningAnalyticsApi, progressApi, quizApi, type LearningAnalyticsEventPayload } from "@/api";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { EmptyState, MetricCard, PageHeader } from "@/components/layout/UserPage";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,14 @@ interface LessonQuiz {
   jlptLevel?: string;
 }
 
+const createLessonSessionId = () => {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+
+  return `lesson-${Date.now()}-${Math.round(Math.random() * 100_000)}`;
+};
+
 const LessonDetail = () => {
   const { lessonId } = useParams();
   const navigate = useNavigate();
@@ -40,6 +48,10 @@ const LessonDetail = () => {
   const [quizScore, setQuizScore] = useState<number | null>(null);
   const [quizPassed, setQuizPassed] = useState<boolean | null>(null);
   const [gradingQuiz, setGradingQuiz] = useState(false);
+  const lessonSessionIdRef = useRef<string>(createLessonSessionId());
+  const lessonOpenedAtRef = useRef<number>(Date.now());
+  const startedInSessionRef = useRef(false);
+  const completedInSessionRef = useRef(false);
 
   const { data: lesson, isLoading } = useLesson(Number.isFinite(parsedLessonId) ? parsedLessonId : undefined);
   const { data: progress = [], isLoading: isProgressLoading } = useMyProgress();
@@ -88,6 +100,31 @@ const LessonDetail = () => {
     setNoteText(lessonProgress?.notes ?? "");
   }, [lessonProgress?.notes]);
 
+  useEffect(() => {
+    lessonSessionIdRef.current = createLessonSessionId();
+    lessonOpenedAtRef.current = Date.now();
+    startedInSessionRef.current = false;
+    completedInSessionRef.current = false;
+  }, [parsedLessonId]);
+
+  useEffect(() => {
+    completedInSessionRef.current = lessonProgress?.status === "COMPLETED";
+  }, [lessonProgress?.status]);
+
+  const trackLessonEvent = (payload: Omit<LearningAnalyticsEventPayload, "contentType" | "contentId" | "sessionId" | "jlptLevel">) => {
+    if (!lesson) return;
+
+    void learningAnalyticsApi
+      .trackEvent({
+        ...payload,
+        contentType: "LESSON",
+        contentId: lesson.id,
+        sessionId: lessonSessionIdRef.current,
+        jlptLevel: lesson.jlptLevel,
+      })
+      .catch(() => undefined);
+  };
+
   const saveProgress = async (
     status: "IN_PROGRESS" | "COMPLETED",
     options?: { score?: number; silent?: boolean }
@@ -113,6 +150,40 @@ const LessonDetail = () => {
         queryClient.invalidateQueries({ queryKey: ["progress", "me"] }),
         queryClient.invalidateQueries({ queryKey: ["learning-path"] }),
       ]);
+
+      if (status === "IN_PROGRESS") {
+        const shouldTrackStart =
+          !startedInSessionRef.current &&
+          lessonProgress?.status !== "IN_PROGRESS" &&
+          lessonProgress?.status !== "COMPLETED";
+
+        if (shouldTrackStart) {
+          startedInSessionRef.current = true;
+          trackLessonEvent({
+            eventType: "START_LEARNING",
+            durationSeconds: 0,
+            score: payload.score,
+          });
+        }
+      }
+
+      if (status === "COMPLETED" && !completedInSessionRef.current) {
+        if (!startedInSessionRef.current) {
+          startedInSessionRef.current = true;
+          trackLessonEvent({
+            eventType: "START_LEARNING",
+            durationSeconds: 0,
+            score: payload.score,
+          });
+        }
+
+        completedInSessionRef.current = true;
+        trackLessonEvent({
+          eventType: "COMPLETE_LESSON",
+          durationSeconds: Math.max(0, Math.round((Date.now() - lessonOpenedAtRef.current) / 1000)),
+          score: options?.score ?? payload.score,
+        });
+      }
 
       if (!options?.silent) {
         toast({
@@ -154,9 +225,51 @@ const LessonDetail = () => {
 
     setGradingQuiz(true);
     try {
+      if (!startedInSessionRef.current) {
+        startedInSessionRef.current = true;
+        trackLessonEvent({ eventType: "START_LEARNING", durationSeconds: 0 });
+      }
+
       const correctCount = relatedQuizzes.filter((quiz) => quizAnswers[quiz.id] === quiz.correctAnswer).length;
       const score = Math.round((correctCount / relatedQuizzes.length) * 100);
       const passed = score >= 70;
+
+      const analyticsEvents: LearningAnalyticsEventPayload[] = relatedQuizzes.flatMap((quiz) => {
+        const selectedAnswer = quizAnswers[quiz.id];
+        const isCorrect = selectedAnswer === quiz.correctAnswer;
+        const existing = quizProgressByQuizId.get(quiz.id);
+
+        if (!isCorrect) {
+          return [{
+            eventType: "QUIZ_WRONG",
+            contentType: "LESSON",
+            contentId: lesson.id,
+            sessionId: lessonSessionIdRef.current,
+            jlptLevel: lesson.jlptLevel,
+            score: 0,
+            metadata: {
+              quizId: quiz.id,
+              selectedAnswer,
+            },
+          }];
+        }
+
+        if ((existing?.score ?? null) === 0) {
+          return [{
+            eventType: "QUIZ_CORRECT_AFTER_REVIEW",
+            contentType: "LESSON",
+            contentId: lesson.id,
+            sessionId: lessonSessionIdRef.current,
+            jlptLevel: lesson.jlptLevel,
+            score: 100,
+            metadata: {
+              quizId: quiz.id,
+            },
+          }];
+        }
+
+        return [];
+      });
 
       await Promise.all(
         relatedQuizzes.map(async (quiz) => {
@@ -186,6 +299,10 @@ const LessonDetail = () => {
         await saveProgress("IN_PROGRESS", { score, silent: true });
       }
 
+      if (analyticsEvents.length > 0) {
+        void Promise.allSettled(analyticsEvents.map((event) => learningAnalyticsApi.trackEvent(event)));
+      }
+
       await queryClient.invalidateQueries({ queryKey: ["progress", "me"] });
       toast({
         title: passed ? "Checkpoint dat yeu cau" : "Checkpoint chua dat",
@@ -197,6 +314,23 @@ const LessonDetail = () => {
       setGradingQuiz(false);
     }
   };
+
+  useEffect(() => {
+    return () => {
+      if (!lesson || !startedInSessionRef.current || completedInSessionRef.current) {
+        return;
+      }
+
+      void learningAnalyticsApi.trackEvent({
+        eventType: "ABANDON_LESSON",
+        contentType: "LESSON",
+        contentId: lesson.id,
+        sessionId: lessonSessionIdRef.current,
+        jlptLevel: lesson.jlptLevel,
+        durationSeconds: Math.max(0, Math.round((Date.now() - lessonOpenedAtRef.current) / 1000)),
+      }).catch(() => undefined);
+    };
+  }, [lesson?.id, lesson?.jlptLevel]);
 
   if (!Number.isFinite(parsedLessonId)) {
     return (

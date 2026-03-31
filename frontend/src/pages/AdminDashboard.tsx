@@ -12,8 +12,9 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import WinterNightBackground from "@/components/WinterNightBackground";
-import { adminApi } from "@/api";
+import { adminApi, learningAnalyticsApi, type LearningFunnelResponse } from "@/api";
 import { useAuth } from "@/hooks/use-auth";
 import { Navigate } from "react-router-dom";
 
@@ -30,26 +31,43 @@ interface SystemStats {
 const AdminDashboard = () => {
   const { isAdmin } = useAuth();
   const [stats, setStats] = useState<SystemStats | null>(null);
+  const [funnel, setFunnel] = useState<LearningFunnelResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [funnelLoading, setFunnelLoading] = useState(true);
 
   useEffect(() => {
-    const fetchStats = async () => {
+    const fetchDashboardData = async () => {
       try {
-        const data = await adminApi.getSystemStats() as SystemStats;
-        setStats(data);
-      } catch (error) {
-        console.error("Failed to fetch system stats:", error);
+        const [statsResult, funnelResult] = await Promise.allSettled([
+          adminApi.getSystemStats() as Promise<SystemStats>,
+          learningAnalyticsApi.getFunnel({ days: 30, limit: 8, contentType: "LESSON" }),
+        ]);
+
+        if (statsResult.status === "fulfilled") {
+          setStats(statsResult.value);
+        } else {
+          console.error("Failed to fetch system stats:", statsResult.reason);
+        }
+
+        if (funnelResult.status === "fulfilled") {
+          setFunnel(funnelResult.value);
+        } else {
+          console.error("Failed to fetch learning funnel:", funnelResult.reason);
+        }
       } finally {
         setLoading(false);
+        setFunnelLoading(false);
       }
     };
 
-    fetchStats();
+    fetchDashboardData();
   }, []);
 
   if (!isAdmin()) {
     return <Navigate to="/dashboard" replace />;
   }
+
+  const formatPercent = (value: number | undefined) => `${(value ?? 0).toFixed(1)}%`;
 
   const statCards = [
     {
@@ -165,11 +183,90 @@ const AdminDashboard = () => {
           </div>
         )}
 
+        {/* Learning Funnel */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="mb-8"
+        >
+          <Card className="bg-card/40 backdrop-blur-md border-border/50">
+            <CardHeader>
+              <CardTitle>Learning Funnel (30 days)</CardTitle>
+              <CardDescription>
+                Track start, completion, abandonment, and quiz recovery to identify high-retention lessons.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {funnelLoading ? (
+                <div className="flex items-center justify-center py-16">
+                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
+                </div>
+              ) : !funnel || funnel.contentBreakdown.length === 0 ? (
+                <div className="rounded-lg border border-dashed border-border/70 p-8 text-center text-sm text-muted-foreground">
+                  No analytics data yet. Events will appear after users start learning lessons.
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+                    <div className="rounded-lg border border-border/60 bg-background/40 p-4">
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">Started</p>
+                      <p className="mt-1 text-2xl font-semibold">{funnel.totalStarted}</p>
+                    </div>
+                    <div className="rounded-lg border border-border/60 bg-background/40 p-4">
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">Completed</p>
+                      <p className="mt-1 text-2xl font-semibold">{funnel.totalCompleted}</p>
+                      <p className="text-xs text-emerald-400">{formatPercent(funnel.overallCompletionRate)} completion rate</p>
+                    </div>
+                    <div className="rounded-lg border border-border/60 bg-background/40 p-4">
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">Abandoned</p>
+                      <p className="mt-1 text-2xl font-semibold">{funnel.totalAbandoned}</p>
+                      <p className="text-xs text-amber-400">{formatPercent(funnel.overallAbandonmentRate)} abandonment rate</p>
+                    </div>
+                    <div className="rounded-lg border border-border/60 bg-background/40 p-4">
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">Quiz Recovery</p>
+                      <p className="mt-1 text-2xl font-semibold">{funnel.totalQuizCorrected}</p>
+                      <p className="text-xs text-cyan-400">{formatPercent(funnel.overallQuizRecoveryRate)} corrected after wrong</p>
+                    </div>
+                  </div>
+
+                  <div className="rounded-lg border border-border/60 overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Lesson</TableHead>
+                          <TableHead className="text-right">Starts</TableHead>
+                          <TableHead className="text-right">Completion</TableHead>
+                          <TableHead className="text-right">Abandonment</TableHead>
+                          <TableHead className="text-right">Quiz Recovery</TableHead>
+                          <TableHead className="text-right">Retention Score</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {funnel.topRetainedContent.map((item) => (
+                          <TableRow key={`${item.contentType}-${item.contentId}`}>
+                            <TableCell className="font-medium">{item.contentTitle}</TableCell>
+                            <TableCell className="text-right">{item.startedCount}</TableCell>
+                            <TableCell className="text-right text-emerald-400">{formatPercent(item.completionRate)}</TableCell>
+                            <TableCell className="text-right text-amber-400">{formatPercent(item.abandonmentRate)}</TableCell>
+                            <TableCell className="text-right text-cyan-400">{formatPercent(item.quizRecoveryRate)}</TableCell>
+                            <TableCell className="text-right font-semibold">{formatPercent(item.retentionScore)}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+
         {/* Quick Actions */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
+          transition={{ delay: 0.65 }}
         >
           <Card className="bg-card/40 backdrop-blur-md border-border/50">
             <CardHeader>
