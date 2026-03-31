@@ -25,6 +25,15 @@ export interface Comment {
   createdAt: string;
 }
 
+export interface ChatMessage {
+  id: number;
+  roomId: string;
+  userId: number;
+  userDisplayName: string;
+  content: string;
+  createdAt: string;
+}
+
 export interface PagedPosts {
   content: Post[];
   totalPages: number;

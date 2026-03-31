@@ -11,6 +11,7 @@ import CommunityComposer from "@/pages/community/CommunityComposer";
 import CommunityFeed from "@/pages/community/CommunityFeed";
 import CommunityFilters from "@/pages/community/CommunityFilters";
 import CommunityLeaderboard from "@/pages/community/CommunityLeaderboard";
+import CommunityRealtimeChat from "@/pages/community/CommunityRealtimeChat";
 import { JLPT_OPTIONS } from "@/pages/community/constants";
 import { Comment, CommunityStats, LeaderboardEntry, PagedComments, PagedPosts, Post } from "@/pages/community/types";
 
@@ -229,7 +230,10 @@ const Community = () => {
             }}
             onToggleBookmarked={() => setShowBookmarkedOnly((prev) => !prev)}
           />
-          <CommunityLeaderboard leaderboard={leaderboard} stats={stats} />
+          <div className="space-y-4">
+            <CommunityLeaderboard leaderboard={leaderboard} stats={stats} />
+            <CommunityRealtimeChat currentUserId={user?.id} />
+          </div>
         </div>
 
         <AnimatePresence>

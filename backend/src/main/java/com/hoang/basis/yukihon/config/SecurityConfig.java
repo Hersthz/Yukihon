@@ -45,6 +45,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                     .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/google", "/api/auth/refresh").permitAll()
                     .requestMatchers("/api/auth/me").authenticated()
+                        .requestMatchers("/ws-community-chat/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // Creator mode endpoints - allow ADMIN and TEACHER roles
                         .requestMatchers("/api/admin/creator-mode/**").hasAnyRole("ADMIN", "TEACHER")
