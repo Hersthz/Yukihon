@@ -53,8 +53,16 @@ const STATUS_STYLES: Record<CreatorTemplateStatus, string> = {
 };
 
 const AdminCreatorMode = () => {
-  const { isAdmin } = useAuth();
+  const { isAdmin, isTeacher, isReviewer } = useAuth();
   const { toast } = useToast();
+
+  const isAdminUser = isAdmin();
+  const isTeacherUser = isTeacher();
+  const isReviewerUser = isReviewer();
+  const canManageTemplates = isTeacherUser || isAdminUser;
+  const canReviewAsAdmin = isAdminUser;
+  const canReviewAsReviewer = isReviewerUser;
+  const canAccessReviewQueue = canReviewAsAdmin || canReviewAsReviewer;
 
   const [templates, setTemplates] = useState<CreatorTemplate[]>([]);
   const [reviewQueue, setReviewQueue] = useState<CreatorTemplate[]>([]);
@@ -118,8 +126,11 @@ const AdminCreatorMode = () => {
       setTemplates(templatesData);
       setAnalytics(analyticsData);
 
-      if (isAdmin()) {
-        const queueData = await creatorModeApi.getReviewQueue();
+      if (canReviewAsAdmin) {
+        const queueData = await creatorModeApi.getAdminQueue();
+        setReviewQueue(queueData);
+      } else if (canReviewAsReviewer) {
+        const queueData = await creatorModeApi.getReviewerQueue();
         setReviewQueue(queueData);
       } else {
         setReviewQueue([]);
@@ -133,13 +144,18 @@ const AdminCreatorMode = () => {
     } finally {
       setLoading(false);
     }
-  }, [isAdmin, toast]);
+  }, [canReviewAsAdmin, canReviewAsReviewer, toast]);
 
   useEffect(() => {
-    if (!isAdmin() && selectedTab === "review") {
-      setSelectedTab("studio");
+    if (!canAccessReviewQueue && selectedTab === "review") {
+      setSelectedTab(canManageTemplates ? "studio" : "analytics");
+      return;
     }
-  }, [isAdmin, selectedTab]);
+
+    if (!canManageTemplates && selectedTab === "studio") {
+      setSelectedTab(canAccessReviewQueue ? "review" : "analytics");
+    }
+  }, [canAccessReviewQueue, canManageTemplates, selectedTab]);
 
   useEffect(() => {
     void loadData();
@@ -226,16 +242,29 @@ const AdminCreatorMode = () => {
     }
   }, [activeTemplateId, buildPayload, loadData, toast]);
 
-  const reviewTemplate = useCallback(async (templateId: number, decision: "APPROVED" | "REJECTED" | "PUBLISHED") => {
+  const reviewAsReviewer = useCallback(async (templateId: number, decision: "APPROVED" | "REJECTED") => {
     try {
-      await creatorModeApi.reviewTemplate(templateId, {
+      await creatorModeApi.reviewerDecision(templateId, {
         decision,
         reviewNote: reviewNotes[templateId] ?? "",
       });
-      toast({ title: "Review updated", description: `Template status changed to ${decision}.` });
+      toast({ title: "Reviewer decision saved", description: `Template status changed to ${decision}.` });
       await loadData();
     } catch {
-      toast({ title: "Review failed", description: "Could not update review decision.", variant: "destructive" });
+      toast({ title: "Reviewer action failed", description: "Could not update reviewer decision.", variant: "destructive" });
+    }
+  }, [loadData, reviewNotes, toast]);
+
+  const reviewAsAdmin = useCallback(async (templateId: number, decision: "PUBLISHED" | "REJECTED") => {
+    try {
+      await creatorModeApi.adminDecision(templateId, {
+        decision,
+        reviewNote: reviewNotes[templateId] ?? "",
+      });
+      toast({ title: "Admin decision saved", description: `Template status changed to ${decision}.` });
+      await loadData();
+    } catch {
+      toast({ title: "Admin action failed", description: "Could not update admin decision.", variant: "destructive" });
     }
   }, [loadData, reviewNotes, toast]);
 
@@ -276,10 +305,12 @@ const AdminCreatorMode = () => {
             </div>
 
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" onClick={resetEditor}>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                New Draft
-              </Button>
+              {canManageTemplates && (
+                <Button variant="outline" onClick={resetEditor}>
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  New Draft
+                </Button>
+              )}
               <Button variant="outline" onClick={() => void loadData()} disabled={loading}>
                 <BarChart3 className="mr-2 h-4 w-4" />
                 Refresh
@@ -288,12 +319,15 @@ const AdminCreatorMode = () => {
           </div>
 
           <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
-            <TabsList className={`grid w-full ${isAdmin() ? "grid-cols-3" : "grid-cols-2"} bg-card/70`}>
-              <TabsTrigger value="studio">Studio</TabsTrigger>
-              {isAdmin() && <TabsTrigger value="review">Review Queue</TabsTrigger>}
+            <TabsList className={`grid w-full ${canManageTemplates && canAccessReviewQueue ? "grid-cols-3" : "grid-cols-2"} bg-card/70`}>
+              {canManageTemplates && <TabsTrigger value="studio">Studio</TabsTrigger>}
+              {canAccessReviewQueue && (
+                <TabsTrigger value="review">{canReviewAsAdmin ? "Admin Queue" : "Review Queue"}</TabsTrigger>
+              )}
               <TabsTrigger value="analytics">Analytics</TabsTrigger>
             </TabsList>
 
+            {canManageTemplates && (
             <TabsContent value="studio" className="space-y-6">
               <div className="grid gap-6 xl:grid-cols-[1.2fr_1fr]">
                 <Card className="border-border/70 bg-card/70">
@@ -472,16 +506,21 @@ const AdminCreatorMode = () => {
                 </CardContent>
               </Card>
             </TabsContent>
+            )}
 
-            {isAdmin() && (
+            {canAccessReviewQueue && (
               <TabsContent value="review" className="space-y-4">
               <Card className="border-border/70 bg-card/70">
                 <CardHeader>
-                  <CardTitle className="text-base">Pending Review Queue</CardTitle>
+                  <CardTitle className="text-base">
+                    {canReviewAsAdmin ? "Admin Approval Queue" : "Reviewer Queue"}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {reviewQueue.length === 0 && (
-                    <p className="text-sm text-muted-foreground">No pending templates right now.</p>
+                    <p className="text-sm text-muted-foreground">
+                      {canReviewAsAdmin ? "No templates waiting for admin approval." : "No templates waiting for reviewer approval."}
+                    </p>
                   )}
 
                   {reviewQueue.map((template) => (
@@ -506,17 +545,28 @@ const AdminCreatorMode = () => {
                       />
 
                       <div className="flex flex-wrap gap-2">
-                        <Button size="sm" onClick={() => void reviewTemplate(template.id, "APPROVED")}>
-                          <CheckCircle2 className="mr-2 h-4 w-4" />
-                          Approve
-                        </Button>
-                        <Button size="sm" variant="destructive" onClick={() => void reviewTemplate(template.id, "REJECTED")}>
-                          <XCircle className="mr-2 h-4 w-4" />
-                          Reject
-                        </Button>
-                        <Button size="sm" variant="secondary" onClick={() => void reviewTemplate(template.id, "PUBLISHED")}>
-                          Publish
-                        </Button>
+                        {canReviewAsAdmin ? (
+                          <>
+                            <Button size="sm" variant="secondary" onClick={() => void reviewAsAdmin(template.id, "PUBLISHED")}>
+                              Publish
+                            </Button>
+                            <Button size="sm" variant="destructive" onClick={() => void reviewAsAdmin(template.id, "REJECTED")}>
+                              <XCircle className="mr-2 h-4 w-4" />
+                              Reject
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button size="sm" onClick={() => void reviewAsReviewer(template.id, "APPROVED")}>
+                              <CheckCircle2 className="mr-2 h-4 w-4" />
+                              Approve To Admin
+                            </Button>
+                            <Button size="sm" variant="destructive" onClick={() => void reviewAsReviewer(template.id, "REJECTED")}>
+                              <XCircle className="mr-2 h-4 w-4" />
+                              Reject
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </div>
                   ))}

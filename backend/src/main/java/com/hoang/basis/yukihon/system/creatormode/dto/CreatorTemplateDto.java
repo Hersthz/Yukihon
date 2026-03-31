@@ -29,6 +29,9 @@ public class CreatorTemplateDto {
     private Long reviewedByUserId;
     private String reviewedByDisplayName;
     private String reviewNote;
+    private Long adminReviewedByUserId;
+    private String adminReviewedByDisplayName;
+    private String adminReviewNote;
 
     private Integer usageCount;
     private Integer completionCount;
@@ -37,6 +40,7 @@ public class CreatorTemplateDto {
     private String createdAt;
     private String updatedAt;
     private String reviewedAt;
+    private String adminReviewedAt;
     private String lastPublishedAt;
 
     public static CreatorTemplateDto fromEntity(CreatorTemplate entity) {
@@ -55,12 +59,16 @@ public class CreatorTemplateDto {
                 .reviewedByUserId(entity.getReviewedByUserId())
                 .reviewedByDisplayName(entity.getReviewedBy() != null ? entity.getReviewedBy().getDisplayName() : null)
                 .reviewNote(entity.getReviewNote())
+                .adminReviewedByUserId(entity.getAdminReviewedByUserId())
+                .adminReviewedByDisplayName(entity.getAdminReviewedBy() != null ? entity.getAdminReviewedBy().getDisplayName() : null)
+                .adminReviewNote(entity.getAdminReviewNote())
                 .usageCount(entity.getUsageCount())
                 .completionCount(entity.getCompletionCount())
                 .averageScore(entity.getAverageScore())
                 .createdAt(entity.getCreatedAt() != null ? entity.getCreatedAt().toString() : null)
                 .updatedAt(entity.getUpdatedAt() != null ? entity.getUpdatedAt().toString() : null)
                 .reviewedAt(entity.getReviewedAt() != null ? entity.getReviewedAt().toString() : null)
+                .adminReviewedAt(entity.getAdminReviewedAt() != null ? entity.getAdminReviewedAt().toString() : null)
                 .lastPublishedAt(entity.getLastPublishedAt() != null ? entity.getLastPublishedAt().toString() : null)
                 .build();
     }

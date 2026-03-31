@@ -61,6 +61,22 @@ public class CreatorModeService {
         return CreatorTemplateDto.fromEntity(template);
     }
 
+    @Transactional(readOnly = true)
+    public List<CreatorTemplateDto> getReviewerQueue() {
+        return creatorTemplateRepository.findByStatusOrderByUpdatedAtDesc(CreatorTemplate.TemplateStatus.PENDING_REVIEW)
+                .stream()
+                .map(CreatorTemplateDto::fromEntity)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<CreatorTemplateDto> getAdminQueue() {
+        return creatorTemplateRepository.findByStatusOrderByUpdatedAtDesc(CreatorTemplate.TemplateStatus.APPROVED)
+                .stream()
+                .map(CreatorTemplateDto::fromEntity)
+                .toList();
+    }
+
     public CreatorTemplateDto createTemplate(CreatorTemplateUpsertRequest request, Long actorUserId) {
         User actor = findUserByIdOrThrow(actorUserId);
 
@@ -112,21 +128,25 @@ public class CreatorModeService {
         template.setReviewedBy(null);
         template.setReviewNote(null);
         template.setReviewedAt(null);
+        clearAdminReview(template);
 
         CreatorTemplate saved = creatorTemplateRepository.save(template);
         log.info("Creator template submitted for review: id={}, actorUserId={}", id, actorUserId);
         return CreatorTemplateDto.fromEntity(saved);
     }
 
-    public CreatorTemplateDto reviewTemplate(Long id, CreatorTemplateReviewRequest request, Long reviewerUserId) {
+    public CreatorTemplateDto reviewByReviewer(Long id, CreatorTemplateReviewRequest request, Long reviewerUserId) {
         CreatorTemplate template = creatorTemplateRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Creator template not found with id: " + id));
 
+        if (template.getStatus() != CreatorTemplate.TemplateStatus.PENDING_REVIEW) {
+            throw new IllegalStateException("Template must be in PENDING_REVIEW before reviewer decision");
+        }
+
         CreatorTemplate.TemplateStatus decision = parseStatus(request.getDecision(), true);
         if (decision != CreatorTemplate.TemplateStatus.APPROVED
-                && decision != CreatorTemplate.TemplateStatus.REJECTED
-                && decision != CreatorTemplate.TemplateStatus.PUBLISHED) {
-            throw new IllegalArgumentException("Decision must be APPROVED, REJECTED, or PUBLISHED");
+                && decision != CreatorTemplate.TemplateStatus.REJECTED) {
+            throw new IllegalArgumentException("Reviewer decision must be APPROVED or REJECTED");
         }
 
         User reviewer = findUserByIdOrThrow(reviewerUserId);
@@ -135,13 +155,40 @@ public class CreatorModeService {
         template.setReviewedBy(reviewer);
         template.setReviewNote(trimToNull(request.getReviewNote()));
         template.setReviewedAt(Instant.now());
+        clearAdminReview(template);
+
+        CreatorTemplate saved = creatorTemplateRepository.save(template);
+        log.info("Creator template reviewer decision: id={}, decision={}, reviewerUserId={}", id, decision, reviewerUserId);
+        return CreatorTemplateDto.fromEntity(saved);
+    }
+
+    public CreatorTemplateDto reviewByAdmin(Long id, CreatorTemplateReviewRequest request, Long adminUserId) {
+        CreatorTemplate template = creatorTemplateRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Creator template not found with id: " + id));
+
+        if (template.getStatus() != CreatorTemplate.TemplateStatus.APPROVED) {
+            throw new IllegalStateException("Template must be APPROVED by reviewer before admin decision");
+        }
+
+        CreatorTemplate.TemplateStatus decision = parseStatus(request.getDecision(), true);
+        if (decision != CreatorTemplate.TemplateStatus.PUBLISHED
+                && decision != CreatorTemplate.TemplateStatus.REJECTED) {
+            throw new IllegalArgumentException("Admin decision must be PUBLISHED or REJECTED");
+        }
+
+        User adminReviewer = findUserByIdOrThrow(adminUserId);
+
+        template.setStatus(decision);
+        template.setAdminReviewedBy(adminReviewer);
+        template.setAdminReviewNote(trimToNull(request.getReviewNote()));
+        template.setAdminReviewedAt(Instant.now());
 
         if (decision == CreatorTemplate.TemplateStatus.PUBLISHED) {
             template.setLastPublishedAt(Instant.now());
         }
 
         CreatorTemplate saved = creatorTemplateRepository.save(template);
-        log.info("Creator template reviewed: id={}, decision={}, reviewerUserId={}", id, decision, reviewerUserId);
+        log.info("Creator template admin decision: id={}, decision={}, adminUserId={}", id, decision, adminUserId);
         return CreatorTemplateDto.fromEntity(saved);
     }
 
@@ -326,5 +373,11 @@ public class CreatorModeService {
 
     private int safeInt(Integer value) {
         return value == null ? 0 : value;
+    }
+
+    private void clearAdminReview(CreatorTemplate template) {
+        template.setAdminReviewedBy(null);
+        template.setAdminReviewNote(null);
+        template.setAdminReviewedAt(null);
     }
 }

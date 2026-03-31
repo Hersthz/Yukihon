@@ -18,12 +18,16 @@ export interface CreatorTemplate {
   reviewedByUserId: number | null;
   reviewedByDisplayName: string | null;
   reviewNote: string | null;
+  adminReviewedByUserId: number | null;
+  adminReviewedByDisplayName: string | null;
+  adminReviewNote: string | null;
   usageCount: number;
   completionCount: number;
   averageScore: number;
   createdAt: string;
   updatedAt: string;
   reviewedAt: string | null;
+  adminReviewedAt: string | null;
   lastPublishedAt: string | null;
 }
 
@@ -37,8 +41,13 @@ export interface CreatorTemplateUpsertPayload {
   builderJson: string;
 }
 
-export interface CreatorTemplateReviewPayload {
-  decision: "APPROVED" | "REJECTED" | "PUBLISHED";
+export interface CreatorTemplateReviewerDecisionPayload {
+  decision: "APPROVED" | "REJECTED";
+  reviewNote?: string;
+}
+
+export interface CreatorTemplateAdminDecisionPayload {
+  decision: "PUBLISHED" | "REJECTED";
   reviewNote?: string;
 }
 
@@ -106,8 +115,13 @@ export const creatorModeApi = {
     apiClient.request<CreatorTemplate>(`/api/admin/creator-mode/templates/${id}/submit`, {
       method: "POST",
     }),
-  reviewTemplate: (id: number, payload: CreatorTemplateReviewPayload) =>
-    apiClient.request<CreatorTemplate>(`/api/admin/creator-mode/templates/${id}/review`, {
+  reviewerDecision: (id: number, payload: CreatorTemplateReviewerDecisionPayload) =>
+    apiClient.request<CreatorTemplate>(`/api/admin/creator-mode/templates/${id}/review/reviewer`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  adminDecision: (id: number, payload: CreatorTemplateAdminDecisionPayload) =>
+    apiClient.request<CreatorTemplate>(`/api/admin/creator-mode/templates/${id}/review/admin`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
@@ -120,6 +134,7 @@ export const creatorModeApi = {
     apiClient.request<void>(`/api/admin/creator-mode/templates/${id}`, {
       method: "DELETE",
     }),
-  getReviewQueue: () => apiClient.request<CreatorTemplate[]>("/api/admin/creator-mode/review-queue"),
+  getReviewerQueue: () => apiClient.request<CreatorTemplate[]>("/api/admin/creator-mode/review-queue/reviewer"),
+  getAdminQueue: () => apiClient.request<CreatorTemplate[]>("/api/admin/creator-mode/review-queue/admin"),
   getAnalytics: () => apiClient.request<CreatorAnalytics>("/api/admin/creator-mode/analytics"),
 };

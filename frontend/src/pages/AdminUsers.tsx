@@ -8,6 +8,7 @@ import {
   UserX,
   UserCheck,
   GraduationCap,
+  ClipboardCheck,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -58,7 +59,9 @@ const AdminUsers = () => {
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [selectedUser, setSelectedUser] = useState<UserManagement | null>(null);
-  const [actionType, setActionType] = useState<"promote" | "demote" | "grantTeacher" | "revokeTeacher" | "disable" | "enable" | null>(null);
+  const [actionType, setActionType] = useState<
+    "promote" | "demote" | "grantTeacher" | "revokeTeacher" | "grantReviewer" | "revokeReviewer" | "disable" | "enable" | null
+  >(null);
 
   const fetchUsers = useCallback(async (pageNum = 0) => {
     try {
@@ -134,6 +137,19 @@ const AdminUsers = () => {
           }
           await adminApi.updateUserRoles(selectedUser.id, Array.from(currentRoles));
           toast({ title: "Success", description: "Teacher role revoked" });
+          break;
+        case "grantReviewer":
+          currentRoles.add("REVIEWER");
+          await adminApi.updateUserRoles(selectedUser.id, Array.from(currentRoles));
+          toast({ title: "Success", description: "Reviewer role granted" });
+          break;
+        case "revokeReviewer":
+          currentRoles.delete("REVIEWER");
+          if (currentRoles.size === 0) {
+            currentRoles.add("USER");
+          }
+          await adminApi.updateUserRoles(selectedUser.id, Array.from(currentRoles));
+          toast({ title: "Success", description: "Reviewer role revoked" });
           break;
         case "disable":
           await adminApi.updateUserStatus(selectedUser.id, false);
@@ -263,6 +279,12 @@ const AdminUsers = () => {
                               Teacher
                             </Badge>
                           )}
+                          {user.roles.includes("REVIEWER") && (
+                            <Badge variant="default" className="bg-cyan-500/20 text-cyan-300 border-cyan-500/30">
+                              <ClipboardCheck className="w-3 h-3 mr-1" />
+                              Reviewer
+                            </Badge>
+                          )}
                           {!user.enabled && (
                             <Badge variant="destructive" className="bg-red-500/20 text-red-400 border-red-500/30">
                               Disabled
@@ -315,6 +337,26 @@ const AdminUsers = () => {
                               >
                                 <GraduationCap className="w-4 h-4 mr-1" />
                                 Grant Teacher
+                              </Button>
+                            )}
+
+                            {user.roles.includes("REVIEWER") ? (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => confirmAction(user, "revokeReviewer")}
+                              >
+                                <ClipboardCheck className="w-4 h-4 mr-1" />
+                                Remove Reviewer
+                              </Button>
+                            ) : (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => confirmAction(user, "grantReviewer")}
+                              >
+                                <ClipboardCheck className="w-4 h-4 mr-1" />
+                                Grant Reviewer
                               </Button>
                             )}
 
@@ -387,6 +429,8 @@ const AdminUsers = () => {
               {actionType === "demote" && `Demote ${selectedUser?.displayName} from admin?`}
               {actionType === "grantTeacher" && `Grant teacher role to ${selectedUser?.displayName}?`}
               {actionType === "revokeTeacher" && `Remove teacher role from ${selectedUser?.displayName}?`}
+              {actionType === "grantReviewer" && `Grant reviewer role to ${selectedUser?.displayName}?`}
+              {actionType === "revokeReviewer" && `Remove reviewer role from ${selectedUser?.displayName}?`}
               {actionType === "disable" && `Disable ${selectedUser?.displayName}'s account?`}
               {actionType === "enable" && `Enable ${selectedUser?.displayName}'s account?`}
             </AlertDialogDescription>
