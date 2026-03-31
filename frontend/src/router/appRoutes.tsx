@@ -4,6 +4,7 @@ import { Suspense, lazy } from "react";
 import { Route, Routes } from "react-router-dom";
 
 const AdminContent = lazy(() => import("@/pages/AdminContent"));
+const AdminCreatorMode = lazy(() => import("@/pages/AdminCreatorMode"));
 const AdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
 const AdminUsers = lazy(() => import("@/pages/AdminUsers"));
 const Auth = lazy(() => import("@/pages/Auth"));
@@ -65,6 +66,7 @@ export const AppRoutes = () => {
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/users" element={<AdminUsers />} />
           <Route path="/admin/content" element={<AdminContent />} />
+          <Route path="/admin/creator-mode" element={<AdminCreatorMode />} />
         </Route>
 
         <Route path="*" element={<NotFound />} />
