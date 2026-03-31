@@ -1,11 +1,20 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { BarChart3, CheckCircle2, ClipboardCheck, PlusCircle, Sparkles, XCircle } from "lucide-react";
-import { creatorModeApi, type CreatorAnalytics, type CreatorContentType, type CreatorTemplate, type CreatorTemplateStatus } from "@/api";
+import {
+  creatorModeApi,
+  type CreatorAuditStage,
+  type CreatorAnalytics,
+  type CreatorContentType,
+  type CreatorTemplate,
+  type CreatorTemplateAuditEvent,
+  type CreatorTemplateStatus,
+} from "@/api";
 import WinterNightBackground from "@/components/WinterNightBackground";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -14,6 +23,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import CreatorBlockEditor from "@/features/creator-mode/components/CreatorBlockEditor";
 import CreatorCanvas from "@/features/creator-mode/components/CreatorCanvas";
+import CreatorAuditTimeline from "@/features/creator-mode/components/CreatorAuditTimeline";
 import CreatorMetricCard from "@/features/creator-mode/components/CreatorMetricCard";
 import {
   createDefaultBlock,
@@ -35,6 +45,16 @@ interface EditorMeta {
   estimatedMinutes: number;
 }
 
+interface AuditTimelineFilters {
+  stageFilter: CreatorAuditStage | "ALL";
+  actorFilter: string;
+}
+
+const DEFAULT_AUDIT_FILTERS: AuditTimelineFilters = {
+  stageFilter: "ALL",
+  actorFilter: "ALL",
+};
+
 const DEFAULT_EDITOR_META: EditorMeta = {
   title: "",
   summary: "",
@@ -53,8 +73,16 @@ const STATUS_STYLES: Record<CreatorTemplateStatus, string> = {
 };
 
 const AdminCreatorMode = () => {
-  const { isAdmin } = useAuth();
+  const { isAdmin, isTeacher, isReviewer } = useAuth();
   const { toast } = useToast();
+
+  const isAdminUser = isAdmin();
+  const isTeacherUser = isTeacher();
+  const isReviewerUser = isReviewer();
+  const canManageTemplates = isTeacherUser || isAdminUser;
+  const canReviewAsAdmin = isAdminUser;
+  const canReviewAsReviewer = isReviewerUser;
+  const canAccessReviewQueue = canReviewAsAdmin || canReviewAsReviewer;
 
   const [templates, setTemplates] = useState<CreatorTemplate[]>([]);
   const [reviewQueue, setReviewQueue] = useState<CreatorTemplate[]>([]);
@@ -69,6 +97,10 @@ const AdminCreatorMode = () => {
   const [blocks, setBlocks] = useState<CreatorBlock[]>(createDefaultDocument().blocks);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(blocks[0]?.id ?? null);
   const [reviewNotes, setReviewNotes] = useState<Record<number, string>>({});
+  const [auditTimelineByTemplate, setAuditTimelineByTemplate] = useState<Record<number, CreatorTemplateAuditEvent[]>>({});
+  const [auditFiltersByTemplate, setAuditFiltersByTemplate] = useState<Record<number, AuditTimelineFilters>>({});
+  const [loadingAuditTemplateId, setLoadingAuditTemplateId] = useState<number | null>(null);
+  const [auditDialogTemplate, setAuditDialogTemplate] = useState<CreatorTemplate | null>(null);
 
   const [templateFilter, setTemplateFilter] = useState<CreatorTemplateStatus | "ALL">("ALL");
 
@@ -107,6 +139,47 @@ const AdminCreatorMode = () => {
     setSelectedBlockId(parsed.blocks[0]?.id ?? null);
   }, []);
 
+  const loadTemplateTimeline = useCallback(async (
+    templateId: number,
+    options?: {
+      filters?: AuditTimelineFilters;
+    }
+  ) => {
+    const effectiveFilters = options?.filters ?? auditFiltersByTemplate[templateId] ?? DEFAULT_AUDIT_FILTERS;
+
+    try {
+      setLoadingAuditTemplateId(templateId);
+      const events = await creatorModeApi.getTemplateAuditTimeline(templateId, {
+        stage: effectiveFilters.stageFilter === "ALL" ? undefined : effectiveFilters.stageFilter,
+        actor: effectiveFilters.actorFilter === "ALL" ? undefined : effectiveFilters.actorFilter,
+      });
+      setAuditTimelineByTemplate((previous) => ({
+        ...previous,
+        [templateId]: events,
+      }));
+      setAuditFiltersByTemplate((previous) => ({
+        ...previous,
+        [templateId]: effectiveFilters,
+      }));
+    } catch {
+      toast({
+        title: "Audit timeline unavailable",
+        description: "Could not load the review history for this template.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingAuditTemplateId((current) => (current === templateId ? null : current));
+    }
+  }, [auditFiltersByTemplate, toast]);
+
+  const handleAuditFiltersChange = useCallback((templateId: number, filters: AuditTimelineFilters) => {
+    setAuditFiltersByTemplate((previous) => ({
+      ...previous,
+      [templateId]: filters,
+    }));
+    void loadTemplateTimeline(templateId, { filters });
+  }, [loadTemplateTimeline]);
+
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
@@ -118,8 +191,11 @@ const AdminCreatorMode = () => {
       setTemplates(templatesData);
       setAnalytics(analyticsData);
 
-      if (isAdmin()) {
-        const queueData = await creatorModeApi.getReviewQueue();
+      if (canReviewAsAdmin) {
+        const queueData = await creatorModeApi.getAdminQueue();
+        setReviewQueue(queueData);
+      } else if (canReviewAsReviewer) {
+        const queueData = await creatorModeApi.getReviewerQueue();
         setReviewQueue(queueData);
       } else {
         setReviewQueue([]);
@@ -133,13 +209,18 @@ const AdminCreatorMode = () => {
     } finally {
       setLoading(false);
     }
-  }, [isAdmin, toast]);
+  }, [canReviewAsAdmin, canReviewAsReviewer, toast]);
 
   useEffect(() => {
-    if (!isAdmin() && selectedTab === "review") {
-      setSelectedTab("studio");
+    if (!canAccessReviewQueue && selectedTab === "review") {
+      setSelectedTab(canManageTemplates ? "studio" : "analytics");
+      return;
     }
-  }, [isAdmin, selectedTab]);
+
+    if (!canManageTemplates && selectedTab === "studio") {
+      setSelectedTab(canAccessReviewQueue ? "review" : "analytics");
+    }
+  }, [canAccessReviewQueue, canManageTemplates, selectedTab]);
 
   useEffect(() => {
     void loadData();
@@ -200,12 +281,13 @@ const AdminCreatorMode = () => {
       setActiveTemplateId(saved.id);
       toast({ title: "Draft saved", description: "Creator template has been saved." });
       await loadData();
+      await loadTemplateTimeline(saved.id);
     } catch {
       toast({ title: "Save failed", description: "Could not save this creator draft.", variant: "destructive" });
     } finally {
       setSaving(false);
     }
-  }, [activeTemplateId, buildPayload, editorMeta.title, loadData, toast]);
+  }, [activeTemplateId, buildPayload, editorMeta.title, loadData, loadTemplateTimeline, toast]);
 
   const submitCurrentTemplate = useCallback(async () => {
     try {
@@ -221,23 +303,39 @@ const AdminCreatorMode = () => {
       await creatorModeApi.submitForReview(templateId);
       toast({ title: "Submitted", description: "Template is now in review queue." });
       await loadData();
+      await loadTemplateTimeline(templateId);
     } catch {
       toast({ title: "Submit failed", description: "Could not submit template for review.", variant: "destructive" });
     }
-  }, [activeTemplateId, buildPayload, loadData, toast]);
+  }, [activeTemplateId, buildPayload, loadData, loadTemplateTimeline, toast]);
 
-  const reviewTemplate = useCallback(async (templateId: number, decision: "APPROVED" | "REJECTED" | "PUBLISHED") => {
+  const reviewAsReviewer = useCallback(async (templateId: number, decision: "APPROVED" | "REJECTED") => {
     try {
-      await creatorModeApi.reviewTemplate(templateId, {
+      await creatorModeApi.reviewerDecision(templateId, {
         decision,
         reviewNote: reviewNotes[templateId] ?? "",
       });
-      toast({ title: "Review updated", description: `Template status changed to ${decision}.` });
+      toast({ title: "Reviewer decision saved", description: `Template status changed to ${decision}.` });
       await loadData();
+      await loadTemplateTimeline(templateId);
     } catch {
-      toast({ title: "Review failed", description: "Could not update review decision.", variant: "destructive" });
+      toast({ title: "Reviewer action failed", description: "Could not update reviewer decision.", variant: "destructive" });
     }
-  }, [loadData, reviewNotes, toast]);
+  }, [loadData, loadTemplateTimeline, reviewNotes, toast]);
+
+  const reviewAsAdmin = useCallback(async (templateId: number, decision: "PUBLISHED" | "REJECTED") => {
+    try {
+      await creatorModeApi.adminDecision(templateId, {
+        decision,
+        reviewNote: reviewNotes[templateId] ?? "",
+      });
+      toast({ title: "Admin decision saved", description: `Template status changed to ${decision}.` });
+      await loadData();
+      await loadTemplateTimeline(templateId);
+    } catch {
+      toast({ title: "Admin action failed", description: "Could not update admin decision.", variant: "destructive" });
+    }
+  }, [loadData, loadTemplateTimeline, reviewNotes, toast]);
 
   const logPlaytest = useCallback(async () => {
     if (!activeTemplateId) {
@@ -276,10 +374,12 @@ const AdminCreatorMode = () => {
             </div>
 
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" onClick={resetEditor}>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                New Draft
-              </Button>
+              {canManageTemplates && (
+                <Button variant="outline" onClick={resetEditor}>
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  New Draft
+                </Button>
+              )}
               <Button variant="outline" onClick={() => void loadData()} disabled={loading}>
                 <BarChart3 className="mr-2 h-4 w-4" />
                 Refresh
@@ -288,12 +388,15 @@ const AdminCreatorMode = () => {
           </div>
 
           <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
-            <TabsList className={`grid w-full ${isAdmin() ? "grid-cols-3" : "grid-cols-2"} bg-card/70`}>
-              <TabsTrigger value="studio">Studio</TabsTrigger>
-              {isAdmin() && <TabsTrigger value="review">Review Queue</TabsTrigger>}
+            <TabsList className={`grid w-full ${canManageTemplates && canAccessReviewQueue ? "grid-cols-3" : "grid-cols-2"} bg-card/70`}>
+              {canManageTemplates && <TabsTrigger value="studio">Studio</TabsTrigger>}
+              {canAccessReviewQueue && (
+                <TabsTrigger value="review">{canReviewAsAdmin ? "Admin Queue" : "Review Queue"}</TabsTrigger>
+              )}
               <TabsTrigger value="analytics">Analytics</TabsTrigger>
             </TabsList>
 
+            {canManageTemplates && (
             <TabsContent value="studio" className="space-y-6">
               <div className="grid gap-6 xl:grid-cols-[1.2fr_1fr]">
                 <Card className="border-border/70 bg-card/70">
@@ -455,7 +558,10 @@ const AdminCreatorMode = () => {
                     <button
                       key={template.id}
                       type="button"
-                      onClick={() => hydrateFromTemplate(template)}
+                      onClick={() => {
+                        hydrateFromTemplate(template);
+                        void loadTemplateTimeline(template.id);
+                      }}
                       className="flex w-full items-center justify-between rounded-lg border border-border bg-background/50 px-3 py-3 text-left hover:bg-background/70"
                     >
                       <div>
@@ -471,17 +577,48 @@ const AdminCreatorMode = () => {
                   ))}
                 </CardContent>
               </Card>
-            </TabsContent>
 
-            {isAdmin() && (
+              {activeTemplateId && (
+                <Card className="border-border/70 bg-card/70">
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle className="text-base">Audit Timeline</CardTitle>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => void loadTemplateTimeline(activeTemplateId)}
+                      disabled={loadingAuditTemplateId === activeTemplateId}
+                    >
+                      Refresh
+                    </Button>
+                  </CardHeader>
+                  <CardContent>
+                    <CreatorAuditTimeline
+                      events={auditTimelineByTemplate[activeTemplateId] ?? []}
+                      loading={loadingAuditTemplateId === activeTemplateId}
+                      emptyMessage="No audit events for this template yet."
+                      stageFilter={(auditFiltersByTemplate[activeTemplateId] ?? DEFAULT_AUDIT_FILTERS).stageFilter}
+                      actorFilter={(auditFiltersByTemplate[activeTemplateId] ?? DEFAULT_AUDIT_FILTERS).actorFilter}
+                      onFiltersChange={(filters) => handleAuditFiltersChange(activeTemplateId, filters)}
+                    />
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+            )}
+
+            {canAccessReviewQueue && (
               <TabsContent value="review" className="space-y-4">
               <Card className="border-border/70 bg-card/70">
                 <CardHeader>
-                  <CardTitle className="text-base">Pending Review Queue</CardTitle>
+                  <CardTitle className="text-base">
+                    {canReviewAsAdmin ? "Admin Approval Queue" : "Reviewer Queue"}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {reviewQueue.length === 0 && (
-                    <p className="text-sm text-muted-foreground">No pending templates right now.</p>
+                    <p className="text-sm text-muted-foreground">
+                      {canReviewAsAdmin ? "No templates waiting for admin approval." : "No templates waiting for reviewer approval."}
+                    </p>
                   )}
 
                   {reviewQueue.map((template) => (
@@ -506,17 +643,38 @@ const AdminCreatorMode = () => {
                       />
 
                       <div className="flex flex-wrap gap-2">
-                        <Button size="sm" onClick={() => void reviewTemplate(template.id, "APPROVED")}>
-                          <CheckCircle2 className="mr-2 h-4 w-4" />
-                          Approve
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setAuditDialogTemplate(template);
+                            void loadTemplateTimeline(template.id);
+                          }}
+                        >
+                          Audit Timeline
                         </Button>
-                        <Button size="sm" variant="destructive" onClick={() => void reviewTemplate(template.id, "REJECTED")}>
-                          <XCircle className="mr-2 h-4 w-4" />
-                          Reject
-                        </Button>
-                        <Button size="sm" variant="secondary" onClick={() => void reviewTemplate(template.id, "PUBLISHED")}>
-                          Publish
-                        </Button>
+                        {canReviewAsAdmin ? (
+                          <>
+                            <Button size="sm" variant="secondary" onClick={() => void reviewAsAdmin(template.id, "PUBLISHED")}>
+                              Publish
+                            </Button>
+                            <Button size="sm" variant="destructive" onClick={() => void reviewAsAdmin(template.id, "REJECTED")}>
+                              <XCircle className="mr-2 h-4 w-4" />
+                              Reject
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button size="sm" onClick={() => void reviewAsReviewer(template.id, "APPROVED")}>
+                              <CheckCircle2 className="mr-2 h-4 w-4" />
+                              Approve To Admin
+                            </Button>
+                            <Button size="sm" variant="destructive" onClick={() => void reviewAsReviewer(template.id, "REJECTED")}>
+                              <XCircle className="mr-2 h-4 w-4" />
+                              Reject
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -524,6 +682,28 @@ const AdminCreatorMode = () => {
               </Card>
               </TabsContent>
             )}
+
+            <Dialog open={!!auditDialogTemplate} onOpenChange={(open) => !open && setAuditDialogTemplate(null)}>
+              <DialogContent className="max-w-2xl border-border/70 bg-card/95">
+                <DialogHeader>
+                  <DialogTitle>
+                    Audit Timeline{auditDialogTemplate ? ` - ${auditDialogTemplate.title}` : ""}
+                  </DialogTitle>
+                </DialogHeader>
+                <CreatorAuditTimeline
+                  events={auditDialogTemplate ? (auditTimelineByTemplate[auditDialogTemplate.id] ?? []) : []}
+                  loading={auditDialogTemplate ? loadingAuditTemplateId === auditDialogTemplate.id : false}
+                  emptyMessage="No audit history found for this template."
+                  stageFilter={auditDialogTemplate ? (auditFiltersByTemplate[auditDialogTemplate.id] ?? DEFAULT_AUDIT_FILTERS).stageFilter : "ALL"}
+                  actorFilter={auditDialogTemplate ? (auditFiltersByTemplate[auditDialogTemplate.id] ?? DEFAULT_AUDIT_FILTERS).actorFilter : "ALL"}
+                  onFiltersChange={
+                    auditDialogTemplate
+                      ? (filters) => handleAuditFiltersChange(auditDialogTemplate.id, filters)
+                      : undefined
+                  }
+                />
+              </DialogContent>
+            </Dialog>
 
             <TabsContent value="analytics" className="space-y-6">
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

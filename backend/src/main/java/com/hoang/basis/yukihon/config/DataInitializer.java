@@ -81,6 +81,16 @@ public class DataInitializer implements CommandLineRunner {
                 "Manage Learning Content",
                 "Create, edit, and delete lessons, grammar, vocabulary, and quizzes"
         );
+        Permission contentReview = ensurePermission(
+                "CONTENT_REVIEW",
+                "Review Learning Content",
+                "Review and approve creator submissions before admin publishing"
+        );
+        Permission contentPublish = ensurePermission(
+                "CONTENT_PUBLISH",
+                "Publish Learning Content",
+                "Perform final publish decision for creator submissions"
+        );
         Permission communityInteract = ensurePermission(
                 "COMMUNITY_INTERACT",
                 "Community Interactions",
@@ -120,10 +130,19 @@ public class DataInitializer implements CommandLineRunner {
         ensureRolePermission(RoleName.TEACHER, communityInteract);
         ensureRolePermission(RoleName.TEACHER, translationUse);
 
+        ensureRolePermission(RoleName.REVIEWER, userReadProfile);
+        ensureRolePermission(RoleName.REVIEWER, userUpdateProfile);
+        ensureRolePermission(RoleName.REVIEWER, contentRead);
+        ensureRolePermission(RoleName.REVIEWER, contentReview);
+        ensureRolePermission(RoleName.REVIEWER, communityInteract);
+        ensureRolePermission(RoleName.REVIEWER, translationUse);
+
         ensureRolePermission(RoleName.ADMIN, userReadProfile);
         ensureRolePermission(RoleName.ADMIN, userUpdateProfile);
         ensureRolePermission(RoleName.ADMIN, contentRead);
         ensureRolePermission(RoleName.ADMIN, contentManage);
+        ensureRolePermission(RoleName.ADMIN, contentReview);
+        ensureRolePermission(RoleName.ADMIN, contentPublish);
         ensureRolePermission(RoleName.ADMIN, communityInteract);
         ensureRolePermission(RoleName.ADMIN, translationUse);
         ensureRolePermission(RoleName.ADMIN, adminDashboardRead);
@@ -159,15 +178,25 @@ public class DataInitializer implements CommandLineRunner {
                 true
         );
 
+        User reviewer = ensureUser(
+                "reviewer@yukihon.local",
+                "Reviewer Demo",
+                "Reviewer@123",
+                Set.of(RoleName.REVIEWER, RoleName.USER),
+                true
+        );
+
         ensureUserArtifacts(admin);
         ensureUserArtifacts(user);
         ensureUserArtifacts(teacher);
+        ensureUserArtifacts(reviewer);
 
         long totalUsers = userRepository.count();
         log.info("Initialized users: {} total", totalUsers);
         log.info("Default credentials -> admin: admin@yukihon.local / Admin@123");
         log.info("Default credentials -> user: learner@yukihon.local / User@123");
         log.info("Default credentials -> teacher: teacher@yukihon.local / Teacher@123");
+        log.info("Default credentials -> reviewer: reviewer@yukihon.local / Reviewer@123");
     }
 
     private User ensureUser(

@@ -67,6 +67,16 @@ public class CreatorTemplate {
     @Column(name = "review_note", length = 1000)
     private String reviewNote;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "admin_reviewed_by_user_id")
+    private User adminReviewedBy;
+
+    @Column(name = "admin_reviewed_by_user_id", insertable = false, updatable = false)
+    private Long adminReviewedByUserId;
+
+    @Column(name = "admin_review_note", length = 1000)
+    private String adminReviewNote;
+
     @Builder.Default
     @Column(name = "usage_count", nullable = false)
     private Integer usageCount = 0;
@@ -81,6 +91,9 @@ public class CreatorTemplate {
 
     @Column(name = "reviewed_at")
     private Instant reviewedAt;
+
+    @Column(name = "admin_reviewed_at")
+    private Instant adminReviewedAt;
 
     @Column(name = "last_published_at")
     private Instant lastPublishedAt;

@@ -3,11 +3,14 @@ package com.hoang.basis.yukihon.system.creatormode.service;
 import com.hoang.basis.yukihon.exception.ResourceNotFoundException;
 import com.hoang.basis.yukihon.system.creatormode.dto.CreatorTemplateAnalyticsDto;
 import com.hoang.basis.yukihon.system.creatormode.dto.CreatorTemplateAnalyticsItemDto;
+import com.hoang.basis.yukihon.system.creatormode.dto.CreatorTemplateAuditEventDto;
 import com.hoang.basis.yukihon.system.creatormode.dto.CreatorTemplateDto;
 import com.hoang.basis.yukihon.system.creatormode.dto.CreatorTemplateMetricsRequest;
 import com.hoang.basis.yukihon.system.creatormode.dto.CreatorTemplateReviewRequest;
 import com.hoang.basis.yukihon.system.creatormode.dto.CreatorTemplateUpsertRequest;
+import com.hoang.basis.yukihon.system.creatormode.entity.CreatorTemplateAuditEvent;
 import com.hoang.basis.yukihon.system.creatormode.entity.CreatorTemplate;
+import com.hoang.basis.yukihon.system.creatormode.repository.CreatorTemplateAuditEventRepository;
 import com.hoang.basis.yukihon.system.creatormode.repository.CreatorTemplateRepository;
 import com.hoang.basis.yukihon.system.user.entity.User;
 import com.hoang.basis.yukihon.system.user.repository.UserRepository;
@@ -31,8 +34,10 @@ import java.util.Set;
 public class CreatorModeService {
 
     private static final Set<String> VALID_JLPT_LEVELS = Set.of("N5", "N4", "N3", "N2", "N1");
+    private static final String SYSTEM_ACTOR_TOKEN = "SYSTEM";
 
     private final CreatorTemplateRepository creatorTemplateRepository;
+    private final CreatorTemplateAuditEventRepository creatorTemplateAuditEventRepository;
     private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
@@ -61,6 +66,54 @@ public class CreatorModeService {
         return CreatorTemplateDto.fromEntity(template);
     }
 
+    @Transactional(readOnly = true)
+    public List<CreatorTemplateAuditEventDto> getTemplateAuditTimeline(Long id, String stage, String actor) {
+        creatorTemplateRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Creator template not found with id: " + id));
+
+        CreatorTemplateAuditEvent.AuditStage stageFilter = parseAuditStage(stage);
+        AuditActorFilter actorFilter = parseAuditActorFilter(actor);
+
+        List<CreatorTemplateAuditEvent> events;
+        if (stageFilter != null && actorFilter.type() == AuditActorType.SYSTEM) {
+            events = creatorTemplateAuditEventRepository
+                    .findByTemplateIdAndStageAndActorUserIdIsNullOrderByCreatedAtAscIdAsc(id, stageFilter);
+        } else if (stageFilter != null && actorFilter.type() == AuditActorType.USER) {
+            events = creatorTemplateAuditEventRepository
+                    .findByTemplateIdAndStageAndActorUserIdOrderByCreatedAtAscIdAsc(id, stageFilter, actorFilter.actorUserId());
+        } else if (stageFilter != null) {
+            events = creatorTemplateAuditEventRepository.findByTemplateIdAndStageOrderByCreatedAtAscIdAsc(id, stageFilter);
+        } else if (actorFilter.type() == AuditActorType.SYSTEM) {
+            events = creatorTemplateAuditEventRepository.findByTemplateIdAndActorUserIdIsNullOrderByCreatedAtAscIdAsc(id);
+        } else if (actorFilter.type() == AuditActorType.USER) {
+            events = creatorTemplateAuditEventRepository
+                    .findByTemplateIdAndActorUserIdOrderByCreatedAtAscIdAsc(id, actorFilter.actorUserId());
+        } else {
+            events = creatorTemplateAuditEventRepository.findByTemplateIdOrderByCreatedAtAscIdAsc(id);
+        }
+
+        return events
+            .stream()
+            .map(CreatorTemplateAuditEventDto::fromEntity)
+            .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<CreatorTemplateDto> getReviewerQueue() {
+        return creatorTemplateRepository.findByStatusOrderByUpdatedAtDesc(CreatorTemplate.TemplateStatus.PENDING_REVIEW)
+                .stream()
+                .map(CreatorTemplateDto::fromEntity)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<CreatorTemplateDto> getAdminQueue() {
+        return creatorTemplateRepository.findByStatusOrderByUpdatedAtDesc(CreatorTemplate.TemplateStatus.APPROVED)
+                .stream()
+                .map(CreatorTemplateDto::fromEntity)
+                .toList();
+    }
+
     public CreatorTemplateDto createTemplate(CreatorTemplateUpsertRequest request, Long actorUserId) {
         User actor = findUserByIdOrThrow(actorUserId);
 
@@ -77,12 +130,15 @@ public class CreatorModeService {
                 .build();
 
         CreatorTemplate saved = creatorTemplateRepository.save(template);
+        appendAuditEvent(saved, actor, CreatorTemplateAuditEvent.AuditStage.AUTHORING,
+            CreatorTemplateAuditEvent.AuditAction.CREATED, null, "Template draft created");
         log.info("Creator template created: id={}, actorUserId={}", saved.getId(), actorUserId);
         return CreatorTemplateDto.fromEntity(saved);
     }
 
     public CreatorTemplateDto updateTemplate(Long id, CreatorTemplateUpsertRequest request, Long actorUserId, boolean isAdmin) {
         CreatorTemplate template = findEditableTemplate(id, actorUserId, isAdmin);
+        User actor = findUserByIdOrThrow(actorUserId);
 
         template.setTitle(request.getTitle().trim());
         template.setSummary(trimToNull(request.getSummary()));
@@ -97,12 +153,15 @@ public class CreatorModeService {
         }
 
         CreatorTemplate updated = creatorTemplateRepository.save(template);
+    appendAuditEvent(updated, actor, CreatorTemplateAuditEvent.AuditStage.AUTHORING,
+        CreatorTemplateAuditEvent.AuditAction.UPDATED_DRAFT, null, null);
         log.info("Creator template updated: id={}, actorUserId={}", id, actorUserId);
         return CreatorTemplateDto.fromEntity(updated);
     }
 
     public CreatorTemplateDto submitForReview(Long id, Long actorUserId, boolean isAdmin) {
         CreatorTemplate template = findEditableTemplate(id, actorUserId, isAdmin);
+        User actor = findUserByIdOrThrow(actorUserId);
 
         if (template.getStatus() == CreatorTemplate.TemplateStatus.PUBLISHED) {
             throw new IllegalStateException("Published template cannot be submitted for review");
@@ -112,21 +171,28 @@ public class CreatorModeService {
         template.setReviewedBy(null);
         template.setReviewNote(null);
         template.setReviewedAt(null);
+        clearAdminReview(template);
 
         CreatorTemplate saved = creatorTemplateRepository.save(template);
+    appendAuditEvent(saved, actor, CreatorTemplateAuditEvent.AuditStage.REVIEW_SUBMISSION,
+        CreatorTemplateAuditEvent.AuditAction.SUBMITTED_FOR_REVIEW,
+        CreatorTemplate.TemplateStatus.PENDING_REVIEW.name(), null);
         log.info("Creator template submitted for review: id={}, actorUserId={}", id, actorUserId);
         return CreatorTemplateDto.fromEntity(saved);
     }
 
-    public CreatorTemplateDto reviewTemplate(Long id, CreatorTemplateReviewRequest request, Long reviewerUserId) {
+    public CreatorTemplateDto reviewByReviewer(Long id, CreatorTemplateReviewRequest request, Long reviewerUserId) {
         CreatorTemplate template = creatorTemplateRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Creator template not found with id: " + id));
 
+        if (template.getStatus() != CreatorTemplate.TemplateStatus.PENDING_REVIEW) {
+            throw new IllegalStateException("Template must be in PENDING_REVIEW before reviewer decision");
+        }
+
         CreatorTemplate.TemplateStatus decision = parseStatus(request.getDecision(), true);
         if (decision != CreatorTemplate.TemplateStatus.APPROVED
-                && decision != CreatorTemplate.TemplateStatus.REJECTED
-                && decision != CreatorTemplate.TemplateStatus.PUBLISHED) {
-            throw new IllegalArgumentException("Decision must be APPROVED, REJECTED, or PUBLISHED");
+                && decision != CreatorTemplate.TemplateStatus.REJECTED) {
+            throw new IllegalArgumentException("Reviewer decision must be APPROVED or REJECTED");
         }
 
         User reviewer = findUserByIdOrThrow(reviewerUserId);
@@ -135,13 +201,44 @@ public class CreatorModeService {
         template.setReviewedBy(reviewer);
         template.setReviewNote(trimToNull(request.getReviewNote()));
         template.setReviewedAt(Instant.now());
+        clearAdminReview(template);
+
+        CreatorTemplate saved = creatorTemplateRepository.save(template);
+    appendAuditEvent(saved, reviewer, CreatorTemplateAuditEvent.AuditStage.REVIEWER_REVIEW,
+        CreatorTemplateAuditEvent.AuditAction.REVIEW_DECISION, decision.name(), request.getReviewNote());
+        log.info("Creator template reviewer decision: id={}, decision={}, reviewerUserId={}", id, decision, reviewerUserId);
+        return CreatorTemplateDto.fromEntity(saved);
+    }
+
+    public CreatorTemplateDto reviewByAdmin(Long id, CreatorTemplateReviewRequest request, Long adminUserId) {
+        CreatorTemplate template = creatorTemplateRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Creator template not found with id: " + id));
+
+        if (template.getStatus() != CreatorTemplate.TemplateStatus.APPROVED) {
+            throw new IllegalStateException("Template must be APPROVED by reviewer before admin decision");
+        }
+
+        CreatorTemplate.TemplateStatus decision = parseStatus(request.getDecision(), true);
+        if (decision != CreatorTemplate.TemplateStatus.PUBLISHED
+                && decision != CreatorTemplate.TemplateStatus.REJECTED) {
+            throw new IllegalArgumentException("Admin decision must be PUBLISHED or REJECTED");
+        }
+
+        User adminReviewer = findUserByIdOrThrow(adminUserId);
+
+        template.setStatus(decision);
+        template.setAdminReviewedBy(adminReviewer);
+        template.setAdminReviewNote(trimToNull(request.getReviewNote()));
+        template.setAdminReviewedAt(Instant.now());
 
         if (decision == CreatorTemplate.TemplateStatus.PUBLISHED) {
             template.setLastPublishedAt(Instant.now());
         }
 
         CreatorTemplate saved = creatorTemplateRepository.save(template);
-        log.info("Creator template reviewed: id={}, decision={}, reviewerUserId={}", id, decision, reviewerUserId);
+    appendAuditEvent(saved, adminReviewer, CreatorTemplateAuditEvent.AuditStage.ADMIN_APPROVAL,
+        CreatorTemplateAuditEvent.AuditAction.ADMIN_DECISION, decision.name(), request.getReviewNote());
+        log.info("Creator template admin decision: id={}, decision={}, adminUserId={}", id, decision, adminUserId);
         return CreatorTemplateDto.fromEntity(saved);
     }
 
@@ -296,6 +393,43 @@ public class CreatorModeService {
         }
     }
 
+    private CreatorTemplateAuditEvent.AuditStage parseAuditStage(String rawStage) {
+        if (rawStage == null || rawStage.isBlank()) {
+            return null;
+        }
+
+        try {
+            return CreatorTemplateAuditEvent.AuditStage.valueOf(rawStage.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException("Invalid audit stage: " + rawStage);
+        }
+    }
+
+    private AuditActorFilter parseAuditActorFilter(String rawActor) {
+        if (rawActor == null || rawActor.isBlank()) {
+            return new AuditActorFilter(AuditActorType.ANY, null);
+        }
+
+        String normalized = rawActor.trim();
+        if (SYSTEM_ACTOR_TOKEN.equalsIgnoreCase(normalized) || "actor:system".equalsIgnoreCase(normalized)) {
+            return new AuditActorFilter(AuditActorType.SYSTEM, null);
+        }
+
+        if (normalized.toLowerCase(Locale.ROOT).startsWith("actor:")) {
+            normalized = normalized.substring("actor:".length());
+        }
+
+        try {
+            long actorUserId = Long.parseLong(normalized);
+            if (actorUserId <= 0) {
+                throw new IllegalArgumentException("Actor user id must be positive");
+            }
+            return new AuditActorFilter(AuditActorType.USER, actorUserId);
+        } catch (NumberFormatException ex) {
+            throw new IllegalArgumentException("Invalid actor filter: " + rawActor);
+        }
+    }
+
     private String normalizeJlptLevel(String rawLevel) {
         if (rawLevel == null || rawLevel.isBlank()) {
             throw new IllegalArgumentException("JLPT level is required");
@@ -326,5 +460,39 @@ public class CreatorModeService {
 
     private int safeInt(Integer value) {
         return value == null ? 0 : value;
+    }
+
+    private void clearAdminReview(CreatorTemplate template) {
+        template.setAdminReviewedBy(null);
+        template.setAdminReviewNote(null);
+        template.setAdminReviewedAt(null);
+    }
+
+    private void appendAuditEvent(
+            CreatorTemplate template,
+            User actor,
+            CreatorTemplateAuditEvent.AuditStage stage,
+            CreatorTemplateAuditEvent.AuditAction action,
+            String decision,
+            String note
+    ) {
+        CreatorTemplateAuditEvent event = CreatorTemplateAuditEvent.builder()
+                .template(template)
+                .actor(actor)
+                .stage(stage)
+                .action(action)
+                .decision(trimToNull(decision))
+                .note(trimToNull(note))
+                .build();
+        creatorTemplateAuditEventRepository.save(event);
+    }
+
+    private enum AuditActorType {
+        ANY,
+        SYSTEM,
+        USER
+    }
+
+    private record AuditActorFilter(AuditActorType type, Long actorUserId) {
     }
 }

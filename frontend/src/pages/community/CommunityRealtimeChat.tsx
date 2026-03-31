@@ -24,10 +24,25 @@ const CommunityRealtimeChat = ({ currentUserId, roomId = "general" }: CommunityR
   const { toast } = useToast();
   const [draft, setDraft] = useState("");
   const listRef = useRef<HTMLDivElement | null>(null);
+  const lastSocketErrorRef = useRef<string | null>(null);
 
-  const { messages, connectionState, isLoadingHistory, connectionError, reconnect, sendMessage } = useRealtimeChat({
+  const {
+    messages,
+    typingUsers,
+    unreadCount,
+    lastSocketError,
+    connectionState,
+    isLoadingHistory,
+    connectionError,
+    reconnect,
+    markRead,
+    sendMessage,
+    sendTyping,
+  } = useRealtimeChat({
     roomId,
     enabled: true,
+    currentUserId,
+    trackUnread: true,
   });
 
   useEffect(() => {
@@ -38,6 +53,65 @@ const CommunityRealtimeChat = ({ currentUserId, roomId = "general" }: CommunityR
 
     list.scrollTo({ top: list.scrollHeight, behavior: "smooth" });
   }, [messages.length]);
+
+  useEffect(() => {
+    const clearUnreadWhenActive = () => {
+      if (document.visibilityState === "visible") {
+        markRead();
+      }
+    };
+
+    clearUnreadWhenActive();
+    window.addEventListener("focus", clearUnreadWhenActive);
+    document.addEventListener("visibilitychange", clearUnreadWhenActive);
+    return () => {
+      window.removeEventListener("focus", clearUnreadWhenActive);
+      document.removeEventListener("visibilitychange", clearUnreadWhenActive);
+    };
+  }, [markRead]);
+
+  useEffect(() => {
+    if (!lastSocketError) {
+      return;
+    }
+
+    const errorKey = `${lastSocketError.code}:${lastSocketError.createdAt}`;
+    if (lastSocketErrorRef.current === errorKey) {
+      return;
+    }
+
+    lastSocketErrorRef.current = errorKey;
+
+    const description =
+      lastSocketError.code === "RATE_LIMIT"
+        ? "Ban dang gui qua nhanh. Thu lai sau vai giay."
+        : lastSocketError.code === "MODERATION"
+          ? "Tin nhan co tu khoa bi chan. Vui long dieu chinh noi dung."
+          : lastSocketError.message;
+
+    toast({
+      title: "Khong gui duoc tin nhan",
+      description,
+      variant: "destructive",
+    });
+  }, [lastSocketError, toast]);
+
+  useEffect(() => {
+    const hasDraft = draft.trim().length > 0;
+    const timeoutId = setTimeout(() => {
+      sendTyping(hasDraft);
+    }, 250);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [draft, sendTyping]);
+
+  useEffect(() => {
+    return () => {
+      sendTyping(false);
+    };
+  }, [sendTyping]);
 
   const statusClassName = useMemo(() => {
     if (connectionState === "connected") {
@@ -65,13 +139,37 @@ const CommunityRealtimeChat = ({ currentUserId, roomId = "general" }: CommunityR
     }
 
     setDraft("");
+    sendTyping(false);
   };
+
+  const typingLabel = useMemo(() => {
+    if (typingUsers.length === 0) {
+      return null;
+    }
+
+    if (typingUsers.length === 1) {
+      return `${typingUsers[0]} dang go...`;
+    }
+
+    if (typingUsers.length === 2) {
+      return `${typingUsers[0]} va ${typingUsers[1]} dang go...`;
+    }
+
+    return `${typingUsers[0]} va ${typingUsers.length - 1} nguoi khac dang go...`;
+  }, [typingUsers]);
 
   return (
     <Card className="rounded-3xl border-slate-200 bg-white/90 shadow-lg">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between gap-3">
-          <CardTitle className="text-lg font-semibold text-slate-900">Real-time Lounge</CardTitle>
+          <div className="flex items-center gap-2">
+            <CardTitle className="text-lg font-semibold text-slate-900">Real-time Lounge</CardTitle>
+            {unreadCount > 0 ? (
+              <span className="rounded-full bg-sky-500 px-2 py-0.5 text-[11px] font-semibold text-white">
+                {unreadCount > 99 ? "99+" : unreadCount} unread
+              </span>
+            ) : null}
+          </div>
           <div className="flex items-center gap-2">
             <span className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", statusClassName)}>
               {statusLabelMap[connectionState]}
@@ -122,6 +220,8 @@ const CommunityRealtimeChat = ({ currentUserId, roomId = "general" }: CommunityR
             })
           )}
         </div>
+
+        {typingLabel ? <p className="px-1 text-xs font-medium text-sky-600">{typingLabel}</p> : null}
 
         <form
           className="flex items-center gap-2"

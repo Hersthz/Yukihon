@@ -2,6 +2,7 @@ package com.hoang.basis.yukihon.system.creatormode.controller;
 
 import com.hoang.basis.yukihon.exception.ResourceNotFoundException;
 import com.hoang.basis.yukihon.system.creatormode.dto.CreatorTemplateAnalyticsDto;
+import com.hoang.basis.yukihon.system.creatormode.dto.CreatorTemplateAuditEventDto;
 import com.hoang.basis.yukihon.system.creatormode.dto.CreatorTemplateDto;
 import com.hoang.basis.yukihon.system.creatormode.dto.CreatorTemplateMetricsRequest;
 import com.hoang.basis.yukihon.system.creatormode.dto.CreatorTemplateReviewRequest;
@@ -47,6 +48,16 @@ public class CreatorModeController {
         return ResponseEntity.ok(creatorModeService.getTemplate(id));
     }
 
+    @GetMapping("/templates/{id}/audit-timeline")
+    @PreAuthorize("hasAnyAuthority('CONTENT_READ','CONTENT_MANAGE','CONTENT_REVIEW')")
+    public ResponseEntity<List<CreatorTemplateAuditEventDto>> getTemplateAuditTimeline(
+            @PathVariable Long id,
+            @RequestParam(required = false) String stage,
+            @RequestParam(required = false) String actor
+    ) {
+        return ResponseEntity.ok(creatorModeService.getTemplateAuditTimeline(id, stage, actor));
+    }
+
     @PostMapping("/templates")
     @PreAuthorize("hasAuthority('CONTENT_MANAGE')")
     public ResponseEntity<CreatorTemplateDto> createTemplate(
@@ -81,15 +92,27 @@ public class CreatorModeController {
         return ResponseEntity.ok(updated);
     }
 
-    @PostMapping("/templates/{id}/review")
-    @PreAuthorize("hasRole('ADMIN') and hasAuthority('CONTENT_MANAGE')")
-    public ResponseEntity<CreatorTemplateDto> reviewTemplate(
+    @PostMapping("/templates/{id}/review/reviewer")
+    @PreAuthorize("hasAuthority('CONTENT_REVIEW')")
+    public ResponseEntity<CreatorTemplateDto> reviewerDecision(
             @PathVariable Long id,
             @Valid @RequestBody CreatorTemplateReviewRequest request,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
         Long reviewerUserId = resolveCurrentUserId(userDetails);
-        CreatorTemplateDto updated = creatorModeService.reviewTemplate(id, request, reviewerUserId);
+        CreatorTemplateDto updated = creatorModeService.reviewByReviewer(id, request, reviewerUserId);
+        return ResponseEntity.ok(updated);
+    }
+
+    @PostMapping("/templates/{id}/review/admin")
+    @PreAuthorize("hasRole('ADMIN') and hasAuthority('CONTENT_PUBLISH')")
+    public ResponseEntity<CreatorTemplateDto> adminDecision(
+            @PathVariable Long id,
+            @Valid @RequestBody CreatorTemplateReviewRequest request,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        Long adminUserId = resolveCurrentUserId(userDetails);
+        CreatorTemplateDto updated = creatorModeService.reviewByAdmin(id, request, adminUserId);
         return ResponseEntity.ok(updated);
     }
 
@@ -114,10 +137,16 @@ public class CreatorModeController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/review-queue")
-    @PreAuthorize("hasRole('ADMIN') and hasAuthority('CONTENT_MANAGE')")
-    public ResponseEntity<List<CreatorTemplateDto>> getReviewQueue() {
-        return ResponseEntity.ok(creatorModeService.getTemplates("PENDING_REVIEW", null));
+    @GetMapping("/review-queue/reviewer")
+    @PreAuthorize("hasAuthority('CONTENT_REVIEW')")
+    public ResponseEntity<List<CreatorTemplateDto>> getReviewerQueue() {
+        return ResponseEntity.ok(creatorModeService.getReviewerQueue());
+    }
+
+    @GetMapping("/review-queue/admin")
+    @PreAuthorize("hasRole('ADMIN') and hasAuthority('CONTENT_PUBLISH')")
+    public ResponseEntity<List<CreatorTemplateDto>> getAdminQueue() {
+        return ResponseEntity.ok(creatorModeService.getAdminQueue());
     }
 
     @GetMapping("/analytics")

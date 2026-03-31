@@ -18,13 +18,37 @@ export interface CreatorTemplate {
   reviewedByUserId: number | null;
   reviewedByDisplayName: string | null;
   reviewNote: string | null;
+  adminReviewedByUserId: number | null;
+  adminReviewedByDisplayName: string | null;
+  adminReviewNote: string | null;
   usageCount: number;
   completionCount: number;
   averageScore: number;
   createdAt: string;
   updatedAt: string;
   reviewedAt: string | null;
+  adminReviewedAt: string | null;
   lastPublishedAt: string | null;
+}
+
+export type CreatorAuditStage = "AUTHORING" | "REVIEW_SUBMISSION" | "REVIEWER_REVIEW" | "ADMIN_APPROVAL";
+export type CreatorAuditAction = "CREATED" | "UPDATED_DRAFT" | "SUBMITTED_FOR_REVIEW" | "REVIEW_DECISION" | "ADMIN_DECISION";
+
+export interface CreatorTemplateAuditTimelineFilters {
+  stage?: CreatorAuditStage;
+  actor?: string;
+}
+
+export interface CreatorTemplateAuditEvent {
+  id: number;
+  templateId: number;
+  actorUserId: number | null;
+  actorDisplayName: string | null;
+  stage: CreatorAuditStage;
+  action: CreatorAuditAction;
+  decision: string | null;
+  note: string | null;
+  createdAt: string;
 }
 
 export interface CreatorTemplateUpsertPayload {
@@ -37,8 +61,13 @@ export interface CreatorTemplateUpsertPayload {
   builderJson: string;
 }
 
-export interface CreatorTemplateReviewPayload {
-  decision: "APPROVED" | "REJECTED" | "PUBLISHED";
+export interface CreatorTemplateReviewerDecisionPayload {
+  decision: "APPROVED" | "REJECTED";
+  reviewNote?: string;
+}
+
+export interface CreatorTemplateAdminDecisionPayload {
+  decision: "PUBLISHED" | "REJECTED";
   reviewNote?: string;
 }
 
@@ -88,6 +117,23 @@ const buildQuery = (params: { status?: CreatorTemplateStatus; contentType?: Crea
   return encoded ? `?${encoded}` : "";
 };
 
+const buildAuditTimelineQuery = (filters?: CreatorTemplateAuditTimelineFilters) => {
+  if (!filters) {
+    return "";
+  }
+
+  const query = new URLSearchParams();
+  if (filters.stage) {
+    query.set("stage", filters.stage);
+  }
+  if (filters.actor) {
+    query.set("actor", filters.actor);
+  }
+
+  const encoded = query.toString();
+  return encoded ? `?${encoded}` : "";
+};
+
 export const creatorModeApi = {
   getTemplates: (params: { status?: CreatorTemplateStatus; contentType?: CreatorContentType } = {}) =>
     apiClient.request<CreatorTemplate[]>(`/api/admin/creator-mode/templates${buildQuery(params)}`),
@@ -106,8 +152,13 @@ export const creatorModeApi = {
     apiClient.request<CreatorTemplate>(`/api/admin/creator-mode/templates/${id}/submit`, {
       method: "POST",
     }),
-  reviewTemplate: (id: number, payload: CreatorTemplateReviewPayload) =>
-    apiClient.request<CreatorTemplate>(`/api/admin/creator-mode/templates/${id}/review`, {
+  reviewerDecision: (id: number, payload: CreatorTemplateReviewerDecisionPayload) =>
+    apiClient.request<CreatorTemplate>(`/api/admin/creator-mode/templates/${id}/review/reviewer`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  adminDecision: (id: number, payload: CreatorTemplateAdminDecisionPayload) =>
+    apiClient.request<CreatorTemplate>(`/api/admin/creator-mode/templates/${id}/review/admin`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
@@ -120,6 +171,11 @@ export const creatorModeApi = {
     apiClient.request<void>(`/api/admin/creator-mode/templates/${id}`, {
       method: "DELETE",
     }),
-  getReviewQueue: () => apiClient.request<CreatorTemplate[]>("/api/admin/creator-mode/review-queue"),
+  getTemplateAuditTimeline: (id: number, filters?: CreatorTemplateAuditTimelineFilters) =>
+    apiClient.request<CreatorTemplateAuditEvent[]>(
+      `/api/admin/creator-mode/templates/${id}/audit-timeline${buildAuditTimelineQuery(filters)}`
+    ),
+  getReviewerQueue: () => apiClient.request<CreatorTemplate[]>("/api/admin/creator-mode/review-queue/reviewer"),
+  getAdminQueue: () => apiClient.request<CreatorTemplate[]>("/api/admin/creator-mode/review-queue/admin"),
   getAnalytics: () => apiClient.request<CreatorAnalytics>("/api/admin/creator-mode/analytics"),
 };
