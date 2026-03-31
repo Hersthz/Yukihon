@@ -1,4 +1,6 @@
+import { useState } from "react";
 import type { LearningFunnelDailyPoint } from "@/api/learningAnalyticsApi";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   ChartContainer,
   ChartLegend,
@@ -32,6 +34,20 @@ interface LearningFunnelTrendChartProps {
   dailyTrend: LearningFunnelDailyPoint[];
 }
 
+type MetricFocus = "retentionScore" | "completionRate" | "abandonmentRate";
+
+const metricFocusLabels: Record<MetricFocus, string> = {
+  retentionScore: "Retention Score",
+  completionRate: "Completion Rate",
+  abandonmentRate: "Abandonment Rate",
+};
+
+const metricFocusDescriptions: Record<MetricFocus, string> = {
+  retentionScore: "Weighted quality score by day: completion + quiz recovery - abandonment.",
+  completionRate: "Daily percentage of started lessons that reached completion.",
+  abandonmentRate: "Daily percentage of started lessons that were dropped before completion.",
+};
+
 const toShortDate = (isoDate: string) => {
   const parts = isoDate.split("-");
   if (parts.length !== 3) {
@@ -52,13 +68,33 @@ const toReadableDate = (isoDate: string) => {
 };
 
 const LearningFunnelTrendChart = ({ dailyTrend }: LearningFunnelTrendChartProps) => {
+  const [metricFocus, setMetricFocus] = useState<MetricFocus>("retentionScore");
+
   return (
     <div className="rounded-lg border border-border/60 bg-background/35 p-4">
-      <div className="mb-3">
-        <p className="text-sm font-medium">Daily Retention Trend</p>
-        <p className="text-xs text-muted-foreground">
-          Compare activity volume with retention quality by day in the selected cohort.
-        </p>
+      <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        <div>
+          <p className="text-sm font-medium">Daily Retention Trend</p>
+          <p className="text-xs text-muted-foreground">
+            {metricFocusDescriptions[metricFocus]}
+          </p>
+        </div>
+
+        <div className="w-full md:w-[220px]">
+          <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Metric focus
+          </label>
+          <Select value={metricFocus} onValueChange={(value) => setMetricFocus(value as MetricFocus)}>
+            <SelectTrigger className="h-9">
+              <SelectValue placeholder="Choose metric" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="retentionScore">Retention Score</SelectItem>
+              <SelectItem value="completionRate">Completion Rate</SelectItem>
+              <SelectItem value="abandonmentRate">Abandonment Rate</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <ChartContainer config={chartConfig} className="h-[300px] w-full">
@@ -91,8 +127,7 @@ const LearningFunnelTrendChart = ({ dailyTrend }: LearningFunnelTrendChartProps)
                     return [String(value), String(name)];
                   }
 
-                  const isPercent =
-                    name === "completionRate" || name === "abandonmentRate" || name === "retentionScore";
+                  const isPercent = name !== "startedCount";
                   return [isPercent ? `${value.toFixed(1)}%` : value.toLocaleString(), String(name)];
                 }}
               />
@@ -104,25 +139,10 @@ const LearningFunnelTrendChart = ({ dailyTrend }: LearningFunnelTrendChartProps)
           <Line
             yAxisId="percent"
             type="monotone"
-            dataKey="completionRate"
-            stroke="var(--color-completionRate)"
-            strokeWidth={2}
-            dot={false}
-          />
-          <Line
-            yAxisId="percent"
-            type="monotone"
-            dataKey="abandonmentRate"
-            stroke="var(--color-abandonmentRate)"
-            strokeWidth={2}
-            dot={false}
-          />
-          <Line
-            yAxisId="percent"
-            type="monotone"
-            dataKey="retentionScore"
-            stroke="var(--color-retentionScore)"
-            strokeWidth={3}
+            dataKey={metricFocus}
+            name={metricFocusLabels[metricFocus]}
+            stroke={`var(--color-${metricFocus})`}
+            strokeWidth={metricFocus === "retentionScore" ? 3 : 2.5}
             dot={false}
           />
         </ComposedChart>
