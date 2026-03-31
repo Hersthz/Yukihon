@@ -1,59 +1,109 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { BookOpen, BookmarkPlus, Brain, Check, ChevronRight, GitBranch, Lock, RotateCcw, Sparkles } from "lucide-react";
+import { BookOpen, BookmarkPlus, Brain, Check, ChevronRight, GitBranch, Lock, RotateCcw, Sparkles, TrendingDown, TrendingUp } from "lucide-react";
 import { dictionaryApi, myWordsApi, type DictionaryEntry } from "@/api";
+import StoryInfoCard from "@/components/learning/StoryInfoCard";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { ToastAction } from "@/components/ui/toast";
+import {
+  buildHydratedStoryModeState,
+  buildInitialPerformanceByStory,
+  buildInitialUnlockedSegmentIds,
+  buildStoryModeSnapshot,
+  createDefaultStoryPerformance,
+  dedupe,
+  getSegmentById,
+  storyDifficultyOrder,
+  type StoryModeSnapshot,
+  type StoryPerformanceState,
+} from "@/features/story-mode/storyModeSnapshot";
 import { useAuth } from "@/hooks/use-auth";
+import { useStoryModePersistence } from "@/hooks/learning/useStoryModePersistence";
 import { useToast } from "@/hooks/use-toast";
-import { storyModeStories, type StoryCheckpointOption, type StoryModeStory, type StorySegment } from "@/data/storyMode";
+import { storyModeStories, type StoryCheckpointOption, type StoryDifficultyLevel, type StorySegment } from "@/data/storyMode";
 
 const normalizeSavedStatuses = (statuses: Record<string, boolean>) =>
   Object.fromEntries(Object.entries(statuses).map(([id, saved]) => [Number(id), saved])) as Record<number, boolean>;
 
-interface StoryModeSnapshot {
-  activeStoryId: string;
-  activeSegmentId?: string;
-  activeSegmentIndex?: number;
-  unlockedSegmentIdsByStory?: Record<string, string[]>;
-  unlockedCounts?: Record<string, number>;
-  selectedAnswers: Record<string, string>;
-  submittedSegments: Record<string, boolean>;
-}
-
-const buildInitialUnlockedSegmentIds = () =>
-  Object.fromEntries(storyModeStories.map((story) => [story.id, [story.entrySegmentId]]));
-
-const dedupe = (values: string[]) => Array.from(new Set(values));
-
-const getSegmentById = (story: StoryModeStory, segmentId?: string | null) =>
-  story.segments.find((segment) => segment.id === segmentId) ?? story.segments.find((segment) => segment.id === story.entrySegmentId) ?? story.segments[0];
-
-const migrateUnlockedSegments = (snapshot: Partial<StoryModeSnapshot>) => {
-  const initial = buildInitialUnlockedSegmentIds();
-  const nextMap: Record<string, string[]> = { ...initial };
-
-  if (snapshot.unlockedSegmentIdsByStory) {
-    storyModeStories.forEach((story) => {
-      const allowedIds = new Set(story.segments.map((segment) => segment.id));
-      const restored = snapshot.unlockedSegmentIdsByStory?.[story.id]?.filter((segmentId) => allowedIds.has(segmentId)) ?? [];
-      nextMap[story.id] = dedupe([story.entrySegmentId, ...restored]);
-    });
-    return nextMap;
+const deriveDifficulty = (performance: StoryPerformanceState): StoryDifficultyLevel => {
+  if (performance.answeredCount < 2) {
+    return performance.currentDifficulty;
   }
 
-  if (snapshot.unlockedCounts) {
-    storyModeStories.forEach((story) => {
-      const count = Math.max(1, Math.min(story.segments.length, snapshot.unlockedCounts?.[story.id] ?? 1));
-      nextMap[story.id] = story.segments.slice(0, count).map((segment) => segment.id);
-    });
+  const accuracy = Math.round((performance.correctCount / performance.answeredCount) * 100);
+  if (performance.answeredCount >= 3 && accuracy >= 85 && performance.streak >= 2) {
+    return "HARD";
   }
 
-  return nextMap;
+  if (accuracy <= 55 || performance.incorrectStreak >= 2) {
+    return "EASY";
+  }
+
+  return "STANDARD";
+};
+
+const updatePerformanceForQuiz = (performance: StoryPerformanceState, isCorrect: boolean): StoryPerformanceState => {
+  const next = {
+    ...performance,
+    answeredCount: performance.answeredCount + 1,
+    correctCount: performance.correctCount + (isCorrect ? 1 : 0),
+    streak: isCorrect ? performance.streak + 1 : 0,
+    incorrectStreak: isCorrect ? 0 : performance.incorrectStreak + 1,
+  };
+
+  return {
+    ...next,
+    currentDifficulty: deriveDifficulty(next),
+  };
+};
+
+const applyDifficultyImpact = (difficulty: StoryDifficultyLevel, impact?: StoryCheckpointOption["difficultyImpact"]): StoryDifficultyLevel => {
+  if (!impact || impact === "NEUTRAL") {
+    return difficulty;
+  }
+
+  const currentIndex = storyDifficultyOrder.indexOf(difficulty);
+  const delta = impact === "EASE_UP" ? 1 : -1;
+  const nextIndex = Math.max(0, Math.min(storyDifficultyOrder.length - 1, currentIndex + delta));
+  return storyDifficultyOrder[nextIndex];
+};
+
+const difficultyLabelMap: Record<StoryDifficultyLevel, string> = {
+  EASY: "De",
+  STANDARD: "Tieu chuan",
+  HARD: "Thu thach",
+};
+
+const resolveCheckpointQuestion = (segment: StorySegment, difficulty: StoryDifficultyLevel) =>
+  segment.checkpoint.questionByDifficulty?.[difficulty] ?? segment.checkpoint.question;
+
+const resolveCheckpointExplanation = (segment: StorySegment, difficulty: StoryDifficultyLevel) =>
+  segment.checkpoint.explanationByDifficulty?.[difficulty] ?? segment.checkpoint.explanation;
+
+const resolveCheckpointOptions = (segment: StorySegment, difficulty: StoryDifficultyLevel): StoryCheckpointOption[] => {
+  const configured = segment.checkpoint.optionsByDifficulty?.[difficulty];
+  if (configured?.length) {
+    return configured;
+  }
+
+  if (segment.checkpoint.mode === "branch") {
+    return segment.checkpoint.options;
+  }
+
+  if (difficulty === "EASY" && segment.checkpoint.correctOptionId && segment.checkpoint.options.length > 2) {
+    const correctOption = segment.checkpoint.options.find((option) => option.id === segment.checkpoint.correctOptionId);
+    const firstDistractor = segment.checkpoint.options.find((option) => option.id !== segment.checkpoint.correctOptionId);
+
+    if (correctOption && firstDistractor) {
+      return [correctOption, firstDistractor];
+    }
+  }
+
+  return segment.checkpoint.options;
 };
 
 const StoryMode = () => {
@@ -65,11 +115,12 @@ const StoryMode = () => {
   const [unlockedSegmentIdsByStory, setUnlockedSegmentIdsByStory] = useState<Record<string, string[]>>(buildInitialUnlockedSegmentIds);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
   const [submittedSegments, setSubmittedSegments] = useState<Record<string, boolean>>({});
+  const [performanceByStory, setPerformanceByStory] = useState<Record<string, StoryPerformanceState>>(buildInitialPerformanceByStory);
+  const [revealedHardTranslation, setRevealedHardTranslation] = useState<Record<string, boolean>>({});
   const [segmentVocab, setSegmentVocab] = useState<DictionaryEntry[]>([]);
   const [segmentVocabLoading, setSegmentVocabLoading] = useState(false);
   const [savedStatuses, setSavedStatuses] = useState<Record<number, boolean>>({});
   const [savingWordId, setSavingWordId] = useState<number | null>(null);
-  const [hasHydratedProgress, setHasHydratedProgress] = useState(false);
 
   const progressStorageKey = useMemo(
     () => `yukihon_story_mode_progress_${user?.id ?? "guest"}`,
@@ -80,25 +131,55 @@ const StoryMode = () => {
     () => storyModeStories.find((story) => story.id === activeStoryId) ?? storyModeStories[0],
     [activeStoryId]
   );
-  const unlockedSegmentIds = unlockedSegmentIdsByStory[activeStory.id] ?? [activeStory.entrySegmentId];
   const activeSegment = useMemo(() => getSegmentById(activeStory, activeSegmentId), [activeSegmentId, activeStory]);
+  const activePerformance = performanceByStory[activeStory.id] ?? createDefaultStoryPerformance();
+  const currentDifficulty = activePerformance.currentDifficulty;
+  const checkpointQuestion = resolveCheckpointQuestion(activeSegment, currentDifficulty);
+  const checkpointExplanation = resolveCheckpointExplanation(activeSegment, currentDifficulty);
+  const checkpointOptions = resolveCheckpointOptions(activeSegment, currentDifficulty);
+  const unlockedSegmentIds = unlockedSegmentIdsByStory[activeStory.id] ?? [activeStory.entrySegmentId];
   const activeSegmentKey = activeSegment?.id ?? "";
   const selectedAnswer = selectedAnswers[activeSegmentKey] ?? "";
-  const selectedOption = activeSegment?.checkpoint.options.find((option) => option.id === selectedAnswer) ?? null;
+  const selectedOption = checkpointOptions.find((option) => option.id === selectedAnswer) ?? null;
   const isSubmitted = !!submittedSegments[activeSegmentKey];
   const isBranchMode = activeSegment?.checkpoint.mode === "branch";
   const isCorrect = isBranchMode ? true : selectedAnswer === activeSegment?.checkpoint.correctOptionId;
-  const nextSegmentId = isBranchMode ? selectedOption?.nextSegmentId : activeSegment?.nextSegmentId;
+  const nextSegmentId = isBranchMode
+    ? selectedOption?.nextSegmentIdByDifficulty?.[currentDifficulty] ?? selectedOption?.nextSegmentId
+    : isCorrect
+      ? activeSegment?.adaptiveRoutes?.onCorrectByDifficulty?.[currentDifficulty] ??
+        activeSegment?.adaptiveRoutes?.onCorrectNextSegmentId ??
+        activeSegment?.nextSegmentId
+      : activeSegment?.adaptiveRoutes?.onWrongByDifficulty?.[currentDifficulty] ?? activeSegment?.adaptiveRoutes?.onWrongNextSegmentId;
   const canOpenNextSegment = !!nextSegmentId && unlockedSegmentIds.includes(nextSegmentId) && activeSegment.id !== nextSegmentId;
   const storyProgress = Math.round((unlockedSegmentIds.length / activeStory.segments.length) * 100);
+  const adaptiveAccuracy = activePerformance.answeredCount === 0 ? 0 : Math.round((activePerformance.correctCount / activePerformance.answeredCount) * 100);
+  const hardTranslationShown = !!revealedHardTranslation[activeSegment.id];
+  const isHardTranslationHidden = currentDifficulty === "HARD" && !hardTranslationShown;
+  const adaptiveTranslation = activeSegment.translationByDifficulty?.[currentDifficulty] ?? activeSegment.translation;
+  const adaptiveMetricHint =
+    activePerformance.answeredCount === 0
+      ? "Bat dau checkpoint de he thong canh chinh do kho"
+      : `${adaptiveAccuracy}% dung · streak ${activePerformance.streak}`;
+  const adaptiveMetricIcon =
+    currentDifficulty === "HARD" ? <TrendingUp className="h-4 w-4 text-emerald-500" /> : currentDifficulty === "EASY" ? <TrendingDown className="h-4 w-4 text-amber-500" /> : <Brain className="h-4 w-4 text-sky-500" />;
 
   const submissionMessage = useMemo(() => {
     if (!isSubmitted || !activeSegment) return "";
     if (isBranchMode) {
       return selectedOption?.response ?? activeSegment.checkpoint.explanation;
     }
-    return activeSegment.checkpoint.explanation;
-  }, [activeSegment, isBranchMode, isSubmitted, selectedOption]);
+    return checkpointExplanation;
+  }, [activeSegment, checkpointExplanation, isBranchMode, isSubmitted, selectedOption]);
+
+  const snapshotForPersistence = useMemo<StoryModeSnapshot>(() => buildStoryModeSnapshot({
+    activeStoryId,
+    activeSegmentId,
+    unlockedSegmentIdsByStory,
+    selectedAnswers,
+    submittedSegments,
+    performanceByStory,
+  }), [activeSegmentId, activeStoryId, performanceByStory, selectedAnswers, submittedSegments, unlockedSegmentIdsByStory]);
 
   const loadSavedStatuses = async (vocabularyIds: number[]) => {
     if (vocabularyIds.length === 0) {
@@ -114,52 +195,23 @@ const StoryMode = () => {
     }
   };
 
-  useEffect(() => {
-    const initialUnlockedSegmentIds = buildInitialUnlockedSegmentIds();
+  const applyHydratedSnapshot = useCallback((snapshot: Partial<StoryModeSnapshot> | null) => {
+    const hydratedState = buildHydratedStoryModeState(snapshot, storyModeStories);
+    setActiveStoryId(hydratedState.activeStoryId);
+    setActiveSegmentId(hydratedState.activeSegmentId);
+    setUnlockedSegmentIdsByStory(hydratedState.unlockedSegmentIdsByStory);
+    setSelectedAnswers(hydratedState.selectedAnswers);
+    setSubmittedSegments(hydratedState.submittedSegments);
+    setPerformanceByStory(hydratedState.performanceByStory);
+    setRevealedHardTranslation(hydratedState.revealedHardTranslation);
+  }, []);
 
-    try {
-      const raw = localStorage.getItem(progressStorageKey);
-      if (!raw) {
-        setUnlockedSegmentIdsByStory(initialUnlockedSegmentIds);
-        setHasHydratedProgress(true);
-        return;
-      }
-
-      const snapshot = JSON.parse(raw) as Partial<StoryModeSnapshot>;
-      const nextStory = storyModeStories.find((story) => story.id === snapshot.activeStoryId) ?? storyModeStories[0];
-      const nextUnlockedSegmentIdsByStory = migrateUnlockedSegments(snapshot);
-      const fallbackActiveSegment =
-        snapshot.activeSegmentId ??
-        nextStory.segments[Math.max(0, Math.min(nextUnlockedSegmentIdsByStory[nextStory.id].length - 1, snapshot.activeSegmentIndex ?? 0))]?.id ??
-        nextStory.entrySegmentId;
-
-      setActiveStoryId(nextStory.id);
-      setUnlockedSegmentIdsByStory(nextUnlockedSegmentIdsByStory);
-      setActiveSegmentId(getSegmentById(nextStory, fallbackActiveSegment).id);
-      setSelectedAnswers(snapshot.selectedAnswers ?? {});
-      setSubmittedSegments(snapshot.submittedSegments ?? {});
-    } catch {
-      setUnlockedSegmentIdsByStory(initialUnlockedSegmentIds);
-      setActiveStoryId(storyModeStories[0]?.id ?? "");
-      setActiveSegmentId(storyModeStories[0]?.entrySegmentId ?? "");
-    } finally {
-      setHasHydratedProgress(true);
-    }
-  }, [progressStorageKey]);
-
-  useEffect(() => {
-    if (!hasHydratedProgress) return;
-
-    const snapshot: StoryModeSnapshot = {
-      activeStoryId,
-      activeSegmentId,
-      unlockedSegmentIdsByStory,
-      selectedAnswers,
-      submittedSegments,
-    };
-
-    localStorage.setItem(progressStorageKey, JSON.stringify(snapshot));
-  }, [activeSegmentId, activeStoryId, hasHydratedProgress, progressStorageKey, selectedAnswers, submittedSegments, unlockedSegmentIdsByStory]);
+  const { clearLocalSnapshot } = useStoryModePersistence({
+    userId: user?.id,
+    storageKey: progressStorageKey,
+    snapshot: snapshotForPersistence,
+    onHydrateSnapshot: applyHydratedSnapshot,
+  });
 
   useEffect(() => {
     if (!activeStory || !activeSegment) return;
@@ -211,15 +263,12 @@ const StoryMode = () => {
     const firstUnlockedSegmentId = unlockedSegmentIdsByStory[storyId]?.[0] ?? nextStory.entrySegmentId;
     setActiveStoryId(storyId);
     setActiveSegmentId(firstUnlockedSegmentId);
+    setRevealedHardTranslation((prev) => ({ ...prev, [firstUnlockedSegmentId]: false }));
   };
 
   const handleResetProgress = () => {
-    localStorage.removeItem(progressStorageKey);
-    setActiveStoryId(storyModeStories[0]?.id ?? "");
-    setActiveSegmentId(storyModeStories[0]?.entrySegmentId ?? "");
-    setUnlockedSegmentIdsByStory(buildInitialUnlockedSegmentIds());
-    setSelectedAnswers({});
-    setSubmittedSegments({});
+    clearLocalSnapshot();
+    applyHydratedSnapshot(null);
     toast({ title: "Đã reset Story Mode", description: "Tiến độ đọc truyện trên máy này đã quay về từ đầu." });
   };
 
@@ -232,38 +281,79 @@ const StoryMode = () => {
     setSubmittedSegments((prev) => ({ ...prev, [activeSegment.id]: true }));
 
     if (isBranchMode) {
-      if (selectedOption.nextSegmentId) {
+      const nextBranchSegmentId = selectedOption.nextSegmentIdByDifficulty?.[currentDifficulty] ?? selectedOption.nextSegmentId;
+      const nextDifficulty = applyDifficultyImpact(currentDifficulty, selectedOption.difficultyImpact);
+
+      if (nextBranchSegmentId) {
         setUnlockedSegmentIdsByStory((prev) => ({
           ...prev,
-          [activeStory.id]: dedupe([...(prev[activeStory.id] ?? [activeStory.entrySegmentId]), selectedOption.nextSegmentId as string]),
+          [activeStory.id]: dedupe([...(prev[activeStory.id] ?? [activeStory.entrySegmentId]), nextBranchSegmentId]),
         }));
+      }
+
+      if (selectedOption.difficultyImpact && selectedOption.difficultyImpact !== "NEUTRAL") {
+        setPerformanceByStory((prev) => {
+          const current = prev[activeStory.id] ?? createDefaultStoryPerformance();
+          return {
+            ...prev,
+            [activeStory.id]: {
+              ...current,
+              currentDifficulty: nextDifficulty,
+            },
+          };
+        });
       }
 
       toast({
         title: "Đã mở một nhánh mới",
-        description: selectedOption.response ?? "Bạn vừa mở một hướng đi khác của câu chuyện.",
+        description: `${selectedOption.response ?? "Bạn vừa mở một hướng đi khác của câu chuyện."} Muc do hien tai: ${difficultyLabelMap[nextDifficulty]}.`,
       });
       return;
     }
 
-    if (!isCorrect) {
+    const currentPerformance = performanceByStory[activeStory.id] ?? createDefaultStoryPerformance();
+    const nextPerformance = updatePerformanceForQuiz(currentPerformance, isCorrect);
+    const hasDifficultyChanged = nextPerformance.currentDifficulty !== currentPerformance.currentDifficulty;
+    setPerformanceByStory((prev) => ({ ...prev, [activeStory.id]: nextPerformance }));
+
+    const resolvedNextSegmentId = isCorrect
+      ? activeSegment.adaptiveRoutes?.onCorrectByDifficulty?.[nextPerformance.currentDifficulty] ??
+        activeSegment.adaptiveRoutes?.onCorrectNextSegmentId ??
+        activeSegment.nextSegmentId
+      : activeSegment.adaptiveRoutes?.onWrongByDifficulty?.[nextPerformance.currentDifficulty] ?? activeSegment.adaptiveRoutes?.onWrongNextSegmentId;
+
+    if (resolvedNextSegmentId) {
+      setUnlockedSegmentIdsByStory((prev) => ({
+        ...prev,
+        [activeStory.id]: dedupe([...(prev[activeStory.id] ?? [activeStory.entrySegmentId]), resolvedNextSegmentId]),
+      }));
+    }
+
+    if (!isCorrect && !resolvedNextSegmentId) {
       toast({ title: "Chưa đúng rồi", description: "Đọc lại đoạn ngắn và thử chọn lại đáp án phù hợp hơn." });
       return;
     }
 
-    if (activeSegment.nextSegmentId) {
-      setUnlockedSegmentIdsByStory((prev) => ({
-        ...prev,
-        [activeStory.id]: dedupe([...(prev[activeStory.id] ?? [activeStory.entrySegmentId]), activeSegment.nextSegmentId as string]),
-      }));
+    if (!isCorrect && resolvedNextSegmentId) {
+      toast({
+        title: "Mo nhanh on tap",
+        description: `Ban vua mo mot doan review de lay lai nhip. Muc do hien tai: ${difficultyLabelMap[nextPerformance.currentDifficulty]}.`,
+      });
+      return;
     }
 
-    toast({ title: "Đã mở đoạn kế tiếp", description: "Bạn có thể tiếp tục câu chuyện hoặc ở lại ôn vocab của đoạn này." });
+    toast({
+      title: "Đã mở đoạn kế tiếp",
+      description: hasDifficultyChanged
+        ? `Ban dang hoc rat tot, he thong da chuyen sang muc ${difficultyLabelMap[nextPerformance.currentDifficulty]}.`
+        : "Bạn có thể tiếp tục câu chuyện hoặc ở lại ôn vocab của đoạn này.",
+    });
   };
 
   const handleOpenNextSegment = () => {
     if (!nextSegmentId || !unlockedSegmentIds.includes(nextSegmentId)) return;
     setActiveSegmentId(nextSegmentId);
+    setRevealedHardTranslation((prev) => ({ ...prev, [nextSegmentId]: false }));
   };
 
   const handleSaveWord = async (word: DictionaryEntry) => {
@@ -330,10 +420,11 @@ const StoryMode = () => {
           }
         />
 
-        <div className="mb-4 grid gap-3 md:grid-cols-4">
+        <div className="mb-4 grid gap-3 md:grid-cols-5">
           <MetricCard label="Truyen hien tai" value={activeStory.title} icon={<BookOpen className="h-4 w-4 text-rose-500" />} hint={activeStory.subtitle} />
           <MetricCard label="Tien do" value={`${storyProgress}%`} icon={<Sparkles className="h-4 w-4 text-emerald-500" />} hint={`${unlockedSegmentIds.length}/${activeStory.segments.length} doan da mo`} />
           <MetricCard label="JLPT" value={activeStory.jlptLevel} icon={<Brain className="h-4 w-4 text-sky-500" />} hint={`Khoang ${activeStory.estimatedMinutes} phut`} />
+          <MetricCard label="Adaptive" value={difficultyLabelMap[currentDifficulty]} icon={adaptiveMetricIcon} hint={adaptiveMetricHint} />
           <MetricCard label="Tone" value={activeStory.tone} icon={<GitBranch className="h-4 w-4 text-amber-500" />} hint={activeStory.description} />
         </div>
 
@@ -388,7 +479,10 @@ const StoryMode = () => {
                       key={segment.id}
                       className={active ? "rounded-2xl bg-rose-500 text-white hover:bg-rose-400" : "rounded-2xl border-border bg-card text-foreground/80 hover:bg-card"}
                       disabled={locked}
-                      onClick={() => setActiveSegmentId(segment.id)}
+                      onClick={() => {
+                        setActiveSegmentId(segment.id);
+                        setRevealedHardTranslation((prev) => ({ ...prev, [segment.id]: false }));
+                      }}
                       variant={active ? "default" : "outline"}
                     >
                       {locked ? <Lock className="mr-2 h-4 w-4" /> : <Check className="mr-2 h-4 w-4" />}
@@ -407,12 +501,26 @@ const StoryMode = () => {
                   <div className="flex flex-wrap gap-2">
                     <Badge className="rounded-full border border-rose-200 bg-rose-50 text-rose-700">{activeStory.jlptLevel}</Badge>
                     {isBranchMode ? <Badge className="rounded-full border border-violet-200 bg-violet-50 text-violet-700">Choice point</Badge> : null}
+                    <Badge className="rounded-full border border-sky-200 bg-sky-50 text-sky-700">Adaptive {difficultyLabelMap[currentDifficulty]}</Badge>
                   </div>
                 </div>
 
                 <div className="rounded-[22px] bg-rose-50/70 p-5">
                   <p className="text-2xl leading-10 text-foreground">{activeSegment.japaneseText}</p>
-                  <p className="mt-4 text-sm leading-7 text-muted-foreground">{activeSegment.translation}</p>
+                  {isHardTranslationHidden ? (
+                    <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-700">
+                      <p>Hard mode dang bat. Thu tu doc hieu truoc khi mo ban dich.</p>
+                      <Button
+                        className="mt-3 rounded-xl border-amber-200 bg-white text-amber-800 hover:bg-amber-100"
+                        onClick={() => setRevealedHardTranslation((prev) => ({ ...prev, [activeSegment.id]: true }))}
+                        variant="outline"
+                      >
+                        Mo goi y ban dich
+                      </Button>
+                    </div>
+                  ) : (
+                    <p className="mt-4 text-sm leading-7 text-muted-foreground">{adaptiveTranslation}</p>
+                  )}
                 </div>
               </div>
             </PageSection>
@@ -422,13 +530,13 @@ const StoryMode = () => {
               description={
                 isBranchMode
                   ? "Ở đoạn này, chính lựa chọn của bạn sẽ mở ra một nhánh nội dung khác."
-                  : "Trả lời đúng để mở đoạn tiếp theo và giữ nhịp đọc liền mạch."
+                  : `Do kho hien tai: ${difficultyLabelMap[currentDifficulty]}. He thong se tu dong nang ha do kho theo ket qua cua ban.`
               }
             >
               <div className="rounded-[24px] border border-border bg-card p-4">
-                <p className="text-base font-semibold text-foreground">{activeSegment.checkpoint.question}</p>
+                <p className="text-base font-semibold text-foreground">{checkpointQuestion}</p>
                 <div className="mt-4 grid gap-2">
-                  {activeSegment.checkpoint.options.map((option) => (
+                  {checkpointOptions.map((option) => (
                     <button
                       key={option.id}
                       type="button"
@@ -474,6 +582,26 @@ const StoryMode = () => {
           </div>
 
           <div className="space-y-4">
+            <PageSection title="Adaptive coach" description="Do kho va lo trinh nhanh tu canh chinh theo ket qua checkpoint cua ban.">
+              <div className="space-y-3">
+                <StoryInfoCard>
+                  <p className="font-semibold text-foreground">Muc hien tai: {difficultyLabelMap[currentDifficulty]}</p>
+                  <p className="mt-1 text-muted-foreground">
+                    {activePerformance.answeredCount === 0
+                      ? "Ban chua co du lieu checkpoint. Hoan thanh 2-3 checkpoint de bat dau canh chinh do kho."
+                      : `Dung ${activePerformance.correctCount}/${activePerformance.answeredCount} checkpoint (${adaptiveAccuracy}%).`}
+                  </p>
+                </StoryInfoCard>
+                <StoryInfoCard>
+                  {currentDifficulty === "HARD"
+                    ? "Ban dang vao nhip tot. He thong uu tien cau hoi phan tich va nhanh challenge."
+                    : currentDifficulty === "EASY"
+                      ? "He thong dang ha nhip de ban cung co nen tang vung. Qua checkpoint on tap de quay lai nhom cau hoi nang hon."
+                      : "Ban dang o muc tieu chuan. Duy tri streak de mo nhanh challenge trong truyen."}
+                </StoryInfoCard>
+              </div>
+            </PageSection>
+
             <PageSection title="Vocab mo khoa" description="Luu thang vao My Words neu gap tu muon giu lai.">
               {segmentVocabLoading ? (
                 <div className="flex items-center justify-center py-12">
@@ -536,14 +664,16 @@ const StoryMode = () => {
 
             <PageSection title="Buoc tiep theo" description="Nhanh khac se giu cho ban mot trai nghiem hoc khac, nen thu hoc lai tu dau de mo toan bo cau chuyen.">
               <div className="space-y-3">
-                <div className="rounded-[18px] border border-border bg-card px-4 py-3 text-sm text-foreground">
+                <StoryInfoCard>
                   {isBranchMode
                     ? "Chon mot huong di cho nhan vat va xem vocab/grammar cua nhanh do thay doi nhu the nao."
                     : "Hoan thanh checkpoint de mo khoa doan tiep theo cua nhanh hien tai."}
-                </div>
-                <div className="rounded-[18px] border border-border bg-card px-4 py-3 text-sm text-foreground">
-                  Luu 1-2 vocab quan trong vao My Words de bien cau chuyen thanh mot phien hoc that su.
-                </div>
+                </StoryInfoCard>
+                <StoryInfoCard>
+                  {currentDifficulty === "HARD"
+                    ? "Thu dong ban dich va luu 1-2 vocab moi sau moi doan de giu do kho chat luong cao."
+                    : "Luu 1-2 vocab quan trong vao My Words de bien cau chuyen thanh mot phien hoc that su."}
+                </StoryInfoCard>
                 <Link to="/quiz">
                   <Button className="w-full rounded-2xl bg-sky-500 text-white hover:bg-sky-400">
                     Qua Quiz tong hop

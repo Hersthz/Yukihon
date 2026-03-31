@@ -1,16 +1,23 @@
+export type StoryDifficultyLevel = "EASY" | "STANDARD" | "HARD";
+
 export interface StoryCheckpointOption {
   id: string;
   label: string;
   nextSegmentId?: string;
+  nextSegmentIdByDifficulty?: Partial<Record<StoryDifficultyLevel, string>>;
+  difficultyImpact?: "EASE_UP" | "EASE_DOWN" | "NEUTRAL";
   response?: string;
 }
 
 export interface StoryCheckpoint {
   mode?: "quiz" | "branch";
   question: string;
+  questionByDifficulty?: Partial<Record<StoryDifficultyLevel, string>>;
   options: StoryCheckpointOption[];
+  optionsByDifficulty?: Partial<Record<StoryDifficultyLevel, StoryCheckpointOption[]>>;
   correctOptionId?: string;
   explanation: string;
+  explanationByDifficulty?: Partial<Record<StoryDifficultyLevel, string>>;
 }
 
 export interface StoryGrammarNote {
@@ -25,9 +32,16 @@ export interface StorySegment {
   sceneHint: string;
   japaneseText: string;
   translation: string;
+  translationByDifficulty?: Partial<Record<StoryDifficultyLevel, string>>;
   vocabQueries: string[];
   grammar: StoryGrammarNote[];
   checkpoint: StoryCheckpoint;
+  adaptiveRoutes?: {
+    onCorrectNextSegmentId?: string;
+    onWrongNextSegmentId?: string;
+    onCorrectByDifficulty?: Partial<Record<StoryDifficultyLevel, string>>;
+    onWrongByDifficulty?: Partial<Record<StoryDifficultyLevel, string>>;
+  };
   nextSegmentId?: string;
 }
 
@@ -98,6 +112,10 @@ export const storyModeStories: StoryModeStory[] = [
         ],
         checkpoint: {
           question: "Trong cau nay, Misaki ghe vao thu vien vao luc nao?",
+          questionByDifficulty: {
+            EASY: "Goi y: nhin vao cum 〜前に. Misaki ghe vao thu vien vao luc nao?",
+            HARD: "Cum nao trong cau quy dinh thu tu thoi gian chinh xac cua hanh dong ghe thu vien?",
+          },
           options: [
             { id: "a", label: "Sau khi tan hoc" },
             { id: "b", label: "Truoc khi den truong" },
@@ -105,6 +123,42 @@ export const storyModeStories: StoryModeStory[] = [
           ],
           correctOptionId: "b",
           explanation: "Cum 「学校へ行く前に」co nghia la truoc khi di den truong.",
+          explanationByDifficulty: {
+            EASY: "Dung roi. 「前に」la truoc khi, nen Misaki ghe thu vien truoc khi den truong.",
+            HARD: "「前に」thiet lap thu tu thoi gian: hanh dong ghe thu vien xay ra truoc su kien den truong.",
+          },
+        },
+        adaptiveRoutes: {
+          onWrongNextSegmentId: "winter-library-2-review",
+        },
+        nextSegmentId: "winter-library-3",
+      },
+      {
+        id: "winter-library-2-review",
+        title: "Doan 2.1 - Review nhanh",
+        sceneHint: "On lai truoc khi di tiep",
+        japaneseText: "先生は黒板に「学校へ行く前に、朝ごはんを食べます」と書いてくれました。",
+        translation: "Giáo viên viết lên bảng: 'Trước khi đi học, em ăn sáng.'",
+        vocabQueries: ["黒板", "朝ごはん", "食べる"],
+        grammar: [
+          {
+            pattern: "〜前に",
+            title: "On lai thu tu thoi gian",
+            explanation: "Phan A + 前に + phan B co nghia la B dien ra truoc A.",
+          },
+        ],
+        checkpoint: {
+          question: "Trong cau mau, hanh dong nao xay ra truoc?",
+          questionByDifficulty: {
+            EASY: "Goi y: tu khoa la 朝ごはん. Hanh dong nao xay ra truoc?",
+          },
+          options: [
+            { id: "a", label: "Di hoc truoc" },
+            { id: "b", label: "An sang truoc" },
+            { id: "c", label: "Hai hanh dong dong thoi" },
+          ],
+          correctOptionId: "b",
+          explanation: "Vi co 「学校へ行く前に」nen an sang xay ra truoc khi di hoc.",
         },
         nextSegmentId: "winter-library-3",
       },
@@ -124,13 +178,67 @@ export const storyModeStories: StoryModeStory[] = [
         ],
         checkpoint: {
           question: "Mau nao dien ta du dinh cua nguoi noi?",
+          questionByDifficulty: {
+            EASY: "Goi y: hay tim cum ket thuc bang つもりです. Dap an nao dung?",
+            HARD: "Trong cau nay, marker nao bieu thi y dinh da duoc lap truoc do, khong phai hanh dong ngau hung?",
+          },
           options: [
             { id: "a", label: "借りて" },
             { id: "b", label: "短い" },
             { id: "c", label: "書くつもりです" },
           ],
+          optionsByDifficulty: {
+            HARD: [
+              { id: "a", label: "借りて" },
+              { id: "b", label: "短い" },
+              { id: "c", label: "書くつもりです" },
+              { id: "d", label: "日本語で" },
+            ],
+          },
           correctOptionId: "c",
           explanation: "「書くつもりです」co nghia la du dinh viet, dien ta ke hoach sap lam.",
+          explanationByDifficulty: {
+            HARD: "「つもりです」nhan manh mot ke hoach da co chu dich. Cac thanh phan con lai khong tao nghia y dinh.",
+          },
+        },
+        adaptiveRoutes: {
+          onCorrectByDifficulty: {
+            HARD: "winter-library-3-challenge",
+          },
+        },
+        nextSegmentId: "winter-library-4",
+      },
+      {
+        id: "winter-library-3-challenge",
+        title: "Doan 3.1 - Challenge",
+        sceneHint: "Tang do kho theo nhip hoc",
+        japaneseText: "時間が少なくても、毎日二、三文だけでも書き続けるつもりです。",
+        translation: "Dù ít thời gian, cô ấy vẫn dự định tiếp tục viết mỗi ngày chỉ 2-3 câu.",
+        translationByDifficulty: {
+          HARD: "Doc khong can ban dich: tap trung vao cum 書き続けるつもりです.",
+        },
+        vocabQueries: ["時間", "書き続ける", "毎日"],
+        grammar: [
+          {
+            pattern: "〜続ける",
+            title: "Tiep tuc lam gi",
+            explanation: "Ghep dong tu dang masu bo ます + 続ける de nhan manh hanh dong duy tri lien tuc.",
+          },
+          {
+            pattern: "〜つもりです",
+            title: "Y dinh ro rang",
+            explanation: "Khi ket hop voi 続ける, y dinh mang tinh cam ket dai han hon.",
+          },
+        ],
+        checkpoint: {
+          question: "Cum nao trong cau the hien cam ket tiep tuc lau dai?",
+          options: [
+            { id: "a", label: "時間が少なくても" },
+            { id: "b", label: "二、三文だけでも" },
+            { id: "c", label: "書き続けるつもりです" },
+          ],
+          correctOptionId: "c",
+          explanation: "「続ける」+「つもりです」ket hop thanh mot y dinh co tinh ben bi va duy tri deu dan.",
         },
         nextSegmentId: "winter-library-4",
       },
