@@ -1,4 +1,4 @@
-import { type ElementType, useState } from "react";
+import { type ElementType, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
+import { useRealtimeChat } from "@/hooks/community/useRealtimeChat";
 
 type NavItem = {
   label: string;
@@ -100,16 +101,23 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { canAccessCreatorMode, isAdmin } = useAuth();
+  const { canAccessCreatorMode, isAdmin, isAuthenticated, user } = useAuth();
 
-  const user = (() => {
-    try {
-      const raw = localStorage.getItem("yukihon_user");
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
+  const onCommunityPage = isItemActive(location.pathname, "/community");
+
+  const { unreadCount, markRead } = useRealtimeChat({
+    roomId: "general",
+    enabled: isAuthenticated && !onCommunityPage,
+    currentUserId: user?.id,
+    loadHistory: false,
+    trackUnread: true,
+  });
+
+  useEffect(() => {
+    if (onCommunityPage) {
+      markRead();
     }
-  })();
+  }, [markRead, onCommunityPage]);
 
   const userName = user?.displayName || "Learner";
   const userInitial = userName.charAt(0).toUpperCase();
@@ -124,6 +132,8 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
   const renderItem = (item: NavItem, compact: boolean) => {
     const Icon = item.icon;
     const active = isItemActive(location.pathname, item.path);
+    const computedBadge =
+      item.path === "/community" && unreadCount > 0 ? (unreadCount > 99 ? "99+" : String(unreadCount)) : item.badge;
 
     return (
       <Link
@@ -153,9 +163,16 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
 
         {!compact && (
           <div className="flex items-center gap-2">
-            {item.badge && (
-              <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-500">
-                {item.badge}
+            {computedBadge && (
+              <span
+                className={cn(
+                  "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em]",
+                  item.path === "/community" && unreadCount > 0
+                    ? "bg-rose-500/15 text-rose-500"
+                    : "bg-amber-500/15 text-amber-500"
+                )}
+              >
+                {computedBadge}
               </span>
             )}
             <ChevronRight className={cn("h-4 w-4", active ? "text-primary" : "text-muted-foreground")} />

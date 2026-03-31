@@ -34,6 +34,20 @@ export interface ChatMessage {
   createdAt: string;
 }
 
+export interface ChatTypingEvent {
+  roomId: string;
+  userId: number;
+  userDisplayName: string;
+  typing: boolean;
+  createdAt: string;
+}
+
+export interface ChatSocketError {
+  code: "RATE_LIMIT" | "MODERATION" | "UNAUTHORIZED" | "VALIDATION";
+  message: string;
+  createdAt: string;
+}
+
 export interface PagedPosts {
   content: Post[];
   totalPages: number;
