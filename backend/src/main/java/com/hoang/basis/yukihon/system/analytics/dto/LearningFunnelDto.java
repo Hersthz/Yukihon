@@ -22,6 +22,7 @@ public class LearningFunnelDto {
     private BigDecimal overallCompletionRate;
     private BigDecimal overallAbandonmentRate;
     private BigDecimal overallQuizRecoveryRate;
+    private List<LearningFunnelDailyPointDto> dailyTrend;
     private List<LearningFunnelItemDto> topRetainedContent;
     private List<LearningFunnelItemDto> contentBreakdown;
 }

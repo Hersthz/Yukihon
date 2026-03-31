@@ -12,6 +12,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import LearningFunnelTrendChart from "@/components/admin/LearningFunnelTrendChart";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import WinterNightBackground from "@/components/WinterNightBackground";
@@ -314,6 +315,8 @@ const AdminDashboard = () => {
                       <p className="text-xs text-cyan-400">{formatPercent(funnel.overallQuizRecoveryRate)} corrected after wrong</p>
                     </div>
                   </div>
+
+                  <LearningFunnelTrendChart dailyTrend={funnel.dailyTrend} />
 
                   <div className="rounded-lg border border-border/60 overflow-hidden">
                     <Table>

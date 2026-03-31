@@ -36,6 +36,19 @@ export interface LearningFunnelItem {
   lastEventAt?: string | null;
 }
 
+export interface LearningFunnelDailyPoint {
+  date: string;
+  startedCount: number;
+  completedCount: number;
+  abandonedCount: number;
+  quizWrongCount: number;
+  quizCorrectedCount: number;
+  completionRate: number;
+  abandonmentRate: number;
+  quizRecoveryRate: number;
+  retentionScore: number;
+}
+
 export interface LearningFunnelResponse {
   windowDays: number;
   contentType: LearningContentType;
@@ -50,6 +63,7 @@ export interface LearningFunnelResponse {
   overallCompletionRate: number;
   overallAbandonmentRate: number;
   overallQuizRecoveryRate: number;
+  dailyTrend: LearningFunnelDailyPoint[];
   topRetainedContent: LearningFunnelItem[];
   contentBreakdown: LearningFunnelItem[];
 }

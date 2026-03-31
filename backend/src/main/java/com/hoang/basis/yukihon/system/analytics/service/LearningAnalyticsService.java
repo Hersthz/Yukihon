@@ -3,11 +3,13 @@ package com.hoang.basis.yukihon.system.analytics.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hoang.basis.yukihon.system.analytics.dto.LearningAnalyticsEventRequest;
+import com.hoang.basis.yukihon.system.analytics.dto.LearningFunnelDailyPointDto;
 import com.hoang.basis.yukihon.system.analytics.dto.LearningFunnelDto;
 import com.hoang.basis.yukihon.system.analytics.dto.LearningFunnelItemDto;
 import com.hoang.basis.yukihon.system.analytics.entity.LearningAnalyticsEvent;
 import com.hoang.basis.yukihon.system.analytics.repository.LearningAnalyticsEventRepository;
 import com.hoang.basis.yukihon.system.analytics.repository.LearningFunnelAggregateProjection;
+import com.hoang.basis.yukihon.system.analytics.repository.LearningFunnelDailyTrendProjection;
 import com.hoang.basis.yukihon.system.lesson.repository.LessonRepository;
 import com.hoang.basis.yukihon.system.quiz.repository.QuizRepository;
 import lombok.RequiredArgsConstructor;
@@ -84,7 +86,20 @@ public class LearningAnalyticsService {
                 LearningAnalyticsEvent.EventType.QUIZ_CORRECT_AFTER_REVIEW
         );
 
+            List<LearningFunnelDailyTrendProjection> dailyAggregates = learningAnalyticsEventRepository.aggregateDailyTrend(
+                dateRangeFilter.getSince(),
+                dateRangeFilter.getUntil(),
+                filterType.name(),
+                normalizedJlptLevel,
+                LearningAnalyticsEvent.EventType.START_LEARNING.name(),
+                LearningAnalyticsEvent.EventType.COMPLETE_LESSON.name(),
+                LearningAnalyticsEvent.EventType.ABANDON_LESSON.name(),
+                LearningAnalyticsEvent.EventType.QUIZ_WRONG.name(),
+                LearningAnalyticsEvent.EventType.QUIZ_CORRECT_AFTER_REVIEW.name()
+            );
+
         Map<String, String> titleByKey = resolveTitles(aggregates);
+            List<LearningFunnelDailyPointDto> dailyTrend = buildDailyTrend(dailyAggregates, dateRangeFilter);
 
         List<LearningFunnelItemDto> breakdown = aggregates.stream()
                 .map(item -> toFunnelItem(item, titleByKey))
@@ -113,10 +128,65 @@ public class LearningAnalyticsService {
                 .overallCompletionRate(toPercent(totalCompleted, totalStarted))
                 .overallAbandonmentRate(toPercent(totalAbandoned, totalStarted))
                 .overallQuizRecoveryRate(toPercent(totalQuizCorrected, totalQuizWrong))
+                .dailyTrend(dailyTrend)
                 .topRetainedContent(breakdown.stream().limit(safeLimit).toList())
                 .contentBreakdown(breakdown)
                 .build();
     }
+
+            private List<LearningFunnelDailyPointDto> buildDailyTrend(
+                List<LearningFunnelDailyTrendProjection> dailyAggregates,
+                DateRangeFilter dateRangeFilter
+            ) {
+            Map<LocalDate, LearningFunnelDailyTrendProjection> projectionByDate = dailyAggregates.stream()
+                .filter(item -> item.getEventDate() != null)
+                .collect(Collectors.toMap(
+                    item -> item.getEventDate().toLocalDate(),
+                    item -> item,
+                    (left, right) -> left
+                ));
+
+            LocalDate startDate = dateRangeFilter.getEffectiveStartDate();
+            LocalDate endDate = dateRangeFilter.getEffectiveEndDate();
+
+            if (startDate == null || endDate == null) {
+                return List.of();
+            }
+
+            return startDate.datesUntil(endDate.plusDays(1))
+                .map(date -> {
+                    LearningFunnelDailyTrendProjection projection = projectionByDate.get(date);
+
+                    long started = projection == null ? 0L : safeLong(projection.getStartedCount());
+                    long completed = projection == null ? 0L : safeLong(projection.getCompletedCount());
+                    long abandoned = projection == null ? 0L : safeLong(projection.getAbandonedCount());
+                    long quizWrong = projection == null ? 0L : safeLong(projection.getQuizWrongCount());
+                    long quizCorrected = projection == null ? 0L : safeLong(projection.getQuizCorrectedCount());
+
+                    BigDecimal completionRate = toPercent(completed, started);
+                    BigDecimal abandonmentRate = toPercent(abandoned, started);
+                    BigDecimal quizRecoveryRate = toPercent(quizCorrected, quizWrong);
+                    BigDecimal retentionScore = completionRate
+                        .subtract(abandonmentRate.multiply(BigDecimal.valueOf(0.60)))
+                        .add(quizRecoveryRate.multiply(BigDecimal.valueOf(0.40)))
+                        .max(BigDecimal.ZERO)
+                        .setScale(2, RoundingMode.HALF_UP);
+
+                    return LearningFunnelDailyPointDto.builder()
+                        .date(date.toString())
+                        .startedCount(started)
+                        .completedCount(completed)
+                        .abandonedCount(abandoned)
+                        .quizWrongCount(quizWrong)
+                        .quizCorrectedCount(quizCorrected)
+                        .completionRate(completionRate)
+                        .abandonmentRate(abandonmentRate)
+                        .quizRecoveryRate(quizRecoveryRate)
+                        .retentionScore(retentionScore)
+                        .build();
+                })
+                .toList();
+            }
 
     private LearningFunnelItemDto toFunnelItem(
             LearningFunnelAggregateProjection aggregate,
@@ -232,8 +302,11 @@ public class LearningAnalyticsService {
         LocalDate parsedEnd = parseDate(endDate, "endDate");
 
         if (parsedStart == null && parsedEnd == null) {
-            Instant since = Instant.now().minus(fallbackDays, ChronoUnit.DAYS);
-            return new DateRangeFilter(since, null, fallbackDays, null, null);
+            LocalDate effectiveEnd = LocalDate.now(ZoneOffset.UTC);
+            LocalDate effectiveStart = effectiveEnd.minusDays(fallbackDays - 1L);
+            Instant since = effectiveStart.atStartOfDay(ZoneOffset.UTC).toInstant();
+            Instant until = effectiveEnd.plusDays(1L).atStartOfDay(ZoneOffset.UTC).toInstant();
+            return new DateRangeFilter(since, until, fallbackDays, effectiveStart.toString(), effectiveEnd.toString(), effectiveStart, effectiveEnd);
         }
 
         LocalDate effectiveStart = parsedStart != null ? parsedStart : parsedEnd;
@@ -253,7 +326,7 @@ public class LearningAnalyticsService {
         Instant until = effectiveEnd.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant();
         int windowDays = (int) ChronoUnit.DAYS.between(effectiveStart, effectiveEnd) + 1;
 
-        return new DateRangeFilter(since, until, windowDays, effectiveStart.toString(), effectiveEnd.toString());
+        return new DateRangeFilter(since, until, windowDays, effectiveStart.toString(), effectiveEnd.toString(), effectiveStart, effectiveEnd);
     }
 
     private LocalDate parseDate(String rawValue, String fieldName) {
@@ -315,13 +388,25 @@ public class LearningAnalyticsService {
         private final int windowDays;
         private final String startDate;
         private final String endDate;
+        private final LocalDate effectiveStartDate;
+        private final LocalDate effectiveEndDate;
 
-        private DateRangeFilter(Instant since, Instant until, int windowDays, String startDate, String endDate) {
+        private DateRangeFilter(
+                Instant since,
+                Instant until,
+                int windowDays,
+                String startDate,
+                String endDate,
+                LocalDate effectiveStartDate,
+                LocalDate effectiveEndDate
+        ) {
             this.since = since;
             this.until = until;
             this.windowDays = windowDays;
             this.startDate = startDate;
             this.endDate = endDate;
+            this.effectiveStartDate = effectiveStartDate;
+            this.effectiveEndDate = effectiveEndDate;
         }
 
         private Instant getSince() {
@@ -342,6 +427,14 @@ public class LearningAnalyticsService {
 
         private String getEndDate() {
             return endDate;
+        }
+
+        private LocalDate getEffectiveStartDate() {
+            return effectiveStartDate;
+        }
+
+        private LocalDate getEffectiveEndDate() {
+            return effectiveEndDate;
         }
     }
 }
