@@ -9,6 +9,7 @@ import {
   TrendingUp,
   Shield,
   Activity,
+  Sparkles,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import WinterNightBackground from "@/components/WinterNightBackground";
@@ -203,15 +204,15 @@ const AdminDashboard = () => {
               </Link>
 
               <Link
-                to="/admin/analytics"
+                to="/admin/creator-mode"
                 className="flex items-center gap-3 p-4 rounded-lg bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/30 hover:border-green-500/50 transition-all group"
               >
                 <div className="p-2 rounded-lg bg-green-500/20 group-hover:bg-green-500/30 transition-colors">
-                  <TrendingUp className="w-5 h-5 text-green-400" />
+                  <Sparkles className="w-5 h-5 text-green-400" />
                 </div>
                 <div>
-                  <div className="font-semibold">Analytics</div>
-                  <div className="text-xs text-muted-foreground">View platform insights</div>
+                  <div className="font-semibold">Creator Mode</div>
+                  <div className="text-xs text-muted-foreground">Build and review drag-drop content</div>
                 </div>
               </Link>
             </CardContent>

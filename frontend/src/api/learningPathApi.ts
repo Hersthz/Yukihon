@@ -13,9 +13,23 @@ export interface LearningPathLesson {
   recommendationReason: string;
 }
 
+export interface LearningDeadlinePlan {
+  hasDeadline: boolean;
+  planStatus: "NO_DEADLINE" | "ON_TRACK" | "AT_RISK" | "OFF_TRACK" | "COMPLETED";
+  deadlineDate: string | null;
+  projectedCompletionDate: string | null;
+  daysRemaining: number;
+  remainingLessons: number;
+  remainingEstimatedMinutes: number;
+  requiredMinutesPerDay: number;
+  requiredLessonsPerWeek: number;
+  insight: string;
+}
+
 export interface LearningPathResponse {
   targetJlptLevel: string;
   dailyGoalMinutes: number;
+  deadlinePlan: LearningDeadlinePlan;
   totalLessonsInTrack: number;
   completedLessonsInTrack: number;
   inProgressLessons: number;

@@ -14,6 +14,7 @@ import java.util.List;
 public class LearningPathDto {
     private String targetJlptLevel;
     private int dailyGoalMinutes;
+    private LearningDeadlinePlanDto deadlinePlan;
     private int totalLessonsInTrack;
     private int completedLessonsInTrack;
     private int inProgressLessons;

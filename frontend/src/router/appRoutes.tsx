@@ -1,9 +1,11 @@
 import AdminRoute from "@/components/AdminRoute";
+import CreatorModeRoute from "@/components/CreatorModeRoute";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { Suspense, lazy } from "react";
 import { Route, Routes } from "react-router-dom";
 
 const AdminContent = lazy(() => import("@/pages/AdminContent"));
+const AdminCreatorMode = lazy(() => import("@/pages/AdminCreatorMode"));
 const AdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
 const AdminUsers = lazy(() => import("@/pages/AdminUsers"));
 const Auth = lazy(() => import("@/pages/Auth"));
@@ -60,6 +62,7 @@ export const AppRoutes = () => {
         <Route path="/community" element={withProtectedRoute(<Community />)} />
         <Route path="/my-words" element={withProtectedRoute(<MyWords />)} />
         <Route path="/settings" element={withProtectedRoute(<Settings />)} />
+        <Route path="/admin/creator-mode" element={withProtectedRoute(<CreatorModeRoute><AdminCreatorMode /></CreatorModeRoute>)} />
 
         <Route element={<AdminRoute />}>
           <Route path="/admin" element={<AdminDashboard />} />

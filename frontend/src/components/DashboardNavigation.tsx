@@ -91,6 +91,7 @@ const PAGE_META: Record<string, string> = {
   "/my-words": "Từ của tôi",
   "/profile": "Hồ sơ",
   "/settings": "Cài đặt",
+  "/admin/creator-mode": "Creator Studio",
 };
 
 const isItemActive = (pathname: string, itemPath: string) => pathname === itemPath || pathname.startsWith(`${itemPath}/`);
@@ -99,7 +100,7 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { isAdmin } = useAuth();
+  const { canAccessCreatorMode, isAdmin } = useAuth();
 
   const user = (() => {
     try {
@@ -215,6 +216,22 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
           {!compact && <p className="px-3 pb-2 text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">Cá nhân</p>}
           <div className="space-y-1.5">
             {SECONDARY_ITEMS.map((item) => renderItem(item, compact))}
+            {canAccessCreatorMode() && (
+              <Link
+                title={compact ? "Creator Studio" : undefined}
+                to="/admin/creator-mode"
+                onClick={() => setMobileOpen(false)}
+                className={cn(
+                  "group flex items-center rounded-2xl text-emerald-500 transition-all duration-200 hover:bg-emerald-500/10 border border-transparent",
+                  compact ? "justify-center px-2 py-2.5" : "gap-3 px-3 py-2.5"
+                )}
+              >
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
+                  <Sparkles className="h-4 w-4" />
+                </div>
+                {!compact && <span className="text-sm font-medium">Creator studio</span>}
+              </Link>
+            )}
             {isAdmin() && (
               <Link
                 title={compact ? "Admin" : undefined}
