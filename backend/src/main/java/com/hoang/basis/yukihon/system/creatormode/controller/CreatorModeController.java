@@ -50,8 +50,12 @@ public class CreatorModeController {
 
     @GetMapping("/templates/{id}/audit-timeline")
     @PreAuthorize("hasAnyAuthority('CONTENT_READ','CONTENT_MANAGE','CONTENT_REVIEW')")
-    public ResponseEntity<List<CreatorTemplateAuditEventDto>> getTemplateAuditTimeline(@PathVariable Long id) {
-        return ResponseEntity.ok(creatorModeService.getTemplateAuditTimeline(id));
+    public ResponseEntity<List<CreatorTemplateAuditEventDto>> getTemplateAuditTimeline(
+            @PathVariable Long id,
+            @RequestParam(required = false) String stage,
+            @RequestParam(required = false) String actor
+    ) {
+        return ResponseEntity.ok(creatorModeService.getTemplateAuditTimeline(id, stage, actor));
     }
 
     @PostMapping("/templates")

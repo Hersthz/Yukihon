@@ -34,6 +34,7 @@ import java.util.Set;
 public class CreatorModeService {
 
     private static final Set<String> VALID_JLPT_LEVELS = Set.of("N5", "N4", "N3", "N2", "N1");
+    private static final String SYSTEM_ACTOR_TOKEN = "SYSTEM";
 
     private final CreatorTemplateRepository creatorTemplateRepository;
     private final CreatorTemplateAuditEventRepository creatorTemplateAuditEventRepository;
@@ -65,16 +66,37 @@ public class CreatorModeService {
         return CreatorTemplateDto.fromEntity(template);
     }
 
-        @Transactional(readOnly = true)
-        public List<CreatorTemplateAuditEventDto> getTemplateAuditTimeline(Long id) {
+    @Transactional(readOnly = true)
+    public List<CreatorTemplateAuditEventDto> getTemplateAuditTimeline(Long id, String stage, String actor) {
         creatorTemplateRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Creator template not found with id: " + id));
 
-        return creatorTemplateAuditEventRepository.findByTemplateIdOrderByCreatedAtAscIdAsc(id)
+        CreatorTemplateAuditEvent.AuditStage stageFilter = parseAuditStage(stage);
+        AuditActorFilter actorFilter = parseAuditActorFilter(actor);
+
+        List<CreatorTemplateAuditEvent> events;
+        if (stageFilter != null && actorFilter.type() == AuditActorType.SYSTEM) {
+            events = creatorTemplateAuditEventRepository
+                    .findByTemplateIdAndStageAndActorUserIdIsNullOrderByCreatedAtAscIdAsc(id, stageFilter);
+        } else if (stageFilter != null && actorFilter.type() == AuditActorType.USER) {
+            events = creatorTemplateAuditEventRepository
+                    .findByTemplateIdAndStageAndActorUserIdOrderByCreatedAtAscIdAsc(id, stageFilter, actorFilter.actorUserId());
+        } else if (stageFilter != null) {
+            events = creatorTemplateAuditEventRepository.findByTemplateIdAndStageOrderByCreatedAtAscIdAsc(id, stageFilter);
+        } else if (actorFilter.type() == AuditActorType.SYSTEM) {
+            events = creatorTemplateAuditEventRepository.findByTemplateIdAndActorUserIdIsNullOrderByCreatedAtAscIdAsc(id);
+        } else if (actorFilter.type() == AuditActorType.USER) {
+            events = creatorTemplateAuditEventRepository
+                    .findByTemplateIdAndActorUserIdOrderByCreatedAtAscIdAsc(id, actorFilter.actorUserId());
+        } else {
+            events = creatorTemplateAuditEventRepository.findByTemplateIdOrderByCreatedAtAscIdAsc(id);
+        }
+
+        return events
             .stream()
             .map(CreatorTemplateAuditEventDto::fromEntity)
             .toList();
-        }
+    }
 
     @Transactional(readOnly = true)
     public List<CreatorTemplateDto> getReviewerQueue() {
@@ -371,6 +393,43 @@ public class CreatorModeService {
         }
     }
 
+    private CreatorTemplateAuditEvent.AuditStage parseAuditStage(String rawStage) {
+        if (rawStage == null || rawStage.isBlank()) {
+            return null;
+        }
+
+        try {
+            return CreatorTemplateAuditEvent.AuditStage.valueOf(rawStage.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException("Invalid audit stage: " + rawStage);
+        }
+    }
+
+    private AuditActorFilter parseAuditActorFilter(String rawActor) {
+        if (rawActor == null || rawActor.isBlank()) {
+            return new AuditActorFilter(AuditActorType.ANY, null);
+        }
+
+        String normalized = rawActor.trim();
+        if (SYSTEM_ACTOR_TOKEN.equalsIgnoreCase(normalized) || "actor:system".equalsIgnoreCase(normalized)) {
+            return new AuditActorFilter(AuditActorType.SYSTEM, null);
+        }
+
+        if (normalized.toLowerCase(Locale.ROOT).startsWith("actor:")) {
+            normalized = normalized.substring("actor:".length());
+        }
+
+        try {
+            long actorUserId = Long.parseLong(normalized);
+            if (actorUserId <= 0) {
+                throw new IllegalArgumentException("Actor user id must be positive");
+            }
+            return new AuditActorFilter(AuditActorType.USER, actorUserId);
+        } catch (NumberFormatException ex) {
+            throw new IllegalArgumentException("Invalid actor filter: " + rawActor);
+        }
+    }
+
     private String normalizeJlptLevel(String rawLevel) {
         if (rawLevel == null || rawLevel.isBlank()) {
             throw new IllegalArgumentException("JLPT level is required");
@@ -426,5 +485,14 @@ public class CreatorModeService {
                 .note(trimToNull(note))
                 .build();
         creatorTemplateAuditEventRepository.save(event);
+    }
+
+    private enum AuditActorType {
+        ANY,
+        SYSTEM,
+        USER
+    }
+
+    private record AuditActorFilter(AuditActorType type, Long actorUserId) {
     }
 }

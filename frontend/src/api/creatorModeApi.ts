@@ -34,6 +34,11 @@ export interface CreatorTemplate {
 export type CreatorAuditStage = "AUTHORING" | "REVIEW_SUBMISSION" | "REVIEWER_REVIEW" | "ADMIN_APPROVAL";
 export type CreatorAuditAction = "CREATED" | "UPDATED_DRAFT" | "SUBMITTED_FOR_REVIEW" | "REVIEW_DECISION" | "ADMIN_DECISION";
 
+export interface CreatorTemplateAuditTimelineFilters {
+  stage?: CreatorAuditStage;
+  actor?: string;
+}
+
 export interface CreatorTemplateAuditEvent {
   id: number;
   templateId: number;
@@ -112,6 +117,23 @@ const buildQuery = (params: { status?: CreatorTemplateStatus; contentType?: Crea
   return encoded ? `?${encoded}` : "";
 };
 
+const buildAuditTimelineQuery = (filters?: CreatorTemplateAuditTimelineFilters) => {
+  if (!filters) {
+    return "";
+  }
+
+  const query = new URLSearchParams();
+  if (filters.stage) {
+    query.set("stage", filters.stage);
+  }
+  if (filters.actor) {
+    query.set("actor", filters.actor);
+  }
+
+  const encoded = query.toString();
+  return encoded ? `?${encoded}` : "";
+};
+
 export const creatorModeApi = {
   getTemplates: (params: { status?: CreatorTemplateStatus; contentType?: CreatorContentType } = {}) =>
     apiClient.request<CreatorTemplate[]>(`/api/admin/creator-mode/templates${buildQuery(params)}`),
@@ -149,8 +171,10 @@ export const creatorModeApi = {
     apiClient.request<void>(`/api/admin/creator-mode/templates/${id}`, {
       method: "DELETE",
     }),
-  getTemplateAuditTimeline: (id: number) =>
-    apiClient.request<CreatorTemplateAuditEvent[]>(`/api/admin/creator-mode/templates/${id}/audit-timeline`),
+  getTemplateAuditTimeline: (id: number, filters?: CreatorTemplateAuditTimelineFilters) =>
+    apiClient.request<CreatorTemplateAuditEvent[]>(
+      `/api/admin/creator-mode/templates/${id}/audit-timeline${buildAuditTimelineQuery(filters)}`
+    ),
   getReviewerQueue: () => apiClient.request<CreatorTemplate[]>("/api/admin/creator-mode/review-queue/reviewer"),
   getAdminQueue: () => apiClient.request<CreatorTemplate[]>("/api/admin/creator-mode/review-queue/admin"),
   getAnalytics: () => apiClient.request<CreatorAnalytics>("/api/admin/creator-mode/analytics"),

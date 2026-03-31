@@ -1,11 +1,17 @@
-import { Clock3, UserRound } from "lucide-react";
-import type { CreatorTemplateAuditEvent } from "@/api";
+import { useMemo } from "react";
+import { Clock3, FilterX, UserRound } from "lucide-react";
+import type { CreatorAuditStage, CreatorTemplateAuditEvent } from "@/api";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface CreatorAuditTimelineProps {
   events: CreatorTemplateAuditEvent[];
   loading?: boolean;
   emptyMessage?: string;
+  stageFilter?: CreatorAuditStage | "ALL";
+  actorFilter?: string;
+  onFiltersChange?: (filters: { stageFilter: CreatorAuditStage | "ALL"; actorFilter: string }) => void;
 }
 
 const STAGE_LABELS: Record<CreatorTemplateAuditEvent["stage"], string> = {
@@ -14,6 +20,11 @@ const STAGE_LABELS: Record<CreatorTemplateAuditEvent["stage"], string> = {
   REVIEWER_REVIEW: "Reviewer Review",
   ADMIN_APPROVAL: "Admin Approval",
 };
+
+interface ActorOption {
+  value: string;
+  label: string;
+}
 
 const formatEventTitle = (event: CreatorTemplateAuditEvent): string => {
   switch (event.action) {
@@ -47,7 +58,60 @@ const CreatorAuditTimeline = ({
   events,
   loading = false,
   emptyMessage = "No audit events yet.",
+  stageFilter = "ALL",
+  actorFilter = "ALL",
+  onFiltersChange,
 }: CreatorAuditTimelineProps) => {
+  const actorOptions = useMemo<ActorOption[]>(() => {
+    const seen = new Set<string>();
+    const options: ActorOption[] = [];
+
+    events.forEach((event) => {
+      const key = event.actorUserId != null ? String(event.actorUserId) : "SYSTEM";
+      if (seen.has(key)) {
+        return;
+      }
+      seen.add(key);
+
+      options.push({
+        value: key,
+        label: event.actorDisplayName ?? "System",
+      });
+    });
+
+    if (actorFilter !== "ALL" && !seen.has(actorFilter)) {
+      options.push({
+        value: actorFilter,
+        label: actorFilter === "SYSTEM" ? "System" : `User #${actorFilter}`,
+      });
+    }
+
+    return options.sort((a, b) => a.label.localeCompare(b.label));
+  }, [actorFilter, events]);
+
+  const hasActiveFilters = stageFilter !== "ALL" || actorFilter !== "ALL";
+
+  const handleStageFilterChange = (value: CreatorTemplateAuditEvent["stage"] | "ALL") => {
+    onFiltersChange?.({
+      stageFilter: value,
+      actorFilter,
+    });
+  };
+
+  const handleActorFilterChange = (value: string) => {
+    onFiltersChange?.({
+      stageFilter,
+      actorFilter: value,
+    });
+  };
+
+  const handleClearFilters = () => {
+    onFiltersChange?.({
+      stageFilter: "ALL",
+      actorFilter: "ALL",
+    });
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-28 items-center justify-center text-sm text-muted-foreground">
@@ -65,7 +129,56 @@ const CreatorAuditTimeline = ({
   }
 
   return (
-    <div className="max-h-80 space-y-3 overflow-y-auto pr-1">
+    <div className="space-y-3">
+      <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+        <Select value={stageFilter} onValueChange={(value) => handleStageFilterChange(value as CreatorTemplateAuditEvent["stage"] | "ALL")}>
+          <SelectTrigger className="h-8 bg-background/60">
+            <SelectValue placeholder="Filter by stage" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">All stages</SelectItem>
+            {(Object.keys(STAGE_LABELS) as CreatorTemplateAuditEvent["stage"][]).map((stage) => (
+              <SelectItem key={stage} value={stage}>
+                {STAGE_LABELS[stage]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={actorFilter} onValueChange={handleActorFilterChange}>
+          <SelectTrigger className="h-8 bg-background/60">
+            <SelectValue placeholder="Filter by actor" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">All actors</SelectItem>
+            {actorOptions.map((actor) => (
+              <SelectItem key={actor.value} value={actor.value}>
+                {actor.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-8"
+          onClick={handleClearFilters}
+          disabled={!hasActiveFilters}
+        >
+          <FilterX className="mr-1 h-3.5 w-3.5" />
+          Clear
+        </Button>
+      </div>
+
+      {events.length === 0 && (
+        <div className="rounded-lg border border-dashed border-border/80 p-4 text-sm text-muted-foreground">
+          {hasActiveFilters ? "No events match current filters." : emptyMessage}
+        </div>
+      )}
+
+      <div className="max-h-80 space-y-3 overflow-y-auto pr-1">
       {events.map((event, index) => (
         <div key={event.id} className="relative rounded-lg border border-border/70 bg-background/40 p-3">
           {index < events.length - 1 && (
@@ -102,6 +215,7 @@ const CreatorAuditTimeline = ({
           </div>
         </div>
       ))}
+      </div>
     </div>
   );
 };

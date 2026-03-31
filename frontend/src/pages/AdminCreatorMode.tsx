@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { BarChart3, CheckCircle2, ClipboardCheck, PlusCircle, Sparkles, XCircle } from "lucide-react";
 import {
   creatorModeApi,
+  type CreatorAuditStage,
   type CreatorAnalytics,
   type CreatorContentType,
   type CreatorTemplate,
@@ -43,6 +44,16 @@ interface EditorMeta {
   tags: string;
   estimatedMinutes: number;
 }
+
+interface AuditTimelineFilters {
+  stageFilter: CreatorAuditStage | "ALL";
+  actorFilter: string;
+}
+
+const DEFAULT_AUDIT_FILTERS: AuditTimelineFilters = {
+  stageFilter: "ALL",
+  actorFilter: "ALL",
+};
 
 const DEFAULT_EDITOR_META: EditorMeta = {
   title: "",
@@ -87,6 +98,7 @@ const AdminCreatorMode = () => {
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(blocks[0]?.id ?? null);
   const [reviewNotes, setReviewNotes] = useState<Record<number, string>>({});
   const [auditTimelineByTemplate, setAuditTimelineByTemplate] = useState<Record<number, CreatorTemplateAuditEvent[]>>({});
+  const [auditFiltersByTemplate, setAuditFiltersByTemplate] = useState<Record<number, AuditTimelineFilters>>({});
   const [loadingAuditTemplateId, setLoadingAuditTemplateId] = useState<number | null>(null);
   const [auditDialogTemplate, setAuditDialogTemplate] = useState<CreatorTemplate | null>(null);
 
@@ -127,17 +139,27 @@ const AdminCreatorMode = () => {
     setSelectedBlockId(parsed.blocks[0]?.id ?? null);
   }, []);
 
-  const loadTemplateTimeline = useCallback(async (templateId: number, forceReload = false) => {
-    if (!forceReload && auditTimelineByTemplate[templateId]) {
-      return;
+  const loadTemplateTimeline = useCallback(async (
+    templateId: number,
+    options?: {
+      filters?: AuditTimelineFilters;
     }
+  ) => {
+    const effectiveFilters = options?.filters ?? auditFiltersByTemplate[templateId] ?? DEFAULT_AUDIT_FILTERS;
 
     try {
       setLoadingAuditTemplateId(templateId);
-      const events = await creatorModeApi.getTemplateAuditTimeline(templateId);
+      const events = await creatorModeApi.getTemplateAuditTimeline(templateId, {
+        stage: effectiveFilters.stageFilter === "ALL" ? undefined : effectiveFilters.stageFilter,
+        actor: effectiveFilters.actorFilter === "ALL" ? undefined : effectiveFilters.actorFilter,
+      });
       setAuditTimelineByTemplate((previous) => ({
         ...previous,
         [templateId]: events,
+      }));
+      setAuditFiltersByTemplate((previous) => ({
+        ...previous,
+        [templateId]: effectiveFilters,
       }));
     } catch {
       toast({
@@ -148,7 +170,15 @@ const AdminCreatorMode = () => {
     } finally {
       setLoadingAuditTemplateId((current) => (current === templateId ? null : current));
     }
-  }, [auditTimelineByTemplate, toast]);
+  }, [auditFiltersByTemplate, toast]);
+
+  const handleAuditFiltersChange = useCallback((templateId: number, filters: AuditTimelineFilters) => {
+    setAuditFiltersByTemplate((previous) => ({
+      ...previous,
+      [templateId]: filters,
+    }));
+    void loadTemplateTimeline(templateId, { filters });
+  }, [loadTemplateTimeline]);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -251,7 +281,7 @@ const AdminCreatorMode = () => {
       setActiveTemplateId(saved.id);
       toast({ title: "Draft saved", description: "Creator template has been saved." });
       await loadData();
-      await loadTemplateTimeline(saved.id, true);
+      await loadTemplateTimeline(saved.id);
     } catch {
       toast({ title: "Save failed", description: "Could not save this creator draft.", variant: "destructive" });
     } finally {
@@ -273,7 +303,7 @@ const AdminCreatorMode = () => {
       await creatorModeApi.submitForReview(templateId);
       toast({ title: "Submitted", description: "Template is now in review queue." });
       await loadData();
-      await loadTemplateTimeline(templateId, true);
+      await loadTemplateTimeline(templateId);
     } catch {
       toast({ title: "Submit failed", description: "Could not submit template for review.", variant: "destructive" });
     }
@@ -287,7 +317,7 @@ const AdminCreatorMode = () => {
       });
       toast({ title: "Reviewer decision saved", description: `Template status changed to ${decision}.` });
       await loadData();
-      await loadTemplateTimeline(templateId, true);
+      await loadTemplateTimeline(templateId);
     } catch {
       toast({ title: "Reviewer action failed", description: "Could not update reviewer decision.", variant: "destructive" });
     }
@@ -301,7 +331,7 @@ const AdminCreatorMode = () => {
       });
       toast({ title: "Admin decision saved", description: `Template status changed to ${decision}.` });
       await loadData();
-      await loadTemplateTimeline(templateId, true);
+      await loadTemplateTimeline(templateId);
     } catch {
       toast({ title: "Admin action failed", description: "Could not update admin decision.", variant: "destructive" });
     }
@@ -555,7 +585,7 @@ const AdminCreatorMode = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => void loadTemplateTimeline(activeTemplateId, true)}
+                      onClick={() => void loadTemplateTimeline(activeTemplateId)}
                       disabled={loadingAuditTemplateId === activeTemplateId}
                     >
                       Refresh
@@ -566,6 +596,9 @@ const AdminCreatorMode = () => {
                       events={auditTimelineByTemplate[activeTemplateId] ?? []}
                       loading={loadingAuditTemplateId === activeTemplateId}
                       emptyMessage="No audit events for this template yet."
+                      stageFilter={(auditFiltersByTemplate[activeTemplateId] ?? DEFAULT_AUDIT_FILTERS).stageFilter}
+                      actorFilter={(auditFiltersByTemplate[activeTemplateId] ?? DEFAULT_AUDIT_FILTERS).actorFilter}
+                      onFiltersChange={(filters) => handleAuditFiltersChange(activeTemplateId, filters)}
                     />
                   </CardContent>
                 </Card>
@@ -661,6 +694,13 @@ const AdminCreatorMode = () => {
                   events={auditDialogTemplate ? (auditTimelineByTemplate[auditDialogTemplate.id] ?? []) : []}
                   loading={auditDialogTemplate ? loadingAuditTemplateId === auditDialogTemplate.id : false}
                   emptyMessage="No audit history found for this template."
+                  stageFilter={auditDialogTemplate ? (auditFiltersByTemplate[auditDialogTemplate.id] ?? DEFAULT_AUDIT_FILTERS).stageFilter : "ALL"}
+                  actorFilter={auditDialogTemplate ? (auditFiltersByTemplate[auditDialogTemplate.id] ?? DEFAULT_AUDIT_FILTERS).actorFilter : "ALL"}
+                  onFiltersChange={
+                    auditDialogTemplate
+                      ? (filters) => handleAuditFiltersChange(auditDialogTemplate.id, filters)
+                      : undefined
+                  }
                 />
               </DialogContent>
             </Dialog>
