@@ -232,7 +232,7 @@ const Community = () => {
           />
           <div className="space-y-4">
             <CommunityLeaderboard leaderboard={leaderboard} stats={stats} />
-            <CommunityRealtimeChat currentUserId={user?.id} />
+            <CommunityRealtimeChat currentUserId={user?.id} currentUserName={user?.displayName} />
           </div>
         </div>
 

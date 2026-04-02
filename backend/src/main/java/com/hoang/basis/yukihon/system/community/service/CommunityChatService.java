@@ -2,9 +2,11 @@ package com.hoang.basis.yukihon.system.community.service;
 
 import com.hoang.basis.yukihon.exception.ResourceNotFoundException;
 import com.hoang.basis.yukihon.system.community.dto.CommunityChatMessageDto;
+import com.hoang.basis.yukihon.system.community.dto.CommunityChatPresenceDto;
 import com.hoang.basis.yukihon.system.community.dto.CommunityChatSendRequest;
 import com.hoang.basis.yukihon.system.community.dto.CommunityChatTypingEventDto;
 import com.hoang.basis.yukihon.system.community.dto.CommunityChatTypingRequest;
+import com.hoang.basis.yukihon.system.community.exception.CommunityChatSocketException;
 import com.hoang.basis.yukihon.system.community.entity.CommunityChatMessage;
 import com.hoang.basis.yukihon.system.community.repository.CommunityChatMessageRepository;
 import com.hoang.basis.yukihon.system.user.entity.User;
@@ -23,6 +25,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.LinkedHashSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
@@ -72,12 +75,13 @@ public class CommunityChatService {
     @Transactional
     public CommunityChatMessageDto createMessage(String username, CommunityChatSendRequest request) {
         String normalizedRoomId = normalizeRoomId(request.getRoomId());
-        String normalizedContent = normalizeContent(request.getContent());
+        String clientMessageId = normalizeClientMessageId(request.getClientMessageId());
+        String normalizedContent = normalizeContent(request.getContent(), clientMessageId);
 
         User user = userRepository.findByEmail(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        assertWithinRateLimit(user.getId());
+        assertWithinRateLimit(user.getId(), clientMessageId);
 
         CommunityChatMessage savedMessage = chatMessageRepository.save(
                 CommunityChatMessage.builder()
@@ -87,7 +91,7 @@ public class CommunityChatService {
                         .build()
         );
 
-        return CommunityChatMessageDto.fromEntity(savedMessage);
+        return CommunityChatMessageDto.fromEntity(savedMessage, clientMessageId);
     }
 
     public CommunityChatTypingEventDto createTypingEvent(String username, CommunityChatTypingRequest request) {
@@ -101,6 +105,17 @@ public class CommunityChatService {
                 .userId(user.getId())
                 .userDisplayName(user.getDisplayName())
                 .typing(request.isTyping())
+                .createdAt(Instant.now())
+                .build();
+    }
+
+    public CommunityChatPresenceDto createPresenceSnapshot(String roomId, Map<String, String> sessionDisplayNames) {
+        LinkedHashSet<String> displayNames = new LinkedHashSet<>(sessionDisplayNames.values());
+
+        return CommunityChatPresenceDto.builder()
+                .roomId(normalizeRoomId(roomId))
+                .activeUsers(displayNames.size())
+                .activeDisplayNames(displayNames.stream().limit(5).toList())
                 .createdAt(Instant.now())
                 .build();
     }
@@ -125,31 +140,40 @@ public class CommunityChatService {
         return Math.min(limit, MAX_HISTORY_LIMIT);
     }
 
-    private String normalizeContent(String content) {
+    private String normalizeClientMessageId(String clientMessageId) {
+        if (clientMessageId == null || clientMessageId.isBlank()) {
+            return null;
+        }
+
+        String normalized = clientMessageId.trim();
+        return normalized.length() > 80 ? normalized.substring(0, 80) : normalized;
+    }
+
+    private String normalizeContent(String content, String clientMessageId) {
         if (content == null) {
-            throw new IllegalArgumentException("Chat message cannot be empty");
+            throw new CommunityChatSocketException("VALIDATION", "Chat message cannot be empty", clientMessageId);
         }
 
         String normalized = content.trim();
         if (normalized.isEmpty()) {
-            throw new IllegalArgumentException("Chat message cannot be empty");
+            throw new CommunityChatSocketException("VALIDATION", "Chat message cannot be empty", clientMessageId);
         }
 
         if (normalized.length() > 1000) {
-            throw new IllegalArgumentException("Chat message is too long");
+            throw new CommunityChatSocketException("VALIDATION", "Chat message is too long", clientMessageId);
         }
 
         String lowercase = normalized.toLowerCase(Locale.ROOT);
         for (String blockedKeyword : blockedKeywords) {
             if (lowercase.contains(blockedKeyword)) {
-                throw new IllegalArgumentException("Message contains blocked keyword");
+                throw new CommunityChatSocketException("MODERATION", "Message contains blocked keyword", clientMessageId);
             }
         }
 
         return normalized;
     }
 
-    private void assertWithinRateLimit(Long userId) {
+    private void assertWithinRateLimit(Long userId, String clientMessageId) {
         long now = System.currentTimeMillis();
         ArrayDeque<Long> window = userMessageWindows.computeIfAbsent(userId, key -> new ArrayDeque<>());
 
@@ -159,7 +183,7 @@ public class CommunityChatService {
             }
 
             if (window.size() >= RATE_LIMIT_MAX_MESSAGES) {
-                throw new IllegalArgumentException("Chat rate limit exceeded");
+                throw new CommunityChatSocketException("RATE_LIMIT", "Chat rate limit exceeded", clientMessageId);
             }
 
             window.addLast(now);
