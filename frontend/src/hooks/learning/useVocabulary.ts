@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { vocabularyApi } from "@/api";
+import { myWordsApi, vocabularyApi } from "@/api";
+import type { SavedWord } from "@/pages/my-words/types";
 
 export const useVocabulary = (id?: number) => {
   return useQuery({
@@ -33,5 +34,13 @@ export const useVocabularyLevels = () => {
     queryKey: ["vocabulary", "levels"],
     queryFn: () => vocabularyApi.getLevels(),
     staleTime: 1000 * 60 * 60, // 1 hour
+  });
+};
+
+export const useSavedWords = () => {
+  return useQuery({
+    queryKey: ["my-words", "all"],
+    queryFn: () => myWordsApi.getAll() as Promise<SavedWord[]>,
+    staleTime: 1000 * 60,
   });
 };
