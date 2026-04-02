@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Copy, Volume2 } from "lucide-react";
+import { BookmarkCheck, BookmarkPlus, Copy, GraduationCap, Trash2, Volume2, Clock3 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import type { SavedWord } from "@/pages/my-words/types";
 
 interface VocabularyItem {
   id: number;
@@ -17,13 +19,49 @@ interface VocabularyItem {
 
 interface VocabularyCardProps {
   item: VocabularyItem;
-  onLearn?: (id: number) => void;
-  isLearned?: boolean;
+  savedWord?: SavedWord | null;
+  onSave?: (vocabularyId: number) => void;
+  onRemove?: (savedWordId: number) => void;
+  onToggleMastered?: (savedWordId: number) => void;
+  isSaving?: boolean;
+  isRemoving?: boolean;
+  isTogglingMastered?: boolean;
 }
 
-const VocabularyCard = ({ item, onLearn, isLearned = false }: VocabularyCardProps) => {
+const resolveSourceLabel = (folderName?: string) => {
+  const normalized = folderName?.trim().toUpperCase();
+  if (normalized === "DICTIONARY") {
+    return { label: "Dictionary", className: "border-cyan-200 bg-cyan-50 text-cyan-700" };
+  }
+  if (normalized === "TRANSLATION") {
+    return { label: "Translation", className: "border-amber-200 bg-amber-50 text-amber-700" };
+  }
+  if (normalized === "VOCABULARY") {
+    return { label: "Vocabulary", className: "border-violet-200 bg-violet-50 text-violet-700" };
+  }
+  if (folderName && folderName.trim()) {
+    return { label: folderName.trim(), className: "border-slate-200 bg-slate-50 text-slate-700" };
+  }
+  return null;
+};
+
+const VocabularyCard = ({
+  item,
+  savedWord = null,
+  onSave,
+  onRemove,
+  onToggleMastered,
+  isSaving = false,
+  isRemoving = false,
+  isTogglingMastered = false,
+}: VocabularyCardProps) => {
   const [isFlipped, setIsFlipped] = useState(false);
   const [copied, setCopied] = useState(false);
+  const sourceBadge = resolveSourceLabel(savedWord?.folderName);
+  const isSaved = Boolean(savedWord);
+  const isMastered = savedWord?.mastered ?? false;
+  const isDue = savedWord?.dueForReview ?? false;
+  const isBusy = isSaving || isRemoving || isTogglingMastered;
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -59,14 +97,19 @@ const VocabularyCard = ({ item, onLearn, isLearned = false }: VocabularyCardProp
             style={{ backfaceVisibility: "hidden" }}
           >
             <div>
-              <motion.span
+              <motion.div
                 animate={{ opacity: 1, scale: 1 }}
-                className="mb-4 inline-block rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm text-sky-700"
+                className="mb-4 flex flex-wrap gap-2"
                 initial={{ opacity: 0, scale: 0.85 }}
                 transition={{ delay: 0.1 }}
               >
-                {item.jlptLevel || "N4"}
-              </motion.span>
+                <Badge className="border-sky-200 bg-sky-50 text-sky-700">{item.jlptLevel || "N4"}</Badge>
+                {item.wordType ? <Badge className="border-emerald-200 bg-emerald-50 text-emerald-700">{item.wordType}</Badge> : null}
+                {sourceBadge ? <Badge className={sourceBadge.className}>{sourceBadge.label}</Badge> : null}
+                {isSaved ? <Badge className="border-violet-200 bg-violet-50 text-violet-700">Saved</Badge> : null}
+                {isDue ? <Badge className="border-rose-200 bg-rose-50 text-rose-700">Due</Badge> : null}
+                {isMastered ? <Badge className="border-emerald-200 bg-emerald-50 text-emerald-700">Mastered</Badge> : null}
+              </motion.div>
 
               <motion.div
                 animate={{ opacity: 1, y: 0 }}
@@ -128,6 +171,34 @@ const VocabularyCard = ({ item, onLearn, isLearned = false }: VocabularyCardProp
                 <Copy className="h-4 w-4" />
                 {copied && <span className="ml-1 text-xs">Copied!</span>}
               </Button>
+              {isSaved && savedWord ? (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={isBusy}
+                  className="rounded-xl border border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100 hover:text-rose-700"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRemove?.(savedWord.id);
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {isRemoving ? "Removing..." : "Remove"}
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  disabled={isBusy}
+                  className="rounded-xl bg-violet-500 text-white hover:bg-violet-400"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSave?.(item.id);
+                  }}
+                >
+                  <BookmarkPlus className="h-4 w-4" />
+                  {isSaving ? "Saving..." : "Save"}
+                </Button>
+              )}
             </motion.div>
           </div>
 
@@ -153,19 +224,49 @@ const VocabularyCard = ({ item, onLearn, isLearned = false }: VocabularyCardProp
               )}
             </motion.div>
 
-            {onLearn && (
-              <motion.div animate={{ opacity: 1, y: 0 }} initial={{ opacity: 0, y: 10 }} transition={{ delay: 0.2 }}>
+            <motion.div animate={{ opacity: 1, y: 0 }} className="space-y-3" initial={{ opacity: 0, y: 10 }} transition={{ delay: 0.2 }}>
+              {savedWord ? (
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-3 py-3 text-sm text-slate-700">
+                  <div className="flex items-center gap-2 font-medium text-slate-800">
+                    {isMastered ? <BookmarkCheck className="h-4 w-4 text-emerald-600" /> : <Clock3 className="h-4 w-4 text-rose-600" />}
+                    {isMastered ? "This word is marked as mastered." : isDue ? "This word is due for review now." : "This word is in your review system."}
+                  </div>
+                  <p className="mt-2 text-xs text-slate-500">
+                    Reviews: {savedWord.reviewCount ?? 0} · Interval: {savedWord.reviewIntervalDays ?? 0} day(s)
+                  </p>
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-violet-200 bg-violet-50/70 px-3 py-3 text-sm text-violet-700">
+                  Save this card to move it into My Words and track its review rhythm.
+                </div>
+              )}
+
+              {savedWord ? (
                 <Button
-                  className={`w-full font-semibold text-white ${isLearned ? "bg-emerald-500 hover:bg-emerald-400" : "bg-violet-500 hover:bg-violet-400"}`}
+                  className={`w-full font-semibold text-white ${isMastered ? "bg-emerald-500 hover:bg-emerald-400" : "bg-slate-900 hover:bg-slate-800"}`}
+                  disabled={isBusy}
                   onClick={(e) => {
                     e.stopPropagation();
-                    onLearn(item.id);
+                    onToggleMastered?.(savedWord.id);
                   }}
                 >
-                  {isLearned ? "Learned" : "Mark as Learned"}
+                  <GraduationCap className="h-4 w-4" />
+                  {isTogglingMastered ? "Updating..." : isMastered ? "Unmark Mastered" : "Mark as Mastered"}
                 </Button>
-              </motion.div>
-            )}
+              ) : (
+                <Button
+                  className="w-full bg-violet-500 font-semibold text-white hover:bg-violet-400"
+                  disabled={isBusy}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSave?.(item.id);
+                  }}
+                >
+                  <BookmarkPlus className="h-4 w-4" />
+                  {isSaving ? "Saving..." : "Save to My Words"}
+                </Button>
+              )}
+            </motion.div>
           </div>
         </motion.div>
       </div>

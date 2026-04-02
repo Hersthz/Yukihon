@@ -54,23 +54,6 @@ public class CustomUserDetailsService implements UserDetailsService {
             authorityCodes.add("ADMIN_USERS_MANAGE");
             authorityCodes.add("ADMIN_ROLES_MANAGE");
         }
-        if (user.getRoles().contains(RoleName.TEACHER)) {
-            authorityCodes.add("USER_READ_PROFILE");
-            authorityCodes.add("USER_UPDATE_PROFILE");
-            authorityCodes.add("CONTENT_READ");
-            authorityCodes.add("CONTENT_MANAGE");
-            authorityCodes.add("COMMUNITY_INTERACT");
-            authorityCodes.add("TRANSLATION_USE");
-        }
-        if (user.getRoles().contains(RoleName.REVIEWER)) {
-            authorityCodes.add("USER_READ_PROFILE");
-            authorityCodes.add("USER_UPDATE_PROFILE");
-            authorityCodes.add("CONTENT_READ");
-            authorityCodes.add("CONTENT_REVIEW");
-            authorityCodes.add("COMMUNITY_INTERACT");
-            authorityCodes.add("TRANSLATION_USE");
-        }
-
         List<SimpleGrantedAuthority> authorities = authorityCodes.stream()
                 .map(SimpleGrantedAuthority::new)
                 .toList();

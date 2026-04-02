@@ -17,7 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
@@ -49,7 +48,7 @@ public class CreatorModeController {
     }
 
     @GetMapping("/templates/{id}/audit-timeline")
-    @PreAuthorize("hasAnyAuthority('CONTENT_READ','CONTENT_MANAGE','CONTENT_REVIEW')")
+    @PreAuthorize("hasAnyAuthority('CONTENT_READ','CONTENT_MANAGE','CONTENT_REVIEW','CONTENT_PUBLISH')")
     public ResponseEntity<List<CreatorTemplateAuditEventDto>> getTemplateAuditTimeline(
             @PathVariable Long id,
             @RequestParam(required = false) String stage,
@@ -77,7 +76,7 @@ public class CreatorModeController {
             @AuthenticationPrincipal UserDetails userDetails
     ) {
         Long actorUserId = resolveCurrentUserId(userDetails);
-        CreatorTemplateDto updated = creatorModeService.updateTemplate(id, request, actorUserId, isAdmin(userDetails));
+        CreatorTemplateDto updated = creatorModeService.updateTemplate(id, request, actorUserId);
         return ResponseEntity.ok(updated);
     }
 
@@ -88,25 +87,13 @@ public class CreatorModeController {
             @AuthenticationPrincipal UserDetails userDetails
     ) {
         Long actorUserId = resolveCurrentUserId(userDetails);
-        CreatorTemplateDto updated = creatorModeService.submitForReview(id, actorUserId, isAdmin(userDetails));
+        CreatorTemplateDto updated = creatorModeService.submitForReview(id, actorUserId);
         return ResponseEntity.ok(updated);
     }
 
-    @PostMapping("/templates/{id}/review/reviewer")
-    @PreAuthorize("hasAuthority('CONTENT_REVIEW')")
-    public ResponseEntity<CreatorTemplateDto> reviewerDecision(
-            @PathVariable Long id,
-            @Valid @RequestBody CreatorTemplateReviewRequest request,
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
-        Long reviewerUserId = resolveCurrentUserId(userDetails);
-        CreatorTemplateDto updated = creatorModeService.reviewByReviewer(id, request, reviewerUserId);
-        return ResponseEntity.ok(updated);
-    }
-
-    @PostMapping("/templates/{id}/review/admin")
+    @PostMapping("/templates/{id}/review")
     @PreAuthorize("hasRole('ADMIN') and hasAuthority('CONTENT_PUBLISH')")
-    public ResponseEntity<CreatorTemplateDto> adminDecision(
+    public ResponseEntity<CreatorTemplateDto> reviewDecision(
             @PathVariable Long id,
             @Valid @RequestBody CreatorTemplateReviewRequest request,
             @AuthenticationPrincipal UserDetails userDetails
@@ -133,20 +120,14 @@ public class CreatorModeController {
             @AuthenticationPrincipal UserDetails userDetails
     ) {
         Long actorUserId = resolveCurrentUserId(userDetails);
-        creatorModeService.deleteTemplate(id, actorUserId, isAdmin(userDetails));
+        creatorModeService.deleteTemplate(id, actorUserId);
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/review-queue/reviewer")
-    @PreAuthorize("hasAuthority('CONTENT_REVIEW')")
-    public ResponseEntity<List<CreatorTemplateDto>> getReviewerQueue() {
-        return ResponseEntity.ok(creatorModeService.getReviewerQueue());
-    }
-
-    @GetMapping("/review-queue/admin")
+    @GetMapping("/review-queue")
     @PreAuthorize("hasRole('ADMIN') and hasAuthority('CONTENT_PUBLISH')")
-    public ResponseEntity<List<CreatorTemplateDto>> getAdminQueue() {
-        return ResponseEntity.ok(creatorModeService.getAdminQueue());
+    public ResponseEntity<List<CreatorTemplateDto>> getReviewQueue() {
+        return ResponseEntity.ok(creatorModeService.getReviewQueue());
     }
 
     @GetMapping("/analytics")
@@ -163,11 +144,5 @@ public class CreatorModeController {
         return userRepository.findByEmail(userDetails.getUsername().toLowerCase())
                 .map(user -> user.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-    }
-
-    private boolean isAdmin(UserDetails userDetails) {
-        return userDetails != null && userDetails.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .anyMatch("ROLE_ADMIN"::equals);
     }
 }

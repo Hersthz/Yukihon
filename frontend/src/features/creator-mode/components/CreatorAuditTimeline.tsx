@@ -17,7 +17,7 @@ interface CreatorAuditTimelineProps {
 const STAGE_LABELS: Record<CreatorTemplateAuditEvent["stage"], string> = {
   AUTHORING: "Authoring",
   REVIEW_SUBMISSION: "Review Submission",
-  REVIEWER_REVIEW: "Reviewer Review",
+  REVIEWER_REVIEW: "Review",
   ADMIN_APPROVAL: "Admin Approval",
 };
 
@@ -35,7 +35,7 @@ const formatEventTitle = (event: CreatorTemplateAuditEvent): string => {
     case "SUBMITTED_FOR_REVIEW":
       return "Submitted for review";
     case "REVIEW_DECISION":
-      return event.decision === "REJECTED" ? "Reviewer rejected" : "Reviewer approved";
+      return event.decision === "REJECTED" ? "Review rejected" : "Review approved";
     case "ADMIN_DECISION":
       if (event.decision === "PUBLISHED") {
         return "Admin published";

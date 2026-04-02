@@ -56,6 +56,8 @@ const LessonDetail = () => {
   const { data: lesson, isLoading } = useLesson(Number.isFinite(parsedLessonId) ? parsedLessonId : undefined);
   const { data: progress = [], isLoading: isProgressLoading } = useMyProgress();
   const { data: learningPath } = useLearningPath();
+  const lessonEntityId = lesson?.id;
+  const lessonJlptLevel = lesson?.jlptLevel;
 
   const lessonProgress = useMemo(
     () => progress.find((item) => item.lessonId === parsedLessonId) ?? null,
@@ -317,20 +319,20 @@ const LessonDetail = () => {
 
   useEffect(() => {
     return () => {
-      if (!lesson || !startedInSessionRef.current || completedInSessionRef.current) {
+      if (!lessonEntityId || !startedInSessionRef.current || completedInSessionRef.current) {
         return;
       }
 
       void learningAnalyticsApi.trackEvent({
         eventType: "ABANDON_LESSON",
         contentType: "LESSON",
-        contentId: lesson.id,
+        contentId: lessonEntityId,
         sessionId: lessonSessionIdRef.current,
-        jlptLevel: lesson.jlptLevel,
+        jlptLevel: lessonJlptLevel,
         durationSeconds: Math.max(0, Math.round((Date.now() - lessonOpenedAtRef.current) / 1000)),
       }).catch(() => undefined);
     };
-  }, [lesson?.id, lesson?.jlptLevel]);
+  }, [lessonEntityId, lessonJlptLevel]);
 
   if (!Number.isFinite(parsedLessonId)) {
     return (

@@ -33,7 +33,6 @@ import {
   serializeCreatorDocument,
 } from "@/features/creator-mode/builder";
 import type { CreatorBlock } from "@/features/creator-mode/types";
-import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 
 interface EditorMeta {
@@ -73,16 +72,7 @@ const STATUS_STYLES: Record<CreatorTemplateStatus, string> = {
 };
 
 const AdminCreatorMode = () => {
-  const { isAdmin, isTeacher, isReviewer } = useAuth();
   const { toast } = useToast();
-
-  const isAdminUser = isAdmin();
-  const isTeacherUser = isTeacher();
-  const isReviewerUser = isReviewer();
-  const canManageTemplates = isTeacherUser || isAdminUser;
-  const canReviewAsAdmin = isAdminUser;
-  const canReviewAsReviewer = isReviewerUser;
-  const canAccessReviewQueue = canReviewAsAdmin || canReviewAsReviewer;
 
   const [templates, setTemplates] = useState<CreatorTemplate[]>([]);
   const [reviewQueue, setReviewQueue] = useState<CreatorTemplate[]>([]);
@@ -191,15 +181,8 @@ const AdminCreatorMode = () => {
       setTemplates(templatesData);
       setAnalytics(analyticsData);
 
-      if (canReviewAsAdmin) {
-        const queueData = await creatorModeApi.getAdminQueue();
-        setReviewQueue(queueData);
-      } else if (canReviewAsReviewer) {
-        const queueData = await creatorModeApi.getReviewerQueue();
-        setReviewQueue(queueData);
-      } else {
-        setReviewQueue([]);
-      }
+      const queueData = await creatorModeApi.getReviewQueue();
+      setReviewQueue(queueData);
     } catch {
       toast({
         title: "Creator mode load failed",
@@ -209,18 +192,7 @@ const AdminCreatorMode = () => {
     } finally {
       setLoading(false);
     }
-  }, [canReviewAsAdmin, canReviewAsReviewer, toast]);
-
-  useEffect(() => {
-    if (!canAccessReviewQueue && selectedTab === "review") {
-      setSelectedTab(canManageTemplates ? "studio" : "analytics");
-      return;
-    }
-
-    if (!canManageTemplates && selectedTab === "studio") {
-      setSelectedTab(canAccessReviewQueue ? "review" : "analytics");
-    }
-  }, [canAccessReviewQueue, canManageTemplates, selectedTab]);
+  }, [toast]);
 
   useEffect(() => {
     void loadData();
@@ -309,23 +281,9 @@ const AdminCreatorMode = () => {
     }
   }, [activeTemplateId, buildPayload, loadData, loadTemplateTimeline, toast]);
 
-  const reviewAsReviewer = useCallback(async (templateId: number, decision: "APPROVED" | "REJECTED") => {
-    try {
-      await creatorModeApi.reviewerDecision(templateId, {
-        decision,
-        reviewNote: reviewNotes[templateId] ?? "",
-      });
-      toast({ title: "Reviewer decision saved", description: `Template status changed to ${decision}.` });
-      await loadData();
-      await loadTemplateTimeline(templateId);
-    } catch {
-      toast({ title: "Reviewer action failed", description: "Could not update reviewer decision.", variant: "destructive" });
-    }
-  }, [loadData, loadTemplateTimeline, reviewNotes, toast]);
-
   const reviewAsAdmin = useCallback(async (templateId: number, decision: "PUBLISHED" | "REJECTED") => {
     try {
-      await creatorModeApi.adminDecision(templateId, {
+      await creatorModeApi.reviewDecision(templateId, {
         decision,
         reviewNote: reviewNotes[templateId] ?? "",
       });
@@ -374,12 +332,10 @@ const AdminCreatorMode = () => {
             </div>
 
             <div className="flex flex-wrap gap-2">
-              {canManageTemplates && (
-                <Button variant="outline" onClick={resetEditor}>
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  New Draft
-                </Button>
-              )}
+              <Button variant="outline" onClick={resetEditor}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                New Draft
+              </Button>
               <Button variant="outline" onClick={() => void loadData()} disabled={loading}>
                 <BarChart3 className="mr-2 h-4 w-4" />
                 Refresh
@@ -388,15 +344,12 @@ const AdminCreatorMode = () => {
           </div>
 
           <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
-            <TabsList className={`grid w-full ${canManageTemplates && canAccessReviewQueue ? "grid-cols-3" : "grid-cols-2"} bg-card/70`}>
-              {canManageTemplates && <TabsTrigger value="studio">Studio</TabsTrigger>}
-              {canAccessReviewQueue && (
-                <TabsTrigger value="review">{canReviewAsAdmin ? "Admin Queue" : "Review Queue"}</TabsTrigger>
-              )}
+            <TabsList className="grid w-full grid-cols-3 bg-card/70">
+              <TabsTrigger value="studio">Studio</TabsTrigger>
+              <TabsTrigger value="review">Review Queue</TabsTrigger>
               <TabsTrigger value="analytics">Analytics</TabsTrigger>
             </TabsList>
 
-            {canManageTemplates && (
             <TabsContent value="studio" className="space-y-6">
               <div className="grid gap-6 xl:grid-cols-[1.2fr_1fr]">
                 <Card className="border-border/70 bg-card/70">
@@ -604,21 +557,15 @@ const AdminCreatorMode = () => {
                 </Card>
               )}
             </TabsContent>
-            )}
 
-            {canAccessReviewQueue && (
-              <TabsContent value="review" className="space-y-4">
+            <TabsContent value="review" className="space-y-4">
               <Card className="border-border/70 bg-card/70">
                 <CardHeader>
-                  <CardTitle className="text-base">
-                    {canReviewAsAdmin ? "Admin Approval Queue" : "Reviewer Queue"}
-                  </CardTitle>
+                  <CardTitle className="text-base">Review Queue</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {reviewQueue.length === 0 && (
-                    <p className="text-sm text-muted-foreground">
-                      {canReviewAsAdmin ? "No templates waiting for admin approval." : "No templates waiting for reviewer approval."}
-                    </p>
+                    <p className="text-sm text-muted-foreground">No templates waiting for review.</p>
                   )}
 
                   {reviewQueue.map((template) => (
@@ -653,35 +600,19 @@ const AdminCreatorMode = () => {
                         >
                           Audit Timeline
                         </Button>
-                        {canReviewAsAdmin ? (
-                          <>
-                            <Button size="sm" variant="secondary" onClick={() => void reviewAsAdmin(template.id, "PUBLISHED")}>
-                              Publish
-                            </Button>
-                            <Button size="sm" variant="destructive" onClick={() => void reviewAsAdmin(template.id, "REJECTED")}>
-                              <XCircle className="mr-2 h-4 w-4" />
-                              Reject
-                            </Button>
-                          </>
-                        ) : (
-                          <>
-                            <Button size="sm" onClick={() => void reviewAsReviewer(template.id, "APPROVED")}>
-                              <CheckCircle2 className="mr-2 h-4 w-4" />
-                              Approve To Admin
-                            </Button>
-                            <Button size="sm" variant="destructive" onClick={() => void reviewAsReviewer(template.id, "REJECTED")}>
-                              <XCircle className="mr-2 h-4 w-4" />
-                              Reject
-                            </Button>
-                          </>
-                        )}
+                        <Button size="sm" variant="secondary" onClick={() => void reviewAsAdmin(template.id, "PUBLISHED")}>
+                          Publish
+                        </Button>
+                        <Button size="sm" variant="destructive" onClick={() => void reviewAsAdmin(template.id, "REJECTED")}>
+                          <XCircle className="mr-2 h-4 w-4" />
+                          Reject
+                        </Button>
                       </div>
                     </div>
                   ))}
                 </CardContent>
               </Card>
-              </TabsContent>
-            )}
+            </TabsContent>
 
             <Dialog open={!!auditDialogTemplate} onOpenChange={(open) => !open && setAuditDialogTemplate(null)}>
               <DialogContent className="max-w-2xl border-border/70 bg-card/95">

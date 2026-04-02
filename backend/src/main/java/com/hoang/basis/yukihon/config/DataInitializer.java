@@ -123,20 +123,6 @@ public class DataInitializer implements CommandLineRunner {
         ensureRolePermission(RoleName.USER, communityInteract);
         ensureRolePermission(RoleName.USER, translationUse);
 
-        ensureRolePermission(RoleName.TEACHER, userReadProfile);
-        ensureRolePermission(RoleName.TEACHER, userUpdateProfile);
-        ensureRolePermission(RoleName.TEACHER, contentRead);
-        ensureRolePermission(RoleName.TEACHER, contentManage);
-        ensureRolePermission(RoleName.TEACHER, communityInteract);
-        ensureRolePermission(RoleName.TEACHER, translationUse);
-
-        ensureRolePermission(RoleName.REVIEWER, userReadProfile);
-        ensureRolePermission(RoleName.REVIEWER, userUpdateProfile);
-        ensureRolePermission(RoleName.REVIEWER, contentRead);
-        ensureRolePermission(RoleName.REVIEWER, contentReview);
-        ensureRolePermission(RoleName.REVIEWER, communityInteract);
-        ensureRolePermission(RoleName.REVIEWER, translationUse);
-
         ensureRolePermission(RoleName.ADMIN, userReadProfile);
         ensureRolePermission(RoleName.ADMIN, userUpdateProfile);
         ensureRolePermission(RoleName.ADMIN, contentRead);
@@ -170,33 +156,13 @@ public class DataInitializer implements CommandLineRunner {
                 true
         );
 
-        User teacher = ensureUser(
-                "teacher@yukihon.local",
-                "Teacher Demo",
-                "Teacher@123",
-                Set.of(RoleName.TEACHER, RoleName.USER),
-                true
-        );
-
-        User reviewer = ensureUser(
-                "reviewer@yukihon.local",
-                "Reviewer Demo",
-                "Reviewer@123",
-                Set.of(RoleName.REVIEWER, RoleName.USER),
-                true
-        );
-
         ensureUserArtifacts(admin);
         ensureUserArtifacts(user);
-        ensureUserArtifacts(teacher);
-        ensureUserArtifacts(reviewer);
 
         long totalUsers = userRepository.count();
         log.info("Initialized users: {} total", totalUsers);
         log.info("Default credentials -> admin: admin@yukihon.local / Admin@123");
         log.info("Default credentials -> user: learner@yukihon.local / User@123");
-        log.info("Default credentials -> teacher: teacher@yukihon.local / Teacher@123");
-        log.info("Default credentials -> reviewer: reviewer@yukihon.local / Reviewer@123");
     }
 
     private User ensureUser(
