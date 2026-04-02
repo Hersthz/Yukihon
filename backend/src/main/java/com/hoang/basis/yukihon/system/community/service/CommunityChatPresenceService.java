@@ -5,9 +5,6 @@ import com.hoang.basis.yukihon.system.user.entity.User;
 import com.hoang.basis.yukihon.system.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
-import org.springframework.messaging.Message;
-import org.springframework.messaging.MessageHeaders;
-import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.simp.stomp.StompCommand;
@@ -55,8 +52,15 @@ public class CommunityChatPresenceService {
             return;
         }
 
-        String roomId = destination.substring(CHAT_TOPIC_PREFIX.length());
-        if (roomId.isBlank()) {
+        String rawRoomId = destination.substring(CHAT_TOPIC_PREFIX.length());
+        if (rawRoomId.isBlank()) {
+            return;
+        }
+
+        String roomId;
+        try {
+            roomId = communityChatService.normalizeSupportedRoomId(rawRoomId);
+        } catch (IllegalArgumentException exception) {
             return;
         }
 

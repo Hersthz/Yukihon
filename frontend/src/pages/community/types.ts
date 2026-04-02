@@ -58,6 +58,14 @@ export interface ChatPresence {
   createdAt: string;
 }
 
+export interface ChatRoom {
+  id: string;
+  title: string;
+  description: string;
+  focus: string;
+  accent: string;
+}
+
 export interface PagedPosts {
   content: Post[];
   totalPages: number;

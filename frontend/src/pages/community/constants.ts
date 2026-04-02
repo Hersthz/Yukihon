@@ -1,4 +1,5 @@
 import { Award, BookOpen, HelpCircle, Lightbulb, MessageSquare, Users } from "lucide-react";
+import type { ChatRoom } from "@/pages/community/types";
 
 export const CATEGORIES = [
   { value: "", label: "Tat ca", icon: Users, tone: "border-border bg-white text-foreground/80" },
@@ -10,3 +11,48 @@ export const CATEGORIES = [
 ] as const;
 
 export const JLPT_OPTIONS = ["ALL", "N5", "N4", "N3", "N2", "N1"] as const;
+
+export const DEFAULT_CHAT_ROOMS: ChatRoom[] = [
+  {
+    id: "general",
+    title: "General",
+    description: "Phong tro chuyen tong hop cho moi nguoi hoc.",
+    focus: "Open discussion",
+    accent: "sky",
+  },
+  {
+    id: "n5",
+    title: "N5",
+    description: "Phong lam quen voi ngu phap va tu vung nen tang.",
+    focus: "Starter practice",
+    accent: "emerald",
+  },
+  {
+    id: "n4",
+    title: "N4",
+    description: "Phong de tang toc voi mau cau va bai tap trung cap co ban.",
+    focus: "Level-up drills",
+    accent: "amber",
+  },
+  {
+    id: "kanji",
+    title: "Kanji",
+    description: "Phong danh rieng cho bo thu, onyomi, kunyomi va ghi nho mat chu.",
+    focus: "Character lab",
+    accent: "violet",
+  },
+  {
+    id: "grammar",
+    title: "Grammar",
+    description: "Phong thao luan mau cau, cach dung va cac diem de nham.",
+    focus: "Pattern clinic",
+    accent: "rose",
+  },
+  {
+    id: "speaking",
+    title: "Speaking",
+    description: "Phong luyen hoi thoai, shadowing va cac tinh huong giao tiep.",
+    focus: "Conversation club",
+    accent: "cyan",
+  },
+];

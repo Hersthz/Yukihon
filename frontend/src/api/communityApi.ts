@@ -40,6 +40,7 @@ export const communityApi = {
       body: JSON.stringify({ content }),
     }),
   deleteComment: (commentId: number) => apiClient.request(`/api/community/comments/${commentId}`, { method: "DELETE" }),
+  getChatRooms: () => apiClient.request("/api/community/chat/rooms"),
   getChatMessages: (roomId = "general", limit = 50) =>
     apiClient.request(`/api/community/chat/messages?roomId=${encodeURIComponent(roomId)}&limit=${limit}`),
   getStats: () => apiClient.request("/api/community/stats"),

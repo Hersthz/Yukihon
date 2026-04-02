@@ -7,11 +7,12 @@ import { Input } from "@/components/ui/input";
 import { useRealtimeChat } from "@/hooks/community/useRealtimeChat";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import type { ChatRoom } from "@/pages/community/types";
 
 interface CommunityRealtimeChatProps {
   currentUserId?: number;
   currentUserName?: string;
-  roomId?: string;
+  room: ChatRoom;
 }
 
 const statusLabelMap = {
@@ -21,7 +22,7 @@ const statusLabelMap = {
   error: "Error",
 } as const;
 
-const CommunityRealtimeChat = ({ currentUserId, currentUserName, roomId = "general" }: CommunityRealtimeChatProps) => {
+const CommunityRealtimeChat = ({ currentUserId, currentUserName, room }: CommunityRealtimeChatProps) => {
   const { toast } = useToast();
   const [draft, setDraft] = useState("");
   const listRef = useRef<HTMLDivElement | null>(null);
@@ -43,12 +44,17 @@ const CommunityRealtimeChat = ({ currentUserId, currentUserName, roomId = "gener
     activeUsers,
     activeDisplayNames,
   } = useRealtimeChat({
-    roomId,
+    roomId: room.id,
     enabled: true,
     currentUserId,
     currentUserName,
     trackUnread: true,
   });
+
+  useEffect(() => {
+    setDraft("");
+    lastSocketErrorRef.current = null;
+  }, [room.id]);
 
   useEffect(() => {
     const list = listRef.current;
@@ -173,7 +179,10 @@ const CommunityRealtimeChat = ({ currentUserId, currentUserName, roomId = "gener
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <CardTitle className="text-lg font-semibold text-slate-900">Real-time Lounge</CardTitle>
+            <div>
+              <CardTitle className="text-lg font-semibold text-slate-900">{room.title} room</CardTitle>
+              <p className="mt-1 text-xs text-slate-500">{room.description}</p>
+            </div>
             {unreadCount > 0 ? (
               <span className="rounded-full bg-sky-500 px-2 py-0.5 text-[11px] font-semibold text-white">
                 {unreadCount > 99 ? "99+" : unreadCount} unread
@@ -201,6 +210,10 @@ const CommunityRealtimeChat = ({ currentUserId, currentUserName, roomId = "gener
           </div>
         </div>
         {connectionError ? <p className="text-xs text-rose-600">{connectionError}</p> : null}
+        <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+          <span className="rounded-full bg-slate-100 px-2.5 py-1 font-semibold text-slate-600">{room.focus}</span>
+          <span>Room id: #{room.id}</span>
+        </div>
         {activeDisplayNames.length > 0 ? (
           <p className="text-xs text-slate-500">
             Dang trong phong: {activeDisplayNames.join(", ")}
@@ -285,7 +298,7 @@ const CommunityRealtimeChat = ({ currentUserId, currentUserName, roomId = "gener
           <Input
             maxLength={1000}
             onChange={(event) => setDraft(event.target.value)}
-            placeholder="Nhap tin nhan va nhan Enter..."
+            placeholder={`Nhan tin trong phong ${room.title}...`}
             value={draft}
           />
           <Button className="rounded-xl" disabled={!draft.trim()} type="submit">

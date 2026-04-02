@@ -196,6 +196,7 @@ export const useRealtimeChat = ({
   const [presence, setPresence] = useState<ChatPresence | null>(null);
 
   const clientRef = useRef<Client | null>(null);
+  const activeRoomIdRef = useRef(normalizedRoomId);
   const typingUsersRef = useRef<Map<number, string>>(new Map());
   const typingTimeoutsRef = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());
   const lastSentTypingStateRef = useRef<boolean>(false);
@@ -234,7 +235,7 @@ export const useRealtimeChat = ({
   const handleIncomingMessage = useCallback((frame: IMessage) => {
     try {
       const parsed = parseMessage(JSON.parse(frame.body));
-      if (!parsed) {
+      if (!parsed || parsed.roomId !== activeRoomIdRef.current) {
         return;
       }
 
@@ -255,7 +256,7 @@ export const useRealtimeChat = ({
     (frame: IMessage) => {
       try {
         const parsed = parseTypingEvent(JSON.parse(frame.body));
-        if (!parsed || parsed.roomId !== normalizedRoomId || parsed.userId === currentUserId) {
+        if (!parsed || parsed.roomId !== activeRoomIdRef.current || parsed.userId === currentUserId) {
           return;
         }
 
@@ -278,7 +279,7 @@ export const useRealtimeChat = ({
         // Ignore malformed typing payloads.
       }
     },
-    [clearTypingUser, currentUserId, normalizedRoomId, updateTypingUsers]
+    [clearTypingUser, currentUserId, updateTypingUsers]
   );
 
   const handleSocketError = useCallback((frame: IMessage) => {
@@ -298,7 +299,7 @@ export const useRealtimeChat = ({
   const handlePresence = useCallback((frame: IMessage) => {
     try {
       const parsed = parsePresence(JSON.parse(frame.body));
-      if (!parsed || parsed.roomId !== normalizedRoomId) {
+      if (!parsed || parsed.roomId !== activeRoomIdRef.current) {
         return;
       }
 
@@ -306,7 +307,7 @@ export const useRealtimeChat = ({
     } catch {
       // Ignore malformed presence payloads.
     }
-  }, [normalizedRoomId]);
+  }, []);
 
   const reconnect = useCallback(() => {
     setSessionNonce((prev) => prev + 1);
@@ -315,6 +316,21 @@ export const useRealtimeChat = ({
   const markRead = useCallback(() => {
     setUnreadCount(0);
   }, []);
+
+  useEffect(() => {
+    activeRoomIdRef.current = normalizedRoomId;
+    lastSentTypingStateRef.current = false;
+    setMessages([]);
+    setTypingUsers([]);
+    setUnreadCount(0);
+    setLastSocketError(null);
+    setPresence(null);
+    setConnectionError(null);
+
+    typingTimeoutsRef.current.forEach((timeoutId) => clearTimeout(timeoutId));
+    typingTimeoutsRef.current.clear();
+    typingUsersRef.current.clear();
+  }, [normalizedRoomId]);
 
   useEffect(() => {
     if (!enabled) {
@@ -336,12 +352,12 @@ export const useRealtimeChat = ({
       setIsLoadingHistory(true);
       try {
         const history = (await communityApi.getChatMessages(normalizedRoomId, HISTORY_LIMIT)) as ChatMessage[];
-        if (!isActive) {
+        if (!isActive || activeRoomIdRef.current !== normalizedRoomId) {
           return;
         }
 
         const safeHistory = history.map((item) => parseMessage(item)).filter((item): item is ChatMessage => item !== null);
-        setMessages((prev) => mergeHistory(prev, safeHistory));
+        setMessages((prev) => mergeHistory(prev, safeHistory.filter((item) => item.roomId === activeRoomIdRef.current)));
       } catch {
         if (isActive) {
           setConnectionError("Khong tai duoc lich su chat");

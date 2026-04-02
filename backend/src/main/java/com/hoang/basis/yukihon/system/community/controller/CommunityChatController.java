@@ -1,6 +1,7 @@
 package com.hoang.basis.yukihon.system.community.controller;
 
 import com.hoang.basis.yukihon.system.community.dto.CommunityChatMessageDto;
+import com.hoang.basis.yukihon.system.community.dto.CommunityChatRoomDto;
 import com.hoang.basis.yukihon.system.community.service.CommunityChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +18,11 @@ import java.util.List;
 public class CommunityChatController {
 
     private final CommunityChatService communityChatService;
+
+    @GetMapping("/rooms")
+    public ResponseEntity<List<CommunityChatRoomDto>> getAvailableRooms() {
+        return ResponseEntity.ok(communityChatService.getAvailableRooms());
+    }
 
     @GetMapping("/messages")
     public ResponseEntity<List<CommunityChatMessageDto>> getRecentMessages(

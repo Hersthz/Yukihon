@@ -3,6 +3,7 @@ package com.hoang.basis.yukihon.system.community.service;
 import com.hoang.basis.yukihon.exception.ResourceNotFoundException;
 import com.hoang.basis.yukihon.system.community.dto.CommunityChatMessageDto;
 import com.hoang.basis.yukihon.system.community.dto.CommunityChatPresenceDto;
+import com.hoang.basis.yukihon.system.community.dto.CommunityChatRoomDto;
 import com.hoang.basis.yukihon.system.community.dto.CommunityChatSendRequest;
 import com.hoang.basis.yukihon.system.community.dto.CommunityChatTypingEventDto;
 import com.hoang.basis.yukihon.system.community.dto.CommunityChatTypingRequest;
@@ -21,7 +22,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.ArrayDeque;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -40,6 +43,7 @@ public class CommunityChatService {
     private static final int MAX_HISTORY_LIMIT = 100;
     private static final int RATE_LIMIT_MAX_MESSAGES = 8;
     private static final long RATE_LIMIT_WINDOW_MS = 10_000L;
+    private static final Map<String, CommunityChatRoomDto> SUPPORTED_ROOMS = createSupportedRooms();
 
     @Value("${app.community-chat.blocked-keywords:spam,scam,porn,sex,telegram,whatsapp}")
     private String blockedKeywordsConfig;
@@ -60,8 +64,12 @@ public class CommunityChatService {
                 .toList();
     }
 
+    public List<CommunityChatRoomDto> getAvailableRooms() {
+        return List.copyOf(SUPPORTED_ROOMS.values());
+    }
+
     public List<CommunityChatMessageDto> getRecentMessages(String roomId, Integer limit) {
-        String normalizedRoomId = normalizeRoomId(roomId);
+        String normalizedRoomId = normalizeSupportedRoomId(roomId);
         int safeLimit = normalizeLimit(limit);
 
         return chatMessageRepository
@@ -74,8 +82,8 @@ public class CommunityChatService {
 
     @Transactional
     public CommunityChatMessageDto createMessage(String username, CommunityChatSendRequest request) {
-        String normalizedRoomId = normalizeRoomId(request.getRoomId());
         String clientMessageId = normalizeClientMessageId(request.getClientMessageId());
+        String normalizedRoomId = normalizeSocketRoomId(request.getRoomId(), clientMessageId);
         String normalizedContent = normalizeContent(request.getContent(), clientMessageId);
 
         User user = userRepository.findByEmail(username)
@@ -95,7 +103,7 @@ public class CommunityChatService {
     }
 
     public CommunityChatTypingEventDto createTypingEvent(String username, CommunityChatTypingRequest request) {
-        String normalizedRoomId = normalizeRoomId(request.getRoomId());
+        String normalizedRoomId = normalizeSocketRoomId(request.getRoomId(), null);
 
         User user = userRepository.findByEmail(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -113,14 +121,14 @@ public class CommunityChatService {
         LinkedHashSet<String> displayNames = new LinkedHashSet<>(sessionDisplayNames.values());
 
         return CommunityChatPresenceDto.builder()
-                .roomId(normalizeRoomId(roomId))
+                .roomId(normalizeSupportedRoomId(roomId))
                 .activeUsers(displayNames.size())
                 .activeDisplayNames(displayNames.stream().limit(5).toList())
                 .createdAt(Instant.now())
                 .build();
     }
 
-    private String normalizeRoomId(String roomId) {
+    public String normalizeSupportedRoomId(String roomId) {
         if (roomId == null || roomId.isBlank()) {
             return DEFAULT_ROOM_ID;
         }
@@ -130,7 +138,19 @@ public class CommunityChatService {
             throw new IllegalArgumentException("Invalid room id format");
         }
 
+        if (!SUPPORTED_ROOMS.containsKey(normalized)) {
+            throw new IllegalArgumentException("Unsupported room id: " + normalized);
+        }
+
         return normalized;
+    }
+
+    private String normalizeSocketRoomId(String roomId, String clientMessageId) {
+        try {
+            return normalizeSupportedRoomId(roomId);
+        } catch (IllegalArgumentException exception) {
+            throw new CommunityChatSocketException("VALIDATION", exception.getMessage(), clientMessageId);
+        }
     }
 
     private int normalizeLimit(Integer limit) {
@@ -188,5 +208,36 @@ public class CommunityChatService {
 
             window.addLast(now);
         }
+    }
+
+    private static Map<String, CommunityChatRoomDto> createSupportedRooms() {
+        Map<String, CommunityChatRoomDto> rooms = new LinkedHashMap<>();
+        registerRoom(rooms, "general", "General", "Phong tro chuyen tong hop cho moi nguoi hoc.", "Open discussion", "sky");
+        registerRoom(rooms, "n5", "N5", "Phong lam quen voi ngu phap va tu vung nen tang.", "Starter practice", "emerald");
+        registerRoom(rooms, "n4", "N4", "Phong de tang toc voi mau cau va bai tap trung cap co ban.", "Level-up drills", "amber");
+        registerRoom(rooms, "kanji", "Kanji", "Phong danh rieng cho bo thu, onyomi, kunyomi va ghi nho mat chu.", "Character lab", "violet");
+        registerRoom(rooms, "grammar", "Grammar", "Phong thao luan mau cau, cach dung va cac diem de nham.", "Pattern clinic", "rose");
+        registerRoom(rooms, "speaking", "Speaking", "Phong luyen hoi thoai, shadowing va cac tinh huong giao tiep.", "Conversation club", "cyan");
+        return Collections.unmodifiableMap(rooms);
+    }
+
+    private static void registerRoom(
+            Map<String, CommunityChatRoomDto> rooms,
+            String id,
+            String title,
+            String description,
+            String focus,
+            String accent
+    ) {
+        rooms.put(
+                id,
+                CommunityChatRoomDto.builder()
+                        .id(id)
+                        .title(title)
+                        .description(description)
+                        .focus(focus)
+                        .accent(accent)
+                        .build()
+        );
     }
 }
