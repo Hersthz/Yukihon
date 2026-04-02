@@ -6,6 +6,7 @@ import {
   BookMarked,
   BookOpen,
   Brain,
+  CalendarDays,
   ChevronLeft,
   ChevronRight,
   Compass,
@@ -16,7 +17,6 @@ import {
   LogOut,
   Menu,
   Search,
-  Settings,
   Shield,
   Sparkles,
   User,
@@ -50,6 +50,7 @@ const PRIMARY_GROUPS: NavGroup[] = [
     label: "Khám phá",
     items: [
       { label: "Tổng quan", path: "/dashboard", icon: LayoutDashboard },
+      { label: "Lịch học", path: "/calendar", icon: CalendarDays },
       { label: "Tra cứu", path: "/dictionary", icon: Search },
       { label: "Story Mode", path: "/story-mode", icon: BookOpen, badge: "New" },
       { label: "Dịch", path: "/translation", icon: Globe2 },
@@ -72,12 +73,12 @@ const PRIMARY_GROUPS: NavGroup[] = [
 ];
 
 const SECONDARY_ITEMS: NavItem[] = [
-  { label: "Hồ sơ", path: "/profile", icon: User },
-  { label: "Cài đặt", path: "/settings", icon: Settings },
+  { label: "Tài khoản", path: "/profile", icon: User },
 ];
 
 const PAGE_META: Record<string, string> = {
   "/dashboard": "Không gian học tập",
+  "/calendar": "Lịch học",
   "/dictionary": "Tra cứu",
   "/story-mode": "Story Mode",
   "/translation": "Dịch",
@@ -90,8 +91,8 @@ const PAGE_META: Record<string, string> = {
   "/courses": "Khóa học",
   "/kanji-library": "Kanji",
   "/my-words": "Từ của tôi",
-  "/profile": "Hồ sơ",
-  "/settings": "Cài đặt",
+  "/profile": "Tài khoản",
+  "/settings": "Tài khoản",
   "/admin/creator-mode": "Creator Studio",
 };
 

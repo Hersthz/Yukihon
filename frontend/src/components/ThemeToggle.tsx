@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 
 export const ThemeToggle = () => {
-  const { theme, toggleTheme } = useTheme();
+  const { resolvedTheme, toggleTheme } = useTheme();
 
   return (
     <Button
@@ -12,10 +12,10 @@ export const ThemeToggle = () => {
       size="icon"
       onClick={toggleTheme}
       className="relative rounded-full w-9 h-9 border border-border/40 hover:bg-muted/60 transition-colors"
-      title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+      title={`Switch to ${resolvedTheme === "dark" ? "light" : "dark"} mode`}
     >
       <AnimatePresence mode="wait" initial={false}>
-        {theme === "dark" ? (
+        {resolvedTheme === "dark" ? (
           <motion.div
             key="sun"
             initial={{ scale: 0, rotate: -90, opacity: 0 }}

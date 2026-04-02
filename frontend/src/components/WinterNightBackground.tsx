@@ -37,8 +37,8 @@ const WinterNightBackground = ({
   className = "",
 }: WinterNightBackgroundProps) => {
   const [mounted, setMounted] = useState(false);
-  const { theme } = useTheme();
-  const isLight = theme === "light";
+  const { resolvedTheme } = useTheme();
+  const isLight = resolvedTheme === "light";
 
   useEffect(() => {
     setMounted(true);

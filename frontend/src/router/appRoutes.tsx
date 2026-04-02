@@ -26,6 +26,7 @@ const NotFound = lazy(() => import("@/pages/NotFound"));
 const Profile = lazy(() => import("@/pages/Profile"));
 const Quiz = lazy(() => import("@/pages/Quiz"));
 const Settings = lazy(() => import("@/pages/Settings"));
+const StudyCalendar = lazy(() => import("@/pages/StudyCalendar"));
 const StoryMode = lazy(() => import("@/pages/StoryMode"));
 const Translation = lazy(() => import("@/pages/Translation"));
 const Vocabulary = lazy(() => import("@/pages/Vocabulary"));
@@ -48,6 +49,7 @@ export const AppRoutes = () => {
         <Route path="/vocabulary" element={withProtectedRoute(<Vocabulary />)} />
         <Route path="/grammar" element={withProtectedRoute(<Grammar />)} />
         <Route path="/quiz" element={withProtectedRoute(<Quiz />)} />
+        <Route path="/calendar" element={withProtectedRoute(<StudyCalendar />)} />
         <Route path="/jlpt-lessons" element={withProtectedRoute(<JLPTLessons />)} />
         <Route path="/lessons/:lessonId" element={withProtectedRoute(<LessonDetail />)} />
         <Route path="/mistake-dna" element={withProtectedRoute(<MistakeDna />)} />

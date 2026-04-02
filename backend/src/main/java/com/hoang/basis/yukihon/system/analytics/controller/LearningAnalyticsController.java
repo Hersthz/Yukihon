@@ -3,6 +3,7 @@ package com.hoang.basis.yukihon.system.analytics.controller;
 import com.hoang.basis.yukihon.exception.ResourceNotFoundException;
 import com.hoang.basis.yukihon.system.analytics.dto.LearningAnalyticsEventRequest;
 import com.hoang.basis.yukihon.system.analytics.dto.LearningFunnelDto;
+import com.hoang.basis.yukihon.system.analytics.dto.StudyCalendarDto;
 import com.hoang.basis.yukihon.system.analytics.service.LearningAnalyticsService;
 import com.hoang.basis.yukihon.system.user.repository.UserRepository;
 import jakarta.validation.Valid;
@@ -37,6 +38,16 @@ public class LearningAnalyticsController {
         Long userId = resolveCurrentUserId(userDetails);
         learningAnalyticsService.trackEvent(userId, request);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/analytics/study-calendar")
+    public ResponseEntity<StudyCalendarDto> getStudyCalendar(
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        Long userId = resolveCurrentUserId(userDetails);
+        return ResponseEntity.ok(learningAnalyticsService.getStudyCalendar(userId, startDate, endDate));
     }
 
     @GetMapping("/admin/analytics/learning-funnel")

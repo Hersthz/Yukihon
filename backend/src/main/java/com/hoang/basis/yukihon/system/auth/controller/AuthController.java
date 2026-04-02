@@ -1,10 +1,12 @@
 package com.hoang.basis.yukihon.system.auth.controller;
 
 import com.hoang.basis.yukihon.system.auth.dto.AuthResponse;
+import com.hoang.basis.yukihon.system.auth.dto.ChangePasswordRequest;
 import com.hoang.basis.yukihon.system.auth.dto.GoogleTokenRequest;
 import com.hoang.basis.yukihon.system.auth.dto.LoginRequest;
 import com.hoang.basis.yukihon.system.auth.dto.RefreshTokenRequest;
 import com.hoang.basis.yukihon.system.auth.dto.RegisterRequest;
+import com.hoang.basis.yukihon.system.auth.dto.UpdateProfileRequest;
 import com.hoang.basis.yukihon.system.user.dto.UserDto;
 import com.hoang.basis.yukihon.system.auth.service.AuthService;
 import com.hoang.basis.yukihon.system.auth.service.GoogleOAuthService;
@@ -57,6 +59,31 @@ public class AuthController {
         }
         UserDto dto = authService.getCurrentUser(userDetails.getUsername());
         return ResponseEntity.ok(dto);
+    }
+
+    @PutMapping("/profile")
+    public ResponseEntity<UserDto> updateProfile(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @Valid @RequestBody UpdateProfileRequest request
+    ) {
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        return ResponseEntity.ok(authService.updateProfile(userDetails.getUsername(), request));
+    }
+
+    @PutMapping("/password")
+    public ResponseEntity<Void> changePassword(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @Valid @RequestBody ChangePasswordRequest request
+    ) {
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        authService.changePassword(userDetails.getUsername(), request);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/google")

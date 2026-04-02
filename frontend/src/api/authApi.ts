@@ -14,6 +14,15 @@ export interface AuthResponse {
   user: AuthUser;
 }
 
+export interface UpdateProfilePayload {
+  displayName: string;
+}
+
+export interface ChangePasswordPayload {
+  currentPassword: string;
+  newPassword: string;
+}
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 const GOOGLE_REDIRECT_URI = `${window.location.origin}/auth`;
 
@@ -34,6 +43,20 @@ export const authApi = {
 
   getCurrentUser() {
     return apiClient.request<AuthUser>("/api/auth/me");
+  },
+
+  updateProfile(data: UpdateProfilePayload) {
+    return apiClient.request<AuthUser>("/api/auth/profile", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  },
+
+  changePassword(data: ChangePasswordPayload) {
+    return apiClient.request<void>("/api/auth/password", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
   },
 
   async googleAuth(code: string): Promise<AuthResponse> {
