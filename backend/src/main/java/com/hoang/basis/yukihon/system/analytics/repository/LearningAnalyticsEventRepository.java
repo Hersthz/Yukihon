@@ -66,4 +66,26 @@ public interface LearningAnalyticsEventRepository extends JpaRepository<Learning
           @Param("quizWrongEvent") String quizWrongEvent,
           @Param("quizCorrectedEvent") String quizCorrectedEvent
         );
+
+    @Query(value = """
+          SELECT
+            CAST(e.created_at AS DATE) AS eventDate,
+            COUNT(*) AS totalEvents,
+            SUM(CASE WHEN e.event_type = :startEvent THEN 1 ELSE 0 END) AS startedCount,
+            SUM(CASE WHEN e.event_type = :completeEvent THEN 1 ELSE 0 END) AS completedCount,
+            COALESCE(SUM(COALESCE(e.duration_seconds, 0)), 0) AS totalDurationSeconds
+          FROM learning_analytics_events e
+          WHERE e.user_id = :userId
+            AND (:since IS NULL OR e.created_at >= :since)
+            AND (:until IS NULL OR e.created_at < :until)
+          GROUP BY CAST(e.created_at AS DATE)
+          ORDER BY CAST(e.created_at AS DATE)
+          """, nativeQuery = true)
+    List<StudyCalendarDayProjection> aggregateStudyCalendarDays(
+            @Param("userId") Long userId,
+            @Param("since") Instant since,
+            @Param("until") Instant until,
+            @Param("startEvent") String startEvent,
+            @Param("completeEvent") String completeEvent
+    );
 }

@@ -6,6 +6,7 @@ import {
   ArrowRight,
   BookOpen,
   Brain,
+  CalendarDays,
   Clock3,
   Flame,
   GraduationCap,
@@ -27,6 +28,7 @@ import { buildStudyAura } from "@/lib/studyAura";
 import type { LearningPathLesson } from "@/api";
 
 const quickActions = [
+  { title: "Lịch học", subtitle: "Nhìn nhịp học theo từng ngày", icon: CalendarDays, to: "/calendar", accent: "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400" },
   { title: "Tra cứu", subtitle: "Kanji, ví dụ, cách đọc", icon: Search, to: "/dictionary", accent: "bg-sky-500/15 text-sky-600 dark:text-sky-400" },
   { title: "Story Mode", subtitle: "Học qua truyện ngắn", icon: BookOpen, to: "/story-mode", accent: "bg-rose-500/15 text-rose-600 dark:text-rose-400" },
   { title: "Ngữ pháp", subtitle: "Ôn cấu trúc thường gặp", icon: Brain, to: "/grammar", accent: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" },
@@ -103,7 +105,7 @@ const Dashboard = () => {
   );
   const isStudyAuraLoading = isLearningPathLoading || isMistakeDnaLoading || isWordStatsLoading;
   const todayGoals = learningPath?.todayGoals ?? [
-    "Thiết lập mục tiêu JLPT trong phần Settings để hệ thống cá nhân hóa sâu hơn.",
+    "Thiết lập mục tiêu JLPT trong phần Tài khoản để hệ thống cá nhân hóa sâu hơn.",
     "Chọn một bài trọng tâm và giữ nhịp học đều trong hôm nay.",
   ];
   const deadlinePlan = learningPath?.deadlinePlan ?? null;

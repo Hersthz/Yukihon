@@ -6,6 +6,7 @@ import {
   BookMarked,
   BookOpen,
   Brain,
+  CalendarDays,
   ChevronLeft,
   ChevronRight,
   Compass,
@@ -49,6 +50,7 @@ const PRIMARY_GROUPS: NavGroup[] = [
     label: "Khám phá",
     items: [
       { label: "Tổng quan", path: "/dashboard", icon: LayoutDashboard },
+      { label: "Lịch học", path: "/calendar", icon: CalendarDays },
       { label: "Tra cứu", path: "/dictionary", icon: Search },
       { label: "Story Mode", path: "/story-mode", icon: BookOpen, badge: "New" },
       { label: "Dịch", path: "/translation", icon: Globe2 },
@@ -76,6 +78,7 @@ const SECONDARY_ITEMS: NavItem[] = [
 
 const PAGE_META: Record<string, string> = {
   "/dashboard": "Không gian học tập",
+  "/calendar": "Lịch học",
   "/dictionary": "Tra cứu",
   "/story-mode": "Story Mode",
   "/translation": "Dịch",
