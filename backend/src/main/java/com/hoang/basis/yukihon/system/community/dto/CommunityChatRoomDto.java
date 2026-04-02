@@ -5,16 +5,15 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.Instant;
-
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CommunityChatSocketErrorDto {
+public class CommunityChatRoomDto {
 
-    private String code;
-    private String message;
-    private String clientMessageId;
-    private Instant createdAt;
+    private String id;
+    private String title;
+    private String description;
+    private String focus;
+    private String accent;
 }

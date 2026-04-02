@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { MessageCircle, MessageSquare, Plus, Trophy, Users } from "lucide-react";
 import { communityApi } from "@/api";
@@ -12,8 +12,13 @@ import CommunityFeed from "@/pages/community/CommunityFeed";
 import CommunityFilters from "@/pages/community/CommunityFilters";
 import CommunityLeaderboard from "@/pages/community/CommunityLeaderboard";
 import CommunityRealtimeChat from "@/pages/community/CommunityRealtimeChat";
-import { JLPT_OPTIONS } from "@/pages/community/constants";
-import { Comment, CommunityStats, LeaderboardEntry, PagedComments, PagedPosts, Post } from "@/pages/community/types";
+import CommunityChatRooms from "@/pages/community/CommunityChatRooms";
+import { DEFAULT_CHAT_ROOMS, JLPT_OPTIONS } from "@/pages/community/constants";
+import { ChatRoom, Comment, CommunityStats, LeaderboardEntry, PagedComments, PagedPosts, Post } from "@/pages/community/types";
+
+const CHAT_ROOM_STORAGE_KEY = "yukihon.community.chat-room";
+
+const normalizeRoomId = (roomId?: string | null) => (roomId?.trim().toLowerCase() || DEFAULT_CHAT_ROOMS[0]?.id || "general");
 
 const Community = () => {
   const { user } = useAuth();
@@ -30,6 +35,9 @@ const Community = () => {
   const [stats, setStats] = useState<CommunityStats | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [showBookmarkedOnly, setShowBookmarkedOnly] = useState(false);
+  const [chatRooms, setChatRooms] = useState<ChatRoom[]>(DEFAULT_CHAT_ROOMS);
+  const [chatRoomsLoading, setChatRoomsLoading] = useState(true);
+  const [selectedRoomId, setSelectedRoomId] = useState(() => normalizeRoomId(localStorage.getItem(CHAT_ROOM_STORAGE_KEY)));
 
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [newTitle, setNewTitle] = useState("");
@@ -87,6 +95,50 @@ const Community = () => {
   useEffect(() => {
     void fetchStats();
   }, [fetchStats]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    const fetchChatRooms = async () => {
+      try {
+        const rooms = (await communityApi.getChatRooms()) as ChatRoom[];
+        if (!isActive || !Array.isArray(rooms) || rooms.length === 0) {
+          return;
+        }
+
+        setChatRooms(rooms);
+      } catch {
+        if (isActive) {
+          setChatRooms(DEFAULT_CHAT_ROOMS);
+        }
+      } finally {
+        if (isActive) {
+          setChatRoomsLoading(false);
+        }
+      }
+    };
+
+    void fetchChatRooms();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!chatRooms.some((room) => room.id === selectedRoomId)) {
+      setSelectedRoomId(chatRooms[0]?.id ?? DEFAULT_CHAT_ROOMS[0].id);
+    }
+  }, [chatRooms, selectedRoomId]);
+
+  useEffect(() => {
+    localStorage.setItem(CHAT_ROOM_STORAGE_KEY, selectedRoomId);
+  }, [selectedRoomId]);
+
+  const selectedChatRoom = useMemo(
+    () => chatRooms.find((room) => room.id === selectedRoomId) ?? chatRooms[0] ?? DEFAULT_CHAT_ROOMS[0],
+    [chatRooms, selectedRoomId]
+  );
 
   const handleCreatePost = async () => {
     if (!newContent.trim()) return;
@@ -212,7 +264,7 @@ const Community = () => {
           <MetricCard hint="Bai moi 7 ngay" icon={<Trophy className="h-4 w-4 text-amber-500" />} label="This week" value={stats?.postsThisWeek ?? 0} />
         </div>
 
-        <div className="mb-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="mb-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
           <CommunityFilters
             activeCategory={activeCategory}
             jlptFilter={jlptFilter}
@@ -232,7 +284,13 @@ const Community = () => {
           />
           <div className="space-y-4">
             <CommunityLeaderboard leaderboard={leaderboard} stats={stats} />
-            <CommunityRealtimeChat currentUserId={user?.id} />
+            <CommunityChatRooms
+              isLoading={chatRoomsLoading}
+              onSelectRoom={(roomId) => setSelectedRoomId(normalizeRoomId(roomId))}
+              rooms={chatRooms}
+              selectedRoomId={selectedChatRoom.id}
+            />
+            <CommunityRealtimeChat currentUserId={user?.id} currentUserName={user?.displayName} room={selectedChatRoom} />
           </div>
         </div>
 

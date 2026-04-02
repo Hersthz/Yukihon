@@ -26,12 +26,14 @@ export interface Comment {
 }
 
 export interface ChatMessage {
-  id: number;
+  id: number | string;
   roomId: string;
   userId: number;
   userDisplayName: string;
+  clientMessageId?: string | null;
   content: string;
   createdAt: string;
+  deliveryState?: "sending" | "sent" | "failed";
 }
 
 export interface ChatTypingEvent {
@@ -45,7 +47,23 @@ export interface ChatTypingEvent {
 export interface ChatSocketError {
   code: "RATE_LIMIT" | "MODERATION" | "UNAUTHORIZED" | "VALIDATION";
   message: string;
+  clientMessageId?: string | null;
   createdAt: string;
+}
+
+export interface ChatPresence {
+  roomId: string;
+  activeUsers: number;
+  activeDisplayNames: string[];
+  createdAt: string;
+}
+
+export interface ChatRoom {
+  id: string;
+  title: string;
+  description: string;
+  focus: string;
+  accent: string;
 }
 
 export interface PagedPosts {

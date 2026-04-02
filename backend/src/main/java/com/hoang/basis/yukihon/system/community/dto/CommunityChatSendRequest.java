@@ -14,6 +14,9 @@ public class CommunityChatSendRequest {
     @Size(max = 40)
     private String roomId;
 
+    @Size(max = 80)
+    private String clientMessageId;
+
     @NotBlank
     @Size(max = 1000)
     private String content;

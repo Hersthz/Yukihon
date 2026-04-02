@@ -3,6 +3,7 @@ package com.hoang.basis.yukihon.system.community.controller;
 import com.hoang.basis.yukihon.system.community.dto.CommunityChatSendRequest;
 import com.hoang.basis.yukihon.system.community.dto.CommunityChatSocketErrorDto;
 import com.hoang.basis.yukihon.system.community.dto.CommunityChatTypingRequest;
+import com.hoang.basis.yukihon.system.community.exception.CommunityChatSocketException;
 import com.hoang.basis.yukihon.system.community.service.CommunityChatService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +27,7 @@ public class CommunityChatSocketController {
     @MessageMapping("/community-chat.send")
     public void sendMessage(@Valid @Payload CommunityChatSendRequest request, Principal principal) {
         if (principal == null) {
-            throw new IllegalArgumentException("Unauthorized chat connection");
+            throw new CommunityChatSocketException("UNAUTHORIZED", "Unauthorized chat connection", request.getClientMessageId());
         }
 
         var savedMessage = communityChatService.createMessage(principal.getName(), request);
@@ -36,33 +37,21 @@ public class CommunityChatSocketController {
     @MessageMapping("/community-chat.typing")
     public void typing(@Payload CommunityChatTypingRequest request, Principal principal) {
         if (principal == null) {
-            throw new IllegalArgumentException("Unauthorized chat connection");
+            throw new CommunityChatSocketException("UNAUTHORIZED", "Unauthorized chat connection", null);
         }
 
         var typingEvent = communityChatService.createTypingEvent(principal.getName(), request);
         messagingTemplate.convertAndSend("/topic/community-chat.typing." + typingEvent.getRoomId(), typingEvent);
     }
 
-    @MessageExceptionHandler(IllegalArgumentException.class)
+    @MessageExceptionHandler(CommunityChatSocketException.class)
     @SendToUser("/queue/community-chat.errors")
-    public CommunityChatSocketErrorDto handleValidationError(IllegalArgumentException exception) {
+    public CommunityChatSocketErrorDto handleValidationError(CommunityChatSocketException exception) {
         String message = exception.getMessage() == null ? "Chat action failed" : exception.getMessage();
-        String normalizedMessage = message.toLowerCase();
-        String code;
-
-        if (normalizedMessage.contains("rate limit")) {
-            code = "RATE_LIMIT";
-        } else if (normalizedMessage.contains("blocked keyword")) {
-            code = "MODERATION";
-        } else if (normalizedMessage.contains("unauthorized")) {
-            code = "UNAUTHORIZED";
-        } else {
-            code = "VALIDATION";
-        }
-
         return CommunityChatSocketErrorDto.builder()
-                .code(code)
+                .code(exception.getCode())
                 .message(message)
+                .clientMessageId(exception.getClientMessageId())
                 .createdAt(Instant.now())
                 .build();
     }
