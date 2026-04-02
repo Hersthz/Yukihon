@@ -1,22 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Bell,
-  CalendarClock,
-  Flame,
-  Globe,
-  GraduationCap,
-  KeyRound,
-  LogOut,
-  Palette,
-  RotateCcw,
-  Save,
-  Settings2,
-  Shield,
-  Target,
-  UserRound,
-  Volume2,
-} from "lucide-react";
+import { Bell, CheckCircle2, GraduationCap, KeyRound, LogOut, Palette, RotateCcw, Save, Settings2, ShieldCheck, Target, UserRound, Volume2 } from "lucide-react";
 import { authApi, settingsApi, type UpdateUserSettingsPayload, type UserSettingsResponse } from "@/api";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
@@ -25,64 +9,29 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/hooks/use-auth";
+import { useTheme, type ThemePreference } from "@/hooks/use-theme";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
-interface UserSettingsData {
-  theme: string;
-  language: string;
-  dailyGoalMinutes: number;
-  emailNotifications: boolean;
-  pushNotifications: boolean;
-  showFurigana: boolean;
-  showRomaji: boolean;
-  autoPlayAudio: boolean;
-  quizDifficulty: string;
-  targetJlptLevel: string;
-  jlptDeadlineDate: string | null;
-}
+interface UserSettingsData { theme: string; language: string; dailyGoalMinutes: number; emailNotifications: boolean; pushNotifications: boolean; showFurigana: boolean; showRomaji: boolean; autoPlayAudio: boolean; quizDifficulty: string; targetJlptLevel: string; jlptDeadlineDate: string | null; }
+interface PasswordFormState { currentPassword: string; newPassword: string; confirmPassword: string; }
 
-interface PasswordFormState {
-  currentPassword: string;
-  newPassword: string;
-  confirmPassword: string;
-}
-
-const DEFAULT_SETTINGS: UserSettingsData = {
-  theme: "light",
-  language: "vi",
-  dailyGoalMinutes: 30,
-  emailNotifications: true,
-  pushNotifications: true,
-  showFurigana: true,
-  showRomaji: true,
-  autoPlayAudio: false,
-  quizDifficulty: "normal",
-  targetJlptLevel: "N5",
-  jlptDeadlineDate: null,
-};
-
-const EMPTY_PASSWORD_FORM: PasswordFormState = {
-  currentPassword: "",
-  newPassword: "",
-  confirmPassword: "",
-};
-
-const normalizeSettings = (data: UserSettingsResponse): UserSettingsData => ({
-  ...DEFAULT_SETTINGS,
-  ...data,
-  quizDifficulty: (data.quizDifficulty || DEFAULT_SETTINGS.quizDifficulty).toLowerCase(),
-  jlptDeadlineDate: data.jlptDeadlineDate ?? null,
-});
+const DEFAULT_SETTINGS: UserSettingsData = { theme: "system", language: "vi", dailyGoalMinutes: 30, emailNotifications: true, pushNotifications: true, showFurigana: true, showRomaji: true, autoPlayAudio: false, quizDifficulty: "normal", targetJlptLevel: "N5", jlptDeadlineDate: null };
+const EMPTY_PASSWORD_FORM: PasswordFormState = { currentPassword: "", newPassword: "", confirmPassword: "" };
+const normalize = (data: UserSettingsResponse): UserSettingsData => ({ ...DEFAULT_SETTINGS, ...data, theme: data.theme || "system", language: data.language || "vi", quizDifficulty: (data.quizDifficulty || "normal").toLowerCase(), jlptDeadlineDate: data.jlptDeadlineDate ?? null });
+const diffCount = (a: UserSettingsData, b: UserSettingsData) => Object.keys(a).filter((key) => a[key as keyof UserSettingsData] !== b[key as keyof UserSettingsData]).length;
+const strength = (value: string) => { let score = 0; if (value.length >= 8) score += 35; if (/[A-Z]/.test(value) && /[a-z]/.test(value)) score += 25; if (/\d/.test(value)) score += 20; if (/[^A-Za-z0-9]/.test(value)) score += 20; return { score, label: score >= 80 ? "Manh" : score >= 50 ? "Kha on" : value ? "Con yeu" : "Chua nhap", tone: score >= 80 ? "text-emerald-600" : score >= 50 ? "text-amber-600" : "text-rose-600" }; };
 
 const Profile = () => {
   const navigate = useNavigate();
   const { user, logout, refreshUser } = useAuth();
+  const { setTheme, resolvedTheme } = useTheme();
   const { toast } = useToast();
-
   const [displayName, setDisplayName] = useState("");
   const [settings, setSettings] = useState<UserSettingsData>(DEFAULT_SETTINGS);
   const [originalSettings, setOriginalSettings] = useState<UserSettingsData>(DEFAULT_SETTINGS);
@@ -94,493 +43,80 @@ const Profile = () => {
 
   const fetchPageData = useCallback(async () => {
     setLoading(true);
-    try {
-      const settingsResponse = await settingsApi.get();
-      const normalized = normalizeSettings(settingsResponse);
-      setSettings(normalized);
-      setOriginalSettings(normalized);
-    } catch {
-      setSettings(DEFAULT_SETTINGS);
-      setOriginalSettings(DEFAULT_SETTINGS);
-      toast({
-        title: "Khong tai duoc cai dat",
-        description: "Trang van mo duoc, nhung mot so du lieu co the chua moi nhat.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
+    try { const next = normalize(await settingsApi.get()); setSettings(next); setOriginalSettings(next); }
+    catch { toast({ title: "Khong tai duoc cai dat", description: "Trang van mo duoc, nhung mot so du lieu co the chua moi nhat.", variant: "destructive" }); }
+    finally { setLoading(false); }
   }, [toast]);
 
-  useEffect(() => {
-    setDisplayName(user?.displayName ?? "");
-  }, [user?.displayName]);
+  useEffect(() => { setDisplayName(user?.displayName ?? ""); }, [user?.displayName]);
+  useEffect(() => { void fetchPageData(); }, [fetchPageData]);
+  useEffect(() => { if (!loading) setTheme((settings.theme as ThemePreference) || "system"); }, [loading, setTheme, settings.theme]);
+  useEffect(() => () => setTheme((originalSettings.theme as ThemePreference) || "system"), [originalSettings.theme, setTheme]);
 
-  useEffect(() => {
-    void fetchPageData();
-  }, [fetchPageData]);
+  const setField = (key: keyof UserSettingsData, value: string | number | boolean | null) => setSettings((prev) => ({ ...prev, [key]: value }));
+  const name = displayName.trim();
+  const nameError = !name ? "Ten hien thi khong duoc de trong." : name.length < 2 ? "Ten hien thi nen tu 2 ky tu tro len." : name.length > 50 ? "Ten hien thi nen duoi 50 ky tu." : null;
+  const hasProfileChanges = name !== (user?.displayName ?? "").trim();
+  const settingsChanges = diffCount(settings, originalSettings);
+  const hasSettingsChanges = settingsChanges > 0;
+  const pwd = strength(passwordForm.newPassword);
+  const passwordError = !passwordForm.currentPassword && !passwordForm.newPassword && !passwordForm.confirmPassword ? null : !passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword ? "Can dien day du 3 truong mat khau." : passwordForm.newPassword.length < 8 ? "Mat khau moi can it nhat 8 ky tu." : passwordForm.newPassword === passwordForm.currentPassword ? "Mat khau moi can khac mat khau hien tai." : passwordForm.newPassword !== passwordForm.confirmPassword ? "Xac nhan mat khau chua khop." : null;
+  const deadlineText = useMemo(() => { if (!settings.jlptDeadlineDate) return "Chua dat deadline."; const today = new Date(); const base = new Date(today.getFullYear(), today.getMonth(), today.getDate()); const deadline = new Date(`${settings.jlptDeadlineDate}T00:00:00`); const diff = Math.round((deadline.getTime() - base.getTime()) / 86400000); if (Number.isNaN(diff)) return "Deadline chua hop le."; if (diff < 0) return "Deadline da qua."; if (diff === 0) return "Hom nay la deadline."; return `Con ${diff} ngay den han.`; }, [settings.jlptDeadlineDate]);
 
-  const updateSetting = (key: keyof UserSettingsData, value: string | number | boolean | null) => {
-    setSettings((previous) => ({ ...previous, [key]: value }));
-  };
-
-  const hasSettingsChanges = JSON.stringify(settings) !== JSON.stringify(originalSettings);
-  const hasProfileChanges = displayName.trim() !== (user?.displayName ?? "").trim();
-  const notificationsEnabled = settings.emailNotifications || settings.pushNotifications;
-  const userInitial = (user?.displayName?.trim()?.charAt(0) || user?.email?.charAt(0) || "U").toUpperCase();
-
-  const deadlineMeta = useMemo(() => {
-    if (!settings.jlptDeadlineDate) {
-      return null;
-    }
-
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const deadline = new Date(`${settings.jlptDeadlineDate}T00:00:00`);
-    if (Number.isNaN(deadline.getTime())) {
-      return null;
-    }
-
-    const daysRemaining = Math.floor((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-    return {
-      daysRemaining,
-      isPast: daysRemaining <= 0,
-    };
-  }, [settings.jlptDeadlineDate]);
-
-  const handleSaveProfile = async () => {
-    const nextDisplayName = displayName.trim();
-    if (!nextDisplayName) {
-      toast({ title: "Thieu ten hien thi", description: "Vui long nhap ten hien thi hop le.", variant: "destructive" });
-      return;
-    }
-
+  const saveProfile = async () => {
+    if (nameError || !hasProfileChanges) { if (nameError) toast({ title: "Thong tin chua hop le", description: nameError, variant: "destructive" }); return; }
     setProfileSaving(true);
-    try {
-      await authApi.updateProfile({ displayName: nextDisplayName });
-      await refreshUser();
-      toast({ title: "Da cap nhat ho so", description: "Ten hien thi cua ban da duoc luu." });
-    } catch (error) {
-      toast({
-        title: "Khong the cap nhat ho so",
-        description: error instanceof Error ? error.message : "Vui long thu lai.",
-        variant: "destructive",
-      });
-    } finally {
-      setProfileSaving(false);
-    }
+    try { await authApi.updateProfile({ displayName: name }); await refreshUser(); toast({ title: "Da cap nhat ho so", description: "Ten hien thi da duoc luu." }); }
+    catch (error) { toast({ title: "Khong the cap nhat ho so", description: error instanceof Error ? error.message : "Vui long thu lai.", variant: "destructive" }); }
+    finally { setProfileSaving(false); }
   };
 
-  const handleSaveSettings = async () => {
+  const saveSettings = async () => {
     setSettingsSaving(true);
-    try {
-      const payload: UpdateUserSettingsPayload = {
-        ...settings,
-        jlptDeadlineDate: settings.jlptDeadlineDate ? settings.jlptDeadlineDate : "",
-      };
-      const updated = await settingsApi.update(payload);
-      const normalized = normalizeSettings(updated);
-      setSettings(normalized);
-      setOriginalSettings(normalized);
-      toast({ title: "Da luu cai dat", description: "Thiet lap hoc tap va giao dien da duoc cap nhat." });
-    } catch (error) {
-      toast({
-        title: "Khong the luu cai dat",
-        description: error instanceof Error ? error.message : "Vui long thu lai.",
-        variant: "destructive",
-      });
-    } finally {
-      setSettingsSaving(false);
-    }
+    try { const payload: UpdateUserSettingsPayload = { ...settings, jlptDeadlineDate: settings.jlptDeadlineDate || "" }; const next = normalize(await settingsApi.update(payload)); setSettings(next); setOriginalSettings(next); toast({ title: "Da luu cai dat", description: "Trai nghiem hoc tap cua ban da duoc cap nhat." }); }
+    catch (error) { toast({ title: "Khong the luu cai dat", description: error instanceof Error ? error.message : "Vui long thu lai.", variant: "destructive" }); }
+    finally { setSettingsSaving(false); }
   };
 
-  const handleResetSettings = () => {
-    setSettings(originalSettings);
-    toast({ title: "Da hoan tac", description: "Cai dat quay ve lan luu gan nhat." });
-  };
-
-  const handleChangePassword = async () => {
-    if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
-      toast({ title: "Thieu thong tin", description: "Vui long dien du cac truong mat khau.", variant: "destructive" });
-      return;
-    }
-
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      toast({ title: "Mat khau chua khop", description: "Mat khau moi va xac nhan mat khau phai giong nhau.", variant: "destructive" });
-      return;
-    }
-
+  const savePassword = async () => {
+    if (passwordError) { toast({ title: "Khong the doi mat khau", description: passwordError, variant: "destructive" }); return; }
     setPasswordSaving(true);
-    try {
-      await authApi.changePassword({
-        currentPassword: passwordForm.currentPassword,
-        newPassword: passwordForm.newPassword,
-      });
-      setPasswordForm(EMPTY_PASSWORD_FORM);
-      toast({ title: "Doi mat khau thanh cong", description: "Mat khau tai khoan cua ban da duoc cap nhat." });
-    } catch (error) {
-      toast({
-        title: "Khong the doi mat khau",
-        description: error instanceof Error ? error.message : "Vui long thu lai.",
-        variant: "destructive",
-      });
-    } finally {
-      setPasswordSaving(false);
-    }
+    try { await authApi.changePassword({ currentPassword: passwordForm.currentPassword, newPassword: passwordForm.newPassword }); setPasswordForm(EMPTY_PASSWORD_FORM); toast({ title: "Doi mat khau thanh cong", description: "Mat khau moi da co hieu luc ngay." }); }
+    catch (error) { toast({ title: "Khong the doi mat khau", description: error instanceof Error ? error.message : "Vui long thu lai.", variant: "destructive" }); }
+    finally { setPasswordSaving(false); }
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate("/auth");
-  };
-
-  if (loading) {
-    return (
-      <DashboardLayout>
-        <div className="flex min-h-[60vh] items-center justify-center">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-sky-100 border-t-sky-500" />
-        </div>
-      </DashboardLayout>
-    );
-  }
+  if (loading) return <DashboardLayout><div className="flex min-h-[60vh] items-center justify-center"><div className="h-12 w-12 animate-spin rounded-full border-4 border-sky-100 border-t-sky-500" /></div></DashboardLayout>;
 
   return (
     <DashboardLayout>
-      <div className="mx-auto max-w-[1380px]">
-        <PageHeader
-          eyebrow="Account"
-          icon={<Settings2 className="h-6 w-6 text-sky-600" />}
-          title="Tai khoan"
-          description="Mot noi de quan ly ho so, bao mat va toan bo cai dat hoc tap cua ban."
-          action={
-            <div className="flex flex-wrap gap-2">
-              <Button className="rounded-2xl border-border bg-card text-foreground/80 hover:bg-card" onClick={handleResetSettings} variant="outline">
-                <RotateCcw className="mr-2 h-4 w-4" />
-                Hoan tac cai dat
-              </Button>
-              <Button className="rounded-2xl bg-sky-500 text-white hover:bg-sky-400" disabled={!hasSettingsChanges || settingsSaving} onClick={handleSaveSettings}>
-                <Save className="mr-2 h-4 w-4" />
-                {settingsSaving ? "Dang luu..." : "Luu cai dat"}
-              </Button>
-            </div>
-          }
-        />
-
-        <div className="mb-4 grid gap-3 md:grid-cols-4">
-          <MetricCard hint="Ten hien thi hien tai" icon={<UserRound className="h-4 w-4 text-sky-500" />} label="Ho so" value={user?.displayName || "User"} />
-          <MetricCard hint="Muc tieu chinh" icon={<GraduationCap className="h-4 w-4 text-amber-500" />} label="JLPT" value={settings.targetJlptLevel} />
-          <MetricCard hint="Muc tieu hoc moi ngay" icon={<Target className="h-4 w-4 text-emerald-500" />} label="Daily goal" value={`${settings.dailyGoalMinutes} phut`} />
-          <MetricCard hint="Trang thai thong bao" icon={<Bell className="h-4 w-4 text-violet-500" />} label="Thong bao" value={notificationsEnabled ? "Bat" : "Tat"} />
+      <div className="mx-auto max-w-[1420px]">
+        <PageHeader eyebrow="Account hub" icon={<Settings2 className="h-6 w-6 text-sky-600" />} title="Tai khoan va cai dat" description="Mot noi duy nhat de quan ly ho so, bao mat va nhung tuy chinh giup viec tu hoc muot hon." action={<div className="flex flex-wrap gap-2"><Badge className={cn("rounded-full border px-3 py-1", hasProfileChanges || hasSettingsChanges ? "border-amber-200 bg-amber-50 text-amber-700" : "border-emerald-200 bg-emerald-50 text-emerald-700")}>{hasProfileChanges || hasSettingsChanges ? "Dang co thay doi chua luu" : "Tat ca da duoc luu"}</Badge><Button variant="outline" className="rounded-2xl border-border bg-card text-foreground/80 hover:bg-card" onClick={() => setSettings(originalSettings)}><RotateCcw className="mr-2 h-4 w-4" />Hoan tac</Button><Button className="rounded-2xl bg-sky-500 text-white hover:bg-sky-400" disabled={!hasSettingsChanges || settingsSaving} onClick={saveSettings}><Save className="mr-2 h-4 w-4" />{settingsSaving ? "Dang luu..." : "Luu cai dat"}</Button></div>} />
+        <div className="mb-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <MetricCard label="Trang thai" value={hasProfileChanges || hasSettingsChanges ? "Can luu" : "Da dong bo"} hint={hasProfileChanges || hasSettingsChanges ? "Co thay doi dang cho xu ly." : "Khong co thay doi nao dang cho."} icon={<CheckCircle2 className={cn("h-4 w-4", hasProfileChanges || hasSettingsChanges ? "text-amber-500" : "text-emerald-500")} />} />
+          <MetricCard label="JLPT" value={settings.targetJlptLevel} hint={deadlineText} icon={<GraduationCap className="h-4 w-4 text-amber-500" />} />
+          <MetricCard label="Daily goal" value={`${settings.dailyGoalMinutes} phut`} hint={`${settings.quizDifficulty} quiz • ${settings.showFurigana ? "Co furigana" : "Khong furigana"}`} icon={<Target className="h-4 w-4 text-emerald-500" />} />
+          <MetricCard label="Thong bao" value={settings.emailNotifications || settings.pushNotifications ? "Dang bat" : "Dang tat"} hint={settings.emailNotifications && settings.pushNotifications ? "Email va push" : settings.emailNotifications ? "Chi email" : settings.pushNotifications ? "Chi push" : "Tat het"} icon={<Bell className="h-4 w-4 text-violet-500" />} />
         </div>
-
-        <div className="grid gap-4 xl:grid-cols-[340px_minmax(0,1fr)]">
+        <div className="grid gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
+          <PageSection title="Tong quan" description="Nhin nhanh tinh trang account va trai nghiem hien tai." className="xl:sticky xl:top-[92px] xl:self-start">
+            <div className="flex items-center gap-4"><Avatar className="h-20 w-20 bg-[linear-gradient(135deg,#7dd3fc,#86efac)]"><AvatarFallback className="bg-transparent text-xl font-semibold text-foreground">{(user?.displayName?.[0] || user?.email?.[0] || "U").toUpperCase()}</AvatarFallback></Avatar><div className="min-w-0"><p className="truncate text-lg font-semibold text-foreground">{user?.displayName || "Learner"}</p><p className="truncate text-sm text-muted-foreground">{user?.email}</p><div className="mt-2 flex flex-wrap gap-2">{(user?.roles || ["USER"]).map((role) => <Badge key={role} className="rounded-full border border-sky-200 bg-sky-50 text-sky-700">{role}</Badge>)}</div></div></div>
+            <div className="mt-4 space-y-3"><div className="rounded-[18px] border border-border bg-card p-4 text-sm text-muted-foreground">Theme <span className="font-medium text-foreground">{settings.theme}</span> • dang hien thi <span className="font-medium capitalize text-foreground">{resolvedTheme}</span></div><div className="rounded-[18px] border border-border bg-card p-4 text-sm text-muted-foreground">Ngon ngu <span className="font-medium text-foreground">{settings.language}</span> • muc tieu <span className="font-medium text-foreground">{settings.targetJlptLevel}</span></div><div className="rounded-[18px] border border-emerald-200 bg-emerald-50/80 p-4 text-sm leading-6 text-foreground/80">Ban dang huong toi {settings.targetJlptLevel} voi muc tieu {settings.dailyGoalMinutes} phut moi ngay va {settings.quizDifficulty} quiz.</div></div>
+            <Button variant="outline" className="mt-4 w-full rounded-2xl border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100" onClick={() => { logout(); navigate("/auth"); }}><LogOut className="mr-2 h-4 w-4" />Dang xuat</Button>
+          </PageSection>
           <div className="space-y-4">
-            <PageSection title="Tom tat tai khoan" description="Cac thong tin chinh de ban kiem tra nhanh truoc khi chinh sua.">
-              <div className="flex items-center gap-4">
-                <Avatar className="h-20 w-20 bg-[linear-gradient(135deg,#7dd3fc,#86efac)]">
-                  <AvatarFallback className="bg-transparent text-xl font-semibold text-foreground">{userInitial}</AvatarFallback>
-                </Avatar>
-                <div className="min-w-0">
-                  <p className="truncate text-lg font-semibold text-foreground">{user?.displayName || "Learner"}</p>
-                  <p className="truncate text-sm text-muted-foreground">{user?.email || "user@example.com"}</p>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {(user?.roles || ["USER"]).map((role) => (
-                      <Badge key={role} className="rounded-full border border-sky-200 bg-sky-50 text-sky-700">
-                        {role}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-4 rounded-[20px] border border-emerald-200 bg-emerald-50/70 p-4">
-                <p className="text-sm font-semibold text-emerald-800">Nhip hoc hien tai</p>
-                <p className="mt-1 text-sm leading-6 text-foreground/80">
-                  Ban dang huong toi {settings.targetJlptLevel} voi muc tieu {settings.dailyGoalMinutes} phut moi ngay va
-                  che do quiz {settings.quizDifficulty}.
-                </p>
-              </div>
-
-              <div className="mt-4 rounded-[20px] border border-amber-200 bg-amber-50/70 p-4">
-                <div className="flex items-center gap-2">
-                  <Flame className="h-4 w-4 text-amber-600" />
-                  <p className="text-sm font-semibold text-amber-800">Goi y nhanh</p>
-                </div>
-                <p className="mt-1 text-sm leading-6 text-foreground/80">
-                  Neu ban muon doi toan bo trai nghiem ca nhan, hay chinh ten hien thi o phan ho so va luu cai dat hoc tap
-                  o cung trang nay.
-                </p>
-              </div>
-
-              <Button className="mt-4 w-full rounded-2xl border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100" onClick={handleLogout} variant="outline">
-                <LogOut className="mr-2 h-4 w-4" />
-                Dang xuat
-              </Button>
+            <PageSection title="Ho so ca nhan" description="Cap nhat ten hien thi va giu thong tin account gon gang." action={<Button className="rounded-2xl bg-sky-500 text-white hover:bg-sky-400" disabled={!hasProfileChanges || !!nameError || profileSaving} onClick={saveProfile}><Save className="mr-2 h-4 w-4" />{profileSaving ? "Dang luu..." : "Luu ho so"}</Button>}>
+              <div className="grid gap-4 md:grid-cols-2"><div className="space-y-2"><Label htmlFor="displayName">Ten hien thi</Label><Input id="displayName" className={cn("h-11 rounded-2xl border-border bg-card", nameError ? "border-rose-300" : "")} value={displayName} onChange={(event) => setDisplayName(event.target.value)} placeholder="Nhap ten hien thi cua ban" /><p className={cn("text-xs", nameError ? "text-rose-600" : "text-muted-foreground")}>{nameError || "Ten nay se hien o dashboard va cac khu vuc hoc tap."}</p></div><div className="space-y-2"><Label htmlFor="email">Email</Label><Input id="email" className="h-11 rounded-2xl border-border bg-muted" value={user?.email || ""} disabled /><p className="text-xs text-muted-foreground">Email hien chua doi trong man nay de tranh tac dong den dang nhap.</p></div></div>
             </PageSection>
-          </div>
-
-          <div className="space-y-4">
-            <PageSection
-              title="Ho so ca nhan"
-              description="Cap nhat ten hien thi va kiem tra thong tin tai khoan co ban."
-              action={
-                <Button className="rounded-2xl bg-sky-500 text-white hover:bg-sky-400" disabled={!hasProfileChanges || profileSaving} onClick={handleSaveProfile}>
-                  <Save className="mr-2 h-4 w-4" />
-                  {profileSaving ? "Dang luu..." : "Luu ho so"}
-                </Button>
-              }
-            >
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="displayName">Ten hien thi</Label>
-                  <Input
-                    id="displayName"
-                    className="h-11 rounded-2xl border-border bg-card"
-                    value={displayName}
-                    onChange={(event) => setDisplayName(event.target.value)}
-                    placeholder="Nhap ten hien thi cua ban"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" className="h-11 rounded-2xl border-border bg-muted" value={user?.email || ""} disabled />
-                </div>
-              </div>
+            <PageSection title="Hoc tap va trai nghiem" description="Tat ca preference hoc tap, thong bao va giao dien o cung mot cho.">
+              <div className="grid gap-4 xl:grid-cols-2"><div className="space-y-4"><div className="rounded-[18px] border border-border bg-card p-4"><div className="mb-3 flex items-center justify-between"><div className="flex items-center gap-3"><Target className="h-5 w-5 text-amber-500" /><div><p className="text-sm font-semibold text-foreground">Muc tieu hang ngay</p><p className="text-sm text-muted-foreground">Dieu chinh nhip hoc theo muc tieu ca nhan.</p></div></div><span className="text-sm font-semibold text-amber-700">{settings.dailyGoalMinutes} phut</span></div><Slider min={5} max={120} step={5} value={[settings.dailyGoalMinutes]} onValueChange={([value]) => setField("dailyGoalMinutes", value)} /></div><div className="grid gap-4 md:grid-cols-3"><div className="rounded-[18px] border border-border bg-card p-4"><Label className="mb-2 block text-sm font-semibold text-foreground">JLPT</Label><Select value={settings.targetJlptLevel} onValueChange={(value) => setField("targetJlptLevel", value)}><SelectTrigger className="h-11 rounded-2xl border-border bg-card"><SelectValue /></SelectTrigger><SelectContent>{["N5","N4","N3","N2","N1"].map((level) => <SelectItem key={level} value={level}>{level}</SelectItem>)}</SelectContent></Select></div><div className="rounded-[18px] border border-border bg-card p-4"><Label className="mb-2 block text-sm font-semibold text-foreground">Theme</Label><Select value={settings.theme} onValueChange={(value) => setField("theme", value)}><SelectTrigger className="h-11 rounded-2xl border-border bg-card"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="light">Light</SelectItem><SelectItem value="dark">Dark</SelectItem><SelectItem value="system">System</SelectItem></SelectContent></Select></div><div className="rounded-[18px] border border-border bg-card p-4"><Label className="mb-2 block text-sm font-semibold text-foreground">Language</Label><Select value={settings.language} onValueChange={(value) => setField("language", value)}><SelectTrigger className="h-11 rounded-2xl border-border bg-card"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="vi">Tieng Viet</SelectItem><SelectItem value="en">English</SelectItem><SelectItem value="ja">Nihongo</SelectItem></SelectContent></Select></div></div></div><div className="space-y-3">{[{k:"emailNotifications",t:"Email notifications",d:"Nhan tong ket va nhac hoc qua email.",i:Bell},{k:"pushNotifications",t:"Push notifications",d:"Nhac nhanh tren thiet bi.",i:Volume2},{k:"showFurigana",t:"Hien furigana",d:"Bat goi y doc tren kanji.",i:UserRound},{k:"showRomaji",t:"Hien romaji",d:"Them phien am Latin khi can.",i:UserRound},{k:"autoPlayAudio",t:"Tu phat audio",d:"Phat am thanh khi mo the tu vung.",i:Palette}].map((item) => { const Icon = item.i; return <div key={item.k} className="flex items-center justify-between rounded-[18px] border border-border bg-card p-4"><div className="flex items-start gap-3"><div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-2xl bg-muted text-muted-foreground"><Icon className="h-4 w-4" /></div><div><p className="text-sm font-semibold text-foreground">{item.t}</p><p className="mt-1 text-sm text-muted-foreground">{item.d}</p></div></div><Switch checked={settings[item.k as keyof UserSettingsData] as boolean} onCheckedChange={(value) => setField(item.k as keyof UserSettingsData, value)} /></div>; })}</div></div>
             </PageSection>
-
-            <PageSection
-              title="Bao mat"
-              description="Doi mat khau ngay tai day ma khong can sang man hinh khac."
-              action={
-                <Button className="rounded-2xl bg-emerald-500 text-white hover:bg-emerald-400" disabled={passwordSaving} onClick={handleChangePassword}>
-                  <KeyRound className="mr-2 h-4 w-4" />
-                  {passwordSaving ? "Dang cap nhat..." : "Doi mat khau"}
-                </Button>
-              }
-            >
-              <div className="grid gap-4 md:grid-cols-3">
-                <div className="space-y-2">
-                  <Label htmlFor="currentPassword">Mat khau hien tai</Label>
-                  <Input
-                    id="currentPassword"
-                    type="password"
-                    className="h-11 rounded-2xl border-border bg-card"
-                    value={passwordForm.currentPassword}
-                    onChange={(event) => setPasswordForm((previous) => ({ ...previous, currentPassword: event.target.value }))}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="newPassword">Mat khau moi</Label>
-                  <Input
-                    id="newPassword"
-                    type="password"
-                    className="h-11 rounded-2xl border-border bg-card"
-                    value={passwordForm.newPassword}
-                    onChange={(event) => setPasswordForm((previous) => ({ ...previous, newPassword: event.target.value }))}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Xac nhan mat khau</Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    className="h-11 rounded-2xl border-border bg-card"
-                    value={passwordForm.confirmPassword}
-                    onChange={(event) => setPasswordForm((previous) => ({ ...previous, confirmPassword: event.target.value }))}
-                  />
-                </div>
-              </div>
-            </PageSection>
-
-            <div className="grid gap-4 xl:grid-cols-2">
-              <PageSection title="Giao dien va ngon ngu" description="Chinh cam giac dung app va ngon ngu hien thi o cung mot cum.">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between rounded-[18px] border border-border bg-card p-4">
-                    <div className="flex items-center gap-3">
-                      <Palette className="h-5 w-5 text-violet-500" />
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">Theme</p>
-                        <p className="mt-1 text-sm text-muted-foreground">Chuyen giua light, dark hoac system.</p>
-                      </div>
-                    </div>
-                    <Select onValueChange={(value) => updateSetting("theme", value)} value={settings.theme}>
-                      <SelectTrigger className="h-11 w-[140px] rounded-2xl border-border bg-card text-foreground/80">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="light">Light</SelectItem>
-                        <SelectItem value="dark">Dark</SelectItem>
-                        <SelectItem value="system">System</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="flex items-center justify-between rounded-[18px] border border-border bg-card p-4">
-                    <div className="flex items-center gap-3">
-                      <Globe className="h-5 w-5 text-sky-500" />
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">Ngon ngu giao dien</p>
-                        <p className="mt-1 text-sm text-muted-foreground">Doi ngon ngu hien thi tong the cua ung dung.</p>
-                      </div>
-                    </div>
-                    <Select onValueChange={(value) => updateSetting("language", value)} value={settings.language}>
-                      <SelectTrigger className="h-11 w-[160px] rounded-2xl border-border bg-card text-foreground/80">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="vi">Tieng Viet</SelectItem>
-                        <SelectItem value="en">English</SelectItem>
-                        <SelectItem value="ja">日本語</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </PageSection>
-
-              <PageSection title="Thong bao" description="Dieu khien thong bao email va push ngay trong cung trang tai khoan.">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between rounded-[18px] border border-border bg-card p-4">
-                    <div className="flex items-center gap-3">
-                      <Volume2 className="h-5 w-5 text-sky-500" />
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">Email notifications</p>
-                        <p className="mt-1 text-sm text-muted-foreground">Nhan tong ket va nhac nho qua email.</p>
-                      </div>
-                    </div>
-                    <Switch checked={settings.emailNotifications} onCheckedChange={(value) => updateSetting("emailNotifications", value)} />
-                  </div>
-
-                  <div className="flex items-center justify-between rounded-[18px] border border-border bg-card p-4">
-                    <div className="flex items-center gap-3">
-                      <CalendarClock className="h-5 w-5 text-amber-500" />
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">Push notifications</p>
-                        <p className="mt-1 text-sm text-muted-foreground">Nhac gio hoc truc tiep tren thiet bi.</p>
-                      </div>
-                    </div>
-                    <Switch checked={settings.pushNotifications} onCheckedChange={(value) => updateSetting("pushNotifications", value)} />
-                  </div>
-                </div>
-              </PageSection>
-            </div>
-
-            <PageSection title="Tuy chon hoc tap" description="Tat ca ho tro doc, am thanh, muc tieu va do kho hoc tap duoc gom ve mot cho.">
-              <div className="space-y-5">
-                <div className="grid gap-4 xl:grid-cols-2">
-                  {[
-                    { key: "showFurigana", title: "Hien furigana", description: "Bat goi y doc phia tren kanji." },
-                    { key: "showRomaji", title: "Hien romaji", description: "Hien phien am Latin khi phu hop." },
-                    { key: "autoPlayAudio", title: "Tu phat am", description: "Phat audio khi xem tu vung hoac vi du." },
-                  ].map((item) => (
-                    <div key={item.key} className="flex items-center justify-between rounded-[18px] border border-border bg-card p-4">
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">{item.title}</p>
-                        <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
-                      </div>
-                      <Switch
-                        checked={settings[item.key as keyof UserSettingsData] as boolean}
-                        onCheckedChange={(value) => updateSetting(item.key as keyof UserSettingsData, value)}
-                      />
-                    </div>
-                  ))}
-                </div>
-
-                <div className="rounded-[18px] border border-border bg-card p-4">
-                  <div className="mb-3 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Target className="h-5 w-5 text-amber-500" />
-                      <div>
-                        <Label className="text-sm font-semibold text-foreground">Muc tieu hang ngay</Label>
-                        <p className="mt-1 text-sm text-muted-foreground">Chinh so phut hoc ban muon giu deu moi ngay.</p>
-                      </div>
-                    </div>
-                    <span className="text-sm font-semibold text-amber-700">{settings.dailyGoalMinutes} phut</span>
-                  </div>
-                  <Slider
-                    className="w-full"
-                    max={120}
-                    min={5}
-                    onValueChange={([value]) => updateSetting("dailyGoalMinutes", value)}
-                    step={5}
-                    value={[settings.dailyGoalMinutes]}
-                  />
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-3">
-                  <div className="rounded-[18px] border border-border bg-card p-4">
-                    <Label className="mb-2 block text-sm font-semibold text-foreground">Muc tieu JLPT</Label>
-                    <Select onValueChange={(value) => updateSetting("targetJlptLevel", value)} value={settings.targetJlptLevel}>
-                      <SelectTrigger className="h-11 rounded-2xl border-border bg-card text-foreground/80">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {["N5", "N4", "N3", "N2", "N1"].map((level) => (
-                          <SelectItem key={level} value={level}>
-                            {level}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="rounded-[18px] border border-border bg-card p-4">
-                    <Label className="mb-2 block text-sm font-semibold text-foreground">Deadline JLPT</Label>
-                    <Input
-                      type="date"
-                      className="h-11 rounded-2xl border-border bg-card text-foreground/80"
-                      value={settings.jlptDeadlineDate ?? ""}
-                      onChange={(event) => updateSetting("jlptDeadlineDate", event.target.value || null)}
-                    />
-                    <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
-                      <span>
-                        {deadlineMeta
-                          ? deadlineMeta.isPast
-                            ? "Deadline da qua. Hay doi lich moi de tinh ke hoach chinh xac."
-                            : `Con ${deadlineMeta.daysRemaining} ngay den han.`
-                          : "Chua dat deadline. Ke hoach se dua tren daily goal."}
-                      </span>
-                      {settings.jlptDeadlineDate && (
-                        <button
-                          type="button"
-                          className="font-medium text-primary"
-                          onClick={() => updateSetting("jlptDeadlineDate", null)}
-                        >
-                          Xoa
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="rounded-[18px] border border-border bg-card p-4">
-                    <Label className="mb-2 block text-sm font-semibold text-foreground">Do kho quiz</Label>
-                    <Select onValueChange={(value) => updateSetting("quizDifficulty", value)} value={settings.quizDifficulty}>
-                      <SelectTrigger className="h-11 rounded-2xl border-border bg-card text-foreground/80">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="easy">Easy</SelectItem>
-                        <SelectItem value="normal">Normal</SelectItem>
-                        <SelectItem value="hard">Hard</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="rounded-[18px] border border-slate-200 bg-slate-50/80 p-4">
-                  <div className="flex items-start gap-3">
-                    <Shield className="mt-0.5 h-5 w-5 text-slate-600" />
-                    <div>
-                      <p className="text-sm font-semibold text-slate-900">Luu y</p>
-                      <p className="mt-1 text-sm leading-6 text-slate-700">
-                        Moi thay doi ve cai dat hoc tap, giao dien va thong bao duoc luu bang nut "Luu cai dat" o dau trang.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            <PageSection title="Bao mat" description="Doi mat khau ngay tai day voi huong dan ro rang." action={<Button className="rounded-2xl bg-emerald-500 text-white hover:bg-emerald-400" disabled={!!passwordError || passwordSaving} onClick={savePassword}><KeyRound className="mr-2 h-4 w-4" />{passwordSaving ? "Dang cap nhat..." : "Doi mat khau"}</Button>}>
+              <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_260px]"><div className="space-y-4"><div className="grid gap-4 md:grid-cols-3"><div className="space-y-2"><Label htmlFor="currentPassword">Mat khau hien tai</Label><Input id="currentPassword" type="password" className="h-11 rounded-2xl border-border bg-card" value={passwordForm.currentPassword} onChange={(event) => setPasswordForm((prev) => ({ ...prev, currentPassword: event.target.value }))} /></div><div className="space-y-2"><Label htmlFor="newPassword">Mat khau moi</Label><Input id="newPassword" type="password" className="h-11 rounded-2xl border-border bg-card" value={passwordForm.newPassword} onChange={(event) => setPasswordForm((prev) => ({ ...prev, newPassword: event.target.value }))} /></div><div className="space-y-2"><Label htmlFor="confirmPassword">Xac nhan mat khau</Label><Input id="confirmPassword" type="password" className="h-11 rounded-2xl border-border bg-card" value={passwordForm.confirmPassword} onChange={(event) => setPasswordForm((prev) => ({ ...prev, confirmPassword: event.target.value }))} /></div></div><div className="rounded-[18px] border border-border bg-card p-4"><div className="mb-3 flex items-center justify-between"><p className="text-sm font-semibold text-foreground">Do manh mat khau</p><span className={cn("text-sm font-semibold", pwd.tone)}>{pwd.label}</span></div><Progress value={pwd.score} className="h-2.5 bg-muted" /><p className={cn("mt-3 text-xs", passwordError ? "text-rose-600" : "text-muted-foreground")}>{passwordError || "Uu tien mat khau du dai, co chu hoa, so va ky tu dac biet."}</p></div></div><div className="space-y-3"><div className="rounded-[18px] border border-emerald-200 bg-emerald-50/80 p-4"><div className="flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-emerald-600" /><p className="text-sm font-semibold text-emerald-800">Tinh trang bao mat</p></div><p className="mt-2 text-sm leading-6 text-foreground/80">{passwordError ? "Form doi mat khau can chinh lai truoc khi luu." : "Moi thu da san sang, ban co the doi mat khau bat cu luc nao."}</p></div><div className="rounded-[18px] border border-border bg-card p-4 text-sm leading-6 text-muted-foreground">Mat khau moi co hieu luc ngay. Neu ban dang hoc tren nhieu thiet bi, co the can dang nhap lai de dong bo phien.</div></div></div>
             </PageSection>
           </div>
         </div>
+        {(hasProfileChanges || hasSettingsChanges) && <div className="sticky bottom-4 z-20 mt-4 rounded-[24px] border border-sky-200 bg-white/90 p-4 shadow-[0_18px_50px_rgba(15,23,42,0.12)] backdrop-blur dark:bg-slate-950/85"><div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"><div><p className="text-sm font-semibold text-foreground">Ban dang co thay doi chua luu</p><p className="mt-1 text-sm text-muted-foreground">{hasProfileChanges ? "Ho so dang cho luu." : "Ho so da xong."} {hasSettingsChanges ? `${settingsChanges} cai dat dang cho dong bo.` : "Khong co cai dat nao dang cho."}</p></div><div className="flex flex-wrap gap-2"><Button variant="outline" className="rounded-2xl border-border bg-card text-foreground/80 hover:bg-card" onClick={() => setSettings(originalSettings)}>Hoan tac</Button><Button variant="outline" className="rounded-2xl border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100" disabled={!hasProfileChanges || !!nameError || profileSaving} onClick={saveProfile}><Save className="mr-2 h-4 w-4" />Luu ho so</Button><Button className="rounded-2xl bg-sky-500 text-white hover:bg-sky-400" disabled={!hasSettingsChanges || settingsSaving} onClick={saveSettings}><Save className="mr-2 h-4 w-4" />Luu cai dat</Button></div></div></div>}
       </div>
     </DashboardLayout>
   );

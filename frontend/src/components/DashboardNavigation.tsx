@@ -16,7 +16,6 @@ import {
   LogOut,
   Menu,
   Search,
-  Settings,
   Shield,
   Sparkles,
   User,
@@ -72,8 +71,7 @@ const PRIMARY_GROUPS: NavGroup[] = [
 ];
 
 const SECONDARY_ITEMS: NavItem[] = [
-  { label: "Hồ sơ", path: "/profile", icon: User },
-  { label: "Cài đặt", path: "/settings", icon: Settings },
+  { label: "Tài khoản", path: "/profile", icon: User },
 ];
 
 const PAGE_META: Record<string, string> = {
@@ -90,8 +88,8 @@ const PAGE_META: Record<string, string> = {
   "/courses": "Khóa học",
   "/kanji-library": "Kanji",
   "/my-words": "Từ của tôi",
-  "/profile": "Hồ sơ",
-  "/settings": "Cài đặt",
+  "/profile": "Tài khoản",
+  "/settings": "Tài khoản",
   "/admin/creator-mode": "Creator Studio",
 };
 

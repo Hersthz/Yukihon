@@ -138,13 +138,13 @@ const Dashboard = () => {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <Link to="/settings">
+            <Link to="/profile">
               <Button
                 variant="outline"
                 className="h-10 rounded-2xl border-2 border-border bg-card text-foreground hover:bg-muted"
               >
                 <Target className="mr-2 h-4 w-4" />
-                Chỉnh mục tiêu
+                Tài khoản
               </Button>
             </Link>
             <Link to={nextLesson ? `/lessons/${nextLesson.id}` : "/jlpt-lessons"}>
