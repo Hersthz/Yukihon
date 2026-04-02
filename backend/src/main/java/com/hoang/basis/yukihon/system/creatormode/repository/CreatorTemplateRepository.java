@@ -5,7 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 
 public interface CreatorTemplateRepository extends JpaRepository<CreatorTemplate, Long> {
 
@@ -21,8 +20,6 @@ public interface CreatorTemplateRepository extends JpaRepository<CreatorTemplate
             CreatorTemplate.TemplateStatus status,
             CreatorTemplate.ContentType contentType
     );
-
-    Optional<CreatorTemplate> findByIdAndCreatedByUserId(Long id, Long createdByUserId);
 
     long countByStatus(CreatorTemplate.TemplateStatus status);
 

@@ -17,7 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
@@ -77,7 +76,7 @@ public class CreatorModeController {
             @AuthenticationPrincipal UserDetails userDetails
     ) {
         Long actorUserId = resolveCurrentUserId(userDetails);
-        CreatorTemplateDto updated = creatorModeService.updateTemplate(id, request, actorUserId, isAdmin(userDetails));
+        CreatorTemplateDto updated = creatorModeService.updateTemplate(id, request, actorUserId);
         return ResponseEntity.ok(updated);
     }
 
@@ -88,7 +87,7 @@ public class CreatorModeController {
             @AuthenticationPrincipal UserDetails userDetails
     ) {
         Long actorUserId = resolveCurrentUserId(userDetails);
-        CreatorTemplateDto updated = creatorModeService.submitForReview(id, actorUserId, isAdmin(userDetails));
+        CreatorTemplateDto updated = creatorModeService.submitForReview(id, actorUserId);
         return ResponseEntity.ok(updated);
     }
 
@@ -121,7 +120,7 @@ public class CreatorModeController {
             @AuthenticationPrincipal UserDetails userDetails
     ) {
         Long actorUserId = resolveCurrentUserId(userDetails);
-        creatorModeService.deleteTemplate(id, actorUserId, isAdmin(userDetails));
+        creatorModeService.deleteTemplate(id, actorUserId);
         return ResponseEntity.noContent().build();
     }
 
@@ -145,11 +144,5 @@ public class CreatorModeController {
         return userRepository.findByEmail(userDetails.getUsername().toLowerCase())
                 .map(user -> user.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-    }
-
-    private boolean isAdmin(UserDetails userDetails) {
-        return userDetails != null && userDetails.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .anyMatch("ROLE_ADMIN"::equals);
     }
 }

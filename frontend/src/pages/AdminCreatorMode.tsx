@@ -33,7 +33,6 @@ import {
   serializeCreatorDocument,
 } from "@/features/creator-mode/builder";
 import type { CreatorBlock } from "@/features/creator-mode/types";
-import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 
 interface EditorMeta {
@@ -73,12 +72,7 @@ const STATUS_STYLES: Record<CreatorTemplateStatus, string> = {
 };
 
 const AdminCreatorMode = () => {
-  const { isAdmin } = useAuth();
   const { toast } = useToast();
-
-  const isAdminUser = isAdmin();
-  const canManageTemplates = isAdminUser;
-  const canAccessReviewQueue = isAdminUser;
 
   const [templates, setTemplates] = useState<CreatorTemplate[]>([]);
   const [reviewQueue, setReviewQueue] = useState<CreatorTemplate[]>([]);
@@ -199,17 +193,6 @@ const AdminCreatorMode = () => {
       setLoading(false);
     }
   }, [toast]);
-
-  useEffect(() => {
-    if (!canAccessReviewQueue && selectedTab === "review") {
-      setSelectedTab(canManageTemplates ? "studio" : "analytics");
-      return;
-    }
-
-    if (!canManageTemplates && selectedTab === "studio") {
-      setSelectedTab(canAccessReviewQueue ? "review" : "analytics");
-    }
-  }, [canAccessReviewQueue, canManageTemplates, selectedTab]);
 
   useEffect(() => {
     void loadData();
@@ -349,12 +332,10 @@ const AdminCreatorMode = () => {
             </div>
 
             <div className="flex flex-wrap gap-2">
-              {canManageTemplates && (
-                <Button variant="outline" onClick={resetEditor}>
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  New Draft
-                </Button>
-              )}
+              <Button variant="outline" onClick={resetEditor}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                New Draft
+              </Button>
               <Button variant="outline" onClick={() => void loadData()} disabled={loading}>
                 <BarChart3 className="mr-2 h-4 w-4" />
                 Refresh
@@ -363,13 +344,12 @@ const AdminCreatorMode = () => {
           </div>
 
           <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
-            <TabsList className={`grid w-full ${canManageTemplates && canAccessReviewQueue ? "grid-cols-3" : "grid-cols-2"} bg-card/70`}>
-              {canManageTemplates && <TabsTrigger value="studio">Studio</TabsTrigger>}
-              {canAccessReviewQueue && <TabsTrigger value="review">Review Queue</TabsTrigger>}
+            <TabsList className="grid w-full grid-cols-3 bg-card/70">
+              <TabsTrigger value="studio">Studio</TabsTrigger>
+              <TabsTrigger value="review">Review Queue</TabsTrigger>
               <TabsTrigger value="analytics">Analytics</TabsTrigger>
             </TabsList>
 
-            {canManageTemplates && (
             <TabsContent value="studio" className="space-y-6">
               <div className="grid gap-6 xl:grid-cols-[1.2fr_1fr]">
                 <Card className="border-border/70 bg-card/70">
@@ -577,10 +557,8 @@ const AdminCreatorMode = () => {
                 </Card>
               )}
             </TabsContent>
-            )}
 
-            {canAccessReviewQueue && (
-              <TabsContent value="review" className="space-y-4">
+            <TabsContent value="review" className="space-y-4">
               <Card className="border-border/70 bg-card/70">
                 <CardHeader>
                   <CardTitle className="text-base">Review Queue</CardTitle>
@@ -634,8 +612,7 @@ const AdminCreatorMode = () => {
                   ))}
                 </CardContent>
               </Card>
-              </TabsContent>
-            )}
+            </TabsContent>
 
             <Dialog open={!!auditDialogTemplate} onOpenChange={(open) => !open && setAuditDialogTemplate(null)}>
               <DialogContent className="max-w-2xl border-border/70 bg-card/95">

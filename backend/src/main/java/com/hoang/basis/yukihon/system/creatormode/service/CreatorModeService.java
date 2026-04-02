@@ -16,7 +16,6 @@ import com.hoang.basis.yukihon.system.user.entity.User;
 import com.hoang.basis.yukihon.system.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -130,8 +129,8 @@ public class CreatorModeService {
         return CreatorTemplateDto.fromEntity(saved);
     }
 
-    public CreatorTemplateDto updateTemplate(Long id, CreatorTemplateUpsertRequest request, Long actorUserId, boolean isAdmin) {
-        CreatorTemplate template = findEditableTemplate(id, actorUserId, isAdmin);
+    public CreatorTemplateDto updateTemplate(Long id, CreatorTemplateUpsertRequest request, Long actorUserId) {
+        CreatorTemplate template = findTemplateById(id);
         User actor = findUserByIdOrThrow(actorUserId);
 
         template.setTitle(request.getTitle().trim());
@@ -153,8 +152,8 @@ public class CreatorModeService {
         return CreatorTemplateDto.fromEntity(updated);
     }
 
-    public CreatorTemplateDto submitForReview(Long id, Long actorUserId, boolean isAdmin) {
-        CreatorTemplate template = findEditableTemplate(id, actorUserId, isAdmin);
+    public CreatorTemplateDto submitForReview(Long id, Long actorUserId) {
+        CreatorTemplate template = findTemplateById(id);
         User actor = findUserByIdOrThrow(actorUserId);
 
         if (template.getStatus() == CreatorTemplate.TemplateStatus.PUBLISHED) {
@@ -242,8 +241,8 @@ public class CreatorModeService {
         return CreatorTemplateDto.fromEntity(saved);
     }
 
-    public void deleteTemplate(Long id, Long actorUserId, boolean isAdmin) {
-        CreatorTemplate template = findEditableTemplate(id, actorUserId, isAdmin);
+    public void deleteTemplate(Long id, Long actorUserId) {
+        CreatorTemplate template = findTemplateById(id);
         creatorTemplateRepository.delete(template);
         log.info("Creator template deleted: id={}, actorUserId={}", id, actorUserId);
     }
@@ -314,14 +313,9 @@ public class CreatorModeService {
                 .build();
     }
 
-    private CreatorTemplate findEditableTemplate(Long id, Long actorUserId, boolean isAdmin) {
-        if (isAdmin) {
-            return creatorTemplateRepository.findById(id)
-                    .orElseThrow(() -> new ResourceNotFoundException("Creator template not found with id: " + id));
-        }
-
-        return creatorTemplateRepository.findByIdAndCreatedByUserId(id, actorUserId)
-                .orElseThrow(() -> new AccessDeniedException("You cannot edit templates from other creators"));
+    private CreatorTemplate findTemplateById(Long id) {
+        return creatorTemplateRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Creator template not found with id: " + id));
     }
 
     private User findUserByIdOrThrow(Long userId) {
