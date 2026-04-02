@@ -1,8 +1,10 @@
 package com.hoang.basis.yukihon.system.auth.service;
 
 import com.hoang.basis.yukihon.system.auth.dto.AuthResponse;
+import com.hoang.basis.yukihon.system.auth.dto.ChangePasswordRequest;
 import com.hoang.basis.yukihon.system.auth.dto.LoginRequest;
 import com.hoang.basis.yukihon.system.auth.dto.RegisterRequest;
+import com.hoang.basis.yukihon.system.auth.dto.UpdateProfileRequest;
 import com.hoang.basis.yukihon.system.user.dto.UserDto;
 import com.hoang.basis.yukihon.system.user.entity.RoleName;
 import com.hoang.basis.yukihon.system.user.entity.User;
@@ -122,9 +124,44 @@ public class AuthService {
     }
 
     public UserDto getCurrentUser(String email) {
-        User user = userRepository.findByEmail(email.toLowerCase())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        return UserDto.fromEntity(user);
+        return UserDto.fromEntity(findUserByEmail(email));
+    }
+
+    public UserDto updateProfile(String email, UpdateProfileRequest request) {
+        User user = findUserByEmail(email);
+        String displayName = request.getDisplayName().trim();
+
+        if (displayName.isBlank()) {
+            throw new IllegalArgumentException("Display name is required");
+        }
+
+        user.setDisplayName(displayName);
+        User saved = userRepository.save(user);
+        log.info("Updated profile for user: {}", saved.getEmail());
+        return UserDto.fromEntity(saved);
+    }
+
+    public void changePassword(String email, ChangePasswordRequest request) {
+        User user = findUserByEmail(email);
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new BadCredentialsException("Current password is incorrect");
+        }
+
+        if (!isValidPassword(request.getNewPassword())) {
+            throw new IllegalArgumentException(
+                    String.format("Password must be between %d and %d characters",
+                            MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH)
+            );
+        }
+
+        if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("New password must be different from current password");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+        log.info("Changed password for user: {}", user.getEmail());
     }
 
     public AuthResponse refreshToken(String refreshToken) {
@@ -187,5 +224,10 @@ public class AuthService {
         return password != null 
                 && password.length() >= MIN_PASSWORD_LENGTH 
                 && password.length() <= MAX_PASSWORD_LENGTH;
+    }
+
+    private User findUserByEmail(String email) {
+        return userRepository.findByEmail(email.toLowerCase())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 }
