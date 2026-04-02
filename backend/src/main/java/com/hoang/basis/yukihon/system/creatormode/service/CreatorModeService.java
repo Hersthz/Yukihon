@@ -99,16 +99,10 @@ public class CreatorModeService {
     }
 
     @Transactional(readOnly = true)
-    public List<CreatorTemplateDto> getReviewerQueue() {
-        return creatorTemplateRepository.findByStatusOrderByUpdatedAtDesc(CreatorTemplate.TemplateStatus.PENDING_REVIEW)
-                .stream()
-                .map(CreatorTemplateDto::fromEntity)
-                .toList();
-    }
-
-    @Transactional(readOnly = true)
-    public List<CreatorTemplateDto> getAdminQueue() {
-        return creatorTemplateRepository.findByStatusOrderByUpdatedAtDesc(CreatorTemplate.TemplateStatus.APPROVED)
+    public List<CreatorTemplateDto> getReviewQueue() {
+        return creatorTemplateRepository.findByStatusInOrderByUpdatedAtDesc(
+                        List.of(CreatorTemplate.TemplateStatus.PENDING_REVIEW, CreatorTemplate.TemplateStatus.APPROVED)
+                )
                 .stream()
                 .map(CreatorTemplateDto::fromEntity)
                 .toList();
@@ -181,41 +175,13 @@ public class CreatorModeService {
         return CreatorTemplateDto.fromEntity(saved);
     }
 
-    public CreatorTemplateDto reviewByReviewer(Long id, CreatorTemplateReviewRequest request, Long reviewerUserId) {
-        CreatorTemplate template = creatorTemplateRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Creator template not found with id: " + id));
-
-        if (template.getStatus() != CreatorTemplate.TemplateStatus.PENDING_REVIEW) {
-            throw new IllegalStateException("Template must be in PENDING_REVIEW before reviewer decision");
-        }
-
-        CreatorTemplate.TemplateStatus decision = parseStatus(request.getDecision(), true);
-        if (decision != CreatorTemplate.TemplateStatus.APPROVED
-                && decision != CreatorTemplate.TemplateStatus.REJECTED) {
-            throw new IllegalArgumentException("Reviewer decision must be APPROVED or REJECTED");
-        }
-
-        User reviewer = findUserByIdOrThrow(reviewerUserId);
-
-        template.setStatus(decision);
-        template.setReviewedBy(reviewer);
-        template.setReviewNote(trimToNull(request.getReviewNote()));
-        template.setReviewedAt(Instant.now());
-        clearAdminReview(template);
-
-        CreatorTemplate saved = creatorTemplateRepository.save(template);
-    appendAuditEvent(saved, reviewer, CreatorTemplateAuditEvent.AuditStage.REVIEWER_REVIEW,
-        CreatorTemplateAuditEvent.AuditAction.REVIEW_DECISION, decision.name(), request.getReviewNote());
-        log.info("Creator template reviewer decision: id={}, decision={}, reviewerUserId={}", id, decision, reviewerUserId);
-        return CreatorTemplateDto.fromEntity(saved);
-    }
-
     public CreatorTemplateDto reviewByAdmin(Long id, CreatorTemplateReviewRequest request, Long adminUserId) {
         CreatorTemplate template = creatorTemplateRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Creator template not found with id: " + id));
 
-        if (template.getStatus() != CreatorTemplate.TemplateStatus.APPROVED) {
-            throw new IllegalStateException("Template must be APPROVED by reviewer before admin decision");
+        if (template.getStatus() != CreatorTemplate.TemplateStatus.PENDING_REVIEW
+                && template.getStatus() != CreatorTemplate.TemplateStatus.APPROVED) {
+            throw new IllegalStateException("Template must be in review before admin decision");
         }
 
         CreatorTemplate.TemplateStatus decision = parseStatus(request.getDecision(), true);
@@ -238,7 +204,7 @@ public class CreatorModeService {
         CreatorTemplate saved = creatorTemplateRepository.save(template);
     appendAuditEvent(saved, adminReviewer, CreatorTemplateAuditEvent.AuditStage.ADMIN_APPROVAL,
         CreatorTemplateAuditEvent.AuditAction.ADMIN_DECISION, decision.name(), request.getReviewNote());
-        log.info("Creator template admin decision: id={}, decision={}, adminUserId={}", id, decision, adminUserId);
+        log.info("Creator template review decision: id={}, decision={}, adminUserId={}", id, decision, adminUserId);
         return CreatorTemplateDto.fromEntity(saved);
     }
 

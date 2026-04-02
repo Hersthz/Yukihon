@@ -6,9 +6,9 @@ interface CreatorModeRouteProps {
 }
 
 const CreatorModeRoute = ({ children }: CreatorModeRouteProps) => {
-  const { canAccessCreatorMode } = useAuth();
+  const { isAdmin } = useAuth();
 
-  if (!canAccessCreatorMode()) {
+  if (!isAdmin()) {
     return <Navigate to="/dashboard" replace />;
   }
 

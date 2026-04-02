@@ -61,12 +61,7 @@ export interface CreatorTemplateUpsertPayload {
   builderJson: string;
 }
 
-export interface CreatorTemplateReviewerDecisionPayload {
-  decision: "APPROVED" | "REJECTED";
-  reviewNote?: string;
-}
-
-export interface CreatorTemplateAdminDecisionPayload {
+export interface CreatorTemplateReviewPayload {
   decision: "PUBLISHED" | "REJECTED";
   reviewNote?: string;
 }
@@ -152,13 +147,8 @@ export const creatorModeApi = {
     apiClient.request<CreatorTemplate>(`/api/admin/creator-mode/templates/${id}/submit`, {
       method: "POST",
     }),
-  reviewerDecision: (id: number, payload: CreatorTemplateReviewerDecisionPayload) =>
-    apiClient.request<CreatorTemplate>(`/api/admin/creator-mode/templates/${id}/review/reviewer`, {
-      method: "POST",
-      body: JSON.stringify(payload),
-    }),
-  adminDecision: (id: number, payload: CreatorTemplateAdminDecisionPayload) =>
-    apiClient.request<CreatorTemplate>(`/api/admin/creator-mode/templates/${id}/review/admin`, {
+  reviewDecision: (id: number, payload: CreatorTemplateReviewPayload) =>
+    apiClient.request<CreatorTemplate>(`/api/admin/creator-mode/templates/${id}/review`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
@@ -175,7 +165,6 @@ export const creatorModeApi = {
     apiClient.request<CreatorTemplateAuditEvent[]>(
       `/api/admin/creator-mode/templates/${id}/audit-timeline${buildAuditTimelineQuery(filters)}`
     ),
-  getReviewerQueue: () => apiClient.request<CreatorTemplate[]>("/api/admin/creator-mode/review-queue/reviewer"),
-  getAdminQueue: () => apiClient.request<CreatorTemplate[]>("/api/admin/creator-mode/review-queue/admin"),
+  getReviewQueue: () => apiClient.request<CreatorTemplate[]>("/api/admin/creator-mode/review-queue"),
   getAnalytics: () => apiClient.request<CreatorAnalytics>("/api/admin/creator-mode/analytics"),
 };

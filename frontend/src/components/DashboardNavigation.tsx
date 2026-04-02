@@ -101,7 +101,7 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { canAccessCreatorMode, isAdmin, isAuthenticated, user } = useAuth();
+  const { isAdmin, isAuthenticated, user } = useAuth();
 
   const onCommunityPage = isItemActive(location.pathname, "/community");
 
@@ -233,7 +233,7 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
           {!compact && <p className="px-3 pb-2 text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">Cá nhân</p>}
           <div className="space-y-1.5">
             {SECONDARY_ITEMS.map((item) => renderItem(item, compact))}
-            {canAccessCreatorMode() && (
+            {isAdmin() && (
               <Link
                 title={compact ? "Creator Studio" : undefined}
                 to="/admin/creator-mode"

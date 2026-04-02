@@ -47,8 +47,7 @@ public class SecurityConfig {
                     .requestMatchers("/api/auth/me").authenticated()
                         .requestMatchers("/ws-community-chat/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        // Creator mode endpoints - allow ADMIN, TEACHER, and REVIEWER roles
-                        .requestMatchers("/api/admin/creator-mode/**").hasAnyRole("ADMIN", "TEACHER", "REVIEWER")
+                        .requestMatchers("/api/admin/creator-mode/**").hasRole("ADMIN")
                         // Admin endpoints - require ADMIN role
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         // User endpoints - require authenticated users

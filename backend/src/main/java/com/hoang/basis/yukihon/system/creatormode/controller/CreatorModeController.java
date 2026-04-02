@@ -49,7 +49,7 @@ public class CreatorModeController {
     }
 
     @GetMapping("/templates/{id}/audit-timeline")
-    @PreAuthorize("hasAnyAuthority('CONTENT_READ','CONTENT_MANAGE','CONTENT_REVIEW')")
+    @PreAuthorize("hasAnyAuthority('CONTENT_READ','CONTENT_MANAGE','CONTENT_REVIEW','CONTENT_PUBLISH')")
     public ResponseEntity<List<CreatorTemplateAuditEventDto>> getTemplateAuditTimeline(
             @PathVariable Long id,
             @RequestParam(required = false) String stage,
@@ -92,21 +92,9 @@ public class CreatorModeController {
         return ResponseEntity.ok(updated);
     }
 
-    @PostMapping("/templates/{id}/review/reviewer")
-    @PreAuthorize("hasAuthority('CONTENT_REVIEW')")
-    public ResponseEntity<CreatorTemplateDto> reviewerDecision(
-            @PathVariable Long id,
-            @Valid @RequestBody CreatorTemplateReviewRequest request,
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
-        Long reviewerUserId = resolveCurrentUserId(userDetails);
-        CreatorTemplateDto updated = creatorModeService.reviewByReviewer(id, request, reviewerUserId);
-        return ResponseEntity.ok(updated);
-    }
-
-    @PostMapping("/templates/{id}/review/admin")
+    @PostMapping("/templates/{id}/review")
     @PreAuthorize("hasRole('ADMIN') and hasAuthority('CONTENT_PUBLISH')")
-    public ResponseEntity<CreatorTemplateDto> adminDecision(
+    public ResponseEntity<CreatorTemplateDto> reviewDecision(
             @PathVariable Long id,
             @Valid @RequestBody CreatorTemplateReviewRequest request,
             @AuthenticationPrincipal UserDetails userDetails
@@ -137,16 +125,10 @@ public class CreatorModeController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/review-queue/reviewer")
-    @PreAuthorize("hasAuthority('CONTENT_REVIEW')")
-    public ResponseEntity<List<CreatorTemplateDto>> getReviewerQueue() {
-        return ResponseEntity.ok(creatorModeService.getReviewerQueue());
-    }
-
-    @GetMapping("/review-queue/admin")
+    @GetMapping("/review-queue")
     @PreAuthorize("hasRole('ADMIN') and hasAuthority('CONTENT_PUBLISH')")
-    public ResponseEntity<List<CreatorTemplateDto>> getAdminQueue() {
-        return ResponseEntity.ok(creatorModeService.getAdminQueue());
+    public ResponseEntity<List<CreatorTemplateDto>> getReviewQueue() {
+        return ResponseEntity.ok(creatorModeService.getReviewQueue());
     }
 
     @GetMapping("/analytics")
