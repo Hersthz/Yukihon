@@ -339,9 +339,13 @@ const AiChat = () => {
   const [conversationActionId, setConversationActionId] = useState<number | null>(null);
   const [renamingConversationId, setRenamingConversationId] = useState<number | null>(null);
   const [renameValue, setRenameValue] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const activeConversation = conversations.find((conversation) => conversation.id === activeConversationId) ?? null;
+  const filteredConversations = conversations.filter((conversation) =>
+    conversation.title.toLowerCase().includes(searchQuery.trim().toLowerCase())
+  );
 
   useEffect(() => {
     return () => {
@@ -967,6 +971,15 @@ const AiChat = () => {
                 {creatingConversation ? "Creating..." : "New chat"}
               </Button>
 
+              <div className="mb-4">
+                <Input
+                  className="rounded-2xl"
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  placeholder="Search conversations..."
+                  value={searchQuery}
+                />
+              </div>
+
               <div className="space-y-3">
                 {conversationLoading ? (
                   <div className="flex min-h-[160px] items-center justify-center">
@@ -980,8 +993,14 @@ const AiChat = () => {
                   </div>
                 ) : null}
 
+                {!conversationLoading && conversations.length > 0 && filteredConversations.length === 0 ? (
+                  <div className="rounded-[22px] border border-dashed border-border bg-muted/20 p-4 text-sm text-muted-foreground">
+                    No conversations match "{searchQuery.trim()}".
+                  </div>
+                ) : null}
+
                 {!conversationLoading
-                  ? conversations.map((conversation) => {
+                  ? filteredConversations.map((conversation) => {
                       const isActive = conversation.id === activeConversationId;
                       const isBusy = conversationActionId === conversation.id;
                       const isRenaming = renamingConversationId === conversation.id;
