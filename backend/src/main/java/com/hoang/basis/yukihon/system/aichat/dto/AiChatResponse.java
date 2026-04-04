@@ -9,4 +9,6 @@ public class AiChatResponse {
     private final String reply;
     private final String model;
     private final String mode;
+    private final Long conversationId;
+    private final String conversationTitle;
 }

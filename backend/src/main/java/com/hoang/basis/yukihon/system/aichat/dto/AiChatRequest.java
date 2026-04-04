@@ -12,6 +12,8 @@ import java.util.List;
 @Setter
 public class AiChatRequest {
 
+    private Long conversationId;
+
     @NotBlank(message = "mode is required")
     private String mode;
 

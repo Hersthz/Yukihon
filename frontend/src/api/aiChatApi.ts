@@ -9,6 +9,7 @@ export interface AiChatMessagePayload {
 }
 
 export interface AiChatRequestPayload {
+  conversationId?: number;
   mode: AiChatMode;
   messages: AiChatMessagePayload[];
 }
@@ -17,10 +18,20 @@ export interface AiChatResponse {
   reply: string;
   model: string;
   mode: AiChatMode;
+  conversationId: number;
+  conversationTitle: string;
+}
+
+export interface AiChatConversation {
+  id: number;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface AiChatHistoryItem {
   id: number;
+  conversationId: number;
   role: AiChatRole;
   text: string;
   mode: AiChatMode;
@@ -29,10 +40,14 @@ export interface AiChatHistoryItem {
 }
 
 interface StreamHandlers {
-  onMeta?: (payload: { model?: string; mode?: AiChatMode }) => void;
+  onMeta?: (payload: { model?: string; mode?: AiChatMode; conversationId?: number; conversationTitle?: string }) => void;
   onDelta?: (delta: string) => void;
-  onDone?: (payload: { model?: string; mode?: AiChatMode }) => void;
+  onDone?: (payload: { model?: string; mode?: AiChatMode; conversationId?: number; conversationTitle?: string }) => void;
   onError?: (message: string) => void;
+}
+
+interface StreamOptions {
+  signal?: AbortSignal;
 }
 
 const parseSseBlock = (block: string) => {
@@ -62,7 +77,7 @@ export const aiChatApi = {
       method: "POST",
       body: JSON.stringify(data),
     }),
-  streamRespond: async (data: AiChatRequestPayload, handlers: StreamHandlers = {}) => {
+  streamRespond: async (data: AiChatRequestPayload, handlers: StreamHandlers = {}, options: StreamOptions = {}) => {
     const response = await fetch(`${apiClient.baseURL}/api/ai-chat/respond/stream`, {
       method: "POST",
       headers: {
@@ -70,6 +85,7 @@ export const aiChatApi = {
         ...apiClient.getAuthHeader(),
       },
       body: JSON.stringify(data),
+      signal: options.signal,
     });
 
     if (!response.ok) {
@@ -100,10 +116,22 @@ export const aiChatApi = {
         const parsed = parseSseBlock(trimmed);
         if (!parsed.data) return;
 
-        const payload = JSON.parse(parsed.data) as { delta?: string; model?: string; mode?: AiChatMode; message?: string };
+        const payload = JSON.parse(parsed.data) as {
+          delta?: string;
+          model?: string;
+          mode?: AiChatMode;
+          message?: string;
+          conversationId?: number;
+          conversationTitle?: string;
+        };
 
         if (parsed.event === "meta") {
-          handlers.onMeta?.({ model: payload.model, mode: payload.mode });
+          handlers.onMeta?.({
+            model: payload.model,
+            mode: payload.mode,
+            conversationId: payload.conversationId,
+            conversationTitle: payload.conversationTitle,
+          });
           return;
         }
 
@@ -113,7 +141,12 @@ export const aiChatApi = {
         }
 
         if (parsed.event === "done") {
-          handlers.onDone?.({ model: payload.model, mode: payload.mode });
+          handlers.onDone?.({
+            model: payload.model,
+            mode: payload.mode,
+            conversationId: payload.conversationId,
+            conversationTitle: payload.conversationTitle,
+          });
           return;
         }
 
@@ -123,6 +156,17 @@ export const aiChatApi = {
       });
     }
   },
+  getConversations: () => apiClient.request<AiChatConversation[]>("/api/ai-chat/conversations"),
+  createConversation: () => apiClient.request<AiChatConversation>("/api/ai-chat/conversations", { method: "POST" }),
+  getConversationMessages: (conversationId: number) =>
+    apiClient.request<AiChatHistoryItem[]>(`/api/ai-chat/conversations/${conversationId}/messages`),
+  renameConversation: (conversationId: number, title: string) =>
+    apiClient.request<AiChatConversation>(`/api/ai-chat/conversations/${conversationId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ title }),
+    }),
+  deleteConversation: (conversationId: number) =>
+    apiClient.request(`/api/ai-chat/conversations/${conversationId}`, { method: "DELETE" }),
   getHistory: () => apiClient.request<AiChatHistoryItem[]>("/api/ai-chat/history"),
   clearHistory: () => apiClient.request("/api/ai-chat/history", { method: "DELETE" }),
 };

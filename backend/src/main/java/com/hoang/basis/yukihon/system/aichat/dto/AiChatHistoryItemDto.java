@@ -10,6 +10,7 @@ import java.time.Instant;
 @Builder
 public class AiChatHistoryItemDto {
     private final Long id;
+    private final Long conversationId;
     private final String role;
     private final String text;
     private final String mode;
@@ -19,6 +20,7 @@ public class AiChatHistoryItemDto {
     public static AiChatHistoryItemDto fromEntity(AiChatMessage message) {
         return AiChatHistoryItemDto.builder()
                 .id(message.getId())
+                .conversationId(message.getConversation().getId())
                 .role(message.getRole())
                 .text(message.getText())
                 .mode(message.getMode())

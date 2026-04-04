@@ -2,12 +2,17 @@ package com.hoang.basis.yukihon.system.aichat.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hoang.basis.yukihon.exception.ResourceNotFoundException;
 import com.hoang.basis.yukihon.exception.ServiceUnavailableException;
+import com.hoang.basis.yukihon.system.aichat.dto.AiChatConversationDto;
+import com.hoang.basis.yukihon.system.aichat.dto.AiChatConversationUpdateRequest;
 import com.hoang.basis.yukihon.system.aichat.dto.AiChatHistoryItemDto;
 import com.hoang.basis.yukihon.system.aichat.dto.AiChatMessageRequest;
 import com.hoang.basis.yukihon.system.aichat.dto.AiChatRequest;
 import com.hoang.basis.yukihon.system.aichat.dto.AiChatResponse;
+import com.hoang.basis.yukihon.system.aichat.entity.AiChatConversation;
 import com.hoang.basis.yukihon.system.aichat.entity.AiChatMessage;
+import com.hoang.basis.yukihon.system.aichat.repository.AiChatConversationRepository;
 import com.hoang.basis.yukihon.system.aichat.repository.AiChatMessageRepository;
 import com.hoang.basis.yukihon.system.user.entity.User;
 import com.hoang.basis.yukihon.system.user.repository.UserRepository;
@@ -31,6 +36,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -43,11 +49,14 @@ public class AiChatService {
 
     private static final int MAX_MESSAGES = 12;
     private static final int MAX_MESSAGE_LENGTH = 4_000;
+    private static final int MAX_TITLE_LENGTH = 120;
     private static final List<String> SUPPORTED_MODES = List.of("coach", "grammar", "conversation");
     private static final List<String> SUPPORTED_ROLES = List.of("user", "assistant");
+    private static final String DEFAULT_CONVERSATION_TITLE = "New chat";
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+    private final AiChatConversationRepository aiChatConversationRepository;
     private final AiChatMessageRepository aiChatMessageRepository;
     private final UserRepository userRepository;
 
@@ -71,6 +80,7 @@ public class AiChatService {
         User user = findUserByIdOrThrow(userId);
         String normalizedMode = request.getMode().trim().toLowerCase(Locale.ROOT);
         AiChatMessageRequest latestUserMessage = request.getMessages().get(request.getMessages().size() - 1);
+        AiChatConversation conversation = resolveConversation(user, request.getConversationId(), latestUserMessage.getText());
         Map<String, Object> body = buildOpenAiBody(request, normalizedMode, false);
 
         HttpHeaders headers = new HttpHeaders();
@@ -86,13 +96,15 @@ public class AiChatService {
             );
 
             String reply = extractReply(response.getBody());
-            persistExchange(user, normalizedMode, latestUserMessage.getText().trim(), reply);
+            persistExchange(user, conversation, normalizedMode, latestUserMessage.getText().trim(), reply);
             log.info("AI chat response created for userId={} mode={} model={}", userId, normalizedMode, openAiModel);
 
             return AiChatResponse.builder()
                     .reply(reply)
                     .model(openAiModel)
                     .mode(normalizedMode)
+                    .conversationId(conversation.getId())
+                    .conversationTitle(conversation.getTitle())
                     .build();
         } catch (HttpStatusCodeException exception) {
             String providerMessage = extractProviderError(exception.getResponseBodyAsString());
@@ -119,13 +131,16 @@ public class AiChatService {
         User user = findUserByIdOrThrow(userId);
         String normalizedMode = request.getMode().trim().toLowerCase(Locale.ROOT);
         AiChatMessageRequest latestUserMessage = request.getMessages().get(request.getMessages().size() - 1);
+        AiChatConversation conversation = resolveConversation(user, request.getConversationId(), latestUserMessage.getText());
         Map<String, Object> body = buildOpenAiBody(request, normalizedMode, true);
 
         return outputStream -> {
             Writer writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);
             writeSseEvent(writer, "meta", objectMapper.writeValueAsString(Map.of(
                     "model", openAiModel,
-                    "mode", normalizedMode
+                    "mode", normalizedMode,
+                    "conversationId", conversation.getId(),
+                    "conversationTitle", conversation.getTitle()
             )));
 
             StringBuilder assistantReply = new StringBuilder();
@@ -168,11 +183,13 @@ public class AiChatService {
 
                                     if ("response.completed".equals(type)) {
                                         if (assistantReply.length() > 0) {
-                                            persistExchange(user, normalizedMode, latestUserMessage.getText().trim(), assistantReply.toString());
+                                            persistExchange(user, conversation, normalizedMode, latestUserMessage.getText().trim(), assistantReply.toString());
                                         }
                                         writeSseEvent(writer, "done", objectMapper.writeValueAsString(Map.of(
                                                 "model", openAiModel,
-                                                "mode", normalizedMode
+                                                "mode", normalizedMode,
+                                                "conversationId", conversation.getId(),
+                                                "conversationTitle", conversation.getTitle()
                                         )));
                                         break;
                                     }
@@ -248,6 +265,46 @@ public class AiChatService {
         return body;
     }
 
+    public List<AiChatConversationDto> getConversations(Long userId) {
+        return aiChatConversationRepository.findByUserIdOrderByUpdatedAtDesc(userId)
+                .stream()
+                .map(AiChatConversationDto::fromEntity)
+                .toList();
+    }
+
+    @Transactional
+    public AiChatConversationDto createConversation(Long userId) {
+        User user = findUserByIdOrThrow(userId);
+        AiChatConversation conversation = aiChatConversationRepository.save(AiChatConversation.builder()
+                .user(user)
+                .title(DEFAULT_CONVERSATION_TITLE)
+                .build());
+        return AiChatConversationDto.fromEntity(conversation);
+    }
+
+    public List<AiChatHistoryItemDto> getConversationMessages(Long userId, Long conversationId) {
+        ensureConversationOwnedByUser(userId, conversationId);
+        return aiChatMessageRepository.findByConversationIdAndUserIdOrderByCreatedAtAsc(conversationId, userId)
+                .stream()
+                .map(AiChatHistoryItemDto::fromEntity)
+                .toList();
+    }
+
+    @Transactional
+    public AiChatConversationDto renameConversation(Long userId, Long conversationId, AiChatConversationUpdateRequest request) {
+        AiChatConversation conversation = ensureConversationOwnedByUser(userId, conversationId);
+        conversation.setTitle(sanitizeConversationTitle(request.getTitle()));
+        conversation.setUpdatedAt(Instant.now());
+        return AiChatConversationDto.fromEntity(aiChatConversationRepository.save(conversation));
+    }
+
+    @Transactional
+    public void deleteConversation(Long userId, Long conversationId) {
+        AiChatConversation conversation = ensureConversationOwnedByUser(userId, conversationId);
+        aiChatConversationRepository.delete(conversation);
+        log.info("Deleted AI chat conversation {} for userId={}", conversationId, userId);
+    }
+
     public List<AiChatHistoryItemDto> getHistory(Long userId) {
         return aiChatMessageRepository.findByUserIdOrderByCreatedAtAsc(userId)
                 .stream()
@@ -257,8 +314,8 @@ public class AiChatService {
 
     @Transactional
     public void clearHistory(Long userId) {
-        long deleted = aiChatMessageRepository.deleteByUserId(userId);
-        log.info("Cleared {} AI chat messages for userId={}", deleted, userId);
+        long deleted = aiChatConversationRepository.deleteByUserId(userId);
+        log.info("Cleared {} AI chat conversations for userId={}", deleted, userId);
     }
 
     private String buildInstructions(String mode) {
@@ -353,26 +410,87 @@ public class AiChatService {
         return baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
     }
 
-    private void persistExchange(User user, String mode, String userText, String assistantText) {
+    private void persistExchange(User user, AiChatConversation conversation, String mode, String userText, String assistantText) {
+        Instant now = Instant.now();
+        conversation.setUpdatedAt(now);
+        aiChatConversationRepository.save(conversation);
+
         aiChatMessageRepository.save(AiChatMessage.builder()
                 .user(user)
+                .conversation(conversation)
                 .role("user")
                 .text(userText)
                 .mode(mode)
+                .createdAt(now)
                 .build());
 
         aiChatMessageRepository.save(AiChatMessage.builder()
                 .user(user)
+                .conversation(conversation)
                 .role("assistant")
                 .text(assistantText)
                 .mode(mode)
                 .model(openAiModel)
+                .createdAt(now)
                 .build());
     }
 
     private User findUserByIdOrThrow(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    }
+
+    private AiChatConversation resolveConversation(User user, Long conversationId, String firstUserText) {
+        if (conversationId == null) {
+            return aiChatConversationRepository.save(AiChatConversation.builder()
+                    .user(user)
+                    .title(buildConversationTitle(firstUserText))
+                    .build());
+        }
+
+        AiChatConversation conversation = aiChatConversationRepository.findByIdAndUserId(conversationId, user.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("AI chat conversation not found"));
+
+        if (DEFAULT_CONVERSATION_TITLE.equals(conversation.getTitle())
+                && aiChatMessageRepository.countByConversationId(conversation.getId()) == 0) {
+            conversation.setTitle(buildConversationTitle(firstUserText));
+            conversation.setUpdatedAt(Instant.now());
+            return aiChatConversationRepository.save(conversation);
+        }
+
+        return conversation;
+    }
+
+    private AiChatConversation ensureConversationOwnedByUser(Long userId, Long conversationId) {
+        return aiChatConversationRepository.findByIdAndUserId(conversationId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("AI chat conversation not found"));
+    }
+
+    private String buildConversationTitle(String sourceText) {
+        String normalized = normalizeWhitespace(sourceText);
+        if (normalized.isBlank()) {
+            return DEFAULT_CONVERSATION_TITLE;
+        }
+        return truncate(normalized, 60);
+    }
+
+    private String sanitizeConversationTitle(String title) {
+        String normalized = normalizeWhitespace(title);
+        if (normalized.isBlank()) {
+            throw new IllegalArgumentException("Conversation title must not be blank");
+        }
+        return truncate(normalized, MAX_TITLE_LENGTH);
+    }
+
+    private String normalizeWhitespace(String value) {
+        return value == null ? "" : value.trim().replaceAll("\\s+", " ");
+    }
+
+    private String truncate(String value, int maxLength) {
+        if (value.length() <= maxLength) {
+            return value;
+        }
+        return value.substring(0, Math.max(0, maxLength - 3)).trim() + "...";
     }
 
     private void writeSseEvent(Writer writer, String eventName, String data) throws IOException {
