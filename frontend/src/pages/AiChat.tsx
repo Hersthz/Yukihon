@@ -11,7 +11,7 @@ import {
   Sparkles,
   WandSparkles,
 } from "lucide-react";
-import { aiChatApi, type AiChatMode } from "@/api";
+import { aiChatApi, type AiChatHistoryItem, type AiChatMode } from "@/api";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
 import KaorukoMascot from "@/components/KaorukoMascot";
@@ -96,6 +96,13 @@ const extractApiErrorMessage = (error: unknown) => {
   return error.message || "AI chat is temporarily unavailable. Please try again.";
 };
 
+const toUiMessage = (message: AiChatHistoryItem): ChatMessage => ({
+  id: `history-${message.id}`,
+  role: message.role,
+  text: message.text,
+  timestamp: message.createdAt,
+});
+
 const AiChat = () => {
   const { toast } = useToast();
   const { user } = useAuth();
@@ -104,19 +111,48 @@ const AiChat = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [mode, setMode] = useState<ChatMode>("coach");
   const [activeModel, setActiveModel] = useState("gpt-5-mini");
+  const [historyLoading, setHistoryLoading] = useState(true);
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (!stored) return;
-      const parsed = JSON.parse(stored) as ChatMessage[];
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        setMessages(parsed);
+    const loadHistory = async () => {
+      setHistoryLoading(true);
+      try {
+        const history = await aiChatApi.getHistory();
+        if (history.length > 0) {
+          setMessages(history.map(toUiMessage));
+          const latestAssistant = [...history].reverse().find((message) => message.role === "assistant" && message.model);
+          if (latestAssistant?.model) {
+            setActiveModel(latestAssistant.model);
+          }
+          const latestMode = [...history].reverse().find((message) => !!message.mode)?.mode;
+          if (latestMode) {
+            setMode(latestMode);
+          }
+        } else {
+          setMessages(INITIAL_MESSAGES);
+        }
+      } catch {
+        try {
+          const stored = localStorage.getItem(STORAGE_KEY);
+          if (!stored) {
+            setMessages(INITIAL_MESSAGES);
+            return;
+          }
+          const parsed = JSON.parse(stored) as ChatMessage[];
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setMessages(parsed);
+          }
+        } catch {
+          localStorage.removeItem(STORAGE_KEY);
+          setMessages(INITIAL_MESSAGES);
+        }
+      } finally {
+        setHistoryLoading(false);
       }
-    } catch {
-      localStorage.removeItem(STORAGE_KEY);
-    }
+    };
+
+    void loadHistory();
   }, []);
 
   useEffect(() => {
@@ -174,9 +210,18 @@ const AiChat = () => {
   };
 
   const resetChat = () => {
-    setIsTyping(false);
-    setMessages(INITIAL_MESSAGES);
-    localStorage.removeItem(STORAGE_KEY);
+    const clear = async () => {
+      setIsTyping(false);
+      try {
+        await aiChatApi.clearHistory();
+      } catch {
+        // keep UI responsive even if server cleanup fails
+      }
+      setMessages(INITIAL_MESSAGES);
+      localStorage.removeItem(STORAGE_KEY);
+    };
+
+    void clear();
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -256,6 +301,12 @@ const AiChat = () => {
               </div>
 
               <div className="max-h-[620px] min-h-[420px] space-y-4 overflow-y-auto px-4 py-4">
+                {historyLoading && messages.length === INITIAL_MESSAGES.length ? (
+                  <div className="flex min-h-[220px] items-center justify-center">
+                    <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary/20 border-t-primary" />
+                  </div>
+                ) : null}
+
                 <AnimatePresence initial={false}>
                   {messages.map((message, index) => {
                     const isAssistant = message.role === "assistant";

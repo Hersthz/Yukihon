@@ -19,10 +19,21 @@ export interface AiChatResponse {
   mode: AiChatMode;
 }
 
+export interface AiChatHistoryItem {
+  id: number;
+  role: AiChatRole;
+  text: string;
+  mode: AiChatMode;
+  model?: string | null;
+  createdAt: string;
+}
+
 export const aiChatApi = {
   respond: (data: AiChatRequestPayload) =>
     apiClient.request<AiChatResponse>("/api/ai-chat/respond", {
       method: "POST",
       body: JSON.stringify(data),
     }),
+  getHistory: () => apiClient.request<AiChatHistoryItem[]>("/api/ai-chat/history"),
+  clearHistory: () => apiClient.request("/api/ai-chat/history", { method: "DELETE" }),
 };

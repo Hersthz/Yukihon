@@ -3,9 +3,14 @@ package com.hoang.basis.yukihon.system.aichat.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hoang.basis.yukihon.exception.ServiceUnavailableException;
+import com.hoang.basis.yukihon.system.aichat.dto.AiChatHistoryItemDto;
 import com.hoang.basis.yukihon.system.aichat.dto.AiChatMessageRequest;
 import com.hoang.basis.yukihon.system.aichat.dto.AiChatRequest;
 import com.hoang.basis.yukihon.system.aichat.dto.AiChatResponse;
+import com.hoang.basis.yukihon.system.aichat.entity.AiChatMessage;
+import com.hoang.basis.yukihon.system.aichat.repository.AiChatMessageRepository;
+import com.hoang.basis.yukihon.system.user.entity.User;
+import com.hoang.basis.yukihon.system.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,6 +20,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
@@ -35,6 +41,8 @@ public class AiChatService {
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+    private final AiChatMessageRepository aiChatMessageRepository;
+    private final UserRepository userRepository;
 
     @Value("${openai.api-key:}")
     private String openAiApiKey;
@@ -45,6 +53,7 @@ public class AiChatService {
     @Value("${openai.base-url:https://api.openai.com/v1}")
     private String openAiBaseUrl;
 
+    @Transactional
     public AiChatResponse respond(Long userId, AiChatRequest request) {
         validateRequest(request);
 
@@ -52,7 +61,9 @@ public class AiChatService {
             throw new ServiceUnavailableException("AI chat is not configured yet. Add OPENAI_API_KEY on the backend server.");
         }
 
+        User user = findUserByIdOrThrow(userId);
         String normalizedMode = request.getMode().trim().toLowerCase(Locale.ROOT);
+        AiChatMessageRequest latestUserMessage = request.getMessages().get(request.getMessages().size() - 1);
         List<Map<String, Object>> inputMessages = request.getMessages().stream()
                 .skip(Math.max(0, request.getMessages().size() - MAX_MESSAGES))
                 .map(this::toOpenAiMessage)
@@ -76,6 +87,7 @@ public class AiChatService {
             );
 
             String reply = extractReply(response.getBody());
+            persistExchange(user, normalizedMode, latestUserMessage.getText().trim(), reply);
             log.info("AI chat response created for userId={} mode={} model={}", userId, normalizedMode, openAiModel);
 
             return AiChatResponse.builder()
@@ -106,6 +118,10 @@ public class AiChatService {
         if (request.getMessages().size() > MAX_MESSAGES) {
             throw new IllegalArgumentException("Too many chat messages. Maximum is " + MAX_MESSAGES);
         }
+        String lastRole = request.getMessages().get(request.getMessages().size() - 1).getRole();
+        if (!"user".equalsIgnoreCase(lastRole)) {
+            throw new IllegalArgumentException("The latest chat message must come from the user");
+        }
 
         for (AiChatMessageRequest message : request.getMessages()) {
             String role = message.getRole() == null ? "" : message.getRole().trim().toLowerCase(Locale.ROOT);
@@ -123,6 +139,19 @@ public class AiChatService {
                 "role", message.getRole().trim().toLowerCase(Locale.ROOT),
                 "content", message.getText().trim()
         );
+    }
+
+    public List<AiChatHistoryItemDto> getHistory(Long userId) {
+        return aiChatMessageRepository.findByUserIdOrderByCreatedAtAsc(userId)
+                .stream()
+                .map(AiChatHistoryItemDto::fromEntity)
+                .toList();
+    }
+
+    @Transactional
+    public void clearHistory(Long userId) {
+        long deleted = aiChatMessageRepository.deleteByUserId(userId);
+        log.info("Cleared {} AI chat messages for userId={}", deleted, userId);
     }
 
     private String buildInstructions(String mode) {
@@ -176,7 +205,7 @@ public class AiChatService {
                     for (JsonNode part : content) {
                         String text = part.path("text").asText("");
                         if (!text.isBlank()) {
-                            if (!builder.isEmpty()) {
+                            if (builder.length() > 0) {
                                 builder.append("\n");
                             }
                             builder.append(text.trim());
@@ -184,7 +213,7 @@ public class AiChatService {
                     }
                 }
 
-                if (!builder.isEmpty()) {
+                if (builder.length() > 0) {
                     return builder.toString().trim();
                 }
             }
@@ -215,5 +244,27 @@ public class AiChatService {
 
     private String normalizeBaseUrl(String baseUrl) {
         return baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
+    }
+
+    private void persistExchange(User user, String mode, String userText, String assistantText) {
+        aiChatMessageRepository.save(AiChatMessage.builder()
+                .user(user)
+                .role("user")
+                .text(userText)
+                .mode(mode)
+                .build());
+
+        aiChatMessageRepository.save(AiChatMessage.builder()
+                .user(user)
+                .role("assistant")
+                .text(assistantText)
+                .mode(mode)
+                .model(openAiModel)
+                .build());
+    }
+
+    private User findUserByIdOrThrow(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
     }
 }
