@@ -9,6 +9,7 @@ import {
   RefreshCcw,
   SendHorizontal,
   Sparkles,
+  Square,
   WandSparkles,
 } from "lucide-react";
 import { aiChatApi, type AiChatHistoryItem, type AiChatMode } from "@/api";
@@ -115,6 +116,13 @@ const AiChat = () => {
   const [activeModel, setActiveModel] = useState("gpt-5-mini");
   const [historyLoading, setHistoryLoading] = useState(true);
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort();
+    };
+  }, []);
 
   useEffect(() => {
     const loadHistory = async () => {
@@ -168,6 +176,10 @@ const AiChat = () => {
   const sendMessage = async (preset?: string) => {
     const value = (preset ?? input).trim();
     if (!value || isTyping) return;
+
+    abortControllerRef.current?.abort();
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
 
     const assistantMessageId = `assistant-${Date.now()}`;
     const userMessage: ChatMessage = {
@@ -243,6 +255,8 @@ const AiChat = () => {
             variant: "destructive",
           });
         },
+      }, {
+        signal: abortController.signal,
       });
 
       if (!streamFailed) {
@@ -255,6 +269,10 @@ const AiChat = () => {
         );
       }
     } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        setMessages((current) => current.filter((item) => item.id !== assistantMessageId || item.text !== EMPTY_ASSISTANT_MESSAGE));
+        return;
+      }
       setMessages((current) => current.filter((item) => item.id !== assistantMessageId));
       toast({
         title: "AI chat unavailable",
@@ -262,12 +280,24 @@ const AiChat = () => {
         variant: "destructive",
       });
     } finally {
+      if (abortControllerRef.current === abortController) {
+        abortControllerRef.current = null;
+      }
       setIsTyping(false);
     }
   };
 
+  const stopGenerating = () => {
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
+    setIsTyping(false);
+    setMessages((current) => current.filter((item) => item.text !== EMPTY_ASSISTANT_MESSAGE));
+  };
+
   const resetChat = () => {
     const clear = async () => {
+      abortControllerRef.current?.abort();
+      abortControllerRef.current = null;
       setIsTyping(false);
       try {
         await aiChatApi.clearHistory();
@@ -449,14 +479,26 @@ const AiChat = () => {
                     <p className="text-xs text-muted-foreground">
                       Current mode: {MODE_META[mode].label}
                     </p>
-                    <Button
-                      className="rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90"
-                      disabled={!input.trim() || isTyping}
-                      onClick={() => void sendMessage()}
-                    >
-                      <SendHorizontal className="mr-2 h-4 w-4" />
-                      Send
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      {isTyping && (
+                        <Button
+                          className="rounded-2xl"
+                          onClick={stopGenerating}
+                          variant="outline"
+                        >
+                          <Square className="mr-2 h-4 w-4" />
+                          Stop generating
+                        </Button>
+                      )}
+                      <Button
+                        className="rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90"
+                        disabled={!input.trim() || isTyping}
+                        onClick={() => void sendMessage()}
+                      >
+                        <SendHorizontal className="mr-2 h-4 w-4" />
+                        Send
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>

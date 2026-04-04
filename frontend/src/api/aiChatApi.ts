@@ -35,6 +35,10 @@ interface StreamHandlers {
   onError?: (message: string) => void;
 }
 
+interface StreamOptions {
+  signal?: AbortSignal;
+}
+
 const parseSseBlock = (block: string) => {
   const lines = block.split(/\r?\n/);
   let event = "message";
@@ -62,7 +66,7 @@ export const aiChatApi = {
       method: "POST",
       body: JSON.stringify(data),
     }),
-  streamRespond: async (data: AiChatRequestPayload, handlers: StreamHandlers = {}) => {
+  streamRespond: async (data: AiChatRequestPayload, handlers: StreamHandlers = {}, options: StreamOptions = {}) => {
     const response = await fetch(`${apiClient.baseURL}/api/ai-chat/respond/stream`, {
       method: "POST",
       headers: {
@@ -70,6 +74,7 @@ export const aiChatApi = {
         ...apiClient.getAuthHeader(),
       },
       body: JSON.stringify(data),
+      signal: options.signal,
     });
 
     if (!response.ok) {
