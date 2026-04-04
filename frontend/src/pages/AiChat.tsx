@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { Fragment, useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   BookOpenCheck,
@@ -32,6 +32,13 @@ type ChatMessage = {
   text: string;
   timestamp: string;
 };
+
+type MarkdownBlock =
+  | { type: "heading"; level: 1 | 2 | 3; text: string }
+  | { type: "paragraph"; text: string }
+  | { type: "unordered-list"; items: string[] }
+  | { type: "ordered-list"; items: string[] }
+  | { type: "code"; code: string; language?: string };
 
 const STORAGE_KEY = "yukihon_ai_chat_messages";
 const MAX_CONTEXT_MESSAGES = 12;
@@ -105,6 +112,201 @@ const toUiMessage = (message: AiChatHistoryItem): ChatMessage => ({
 });
 
 const EMPTY_ASSISTANT_MESSAGE = " ";
+
+const renderInlineMarkdown = (text: string) => {
+  const codeSegments = text.split(/(`[^`]+`)/g);
+
+  return codeSegments.map((segment, segmentIndex) => {
+    if (segment.startsWith("`") && segment.endsWith("`")) {
+      return (
+        <code
+          key={`code-${segmentIndex}`}
+          className="rounded-md bg-background/70 px-1.5 py-0.5 font-mono text-[0.9em] text-primary"
+        >
+          {segment.slice(1, -1)}
+        </code>
+      );
+    }
+
+    const boldSegments = segment.split(/(\*\*[^*]+\*\*)/g);
+    return (
+      <Fragment key={`text-${segmentIndex}`}>
+        {boldSegments.map((part, partIndex) =>
+          part.startsWith("**") && part.endsWith("**") ? (
+            <strong key={`bold-${segmentIndex}-${partIndex}`} className="font-semibold text-foreground">
+              {part.slice(2, -2)}
+            </strong>
+          ) : (
+            <Fragment key={`plain-${segmentIndex}-${partIndex}`}>{part}</Fragment>
+          )
+        )}
+      </Fragment>
+    );
+  });
+};
+
+const parseMarkdownBlocks = (text: string): MarkdownBlock[] => {
+  const lines = text.replace(/\r/g, "").split("\n");
+  const blocks: MarkdownBlock[] = [];
+  let index = 0;
+
+  while (index < lines.length) {
+    const line = lines[index];
+    const trimmed = line.trim();
+
+    if (!trimmed) {
+      index += 1;
+      continue;
+    }
+
+    if (trimmed.startsWith("```")) {
+      const language = trimmed.slice(3).trim() || undefined;
+      index += 1;
+      const codeLines: string[] = [];
+
+      while (index < lines.length && !lines[index].trim().startsWith("```")) {
+        codeLines.push(lines[index]);
+        index += 1;
+      }
+
+      if (index < lines.length) {
+        index += 1;
+      }
+
+      blocks.push({
+        type: "code",
+        code: codeLines.join("\n"),
+        language,
+      });
+      continue;
+    }
+
+    const headingMatch = trimmed.match(/^(#{1,3})\s+(.*)$/);
+    if (headingMatch) {
+      blocks.push({
+        type: "heading",
+        level: headingMatch[1].length as 1 | 2 | 3,
+        text: headingMatch[2],
+      });
+      index += 1;
+      continue;
+    }
+
+    if (/^[-*]\s+/.test(trimmed)) {
+      const items: string[] = [];
+      while (index < lines.length && /^[-*]\s+/.test(lines[index].trim())) {
+        items.push(lines[index].trim().replace(/^[-*]\s+/, ""));
+        index += 1;
+      }
+      blocks.push({ type: "unordered-list", items });
+      continue;
+    }
+
+    if (/^\d+\.\s+/.test(trimmed)) {
+      const items: string[] = [];
+      while (index < lines.length && /^\d+\.\s+/.test(lines[index].trim())) {
+        items.push(lines[index].trim().replace(/^\d+\.\s+/, ""));
+        index += 1;
+      }
+      blocks.push({ type: "ordered-list", items });
+      continue;
+    }
+
+    const paragraphLines: string[] = [];
+    while (index < lines.length) {
+      const candidate = lines[index];
+      const candidateTrimmed = candidate.trim();
+
+      if (
+        !candidateTrimmed ||
+        candidateTrimmed.startsWith("```") ||
+        /^(#{1,3})\s+/.test(candidateTrimmed) ||
+        /^[-*]\s+/.test(candidateTrimmed) ||
+        /^\d+\.\s+/.test(candidateTrimmed)
+      ) {
+        break;
+      }
+
+      paragraphLines.push(candidateTrimmed);
+      index += 1;
+    }
+
+    blocks.push({
+      type: "paragraph",
+      text: paragraphLines.join(" "),
+    });
+  }
+
+  return blocks;
+};
+
+const MarkdownMessage = ({ text, isAssistant }: { text: string; isAssistant: boolean }) => {
+  const blocks = parseMarkdownBlocks(text);
+  const codeWrapperClass = isAssistant
+    ? "border-border/80 bg-background/70 text-foreground"
+    : "border-primary-foreground/20 bg-primary-foreground/10 text-primary-foreground";
+  const codeLabelClass = isAssistant ? "text-muted-foreground" : "text-primary-foreground/70";
+
+  return (
+    <div className="space-y-3 text-sm leading-6">
+      {blocks.map((block, blockIndex) => {
+        if (block.type === "heading") {
+          const headingClass =
+            block.level === 1
+              ? "text-lg font-semibold"
+              : block.level === 2
+                ? "text-base font-semibold"
+                : "text-sm font-semibold uppercase tracking-[0.12em]";
+
+          return (
+            <div key={`heading-${blockIndex}`} className={headingClass}>
+              {renderInlineMarkdown(block.text)}
+            </div>
+          );
+        }
+
+        if (block.type === "paragraph") {
+          return (
+            <p key={`paragraph-${blockIndex}`} className="whitespace-pre-wrap">
+              {renderInlineMarkdown(block.text)}
+            </p>
+          );
+        }
+
+        if (block.type === "unordered-list") {
+          return (
+            <ul key={`ul-${blockIndex}`} className="list-disc space-y-1 pl-5">
+              {block.items.map((item, itemIndex) => (
+                <li key={`ul-item-${blockIndex}-${itemIndex}`}>{renderInlineMarkdown(item)}</li>
+              ))}
+            </ul>
+          );
+        }
+
+        if (block.type === "ordered-list") {
+          return (
+            <ol key={`ol-${blockIndex}`} className="list-decimal space-y-1 pl-5">
+              {block.items.map((item, itemIndex) => (
+                <li key={`ol-item-${blockIndex}-${itemIndex}`}>{renderInlineMarkdown(item)}</li>
+              ))}
+            </ol>
+          );
+        }
+
+        return (
+          <div key={`code-${blockIndex}`} className={cn("overflow-hidden rounded-2xl border", codeWrapperClass)}>
+            <div className={cn("border-b px-3 py-2 text-[11px] uppercase tracking-[0.18em]", codeLabelClass)}>
+              {block.language || "code"}
+            </div>
+            <pre className="overflow-x-auto px-4 py-3 text-[13px] leading-6">
+              <code className="font-mono">{block.code}</code>
+            </pre>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
 
 const AiChat = () => {
   const { toast } = useToast();
@@ -430,9 +632,11 @@ const AiChat = () => {
                               {formatTime(message.timestamp)}
                             </span>
                           </div>
-                          <p className="whitespace-pre-wrap text-sm leading-6">
-                            {message.text === EMPTY_ASSISTANT_MESSAGE ? "" : message.text}
-                          </p>
+                          {message.text === EMPTY_ASSISTANT_MESSAGE ? (
+                            <p className="text-sm leading-6" />
+                          ) : (
+                            <MarkdownMessage text={message.text} isAssistant={isAssistant} />
+                          )}
                         </div>
                       </motion.div>
                     );
