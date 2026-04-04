@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import {
   ArrowRight,
   BookOpen,
+  Bot,
   Brain,
   CalendarDays,
   Clock3,
@@ -31,6 +32,7 @@ const quickActions = [
   { title: "Lịch học", subtitle: "Nhìn nhịp học theo từng ngày", icon: CalendarDays, to: "/calendar", accent: "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400" },
   { title: "Tra cứu", subtitle: "Kanji, ví dụ, cách đọc", icon: Search, to: "/dictionary", accent: "bg-sky-500/15 text-sky-600 dark:text-sky-400" },
   { title: "Story Mode", subtitle: "Học qua truyện ngắn", icon: BookOpen, to: "/story-mode", accent: "bg-rose-500/15 text-rose-600 dark:text-rose-400" },
+  { title: "AI Chat", subtitle: "Hoi dap va on tap cung tro ly AI", icon: Bot, to: "/ai-chat", accent: "bg-primary/15 text-primary" },
   { title: "Ngữ pháp", subtitle: "Ôn cấu trúc thường gặp", icon: Brain, to: "/grammar", accent: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" },
   { title: "Quiz", subtitle: "Kiểm tra nhanh mức độ nhớ", icon: Trophy, to: "/quiz", accent: "bg-rose-500/15 text-rose-600 dark:text-rose-400" },
   { title: "JLPT", subtitle: "Lộ trình theo cấp độ", icon: GraduationCap, to: "/jlpt-lessons", accent: "bg-amber-500/15 text-amber-600 dark:text-amber-400" },

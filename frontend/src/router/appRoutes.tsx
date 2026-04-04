@@ -8,6 +8,7 @@ const AdminContent = lazy(() => import("@/pages/AdminContent"));
 const AdminCreatorMode = lazy(() => import("@/pages/AdminCreatorMode"));
 const AdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
 const AdminUsers = lazy(() => import("@/pages/AdminUsers"));
+const AiChat = lazy(() => import("@/pages/AiChat"));
 const Auth = lazy(() => import("@/pages/Auth"));
 const Community = lazy(() => import("@/pages/Community"));
 const CourseDetail = lazy(() => import("@/pages/CourseDetail"));
@@ -46,6 +47,7 @@ export const AppRoutes = () => {
         <Route path="/" element={<Index />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/dashboard" element={withProtectedRoute(<Dashboard />)} />
+        <Route path="/ai-chat" element={withProtectedRoute(<AiChat />)} />
         <Route path="/vocabulary" element={withProtectedRoute(<Vocabulary />)} />
         <Route path="/grammar" element={withProtectedRoute(<Grammar />)} />
         <Route path="/quiz" element={withProtectedRoute(<Quiz />)} />
