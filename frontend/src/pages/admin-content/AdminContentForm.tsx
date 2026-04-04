@@ -39,7 +39,8 @@ const AdminContentForm = ({
     try {
       setUploadingField(field);
       const response = await uploadMedia(file);
-      setEditItem({ ...(editItem as Record<string, unknown>), [field]: response.url } as EditableItem);
+      const updatedItem = { ...editItem, [field]: response.url };
+      setEditItem(updatedItem as unknown as EditableItem);
     } finally {
       setUploadingField(null);
     }
