@@ -11,17 +11,19 @@ import {
   Sparkles,
   WandSparkles,
 } from "lucide-react";
+import { aiChatApi, type AiChatHistoryItem, type AiChatMode } from "@/api";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
 import KaorukoMascot from "@/components/KaorukoMascot";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 
 type ChatRole = "assistant" | "user";
-type ChatMode = "coach" | "grammar" | "conversation";
+type ChatMode = AiChatMode;
 
 type ChatMessage = {
   id: string;
@@ -31,6 +33,7 @@ type ChatMessage = {
 };
 
 const STORAGE_KEY = "yukihon_ai_chat_messages";
+const MAX_CONTEXT_MESSAGES = 12;
 
 const STARTER_PROMPTS = [
   "Make me a 15-minute N5 study plan for today",
@@ -66,102 +69,9 @@ const INITIAL_MESSAGES: ChatMessage[] = [
     role: "assistant",
     timestamp: new Date().toISOString(),
     text:
-      "Hi, I am Yukihon AI. I can help you review grammar, build short study plans, and practice Japanese replies. Send a prompt or tap one of the starter ideas.",
+      "Xin chào, mình là Yukihon AI. Mình có thể giúp bạn ôn ngữ pháp, lên kế hoạch học ngắn, luyện trả lời tiếng Nhật và giải thích câu theo từng phần.",
   },
 ];
-
-const containsJapanese = (value: string) => /[\u3040-\u30ff\u3400-\u9faf]/.test(value);
-
-const buildReply = (message: string, mode: ChatMode) => {
-  const normalized = message.toLowerCase();
-
-  if (containsJapanese(message)) {
-    return [
-      "Here is a quick reading workflow for that Japanese text:",
-      "1. Read the whole sentence once for topic and tense.",
-      "2. Mark particles first, because they tell you the role of each chunk.",
-      "3. Split the sentence into smaller idea blocks.",
-      "",
-      `If you want, I can next turn "${message}" into:`,
-      "- word-by-word gloss",
-      "- natural Vietnamese meaning",
-      "- romaji and speaking practice",
-    ].join("\n");
-  }
-
-  if (normalized.includes("kanji")) {
-    return [
-      "Kanji practice works best in small loops:",
-      "1. Pick 5 characters only.",
-      "2. Learn one keyword and one common reading for each.",
-      "3. Write every kanji 5 times while saying the reading out loud.",
-      "4. Review again after 10 minutes and tonight before sleep.",
-      "",
-      "Send me a JLPT level or a kanji list and I can build the exact set.",
-    ].join("\n");
-  }
-
-  if (normalized.includes("grammar") || normalized.includes("particle") || normalized.includes("は") || normalized.includes("が")) {
-    return [
-      "Grammar tip:",
-      "- は marks the topic, what the sentence is about.",
-      "- が often highlights the subject or new information.",
-      "",
-      "Fast contrast:",
-      "- 私は学生です = As for me, I am a student.",
-      "- 私が学生です = I am the one who is a student.",
-      "",
-      "If you want, I can turn this into a mini drill with 5 fill-in-the-blank questions.",
-    ].join("\n");
-  }
-
-  if (normalized.includes("plan") || normalized.includes("study")) {
-    return [
-      "Here is a compact study block you can do today:",
-      "1. 5 min: review old vocab aloud.",
-      "2. 4 min: learn one grammar point with two examples.",
-      "3. 4 min: write three original sentences.",
-      "4. 2 min: self-check mistakes and save weak points.",
-      "",
-      "Tell me your level, for example N5 or N3, and I will tailor the content.",
-    ].join("\n");
-  }
-
-  if (mode === "conversation") {
-    return [
-      "Conversation mode is on.",
-      "A clean way to answer naturally is:",
-      "1. Start simple.",
-      "2. Keep one tense per sentence.",
-      "3. End with a friendly follow-up question.",
-      "",
-      "Send me the situation and I will draft a natural reply for you.",
-    ].join("\n");
-  }
-
-  if (mode === "grammar") {
-    return [
-      "Grammar mode is on.",
-      "I can break any pattern into:",
-      "- structure",
-      "- meaning",
-      "- nuance",
-      "- example",
-      "- common mistake",
-      "",
-      "Send one form such as ている, そうです, or ことがある.",
-    ].join("\n");
-  }
-
-  return [
-    "I can help with study plans, grammar explanations, vocab review, and Japanese writing practice.",
-    "Try one of these next:",
-    "- explain a grammar pattern",
-    "- create a daily JLPT routine",
-    "- rewrite a sentence in natural Japanese",
-    "- quiz me on vocab",
-  ].join("\n");
-};
 
 const formatTime = (timestamp: string) =>
   new Intl.DateTimeFormat("en-GB", {
@@ -169,26 +79,82 @@ const formatTime = (timestamp: string) =>
     minute: "2-digit",
   }).format(new Date(timestamp));
 
+const extractApiErrorMessage = (error: unknown) => {
+  if (!(error instanceof Error)) {
+    return "AI chat is temporarily unavailable. Please try again.";
+  }
+
+  try {
+    const parsed = JSON.parse(error.message) as { message?: string };
+    if (typeof parsed.message === "string" && parsed.message.trim()) {
+      return parsed.message;
+    }
+  } catch {
+    // ignore JSON parse failures and fall back to the raw message
+  }
+
+  return error.message || "AI chat is temporarily unavailable. Please try again.";
+};
+
+const toUiMessage = (message: AiChatHistoryItem): ChatMessage => ({
+  id: `history-${message.id}`,
+  role: message.role,
+  text: message.text,
+  timestamp: message.createdAt,
+});
+
+const EMPTY_ASSISTANT_MESSAGE = " ";
+
 const AiChat = () => {
+  const { toast } = useToast();
   const { user } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [mode, setMode] = useState<ChatMode>("coach");
+  const [activeModel, setActiveModel] = useState("gpt-5-mini");
+  const [historyLoading, setHistoryLoading] = useState(true);
   const bottomRef = useRef<HTMLDivElement | null>(null);
-  const typingTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (!stored) return;
-      const parsed = JSON.parse(stored) as ChatMessage[];
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        setMessages(parsed);
+    const loadHistory = async () => {
+      setHistoryLoading(true);
+      try {
+        const history = await aiChatApi.getHistory();
+        if (history.length > 0) {
+          setMessages(history.map(toUiMessage));
+          const latestAssistant = [...history].reverse().find((message) => message.role === "assistant" && message.model);
+          if (latestAssistant?.model) {
+            setActiveModel(latestAssistant.model);
+          }
+          const latestMode = [...history].reverse().find((message) => !!message.mode)?.mode;
+          if (latestMode) {
+            setMode(latestMode);
+          }
+        } else {
+          setMessages(INITIAL_MESSAGES);
+        }
+      } catch {
+        try {
+          const stored = localStorage.getItem(STORAGE_KEY);
+          if (!stored) {
+            setMessages(INITIAL_MESSAGES);
+            return;
+          }
+          const parsed = JSON.parse(stored) as ChatMessage[];
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setMessages(parsed);
+          }
+        } catch {
+          localStorage.removeItem(STORAGE_KEY);
+          setMessages(INITIAL_MESSAGES);
+        }
+      } finally {
+        setHistoryLoading(false);
       }
-    } catch {
-      localStorage.removeItem(STORAGE_KEY);
-    }
+    };
+
+    void loadHistory();
   }, []);
 
   useEffect(() => {
@@ -199,55 +165,126 @@ const AiChat = () => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [isTyping, messages]);
 
-  useEffect(() => {
-    return () => {
-      if (typingTimeoutRef.current) {
-        window.clearTimeout(typingTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  const sendMessage = (preset?: string) => {
+  const sendMessage = async (preset?: string) => {
     const value = (preset ?? input).trim();
     if (!value || isTyping) return;
 
+    const assistantMessageId = `assistant-${Date.now()}`;
     const userMessage: ChatMessage = {
       id: `user-${Date.now()}`,
       role: "user",
       text: value,
       timestamp: new Date().toISOString(),
     };
+    const assistantPlaceholder: ChatMessage = {
+      id: assistantMessageId,
+      role: "assistant",
+      text: EMPTY_ASSISTANT_MESSAGE,
+      timestamp: new Date().toISOString(),
+    };
 
-    setMessages((current) => [...current, userMessage]);
+    const nextMessages = [...messages, userMessage, assistantPlaceholder];
+
+    setMessages(nextMessages);
     setInput("");
     setIsTyping(true);
 
-    typingTimeoutRef.current = window.setTimeout(() => {
-      const assistantMessage: ChatMessage = {
-        id: `assistant-${Date.now()}`,
-        role: "assistant",
-        text: buildReply(value, mode),
-        timestamp: new Date().toISOString(),
-      };
+    try {
+      let streamFailed = false;
 
-      setMessages((current) => [...current, assistantMessage]);
+      await aiChatApi.streamRespond({
+        mode,
+        messages: nextMessages
+          .filter((message) => message.id !== assistantMessageId)
+          .slice(-MAX_CONTEXT_MESSAGES)
+          .map((message) => ({
+          role: message.role,
+          text: message.text,
+        })),
+      }, {
+        onMeta: ({ model, mode: streamMode }) => {
+          if (model) {
+            setActiveModel(model);
+          }
+          if (streamMode) {
+            setMode(streamMode);
+          }
+        },
+        onDelta: (delta) => {
+          setMessages((current) =>
+            current.map((message) =>
+              message.id === assistantMessageId
+                ? {
+                    ...message,
+                    text: message.text === EMPTY_ASSISTANT_MESSAGE ? delta : message.text + delta,
+                  }
+                : message
+            )
+          );
+        },
+        onDone: ({ model }) => {
+          if (model) {
+            setActiveModel(model);
+          }
+          setMessages((current) =>
+            current.map((message) =>
+              message.id === assistantMessageId && message.text === EMPTY_ASSISTANT_MESSAGE
+                ? { ...message, text: "" }
+                : message
+            )
+          );
+        },
+        onError: (message) => {
+          streamFailed = true;
+          setMessages((current) => current.filter((item) => item.id !== assistantMessageId));
+          toast({
+            title: "AI chat unavailable",
+            description: message,
+            variant: "destructive",
+          });
+        },
+      });
+
+      if (!streamFailed) {
+        setMessages((current) =>
+          current.map((message) =>
+            message.id === assistantMessageId && message.text === EMPTY_ASSISTANT_MESSAGE
+              ? { ...message, text: "" }
+              : message
+          )
+        );
+      }
+    } catch (error) {
+      setMessages((current) => current.filter((item) => item.id !== assistantMessageId));
+      toast({
+        title: "AI chat unavailable",
+        description: extractApiErrorMessage(error),
+        variant: "destructive",
+      });
+    } finally {
       setIsTyping(false);
-    }, 900);
+    }
   };
 
   const resetChat = () => {
-    if (typingTimeoutRef.current) {
-      window.clearTimeout(typingTimeoutRef.current);
-    }
-    setIsTyping(false);
-    setMessages(INITIAL_MESSAGES);
-    localStorage.removeItem(STORAGE_KEY);
+    const clear = async () => {
+      setIsTyping(false);
+      try {
+        await aiChatApi.clearHistory();
+      } catch {
+        // keep UI responsive even if server cleanup fails
+      }
+      setMessages(INITIAL_MESSAGES);
+      localStorage.removeItem(STORAGE_KEY);
+    };
+
+    void clear();
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
-      sendMessage();
+      void sendMessage();
     }
   };
 
@@ -266,7 +303,7 @@ const AiChat = () => {
           action={
             <>
               <Badge className="rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-primary hover:bg-primary/10">
-                Frontend prototype
+                Live via {activeModel}
               </Badge>
               <Button className="rounded-2xl" onClick={resetChat} variant="outline">
                 <RefreshCcw className="mr-2 h-4 w-4" />
@@ -287,7 +324,7 @@ const AiChat = () => {
             label="Assistant"
             value={`${assistantMessages} replies`}
             icon={<Bot className="h-4 w-4 text-sky-500" />}
-            hint="Each reply is generated locally for UI preview."
+            hint="Replies now come from the backend OpenAI proxy."
           />
           <MetricCard
             label="Status"
@@ -301,7 +338,7 @@ const AiChat = () => {
           <div className="space-y-4">
             <PageSection
               title="Study conversation"
-              description="Chat bubbles, starter prompts, and a composer ready to swap to a real AI endpoint later."
+              description="Chat bubbles, starter prompts, and a live backend AI response flow."
               className="overflow-hidden p-0"
             >
               <div className="border-b border-border bg-gradient-to-r from-primary/10 via-transparent to-secondary/10 px-4 py-4">
@@ -310,7 +347,7 @@ const AiChat = () => {
                     <Button
                       key={prompt}
                       className="rounded-full border-border bg-background/80 text-xs text-foreground/80 hover:bg-background"
-                      onClick={() => sendMessage(prompt)}
+                      onClick={() => void sendMessage(prompt)}
                       size="sm"
                       variant="outline"
                     >
@@ -321,6 +358,12 @@ const AiChat = () => {
               </div>
 
               <div className="max-h-[620px] min-h-[420px] space-y-4 overflow-y-auto px-4 py-4">
+                {historyLoading && messages.length === INITIAL_MESSAGES.length ? (
+                  <div className="flex min-h-[220px] items-center justify-center">
+                    <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary/20 border-t-primary" />
+                  </div>
+                ) : null}
+
                 <AnimatePresence initial={false}>
                   {messages.map((message, index) => {
                     const isAssistant = message.role === "assistant";
@@ -357,14 +400,16 @@ const AiChat = () => {
                               {formatTime(message.timestamp)}
                             </span>
                           </div>
-                          <p className="whitespace-pre-wrap text-sm leading-6">{message.text}</p>
+                          <p className="whitespace-pre-wrap text-sm leading-6">
+                            {message.text === EMPTY_ASSISTANT_MESSAGE ? "" : message.text}
+                          </p>
                         </div>
                       </motion.div>
                     );
                   })}
                 </AnimatePresence>
 
-                {isTyping && (
+                {isTyping && messages[messages.length - 1]?.role !== "assistant" && (
                   <motion.div
                     animate={{ opacity: 1, y: 0 }}
                     className="flex gap-3"
@@ -407,7 +452,7 @@ const AiChat = () => {
                     <Button
                       className="rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90"
                       disabled={!input.trim() || isTyping}
-                      onClick={() => sendMessage()}
+                      onClick={() => void sendMessage()}
                     >
                       <SendHorizontal className="mr-2 h-4 w-4" />
                       Send
@@ -490,7 +535,7 @@ const AiChat = () => {
               </div>
             </PageSection>
 
-            <PageSection title="What to ask" description="Starter directions that fit the current UI even before a backend AI endpoint exists.">
+            <PageSection title="What to ask" description="Starter directions for the live AI study assistant.">
               <div className="space-y-3">
                 <div className="rounded-[20px] border border-border bg-card p-4">
                   <div className="flex items-center gap-2 text-sm font-semibold text-foreground">

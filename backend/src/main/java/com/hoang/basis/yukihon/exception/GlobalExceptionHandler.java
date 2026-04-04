@@ -82,12 +82,20 @@ public class GlobalExceptionHandler {
                 return buildErrorResponse(HttpStatus.UNAUTHORIZED, ErrorCode.TOKEN_EXPIRED, "Token has expired", request);
         }
 
-        @ExceptionHandler(JwtException.class)
-        public ResponseEntity<ApiError> handleJwtException(
+    @ExceptionHandler(JwtException.class)
+    public ResponseEntity<ApiError> handleJwtException(
                         JwtException ex,
                         HttpServletRequest request
         ) {
                 return buildErrorResponse(HttpStatus.UNAUTHORIZED, ErrorCode.TOKEN_INVALID, "Invalid token", request);
+    }
+
+    @ExceptionHandler(ServiceUnavailableException.class)
+    public ResponseEntity<ApiError> handleServiceUnavailable(
+            ServiceUnavailableException ex,
+            HttpServletRequest request
+    ) {
+        return buildErrorResponse(HttpStatus.SERVICE_UNAVAILABLE, ErrorCode.SERVICE_UNAVAILABLE, ex.getMessage(), request);
     }
 
     @ExceptionHandler(Exception.class)
