@@ -103,6 +103,8 @@ const toUiMessage = (message: AiChatHistoryItem): ChatMessage => ({
   timestamp: message.createdAt,
 });
 
+const EMPTY_ASSISTANT_MESSAGE = " ";
+
 const AiChat = () => {
   const { toast } = useToast();
   const { user } = useAuth();
@@ -167,38 +169,93 @@ const AiChat = () => {
     const value = (preset ?? input).trim();
     if (!value || isTyping) return;
 
+    const assistantMessageId = `assistant-${Date.now()}`;
     const userMessage: ChatMessage = {
       id: `user-${Date.now()}`,
       role: "user",
       text: value,
       timestamp: new Date().toISOString(),
     };
+    const assistantPlaceholder: ChatMessage = {
+      id: assistantMessageId,
+      role: "assistant",
+      text: EMPTY_ASSISTANT_MESSAGE,
+      timestamp: new Date().toISOString(),
+    };
 
-    const nextMessages = [...messages, userMessage];
+    const nextMessages = [...messages, userMessage, assistantPlaceholder];
 
     setMessages(nextMessages);
     setInput("");
     setIsTyping(true);
 
     try {
-      const response = await aiChatApi.respond({
+      let streamFailed = false;
+
+      await aiChatApi.streamRespond({
         mode,
-        messages: nextMessages.slice(-MAX_CONTEXT_MESSAGES).map((message) => ({
+        messages: nextMessages
+          .filter((message) => message.id !== assistantMessageId)
+          .slice(-MAX_CONTEXT_MESSAGES)
+          .map((message) => ({
           role: message.role,
           text: message.text,
         })),
+      }, {
+        onMeta: ({ model, mode: streamMode }) => {
+          if (model) {
+            setActiveModel(model);
+          }
+          if (streamMode) {
+            setMode(streamMode);
+          }
+        },
+        onDelta: (delta) => {
+          setMessages((current) =>
+            current.map((message) =>
+              message.id === assistantMessageId
+                ? {
+                    ...message,
+                    text: message.text === EMPTY_ASSISTANT_MESSAGE ? delta : message.text + delta,
+                  }
+                : message
+            )
+          );
+        },
+        onDone: ({ model }) => {
+          if (model) {
+            setActiveModel(model);
+          }
+          setMessages((current) =>
+            current.map((message) =>
+              message.id === assistantMessageId && message.text === EMPTY_ASSISTANT_MESSAGE
+                ? { ...message, text: "" }
+                : message
+            )
+          );
+        },
+        onError: (message) => {
+          streamFailed = true;
+          setMessages((current) => current.filter((item) => item.id !== assistantMessageId));
+          toast({
+            title: "AI chat unavailable",
+            description: message,
+            variant: "destructive",
+          });
+        },
       });
 
-      const assistantMessage: ChatMessage = {
-        id: `assistant-${Date.now()}`,
-        role: "assistant",
-        text: response.reply,
-        timestamp: new Date().toISOString(),
-      };
-
-      setMessages((current) => [...current, assistantMessage]);
-      setActiveModel(response.model);
+      if (!streamFailed) {
+        setMessages((current) =>
+          current.map((message) =>
+            message.id === assistantMessageId && message.text === EMPTY_ASSISTANT_MESSAGE
+              ? { ...message, text: "" }
+              : message
+          )
+        );
+      }
     } catch (error) {
+      setMessages((current) => current.filter((item) => item.id !== assistantMessageId));
       toast({
         title: "AI chat unavailable",
         description: extractApiErrorMessage(error),
@@ -343,14 +400,16 @@ const AiChat = () => {
                               {formatTime(message.timestamp)}
                             </span>
                           </div>
-                          <p className="whitespace-pre-wrap text-sm leading-6">{message.text}</p>
+                          <p className="whitespace-pre-wrap text-sm leading-6">
+                            {message.text === EMPTY_ASSISTANT_MESSAGE ? "" : message.text}
+                          </p>
                         </div>
                       </motion.div>
                     );
                   })}
                 </AnimatePresence>
 
-                {isTyping && (
+                {isTyping && messages[messages.length - 1]?.role !== "assistant" && (
                   <motion.div
                     animate={{ opacity: 1, y: 0 }}
                     className="flex gap-3"
