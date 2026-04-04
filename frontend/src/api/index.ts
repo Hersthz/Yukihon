@@ -1,4 +1,5 @@
 export * from "./authApi";
+export * from "./aiChatApi";
 export * from "./adminApi";
 export * from "./communityApi";
 export * from "./dictionaryApi";
