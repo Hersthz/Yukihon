@@ -9,5 +9,9 @@ public interface AiChatMessageRepository extends JpaRepository<AiChatMessage, Lo
 
     List<AiChatMessage> findByUserIdOrderByCreatedAtAsc(Long userId);
 
+    List<AiChatMessage> findByConversationIdAndUserIdOrderByCreatedAtAsc(Long conversationId, Long userId);
+
+    long countByConversationId(Long conversationId);
+
     long deleteByUserId(Long userId);
 }

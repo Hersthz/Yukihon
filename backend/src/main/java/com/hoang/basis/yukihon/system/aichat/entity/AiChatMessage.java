@@ -27,6 +27,10 @@ public class AiChatMessage {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "conversation_id", nullable = false)
+    private AiChatConversation conversation;
+
     @Column(nullable = false, length = 20)
     private String role;
 
