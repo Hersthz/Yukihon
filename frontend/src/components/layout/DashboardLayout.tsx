@@ -1,6 +1,6 @@
 import { ReactNode, useEffect, useState } from "react";
+
 import DashboardNavigation from "@/components/DashboardNavigation";
-import SnowEffect from "@/components/SnowEffect";
 import { cn } from "@/lib/utils";
 
 interface DashboardLayoutProps {
@@ -18,8 +18,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   }, []);
 
   const handleToggleCollapse = () => {
-    setCollapsed((prev) => {
-      const next = !prev;
+    setCollapsed((previous) => {
+      const next = !previous;
       localStorage.setItem(STORAGE_KEY, String(next));
       return next;
     });
@@ -27,28 +27,31 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* Background layers — theme-aware */}
       <div className="fixed inset-0 -z-10 overflow-hidden">
-        {/* Light mode: warm cream gradient / Dark mode: deep navy gradient */}
-        <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-muted/30" />
-        {/* Colored ambient blobs — subtle */}
-        <div className="absolute left-[10%] top-[8%] h-[18rem] w-[18rem] rounded-full bg-primary/8 blur-[110px]" />
-        <div className="absolute bottom-[5%] right-[10%] h-[16rem] w-[16rem] rounded-full bg-accent-warm/8 blur-[120px]" />
-        <div className="absolute inset-0 opacity-[0.25] bg-noise" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,#fffaf4_0%,#fff5ed_42%,#f8f0e8_100%)]" />
+        <div className="absolute left-[-8rem] top-[-6rem] h-[20rem] w-[20rem] rounded-full bg-[#ffd8cf]/70 blur-[120px]" />
+        <div className="absolute right-[-5rem] top-[8rem] h-[18rem] w-[18rem] rounded-full bg-[#bfeefe]/70 blur-[120px]" />
+        <div className="absolute bottom-[-8rem] left-[20%] h-[16rem] w-[16rem] rounded-full bg-[#c7ffc6]/60 blur-[120px]" />
+        <div className="absolute inset-0 opacity-70 bg-noise" />
       </div>
-
-      <SnowEffect count={16} className="opacity-45" />
 
       <DashboardNavigation collapsed={collapsed} onToggleCollapse={handleToggleCollapse} />
 
       <main
         className={cn(
-          "relative z-10 pt-[76px] transition-[padding] duration-300",
-          collapsed ? "lg:pl-[80px]" : "lg:pl-[224px]"
+          "relative pt-[112px] transition-[padding] duration-300",
+          collapsed ? "lg:pl-[112px]" : "lg:pl-[296px]"
         )}
       >
-        <div className="min-h-[calc(100vh-76px)] px-3 pb-6 pt-3 sm:px-4 lg:px-5 xl:px-6">
-          <div className="rounded-[1.75rem] border-2 border-border bg-card/30 p-3 backdrop-blur-[8px]">
+        <div
+          className="mx-auto w-full max-w-[1680px] px-4 pb-8 sm:px-5 lg:px-6 xl:px-8"
+        >
+          <div
+            className={cn(
+              "min-h-[calc(100vh-136px)] rounded-[2rem] px-0",
+              collapsed ? "lg:ml-2" : "lg:ml-3"
+            )}
+          >
             {children}
           </div>
         </div>

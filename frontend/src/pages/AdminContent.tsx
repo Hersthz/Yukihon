@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import { BookOpen, Download, FileUp, Filter, GraduationCap, HelpCircle, Layers3, PenTool, Plus, RefreshCw, Save } from "lucide-react";
 import { adminApi, grammarApi, lessonApi, quizApi, vocabularyApi } from "@/api";
 import DynamicTable from "@/components/admin/DynamicTable";
-import WinterNightBackground from "@/components/WinterNightBackground";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -382,10 +381,7 @@ const AdminContent = () => {
 
   return (
     <DashboardLayout>
-      <div className="relative min-h-screen">
-        <WinterNightBackground snowCount={15} sparkleCount={8} intensity="light" />
-
-        <div className="relative z-10 container mx-auto max-w-7xl px-4 py-8">
+      <div className="mx-auto max-w-[1520px] py-2">
           <input ref={importInputRef} type="file" accept=".csv,text/csv" className="hidden" onChange={(event) => void handleImportFile(event)} />
 
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
@@ -631,7 +627,6 @@ const AdminContent = () => {
               </DialogFooter>
             </DialogContent>
           </Dialog>
-        </div>
       </div>
     </DashboardLayout>
   );

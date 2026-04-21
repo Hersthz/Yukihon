@@ -15,7 +15,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import LearningFunnelTrendChart from "@/components/admin/LearningFunnelTrendChart";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import WinterNightBackground from "@/components/WinterNightBackground";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 import { adminApi, learningAnalyticsApi, type LearningFunnelResponse } from "@/api";
 import { useAuth } from "@/hooks/use-auth";
 import { Navigate } from "react-router-dom";
@@ -152,10 +152,8 @@ const AdminDashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen relative pb-20">
-      <WinterNightBackground snowCount={40} sparkleCount={20} intensity="light" />
-      
-      <div className="relative z-10 container mx-auto px-4 py-8">
+    <DashboardLayout>
+      <div className="mx-auto max-w-[1520px] py-2">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -404,7 +402,7 @@ const AdminDashboard = () => {
           </Card>
         </motion.div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 
