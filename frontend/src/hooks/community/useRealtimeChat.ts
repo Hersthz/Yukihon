@@ -175,6 +175,20 @@ const createOptimisticMessage = ({
 const createClientMessageId = () =>
   `msg-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
+const createSockJsInstance = (url: string) => {
+  const candidate = SockJS as unknown;
+
+  if (typeof candidate === "function") {
+    try {
+      return new (candidate as new (socketUrl: string) => WebSocket)(url);
+    } catch {
+      return (candidate as (socketUrl: string) => WebSocket)(url);
+    }
+  }
+
+  throw new Error("SockJS constructor is unavailable");
+};
+
 export const useRealtimeChat = ({
   roomId = "general",
   enabled = true,
@@ -386,7 +400,7 @@ export const useRealtimeChat = ({
 
     const socketUrl = `${apiClient.baseURL}/ws-community-chat`;
     const client = new Client({
-      webSocketFactory: () => new SockJS(socketUrl),
+      webSocketFactory: () => createSockJsInstance(socketUrl),
       connectHeaders: {
         Authorization: `Bearer ${token}`,
       },
@@ -421,7 +435,15 @@ export const useRealtimeChat = ({
     });
 
     clientRef.current = client;
-    client.activate();
+    try {
+      client.activate();
+    } catch {
+      setConnectionState("error");
+      setConnectionError("Khong the khoi tao ket noi chat");
+      return () => {
+        isActive = false;
+      };
+    }
 
     const typingTimeouts = typingTimeoutsRef.current;
     const typingUsersMap = typingUsersRef.current;
