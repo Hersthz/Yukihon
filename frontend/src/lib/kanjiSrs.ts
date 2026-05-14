@@ -34,6 +34,11 @@ const writeRecords = (records: KanjiSrsRecord[]) => {
 
 export const getKanjiSrsRecords = () => readRecords();
 
+export const syncKanjiSrsRecords = (records: KanjiSrsRecord[]) => {
+  writeRecords(records);
+  return records;
+};
+
 export const saveKanjiToSrs = (character: string) => {
   const records = readRecords();
   const existing = records.find((item) => item.character === character);

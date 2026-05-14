@@ -15,3 +15,4 @@ export * from "./progressApi";
 export * from "./mistakeDnaApi";
 export * from "./creatorModeApi";
 export * from "./learningAnalyticsApi";
+export * from "./kanjiSrsApi";
