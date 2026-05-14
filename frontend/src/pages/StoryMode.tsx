@@ -14,7 +14,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 
-import { dictionaryApi, myWordsApi, type DictionaryEntry } from "@/api";
+import { dictionaryApi, myWordsApi, storyModeApi, type DictionaryEntry } from "@/api";
 import StoryInfoCard from "@/components/learning/StoryInfoCard";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
@@ -37,7 +37,7 @@ import {
 import { useStoryModePersistence } from "@/hooks/learning/useStoryModePersistence";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { storyModeStories, type StoryCheckpointOption, type StoryDifficultyLevel, type StoryModeStory, type StorySegment } from "@/data/storyMode";
+import { storyModeStories as fallbackStoryModeStories, type StoryCheckpointOption, type StoryDifficultyLevel, type StoryModeStory, type StorySegment } from "@/data/storyMode";
 
 const difficultyLabelMap: Record<StoryDifficultyLevel, string> = {
   EASY: "Dễ",
@@ -134,12 +134,13 @@ const StoryMode = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [activeStoryId, setActiveStoryId] = useState(storyModeStories[0]?.id ?? "");
-  const [activeSegmentId, setActiveSegmentId] = useState(storyModeStories[0]?.entrySegmentId ?? "");
-  const [unlockedSegmentIdsByStory, setUnlockedSegmentIdsByStory] = useState<Record<string, string[]>>(buildInitialUnlockedSegmentIds);
+  const [stories, setStories] = useState<StoryModeStory[]>(fallbackStoryModeStories);
+  const [activeStoryId, setActiveStoryId] = useState(fallbackStoryModeStories[0]?.id ?? "");
+  const [activeSegmentId, setActiveSegmentId] = useState(fallbackStoryModeStories[0]?.entrySegmentId ?? "");
+  const [unlockedSegmentIdsByStory, setUnlockedSegmentIdsByStory] = useState<Record<string, string[]>>(() => buildInitialUnlockedSegmentIds(fallbackStoryModeStories));
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
   const [submittedSegments, setSubmittedSegments] = useState<Record<string, boolean>>({});
-  const [performanceByStory, setPerformanceByStory] = useState<Record<string, StoryPerformanceState>>(buildInitialPerformanceByStory);
+  const [performanceByStory, setPerformanceByStory] = useState<Record<string, StoryPerformanceState>>(() => buildInitialPerformanceByStory(fallbackStoryModeStories));
   const [revealedHardTranslation, setRevealedHardTranslation] = useState<Record<string, boolean>>({});
   const [segmentVocab, setSegmentVocab] = useState<DictionaryEntry[]>([]);
   const [segmentVocabLoading, setSegmentVocabLoading] = useState(false);
@@ -152,8 +153,8 @@ const StoryMode = () => {
   );
 
   const activeStory = useMemo(
-    () => storyModeStories.find((story) => story.id === activeStoryId) ?? storyModeStories[0],
-    [activeStoryId]
+    () => stories.find((story) => story.id === activeStoryId) ?? stories[0],
+    [activeStoryId, stories]
   );
   const activeSegment = useMemo(() => getSegmentById(activeStory, activeSegmentId), [activeSegmentId, activeStory]);
   const activePerformance = performanceByStory[activeStory?.id] ?? createDefaultStoryPerformance();
@@ -181,7 +182,7 @@ const StoryMode = () => {
   const hardTranslationShown = activeSegment ? !!revealedHardTranslation[activeSegment.id] : false;
   const isHardTranslationHidden = currentDifficulty === "HARD" && !hardTranslationShown;
   const adaptiveTranslation = activeSegment?.translationByDifficulty?.[currentDifficulty] ?? activeSegment?.translation ?? "";
-  const completedStoryCount = storyModeStories.filter((story) => getStoryProgress(story, unlockedSegmentIdsByStory) >= 100).length;
+  const completedStoryCount = stories.filter((story) => getStoryProgress(story, unlockedSegmentIdsByStory) >= 100).length;
 
   const adaptiveMetricHint =
     activePerformance.answeredCount === 0
@@ -227,8 +228,48 @@ const StoryMode = () => {
     }
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadStories = async () => {
+      try {
+        const remoteStories = await storyModeApi.getPublishedStories();
+        if (cancelled || remoteStories.length === 0) {
+          return;
+        }
+
+        setStories(remoteStories);
+        setUnlockedSegmentIdsByStory((previous) => {
+          const initial = buildInitialUnlockedSegmentIds(remoteStories);
+          const remoteIds = new Set(remoteStories.map((story) => story.id));
+          const restored = Object.fromEntries(Object.entries(previous).filter(([storyId]) => remoteIds.has(storyId)));
+          return { ...initial, ...restored };
+        });
+        setPerformanceByStory((previous) => {
+          const initial = buildInitialPerformanceByStory(remoteStories);
+          const remoteIds = new Set(remoteStories.map((story) => story.id));
+          const restored = Object.fromEntries(Object.entries(previous).filter(([storyId]) => remoteIds.has(storyId)));
+          return { ...initial, ...restored };
+        });
+        setActiveStoryId((current) => remoteStories.some((story) => story.id === current) ? current : remoteStories[0].id);
+        setActiveSegmentId((current) => {
+          const currentStillExists = remoteStories.some((story) => story.segments.some((segment) => segment.id === current));
+          return currentStillExists ? current : remoteStories[0].entrySegmentId;
+        });
+      } catch {
+        // Keep bundled fallback stories when backend content has not been published yet.
+      }
+    };
+
+    void loadStories();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const applyHydratedSnapshot = useCallback((snapshot: Partial<StoryModeSnapshot> | null) => {
-    const hydratedState = buildHydratedStoryModeState(snapshot, storyModeStories);
+    const hydratedState = buildHydratedStoryModeState(snapshot, stories);
     setActiveStoryId(hydratedState.activeStoryId);
     setActiveSegmentId(hydratedState.activeSegmentId);
     setUnlockedSegmentIdsByStory(hydratedState.unlockedSegmentIdsByStory);
@@ -236,7 +277,7 @@ const StoryMode = () => {
     setSubmittedSegments(hydratedState.submittedSegments);
     setPerformanceByStory(hydratedState.performanceByStory);
     setRevealedHardTranslation(hydratedState.revealedHardTranslation);
-  }, []);
+  }, [stories]);
 
   const { clearLocalSnapshot, hasHydratedProgress } = useStoryModePersistence({
     userId: user?.id,
@@ -289,7 +330,7 @@ const StoryMode = () => {
   }, [activeSegment, activeStory, loadSavedStatuses]);
 
   const handleSelectStory = (storyId: string) => {
-    const nextStory = storyModeStories.find((story) => story.id === storyId);
+    const nextStory = stories.find((story) => story.id === storyId);
     if (!nextStory) return;
 
     const firstUnlockedSegmentId = unlockedSegmentIdsByStory[storyId]?.[0] ?? nextStory.entrySegmentId;
@@ -459,12 +500,12 @@ const StoryMode = () => {
           <MetricCard label="Tiến độ" value={`${storyProgress}%`} icon={<Sparkles className="h-4 w-4 text-emerald-500" />} hint={`${unlockedSegmentIds.length}/${activeStory.segments.length} đoạn đã mở`} />
           <MetricCard label="JLPT" value={activeStory.jlptLevel} icon={<Brain className="h-4 w-4 text-sky-500" />} hint={`Khoảng ${activeStory.estimatedMinutes} phút`} />
           <MetricCard label="Adaptive" value={difficultyLabelMap[currentDifficulty]} icon={adaptiveMetricIcon} hint={adaptiveMetricHint} />
-          <MetricCard label="Tổng quan" value={`${completedStoryCount}/${storyModeStories.length}`} icon={<GitBranch className="h-4 w-4 text-amber-500" />} hint={hasHydratedProgress ? "Đã sẵn sàng lưu tiến độ" : "Đang tải tiến độ"} />
+          <MetricCard label="Tổng quan" value={`${completedStoryCount}/${stories.length}`} icon={<GitBranch className="h-4 w-4 text-amber-500" />} hint={hasHydratedProgress ? "Đã sẵn sàng lưu tiến độ" : "Đang tải tiến độ"} />
         </div>
 
         <PageSection className="mb-4" title="Chọn truyện" description="Mỗi truyện có tiến độ, nhánh và checkpoint riêng. Bạn có thể quay lại nhánh đã mở bất cứ lúc nào.">
           <div className="grid gap-3 lg:grid-cols-2">
-            {storyModeStories.map((story) => {
+            {stories.map((story) => {
               const progress = getStoryProgress(story, unlockedSegmentIdsByStory);
               const isActive = story.id === activeStory.id;
 

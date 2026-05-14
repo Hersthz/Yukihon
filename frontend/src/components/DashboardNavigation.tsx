@@ -101,6 +101,7 @@ const PAGE_META: Record<string, { eyebrow: string; title: string }> = {
   "/admin": { eyebrow: "Control room", title: "Admin Dashboard" },
   "/admin/users": { eyebrow: "Operations", title: "User Management" },
   "/admin/content": { eyebrow: "Editorial workspace", title: "Content CMS" },
+  "/admin/story-mode": { eyebrow: "Narrative CMS", title: "StoryMode Admin" },
   "/admin/creator-mode": { eyebrow: "Builder workspace", title: "Creator Studio" },
 };
 
@@ -273,6 +274,22 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
                   <Wand2 className="h-4 w-4" />
                 </div>
                 {!compact && <span className="text-sm font-semibold">Creator Studio</span>}
+              </Link>
+            )}
+            {isAdmin() && (
+              <Link
+                to="/admin/story-mode"
+                onClick={() => setMobileOpen(false)}
+                className={cn(
+                  "group flex items-center rounded-[1.2rem] transition-all duration-200",
+                  compact ? "justify-center px-2 py-2.5" : "gap-3 px-3 py-3",
+                  "bg-[#fff0f3] text-foreground hover:bg-[#ffe4eb]"
+                )}
+              >
+                <div className="flex h-11 w-11 items-center justify-center rounded-[1rem] bg-[#ffd8df] text-foreground">
+                  <BookOpen className="h-4 w-4" />
+                </div>
+                {!compact && <span className="text-sm font-semibold">Story Admin</span>}
               </Link>
             )}
             {isAdmin() && (
