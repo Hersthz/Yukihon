@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import kaorukoGuide from "@/assets/kaoruko-guide.png";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { AuthMode } from "./auth.types";
@@ -32,6 +31,8 @@ interface AuthFormCardProps {
   setPassword: (value: string) => void;
   confirmPassword: string;
   setConfirmPassword: (value: string) => void;
+  resetToken: string;
+  setResetToken: (value: string) => void;
   jlptTarget: string;
   setJlptTarget: (value: string) => void;
   showPassword: boolean;
@@ -54,6 +55,8 @@ const AuthFormCard = ({
   setPassword,
   confirmPassword,
   setConfirmPassword,
+  resetToken,
+  setResetToken,
   jlptTarget,
   setJlptTarget,
   showPassword,
@@ -62,6 +65,18 @@ const AuthFormCard = ({
   onGoogleLogin,
 }: AuthFormCardProps) => {
   const pwStrength = getPasswordStrength(password);
+  const isLogin = mode === "login";
+  const isRegister = mode === "register";
+  const isForgot = mode === "forgot";
+  const isReset = mode === "reset";
+  const title = isLogin ? "Welcome back" : isRegister ? "Create account" : isForgot ? "Reset password" : "Set new password";
+  const subtitle = isLogin
+    ? "Sign in to continue your journey"
+    : isRegister
+      ? "Start learning Japanese today"
+      : isForgot
+        ? "Enter your email to get a reset token"
+        : "Enter your reset token and new password";
 
   return (
     <motion.div
@@ -82,11 +97,9 @@ const AuthFormCard = ({
             </div>
 
             <h2 className="text-2xl font-black tracking-tight">
-              {mode === "login" ? "Welcome back" : "Create account"}
+              {title}
             </h2>
-            <p className="text-sm text-muted-foreground mt-1 font-medium">
-              {mode === "login" ? "Sign in to continue your journey" : "Start learning Japanese today"}
-            </p>
+            <p className="text-sm text-muted-foreground mt-1 font-medium">{subtitle}</p>
           </div>
 
           <div className="relative flex p-1 rounded-full bg-muted/50 learnhub-edge mb-4">
@@ -94,7 +107,7 @@ const AuthFormCard = ({
               className="absolute top-1 bottom-1 rounded-full bg-background shadow-sm border border-border/40"
               initial={false}
               animate={{
-                left: mode === "login" ? "4px" : "50%",
+                left: isLogin || isForgot || isReset ? "4px" : "50%",
                 width: "calc(50% - 4px)",
               }}
               transition={{ type: "spring", stiffness: 400, damping: 30 }}
@@ -115,32 +128,44 @@ const AuthFormCard = ({
             ))}
           </div>
 
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onGoogleLogin}
-            disabled={isSubmitting}
-            className="w-full h-11 rounded-xl learnhub-edge bg-background/50 hover:bg-muted/50 gap-2.5 font-bold transition-all group"
-          >
-            <svg className="w-5 h-5" viewBox="0 0 24 24">
-              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
-              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
-              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
-            </svg>
-            Continue with Google
-          </Button>
+          {(isLogin || isRegister) && (
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onGoogleLogin}
+                disabled={isSubmitting}
+                className="w-full h-11 rounded-xl learnhub-edge bg-background/50 hover:bg-muted/50 gap-2.5 font-bold transition-all group"
+              >
+                <svg className="w-5 h-5" viewBox="0 0 24 24">
+                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
+                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+                </svg>
+                Continue with Google
+              </Button>
 
-          <div className="relative my-4">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-border/30" />
+              <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-border/30" />
+                </div>
+                <div className="relative flex justify-center">
+                  <span className="px-3 text-xs text-muted-foreground bg-card/50 backdrop-blur-sm">
+                    or continue with email
+                  </span>
+                </div>
+              </div>
+            </>
+          )}
+
+          {!isLogin && !isRegister && (
+            <div className="mb-4 rounded-xl border border-border/70 bg-muted/40 px-3 py-2.5 text-xs text-muted-foreground">
+              {isForgot
+                ? "Development mode returns a reset token directly. In production this can be sent by email."
+                : "Paste the reset token from your email or from the development response."}
             </div>
-            <div className="relative flex justify-center">
-              <span className="px-3 text-xs text-muted-foreground bg-card/50 backdrop-blur-sm">
-                or continue with email
-              </span>
-            </div>
-          </div>
+          )}
 
           <AnimatePresence>
             {errorMsg && (
@@ -182,7 +207,7 @@ const AuthFormCard = ({
               transition={{ duration: 0.25 }}
               className="space-y-2.5"
             >
-              {mode === "register" && (
+              {isRegister && (
                 <div className="space-y-1.5">
                   <Label htmlFor="name" className="text-sm font-medium">
                     Display name
@@ -201,6 +226,7 @@ const AuthFormCard = ({
                 </div>
               )}
 
+              {(isLogin || isRegister || isForgot) && (
               <div className="space-y-1.5">
                 <Label htmlFor="email" className="text-sm font-medium">
                   Email
@@ -218,10 +244,28 @@ const AuthFormCard = ({
                   />
                 </div>
               </div>
+              )}
 
+              {isReset && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="reset-token" className="text-sm font-medium">
+                    Reset token
+                  </Label>
+                  <Input
+                    id="reset-token"
+                    placeholder="Paste reset token"
+                    value={resetToken}
+                    onChange={(e) => setResetToken(e.target.value)}
+                    className="learnhub-input"
+                    autoComplete="one-time-code"
+                  />
+                </div>
+              )}
+
+              {(isLogin || isRegister || isReset) && (
               <div className="space-y-1.5">
                 <Label htmlFor="password" className="text-sm font-medium">
-                  Password
+                  {isReset ? "New password" : "Password"}
                 </Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -232,7 +276,7 @@ const AuthFormCard = ({
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-10 pr-10 learnhub-input"
-                    autoComplete={mode === "login" ? "current-password" : "new-password"}
+                    autoComplete={isLogin ? "current-password" : "new-password"}
                   />
                   <button
                     type="button"
@@ -244,7 +288,7 @@ const AuthFormCard = ({
                   </button>
                 </div>
 
-                {mode === "register" && password.length > 0 && (
+                {(isRegister || isReset) && password.length > 0 && (
                   <div className="flex items-center gap-2 mt-2">
                     <div className="flex gap-1 flex-1">
                       {[1, 2, 3, 4].map((level) => (
@@ -266,8 +310,9 @@ const AuthFormCard = ({
                   </div>
                 )}
               </div>
+              )}
 
-              {mode === "register" && (
+              {(isRegister || isReset) && (
                 <>
                   <div className="space-y-1.5">
                     <Label htmlFor="confirm" className="text-sm font-medium">
@@ -321,15 +366,6 @@ const AuthFormCard = ({
                 </>
               )}
 
-              {mode === "login" && (
-                <div className="flex items-center gap-2">
-                  <Checkbox id="remember" className="border-border/50" />
-                  <Label htmlFor="remember" className="text-sm text-muted-foreground cursor-pointer">
-                    Remember me
-                  </Label>
-                </div>
-              )}
-
               <Button
                 type="submit"
                 disabled={isSubmitting}
@@ -343,14 +379,14 @@ const AuthFormCard = ({
                   />
                 ) : (
                   <>
-                    {mode === "login" ? "Sign in" : "Start learning"}
+                    {isLogin ? "Sign in" : isRegister ? "Start learning" : isForgot ? "Send reset token" : "Reset password"}
                     <Sparkles className="h-4 w-4" />
                   </>
                 )}
               </Button>
 
               <p className="text-center text-sm text-muted-foreground pt-2">
-                {mode === "login" ? (
+                {isLogin ? (
                   <>
                     New here?{" "}
                     <button
@@ -360,8 +396,16 @@ const AuthFormCard = ({
                     >
                       Join Kaoruko&apos;s class
                     </button>
+                    <span className="mx-2">•</span>
+                    <button
+                      type="button"
+                      onClick={() => setMode("forgot")}
+                      className="text-primary hover:underline font-semibold"
+                    >
+                      Forgot password?
+                    </button>
                   </>
-                ) : (
+                ) : isRegister ? (
                   <>
                     Already have an account?{" "}
                     <button
@@ -371,6 +415,29 @@ const AuthFormCard = ({
                     >
                       Sign in
                     </button>
+                  </>
+                ) : (
+                  <>
+                    Remembered it?{" "}
+                    <button
+                      type="button"
+                      onClick={() => setMode("login")}
+                      className="text-primary hover:underline font-semibold"
+                    >
+                      Back to sign in
+                    </button>
+                    {isForgot && (
+                      <>
+                        <span className="mx-2">•</span>
+                        <button
+                          type="button"
+                          onClick={() => setMode("reset")}
+                          className="text-primary hover:underline font-semibold"
+                        >
+                          I have a token
+                        </button>
+                      </>
+                    )}
                   </>
                 )}
               </p>

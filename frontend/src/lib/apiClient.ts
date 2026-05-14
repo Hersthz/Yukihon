@@ -63,7 +63,9 @@ const isRefreshRequest = (endpoint: string) => endpoint.startsWith("/api/auth/re
 const isLoginLikeRequest = (endpoint: string) =>
   endpoint.startsWith("/api/auth/login") ||
   endpoint.startsWith("/api/auth/register") ||
-  endpoint.startsWith("/api/auth/google");
+  endpoint.startsWith("/api/auth/google") ||
+  endpoint.startsWith("/api/auth/forgot-password") ||
+  endpoint.startsWith("/api/auth/reset-password");
 
 export const apiClient = {
   baseURL: API_BASE_URL,
@@ -177,7 +179,16 @@ export const apiClient = {
 
   getStoredUser() {
     const user = localStorage.getItem(USER_KEY);
-    return user ? JSON.parse(user) : null;
+    if (!user) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(user);
+    } catch {
+      this.clearAuthData();
+      return null;
+    }
   },
 
   isAuthenticated(): boolean {

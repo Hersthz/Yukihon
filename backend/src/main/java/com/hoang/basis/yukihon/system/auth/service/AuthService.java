@@ -2,8 +2,11 @@ package com.hoang.basis.yukihon.system.auth.service;
 
 import com.hoang.basis.yukihon.system.auth.dto.AuthResponse;
 import com.hoang.basis.yukihon.system.auth.dto.ChangePasswordRequest;
+import com.hoang.basis.yukihon.system.auth.dto.ForgotPasswordRequest;
+import com.hoang.basis.yukihon.system.auth.dto.ForgotPasswordResponse;
 import com.hoang.basis.yukihon.system.auth.dto.LoginRequest;
 import com.hoang.basis.yukihon.system.auth.dto.RegisterRequest;
+import com.hoang.basis.yukihon.system.auth.dto.ResetPasswordRequest;
 import com.hoang.basis.yukihon.system.auth.dto.UpdateProfileRequest;
 import com.hoang.basis.yukihon.system.user.dto.UserDto;
 import com.hoang.basis.yukihon.system.user.entity.RoleName;
@@ -14,6 +17,7 @@ import com.hoang.basis.yukihon.system.usersettings.service.UserSettingsService;
 import com.hoang.basis.yukihon.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -21,6 +25,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.time.Instant;
+import java.util.Base64;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -40,6 +50,13 @@ public class AuthService {
             Pattern.compile("^[A-Za-z0-9+_.-]+@(.+)$");
     private static final int MIN_PASSWORD_LENGTH = 6;
     private static final int MAX_PASSWORD_LENGTH = 100;
+    private static final long PASSWORD_RESET_TOKEN_TTL_SECONDS = 30 * 60;
+    private static final String PASSWORD_RESET_MESSAGE =
+            "If an account exists for this email, password reset instructions are available.";
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
+    @Value("${app.auth.expose-reset-token:false}")
+    private boolean exposeResetToken;
 
     public AuthResponse register(RegisterRequest request) {
         String email = request.getEmail().trim().toLowerCase();
@@ -164,6 +181,64 @@ public class AuthService {
         log.info("Changed password for user: {}", user.getEmail());
     }
 
+    public ForgotPasswordResponse forgotPassword(ForgotPasswordRequest request) {
+        String email = request.getEmail().trim().toLowerCase();
+        String resetToken = null;
+
+        if (isValidEmail(email)) {
+            resetToken = userRepository.findByEmail(email)
+                    .map(user -> {
+                        String token = generateSecureToken();
+                        user.setPasswordResetTokenHash(hashToken(token));
+                        user.setPasswordResetRequestedAt(Instant.now());
+                        user.setPasswordResetExpiresAt(Instant.now().plusSeconds(PASSWORD_RESET_TOKEN_TTL_SECONDS));
+                        userRepository.save(user);
+
+                        if (exposeResetToken) {
+                            log.info("Development password reset token for {}: {}", email, token);
+                            return token;
+                        }
+
+                        log.info("Password reset requested for {}", email);
+                        return null;
+                    })
+                    .orElse(null);
+        }
+
+        return ForgotPasswordResponse.builder()
+                .message(PASSWORD_RESET_MESSAGE)
+                .resetToken(resetToken)
+                .build();
+    }
+
+    public void resetPassword(ResetPasswordRequest request) {
+        if (!isValidPassword(request.getNewPassword())) {
+            throw new IllegalArgumentException(
+                    String.format("Password must be between %d and %d characters",
+                            MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH)
+            );
+        }
+
+        String tokenHash = hashToken(request.getToken());
+        User user = userRepository.findByPasswordResetTokenHash(tokenHash)
+                .orElseThrow(() -> new BadCredentialsException("Invalid or expired password reset token"));
+
+        if (user.getPasswordResetExpiresAt() == null || user.getPasswordResetExpiresAt().isBefore(Instant.now())) {
+            clearPasswordResetToken(user);
+            userRepository.save(user);
+            throw new BadCredentialsException("Invalid or expired password reset token");
+        }
+
+        if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("New password must be different from current password");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        clearPasswordResetToken(user);
+        userRepository.save(user);
+        log.info("Password reset completed for user: {}", user.getEmail());
+    }
+
     public AuthResponse refreshToken(String refreshToken) {
         String username;
         try {
@@ -229,5 +304,27 @@ public class AuthService {
     private User findUserByEmail(String email) {
         return userRepository.findByEmail(email.toLowerCase())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    }
+
+    private String generateSecureToken() {
+        byte[] bytes = new byte[32];
+        SECURE_RANDOM.nextBytes(bytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+    }
+
+    private String hashToken(String token) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(token.getBytes(StandardCharsets.UTF_8));
+            return Base64.getUrlEncoder().withoutPadding().encodeToString(hash);
+        } catch (NoSuchAlgorithmException ex) {
+            throw new IllegalStateException("SHA-256 is not available", ex);
+        }
+    }
+
+    private void clearPasswordResetToken(User user) {
+        user.setPasswordResetTokenHash(null);
+        user.setPasswordResetExpiresAt(null);
+        user.setPasswordResetRequestedAt(null);
     }
 }

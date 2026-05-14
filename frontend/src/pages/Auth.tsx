@@ -26,6 +26,7 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [resetToken, setResetToken] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -75,8 +76,17 @@ const Auth = () => {
     const code = params.get("code");
     const error = params.get("error");
     const reason = params.get("reason");
+    const authMode = params.get("mode");
+    const token = params.get("token");
     const nextRedirectPath = getSafeRedirectPath(params);
     setRedirectPath(nextRedirectPath);
+
+    if (authMode === "reset" || token) {
+      setMode("reset");
+      if (token) {
+        setResetToken(token);
+      }
+    }
 
     if (reason === "session_expired") {
       setErrorMsg("Your previous session expired. Please sign in again.");
@@ -108,6 +118,7 @@ const Auth = () => {
 
     resetMessages();
     setMode(nextMode);
+    window.history.replaceState({}, document.title, window.location.pathname);
   };
 
   const handleGoogleLogin = () => {
@@ -136,6 +147,59 @@ const Auth = () => {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     resetMessages();
+
+    if (mode === "forgot") {
+      if (!email) {
+        setErrorMsg("Please enter your email.");
+        return;
+      }
+
+      setIsSubmitting(true);
+      try {
+        const response = await authApi.forgotPassword(email);
+        if (response.resetToken) {
+          setResetToken(response.resetToken);
+          setSuccessMsg("Reset token created. You can set a new password now.");
+          setMode("reset");
+        } else {
+          setSuccessMsg(response.message || "If the account exists, reset instructions have been sent.");
+        }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Password reset request failed.";
+        setErrorMsg(message);
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
+
+    if (mode === "reset") {
+      if (!resetToken || !password || !confirmPassword) {
+        setErrorMsg("Please enter reset token and new password.");
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        setErrorMsg("Passwords do not match.");
+        return;
+      }
+
+      setIsSubmitting(true);
+      try {
+        await authApi.resetPassword({ token: resetToken, newPassword: password });
+        setPassword("");
+        setConfirmPassword("");
+        setResetToken("");
+        setSuccessMsg("Password reset successfully. Please sign in with your new password.");
+        setMode("login");
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Password reset failed.";
+        setErrorMsg(message);
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
 
     if (mode === "register" && password !== confirmPassword) {
       setErrorMsg("Passwords do not match.");
@@ -220,6 +284,8 @@ const Auth = () => {
             setPassword={setPassword}
             confirmPassword={confirmPassword}
             setConfirmPassword={setConfirmPassword}
+            resetToken={resetToken}
+            setResetToken={setResetToken}
             jlptTarget={jlptTarget}
             setJlptTarget={setJlptTarget}
             showPassword={showPassword}
