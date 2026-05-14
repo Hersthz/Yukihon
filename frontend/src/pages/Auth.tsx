@@ -9,6 +9,15 @@ import { useAuth } from "@/hooks/use-auth";
 
 const KANJI_SEQUENCE = "Nihongo, every day.";
 
+const getSafeRedirectPath = (params: URLSearchParams) => {
+  const from = params.get("from");
+  if (!from || !from.startsWith("/") || from.startsWith("//") || from.startsWith("/auth")) {
+    return "/dashboard";
+  }
+
+  return from;
+};
+
 const Auth = () => {
   const [mode, setMode] = useState<AuthMode>("login");
   const [showPassword, setShowPassword] = useState(false);
@@ -21,17 +30,18 @@ const Auth = () => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [typingKanji, setTypingKanji] = useState("");
+  const [redirectPath, setRedirectPath] = useState("/dashboard");
 
   const navigate = useNavigate();
   const { login, loginWithGoogleCode, register } = useAuth();
 
   const authenticateWithGoogle = useCallback(
-    async (code: string) => {
+    async (code: string, targetPath: string) => {
       setIsSubmitting(true);
       try {
         await loginWithGoogleCode(code);
         setSuccessMsg("Signed in with Google successfully.");
-        setTimeout(() => navigate("/dashboard"), 500);
+        setTimeout(() => navigate(targetPath, { replace: true }), 500);
       } catch (error) {
         const message = error instanceof Error ? error.message : "Google authentication failed.";
         setErrorMsg(message);
@@ -65,6 +75,8 @@ const Auth = () => {
     const code = params.get("code");
     const error = params.get("error");
     const reason = params.get("reason");
+    const nextRedirectPath = getSafeRedirectPath(params);
+    setRedirectPath(nextRedirectPath);
 
     if (reason === "session_expired") {
       setErrorMsg("Your previous session expired. Please sign in again.");
@@ -80,7 +92,7 @@ const Auth = () => {
     }
 
     if (code) {
-      void authenticateWithGoogle(code);
+      void authenticateWithGoogle(code, nextRedirectPath);
     }
   }, [authenticateWithGoogle]);
 
@@ -145,7 +157,7 @@ const Auth = () => {
       }
 
       setSuccessMsg(mode === "login" ? "Signed in successfully." : "Account created successfully.");
-      navigate("/dashboard", { replace: true });
+      navigate(redirectPath, { replace: true });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Authentication failed.";
       setErrorMsg(message);

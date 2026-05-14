@@ -75,7 +75,7 @@ export const authApi = {
   },
 
   storeAuthData(response: AuthResponse) {
-    apiClient.setAuthData(response.accessToken, response.user);
+    apiClient.setAuthData(response.accessToken, response.user, response.refreshToken);
   },
 
   getGoogleClientId() {

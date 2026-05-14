@@ -10,7 +10,6 @@ import {
   Target,
   User,
 } from "lucide-react";
-import { Link } from "react-router-dom";
 import kaorukoGuide from "@/assets/kaoruko-guide.png";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -221,16 +220,9 @@ const AuthFormCard = ({
               </div>
 
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password" className="text-sm font-medium">
-                    Password
-                  </Label>
-                  {mode === "login" && (
-                    <Link to="/forgot-password" className="text-xs text-primary hover:underline">
-                      Forgot password?
-                    </Link>
-                  )}
-                </div>
+                <Label htmlFor="password" className="text-sm font-medium">
+                  Password
+                </Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input

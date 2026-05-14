@@ -31,10 +31,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const response = await authApi.getCurrentUser();
       setUser(response);
-      apiClient.setAuthData(
-        localStorage.getItem("yukihon_token") || "",
-        response
-      );
+      apiClient.setStoredUser(response);
+      setIsAuthenticated(apiClient.isAuthenticated());
     } catch {
       // Silent fail, just logout
       apiClient.clearAuthData();
@@ -61,7 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email,
         password,
       });
-      apiClient.setAuthData(response.accessToken, response.user);
+      apiClient.setAuthData(response.accessToken, response.user, response.refreshToken);
       setUser(response.user);
       setIsAuthenticated(true);
     } catch (err) {
@@ -84,7 +82,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           displayName,
           jlptTargetLevel,
         });
-        apiClient.setAuthData(response.accessToken, response.user);
+        apiClient.setAuthData(response.accessToken, response.user, response.refreshToken);
         setUser(response.user);
         setIsAuthenticated(true);
       } catch (err) {
@@ -103,7 +101,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setError(null);
     try {
       const response: AuthResponse = await authApi.googleAuth(code);
-      apiClient.setAuthData(response.accessToken, response.user);
+      apiClient.setAuthData(response.accessToken, response.user, response.refreshToken);
       setUser(response.user);
       setIsAuthenticated(true);
     } catch (err) {

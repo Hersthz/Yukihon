@@ -1,8 +1,9 @@
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 
 const AdminRoute = () => {
   const { isAuthenticated, isAdmin, isLoading } = useAuth();
+  const location = useLocation();
 
   if (isLoading) {
     return (
@@ -13,7 +14,7 @@ const AdminRoute = () => {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/auth" replace />;
+    return <Navigate to={`/auth?from=${encodeURIComponent(location.pathname + location.search)}`} replace />;
   }
 
   if (!isAdmin()) {

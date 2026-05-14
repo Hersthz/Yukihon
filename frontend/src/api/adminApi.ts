@@ -30,11 +30,8 @@ export const adminApi = {
     const formData = new FormData();
     formData.append("file", file);
 
-    return fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8080"}/api/admin/media/upload`, {
+    return apiClient.fetchWithAuth("/api/admin/media/upload", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("yukihon_token") || ""}`,
-      },
       body: formData,
     }).then(async (response) => {
       if (!response.ok) {
