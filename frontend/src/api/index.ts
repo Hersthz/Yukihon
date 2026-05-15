@@ -17,3 +17,4 @@ export * from "./creatorModeApi";
 export * from "./learningAnalyticsApi";
 export * from "./kanjiSrsApi";
 export * from "./storyModeApi";
+export * from "./reminderApi";

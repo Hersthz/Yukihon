@@ -27,10 +27,13 @@ import {
   X,
 } from "lucide-react";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { useRealtimeChat } from "@/hooks/community/useRealtimeChat";
+import { useReminders } from "@/hooks/use-reminders";
 
 type NavItem = {
   label: string;
@@ -123,6 +126,7 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
     loadHistory: false,
     trackUnread: true,
   });
+  const { summary: reminderSummary, loading: remindersLoading, refresh: refreshReminders } = useReminders(isAuthenticated);
 
   useEffect(() => {
     if (onCommunityPage) {
@@ -137,6 +141,7 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
 
   const userName = user?.displayName || "Learner";
   const userInitial = userName.charAt(0).toUpperCase();
+  const notificationCount = unreadCount + reminderSummary.totalCount;
 
   const handleLogout = () => {
     logout();
@@ -377,18 +382,95 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
               Quick search vocabulary or kanji
             </button>
 
-            <button
-              aria-label="Notifications"
-              className="relative inline-flex h-11 w-11 items-center justify-center rounded-[1rem] border border-border/80 bg-card text-foreground/80 transition hover:bg-muted"
-              type="button"
-            >
-              <Bell className="h-4 w-4" />
-              {unreadCount > 0 && (
-                <span className="absolute -right-1 -top-1 rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold text-white">
-                  {unreadCount > 9 ? "9+" : unreadCount}
-                </span>
-              )}
-            </button>
+            <Popover onOpenChange={(open) => open && void refreshReminders()}>
+              <PopoverTrigger asChild>
+                <button
+                  aria-label="Notifications"
+                  className="relative inline-flex h-11 w-11 items-center justify-center rounded-[1rem] border border-border/80 bg-card text-foreground/80 transition hover:bg-muted"
+                  type="button"
+                >
+                  <Bell className="h-4 w-4" />
+                  {notificationCount > 0 && (
+                    <span className="absolute -right-1 -top-1 rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold text-white">
+                      {notificationCount > 9 ? "9+" : notificationCount}
+                    </span>
+                  )}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-[360px] rounded-[1.4rem] border-border/80 bg-white p-3">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">Reminders</p>
+                    <p className="text-xs text-muted-foreground">Due reviews, story progress, and chat signals.</p>
+                  </div>
+                  {reminderSummary.urgentCount > 0 ? <Badge className="bg-rose-500 text-white">Urgent</Badge> : null}
+                </div>
+
+                <div className="space-y-2">
+                  {unreadCount > 0 && (
+                    <button
+                      className="w-full rounded-[1rem] border border-sky-100 bg-sky-50/80 p-3 text-left transition hover:bg-sky-50"
+                      onClick={() => {
+                        markRead();
+                        navigate("/community");
+                      }}
+                      type="button"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">Tin nhắn cộng đồng mới</p>
+                          <p className="mt-1 text-xs leading-5 text-muted-foreground">{unreadCount} tin chưa đọc trong phòng general.</p>
+                        </div>
+                        <Badge variant="outline">{unreadCount}</Badge>
+                      </div>
+                    </button>
+                  )}
+
+                  {remindersLoading && (
+                    <div className="rounded-[1rem] border border-border bg-muted/40 p-3 text-sm text-muted-foreground">Đang tải reminder...</div>
+                  )}
+
+                  {!remindersLoading && reminderSummary.items.length === 0 && unreadCount === 0 && (
+                    <div className="rounded-[1rem] border border-border bg-muted/30 p-4 text-center">
+                      <p className="text-sm font-semibold text-foreground">Không có gì đến hạn</p>
+                      <p className="mt-1 text-xs text-muted-foreground">Hàng đợi đang sạch. Một cảnh hiếm gặp, tận hưởng đi.</p>
+                    </div>
+                  )}
+
+                  {!remindersLoading && reminderSummary.items.map((item) => (
+                    <button
+                      key={item.id}
+                      className="w-full rounded-[1rem] border border-border bg-card p-3 text-left transition hover:bg-muted/40"
+                      onClick={() => navigate(item.actionPath)}
+                      type="button"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-semibold text-foreground">{item.title}</p>
+                            <Badge
+                              variant="outline"
+                              className={
+                                item.priority === "HIGH"
+                                  ? "border-rose-200 bg-rose-50 text-rose-700"
+                                  : item.priority === "MEDIUM"
+                                    ? "border-amber-200 bg-amber-50 text-amber-700"
+                                    : "border-sky-200 bg-sky-50 text-sky-700"
+                              }
+                            >
+                              {item.priority}
+                            </Badge>
+                          </div>
+                          <p className="mt-1 text-xs leading-5 text-muted-foreground">{item.description}</p>
+                          <p className="mt-2 text-xs font-semibold text-primary">{item.actionLabel}</p>
+                        </div>
+                        <Badge variant="outline">{item.count}</Badge>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
 
             <div className="hidden items-center gap-3 rounded-[1.2rem] border border-border/80 bg-white px-3 py-2.5 shadow-[0_10px_28px_-24px_rgba(32,48,74,0.35)] sm:flex">
               <div className="flex h-10 w-10 items-center justify-center rounded-[1rem] bg-[#ffded8] text-sm font-bold text-foreground">
