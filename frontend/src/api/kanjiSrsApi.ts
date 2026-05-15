@@ -9,8 +9,41 @@ export interface KanjiSrsServerRecord extends KanjiSrsRecord {
   updatedAt: string;
 }
 
+export interface KanjiSrsWeakKanji {
+  character: string;
+  intervalDays: number;
+  easeFactor: number;
+  repetitionCount: number;
+  reviewCount: number;
+  nextReviewAt?: string;
+  reason: string;
+}
+
+export interface KanjiSrsRetentionPoint {
+  date: string;
+  reviewCount: number;
+  retainedCount: number;
+  forgottenCount: number;
+  retentionRate: number;
+}
+
+export interface KanjiSrsDashboard {
+  deckCount: number;
+  dueTodayCount: number;
+  overdueCount: number;
+  masteredCount: number;
+  learningCount: number;
+  weakCount: number;
+  reviewStreakDays: number;
+  totalReviews: number;
+  retentionRate: number;
+  weakKanji: KanjiSrsWeakKanji[];
+  retentionTrend: KanjiSrsRetentionPoint[];
+}
+
 export const kanjiSrsApi = {
   getAll: () => apiClient.request<KanjiSrsServerRecord[]>("/api/kanji-srs"),
+  getDashboard: () => apiClient.request<KanjiSrsDashboard>("/api/kanji-srs/dashboard"),
   add: (character: string) =>
     apiClient.request<KanjiSrsServerRecord>("/api/kanji-srs", {
       method: "POST",

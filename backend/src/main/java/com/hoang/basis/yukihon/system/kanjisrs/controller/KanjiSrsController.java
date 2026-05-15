@@ -2,6 +2,7 @@ package com.hoang.basis.yukihon.system.kanjisrs.controller;
 
 import com.hoang.basis.yukihon.system.kanjisrs.dto.AddKanjiSrsRequest;
 import com.hoang.basis.yukihon.system.kanjisrs.dto.ImportKanjiSrsRequest;
+import com.hoang.basis.yukihon.system.kanjisrs.dto.KanjiSrsDashboardDto;
 import com.hoang.basis.yukihon.system.kanjisrs.dto.KanjiSrsDto;
 import com.hoang.basis.yukihon.system.kanjisrs.dto.ReviewKanjiSrsRequest;
 import com.hoang.basis.yukihon.system.kanjisrs.service.KanjiSrsService;
@@ -33,6 +34,11 @@ public class KanjiSrsController {
     @GetMapping
     public ResponseEntity<List<KanjiSrsDto>> getRecords(@AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(kanjiSrsService.getRecords(getUserId(userDetails)));
+    }
+
+    @GetMapping("/dashboard")
+    public ResponseEntity<KanjiSrsDashboardDto> getDashboard(@AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(kanjiSrsService.getDashboard(getUserId(userDetails)));
     }
 
     @PostMapping

@@ -1,11 +1,13 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { BookOpen, Brush, CheckCircle2, Layers, Search, Sparkles } from "lucide-react";
+import { AlertTriangle, BarChart3, BookOpen, Brush, CheckCircle2, Flame, Layers, Search, Sparkles, Target } from "lucide-react";
+import { Bar, CartesianGrid, ComposedChart, Line, XAxis, YAxis } from "recharts";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { Input } from "@/components/ui/input";
 import { KANJI_LEVELS, kanjiCatalog, type KanjiEntry } from "@/data/kanji";
 import { useKanjiSrs } from "@/hooks/learning/useKanjiSrs";
@@ -28,12 +30,29 @@ const ratingTone: Record<KanjiReviewRating, string> = {
   EASY: "bg-emerald-500 text-white hover:bg-emerald-400",
 };
 
+const retentionChartConfig = {
+  reviewCount: {
+    label: "Reviews",
+    color: "#38bdf8",
+  },
+  retentionRate: {
+    label: "Retention %",
+    color: "#10b981",
+  },
+} satisfies ChartConfig;
+
 const formatRelativeReview = (value?: string) => {
-  if (!value) return "Review ngay";
+  if (!value) return "Review now";
   const diffDays = Math.ceil((new Date(value).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-  if (diffDays <= 0) return "Đến hạn hôm nay";
-  if (diffDays === 1) return "Đến hạn ngày mai";
-  return `${diffDays} ngày nữa`;
+  if (diffDays <= 0) return "Due today";
+  if (diffDays === 1) return "Due tomorrow";
+  return `${diffDays} days left`;
+};
+
+const toShortDate = (isoDate: string) => {
+  const parts = isoDate.split("-");
+  if (parts.length !== 3) return isoDate;
+  return `${parts[1]}/${parts[2]}`;
 };
 
 const getSearchText = (item: KanjiEntry) =>
@@ -55,7 +74,7 @@ const KanjiLibrary = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLevel, setSelectedLevel] = useState("all");
   const [showDueOnly, setShowDueOnly] = useState(false);
-  const { dueToday, masteredCount, deck, recordMap, addToSrs, removeFromSrs, review } = useKanjiSrs(kanjiCatalog);
+  const { dueToday, masteredCount, dashboard, deck, recordMap, addToSrs, removeFromSrs, review } = useKanjiSrs(kanjiCatalog);
 
   const levelCounts = useMemo(() => {
     return KANJI_LEVELS.reduce<Record<string, number>>((acc, level) => {
@@ -77,6 +96,14 @@ const KanjiLibrary = () => {
   }, [dueToday, searchQuery, selectedLevel, showDueOnly]);
 
   const nextReviewItem = deck[0];
+  const weakKanjiCatalog = useMemo(
+    () =>
+      dashboard.weakKanji.map((weakItem) => ({
+        ...weakItem,
+        catalog: kanjiCatalog.find((item) => item.character === weakItem.character),
+      })),
+    [dashboard.weakKanji],
+  );
 
   return (
     <DashboardLayout>
@@ -85,24 +112,112 @@ const KanjiLibrary = () => {
           eyebrow="Kanji"
           icon={<BookOpen className="h-6 w-6 text-sky-600" />}
           title="Kanji system"
-          description="Thư viện kanji, detail page, writing practice và SRS riêng đã nằm chung trong một flow học liền mạch."
+          description="Library, detail page, writing practice, and backend-backed SRS now live in one study flow."
         />
 
         <div className="mb-4 grid gap-3 md:grid-cols-4">
-          <MetricCard hint="Toàn bộ catalog hiện có" icon={<Layers className="h-4 w-4 text-sky-500" />} label="Kanji" value={kanjiCatalog.length} />
-          <MetricCard hint="Số kanji hợp bộ lọc" icon={<Search className="h-4 w-4 text-violet-500" />} label="Hiển thị" value={filteredKanji.length} />
-          <MetricCard hint="Cần review trong deck riêng" icon={<Sparkles className="h-4 w-4 text-amber-500" />} label="Due today" value={dueToday.length} />
-          <MetricCard hint="Kanji đã vào SRS" icon={<Brush className="h-4 w-4 text-emerald-500" />} label="Trong deck" value={`${deck.length} / ${masteredCount} mastered`} />
+          <MetricCard hint="Full catalog currently available" icon={<Layers className="h-4 w-4 text-sky-500" />} label="Kanji" value={kanjiCatalog.length} />
+          <MetricCard hint="Kanji matching the current filters" icon={<Search className="h-4 w-4 text-violet-500" />} label="Visible" value={filteredKanji.length} />
+          <MetricCard hint="SRS cards due by the end of today" icon={<Sparkles className="h-4 w-4 text-amber-500" />} label="Due today" value={dashboard.dueTodayCount || dueToday.length} />
+          <MetricCard hint="Cards in your SRS deck" icon={<Brush className="h-4 w-4 text-emerald-500" />} label="Deck" value={`${dashboard.deckCount || deck.length} / ${dashboard.masteredCount || masteredCount} mastered`} />
         </div>
 
-        <PageSection className="mb-4" title="Tìm kiếm và lọc" description="Lọc theo JLPT, meaning, reading, radical, tag hoặc từ ví dụ.">
+        <PageSection className="mb-4" title="Kanji SRS dashboard" description="Track due cards, mastery, weak kanji, review streak, and retention from the backend SRS data.">
+          <div className="grid gap-3 lg:grid-cols-4">
+            <div className="rounded-lg border border-border bg-background/60 p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium text-muted-foreground">Overdue</p>
+                <AlertTriangle className="h-4 w-4 text-rose-500" />
+              </div>
+              <p className="mt-2 text-2xl font-semibold text-foreground">{dashboard.overdueCount}</p>
+              <p className="mt-1 text-xs text-muted-foreground">Cards that need attention now</p>
+            </div>
+            <div className="rounded-lg border border-border bg-background/60 p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium text-muted-foreground">Mastered</p>
+                <Target className="h-4 w-4 text-emerald-500" />
+              </div>
+              <p className="mt-2 text-2xl font-semibold text-foreground">{dashboard.masteredCount}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{dashboard.learningCount} cards still learning</p>
+            </div>
+            <div className="rounded-lg border border-border bg-background/60 p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium text-muted-foreground">Review streak</p>
+                <Flame className="h-4 w-4 text-orange-500" />
+              </div>
+              <p className="mt-2 text-2xl font-semibold text-foreground">{dashboard.reviewStreakDays} days</p>
+              <p className="mt-1 text-xs text-muted-foreground">{dashboard.totalReviews} recent reviews tracked</p>
+            </div>
+            <div className="rounded-lg border border-border bg-background/60 p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium text-muted-foreground">Retention</p>
+                <BarChart3 className="h-4 w-4 text-sky-500" />
+              </div>
+              <p className="mt-2 text-2xl font-semibold text-foreground">{dashboard.retentionRate.toFixed(1)}%</p>
+              <p className="mt-1 text-xs text-muted-foreground">{dashboard.weakCount} cards marked weak</p>
+            </div>
+          </div>
+
+          <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+            <div className="rounded-lg border border-border bg-background/60 p-4">
+              <div className="mb-3">
+                <p className="text-sm font-semibold text-foreground">Retention trend</p>
+                <p className="text-xs text-muted-foreground">Reviews that did not receive Again over the last 14 days.</p>
+              </div>
+              <ChartContainer config={retentionChartConfig} className="h-[280px] w-full">
+                <ComposedChart data={dashboard.retentionTrend} margin={{ top: 10, right: 12, left: 0, bottom: 0 }}>
+                  <CartesianGrid vertical={false} />
+                  <XAxis dataKey="date" tickLine={false} axisLine={false} minTickGap={20} tickFormatter={(value: string) => toShortDate(value)} />
+                  <YAxis yAxisId="count" tickLine={false} axisLine={false} allowDecimals={false} width={40} />
+                  <YAxis yAxisId="percent" orientation="right" tickLine={false} axisLine={false} width={44} domain={[0, 100]} tickFormatter={(value) => `${value}%`} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Bar yAxisId="count" dataKey="reviewCount" fill="var(--color-reviewCount)" barSize={18} radius={[4, 4, 0, 0]} />
+                  <Line yAxisId="percent" type="monotone" dataKey="retentionRate" stroke="var(--color-retentionRate)" strokeWidth={3} dot={false} />
+                </ComposedChart>
+              </ChartContainer>
+            </div>
+
+            <div className="rounded-lg border border-border bg-background/60 p-4">
+              <div className="mb-3">
+                <p className="text-sm font-semibold text-foreground">Weak kanji</p>
+                <p className="text-xs text-muted-foreground">Prioritized by low ease, short interval, or unstable repetition.</p>
+              </div>
+              {weakKanjiCatalog.length === 0 ? (
+                <div className="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">No weak kanji yet. Review more cards and this list will update automatically.</div>
+              ) : (
+                <div className="space-y-2">
+                  {weakKanjiCatalog.map((item) => (
+                    <Link
+                      key={item.character}
+                      to={`/kanji-library/${encodeURIComponent(item.character)}`}
+                      className="flex items-center justify-between gap-3 rounded-lg border border-border bg-card p-3 transition hover:bg-muted/40"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-rose-50 text-2xl font-semibold text-foreground">{item.character}</div>
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">{item.catalog?.meaning || item.reason}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Ease {item.easeFactor.toFixed(2)} | {item.reviewCount} reviews
+                          </p>
+                        </div>
+                      </div>
+                      <Badge className="rounded-full border border-rose-200 bg-rose-50 text-rose-700">{item.reason}</Badge>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </PageSection>
+
+        <PageSection className="mb-4" title="Search and filters" description="Filter by JLPT level, meaning, reading, radical, tag, or example word.">
           <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto]">
             <div className="relative">
               <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 className="h-11 rounded-2xl border-border bg-card pl-11 text-foreground placeholder:text-muted-foreground"
                 onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="Tìm kanji, meaning, reading, bộ thủ hoặc ví dụ"
+                placeholder="Search kanji, meaning, reading, radical, or example"
                 value={searchQuery}
               />
             </div>
@@ -143,9 +258,9 @@ const KanjiLibrary = () => {
         </PageSection>
 
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
-          <PageSection title="Kanji library" description="Mỗi ô mở detail page với cách đọc, ví dụ, writing practice và thao tác SRS.">
+          <PageSection title="Kanji library" description="Each card opens the detail page with readings, examples, writing practice, and SRS actions.">
             {filteredKanji.length === 0 ? (
-              <EmptyState title="Không tìm thấy kanji" description="Thử đổi level, bỏ Due only hoặc dùng từ khóa khác." icon={<BookOpen className="h-6 w-6" />} />
+              <EmptyState title="No kanji found" description="Try changing the level, turning off Due only, or using a different keyword." icon={<BookOpen className="h-6 w-6" />} />
             ) : (
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6">
                 {filteredKanji.map((kanji) => {
@@ -161,14 +276,14 @@ const KanjiLibrary = () => {
                         </div>
                         <p className="mt-2 text-sm font-medium text-foreground">{kanji.meaning}</p>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          {kanji.strokeCount} nét • bộ {kanji.radical}
+                          {kanji.strokeCount} strokes | radical {kanji.radical}
                         </p>
                         <p className="mt-2 truncate text-xs text-sky-700">{kanji.exampleWords.join(" / ")}</p>
                       </Link>
 
                       <div className="mt-3 flex gap-2">
                         <Button asChild className="flex-1 rounded-2xl" size="sm" variant="outline">
-                          <Link to={`/kanji-library/${encodeURIComponent(kanji.character)}`}>Chi tiết</Link>
+                          <Link to={`/kanji-library/${encodeURIComponent(kanji.character)}`}>Detail</Link>
                         </Button>
                         <Button
                           className={`flex-1 rounded-2xl ${inDeck ? "border-border bg-card text-foreground/80 hover:bg-muted" : "bg-sky-500 text-white hover:bg-sky-400"}`}
@@ -188,9 +303,9 @@ const KanjiLibrary = () => {
           </PageSection>
 
           <div className="space-y-4">
-            <PageSection title="Next review" description="Ôn nhanh kanji đến hạn hoặc kanji gần nhất trong deck.">
+            <PageSection title="Next review" description="Review the next due kanji or the closest card in your deck.">
               {!nextReviewItem ? (
-                <EmptyState title="Deck kanji đang trống" description="Thêm một kanji vào SRS từ library hoặc detail page để bắt đầu review." icon={<Sparkles className="h-6 w-6" />} />
+                <EmptyState title="Kanji deck is empty" description="Add a kanji from the library or detail page to begin reviewing." icon={<Sparkles className="h-6 w-6" />} />
               ) : (
                 <div className="rounded-[22px] border border-border bg-card p-5">
                   <div className="flex items-start justify-between gap-3">
@@ -211,15 +326,15 @@ const KanjiLibrary = () => {
                   </div>
 
                   <Button asChild className="mt-3 w-full rounded-2xl" variant="outline">
-                    <Link to={`/kanji-library/${encodeURIComponent(nextReviewItem.character)}`}>Mở detail</Link>
+                    <Link to={`/kanji-library/${encodeURIComponent(nextReviewItem.character)}`}>Open detail</Link>
                   </Button>
                 </div>
               )}
             </PageSection>
 
-            <PageSection title="Deck overview" description="Tình trạng ôn tập theo SRS cục bộ của bạn.">
+            <PageSection title="Deck overview" description="Current review status from your Kanji SRS deck.">
               {deck.length === 0 ? (
-                <div className="rounded-[20px] border border-border bg-card p-4 text-sm text-muted-foreground">Chưa có kanji nào trong deck.</div>
+                <div className="rounded-[20px] border border-border bg-card p-4 text-sm text-muted-foreground">No kanji in your deck yet.</div>
               ) : (
                 <div className="space-y-3">
                   {deck.slice(0, 6).map((item) => (
