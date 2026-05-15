@@ -33,6 +33,13 @@ public class User {
     @Builder.Default
     private boolean enabled = true;
 
+    @Column(length = 128)
+    private String passwordResetTokenHash;
+
+    private Instant passwordResetExpiresAt;
+
+    private Instant passwordResetRequestedAt;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
     @Enumerated(EnumType.STRING)

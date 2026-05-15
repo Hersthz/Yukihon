@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Award, BookOpen, GraduationCap, PlayCircle, Target, TrendingUp } from "lucide-react";
+
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import LessonCard2 from "@/components/learning/LessonCard2";
 import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
@@ -52,11 +53,7 @@ const JLPTLessons = () => {
 
   const currentLevelLessons = lessonsByLevel[selectedLevel] || [];
   const progressByLessonId = useMemo(() => {
-    return new Map(
-      progressItems
-        .filter((item) => item.lessonId != null)
-        .map((item) => [item.lessonId as number, item])
-    );
+    return new Map(progressItems.filter((item) => item.lessonId != null).map((item) => [item.lessonId as number, item]));
   }, [progressItems]);
 
   const completedCount = currentLevelLessons.filter((lesson) => progressByLessonId.get(lesson.id)?.status === "COMPLETED").length;
@@ -74,7 +71,7 @@ const JLPTLessons = () => {
           action={
             <Button className="rounded-2xl bg-sky-500 text-white hover:bg-sky-400" onClick={() => navigate(nextLessonId ? `/lessons/${nextLessonId}` : "/jlpt-lessons")}>
               <PlayCircle className="mr-2 h-4 w-4" />
-              {nextLessonId ? "Hoc tiep bai goi y" : "Bat dau lo trinh"}
+              {nextLessonId ? "Học tiếp bài gợi ý" : "Bắt đầu lộ trình"}
             </Button>
           }
         />

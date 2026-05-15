@@ -24,7 +24,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import WinterNightBackground from "@/components/WinterNightBackground";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 import { adminApi } from "@/api";
 import { useAuth } from "@/hooks/use-auth";
 import { Navigate } from "react-router-dom";
@@ -152,10 +152,8 @@ const AdminUsers = () => {
   }
 
   return (
-    <div className="min-h-screen relative pb-20">
-      <WinterNightBackground snowCount={40} sparkleCount={20} intensity="light" />
-      
-      <div className="relative z-10 container mx-auto px-4 py-8">
+    <DashboardLayout>
+      <div className="mx-auto max-w-[1520px] py-2">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -353,7 +351,7 @@ const AdminUsers = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </DashboardLayout>
   );
 };
 

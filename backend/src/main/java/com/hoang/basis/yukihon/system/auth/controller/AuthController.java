@@ -2,10 +2,13 @@ package com.hoang.basis.yukihon.system.auth.controller;
 
 import com.hoang.basis.yukihon.system.auth.dto.AuthResponse;
 import com.hoang.basis.yukihon.system.auth.dto.ChangePasswordRequest;
+import com.hoang.basis.yukihon.system.auth.dto.ForgotPasswordRequest;
+import com.hoang.basis.yukihon.system.auth.dto.ForgotPasswordResponse;
 import com.hoang.basis.yukihon.system.auth.dto.GoogleTokenRequest;
 import com.hoang.basis.yukihon.system.auth.dto.LoginRequest;
 import com.hoang.basis.yukihon.system.auth.dto.RefreshTokenRequest;
 import com.hoang.basis.yukihon.system.auth.dto.RegisterRequest;
+import com.hoang.basis.yukihon.system.auth.dto.ResetPasswordRequest;
 import com.hoang.basis.yukihon.system.auth.dto.UpdateProfileRequest;
 import com.hoang.basis.yukihon.system.user.dto.UserDto;
 import com.hoang.basis.yukihon.system.auth.service.AuthService;
@@ -48,6 +51,21 @@ public class AuthController {
     ) {
         AuthResponse response = authService.refreshToken(request.getRefreshToken());
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ForgotPasswordResponse> forgotPassword(
+            @Valid @RequestBody ForgotPasswordRequest request
+    ) {
+        return ResponseEntity.ok(authService.forgotPassword(request));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Void> resetPassword(
+            @Valid @RequestBody ResetPasswordRequest request
+    ) {
+        authService.resetPassword(request);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/me")

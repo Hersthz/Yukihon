@@ -23,7 +23,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: ${JPA_DDL_AUTO:update}
+        ddl-auto: ${JPA_DDL_AUTO:none}
     show-sql: ${JPA_SHOW_SQL:false}
     properties:
       hibernate:
@@ -43,8 +43,10 @@ app:
   frontend-url: ${FRONTEND_URL:http://localhost:5173}
   base-url: ${BASE_URL:http://localhost:8080}
   media-upload-dir: ${MEDIA_UPLOAD_DIR:uploads}
+  auth:
+    expose-reset-token: ${AUTH_EXPOSE_RESET_TOKEN:true}
   seed:
-    enabled: ${SEED_ENABLED:true}
+    enabled: ${SEED_ENABLED:false}
 
 google:
   client-id: ${GOOGLE_CLIENT_ID:}

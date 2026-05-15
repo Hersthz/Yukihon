@@ -1,13 +1,22 @@
-﻿import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Sparkles } from "lucide-react";
+
 import { authApi } from "@/api";
-import { AuthFormCard, AuthHero, BG_KANJI, PARTICLES, type AuthMode } from "@/components/auth";
-import WinterNightBackground from "@/components/WinterNightBackground";
+import { AuthFormCard, AuthHero, type AuthMode } from "@/components/auth";
 import { useAuth } from "@/hooks/use-auth";
 
-const KANJI_SEQUENCE = "日本語を学ぼう！";
+const KANJI_SEQUENCE = "Nihongo, every day.";
+
+const getSafeRedirectPath = (params: URLSearchParams) => {
+  const from = params.get("from");
+  if (!from || !from.startsWith("/") || from.startsWith("//") || from.startsWith("/auth")) {
+    return "/dashboard";
+  }
+
+  return from;
+};
 
 const Auth = () => {
   const [mode, setMode] = useState<AuthMode>("login");
@@ -17,41 +26,47 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [resetToken, setResetToken] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [typingKanji, setTypingKanji] = useState("");
+  const [redirectPath, setRedirectPath] = useState("/dashboard");
 
   const navigate = useNavigate();
   const { login, loginWithGoogleCode, register } = useAuth();
 
-  const authenticateWithGoogle = useCallback(async (code: string) => {
-    setIsSubmitting(true);
-    try {
-      await loginWithGoogleCode(code);
-      setSuccessMsg("Signed in with Google successfully!");
-      setTimeout(() => navigate("/dashboard"), 500);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Google authentication failed.";
-      setErrorMsg(message);
-      window.history.replaceState({}, document.title, window.location.pathname);
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [loginWithGoogleCode, navigate]);
+  const authenticateWithGoogle = useCallback(
+    async (code: string, targetPath: string) => {
+      setIsSubmitting(true);
+      try {
+        await loginWithGoogleCode(code);
+        setSuccessMsg("Signed in with Google successfully.");
+        setTimeout(() => navigate(targetPath, { replace: true }), 500);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Google authentication failed.";
+        setErrorMsg(message);
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [loginWithGoogleCode, navigate]
+  );
 
   useEffect(() => {
     let index = 0;
     const timer = setInterval(() => {
       setTypingKanji(KANJI_SEQUENCE.slice(0, index + 1));
       index += 1;
+
       if (index >= KANJI_SEQUENCE.length) {
         setTimeout(() => {
           index = 0;
           setTypingKanji("");
-        }, 2000);
+        }, 1800);
       }
-    }, 200);
+    }, 110);
 
     return () => clearInterval(timer);
   }, []);
@@ -61,9 +76,20 @@ const Auth = () => {
     const code = params.get("code");
     const error = params.get("error");
     const reason = params.get("reason");
+    const authMode = params.get("mode");
+    const token = params.get("token");
+    const nextRedirectPath = getSafeRedirectPath(params);
+    setRedirectPath(nextRedirectPath);
+
+    if (authMode === "reset" || token) {
+      setMode("reset");
+      if (token) {
+        setResetToken(token);
+      }
+    }
 
     if (reason === "session_expired") {
-      setErrorMsg("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+      setErrorMsg("Your previous session expired. Please sign in again.");
       window.history.replaceState({}, document.title, window.location.pathname);
       return;
     }
@@ -76,7 +102,7 @@ const Auth = () => {
     }
 
     if (code) {
-      void authenticateWithGoogle(code);
+      void authenticateWithGoogle(code, nextRedirectPath);
     }
   }, [authenticateWithGoogle]);
 
@@ -86,9 +112,13 @@ const Auth = () => {
   };
 
   const handleModeChange = (nextMode: AuthMode) => {
-    if (nextMode === mode) return;
+    if (nextMode === mode) {
+      return;
+    }
+
     resetMessages();
     setMode(nextMode);
+    window.history.replaceState({}, document.title, window.location.pathname);
   };
 
   const handleGoogleLogin = () => {
@@ -97,7 +127,7 @@ const Auth = () => {
 
     if (!isGoogleConfigured) {
       setErrorMsg(
-        "Google Client ID chua duoc cau hinh. Vui long tao OAuth credentials tai Google Cloud Console roi dien vao VITE_GOOGLE_CLIENT_ID trong frontend/.env.local"
+        "Google Client ID is not configured yet. Add VITE_GOOGLE_CLIENT_ID inside frontend/.env.local before using Google auth."
       );
       return;
     }
@@ -105,15 +135,71 @@ const Auth = () => {
     const scope = encodeURIComponent(
       "https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile"
     );
-    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(
-      authApi.getGoogleRedirectUri()
-    )}&response_type=code&scope=${scope}`;
+
+    const authUrl =
+      `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}` +
+      `&redirect_uri=${encodeURIComponent(authApi.getGoogleRedirectUri())}` +
+      `&response_type=code&scope=${scope}`;
+
     window.location.href = authUrl;
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     resetMessages();
+
+    if (mode === "forgot") {
+      if (!email) {
+        setErrorMsg("Please enter your email.");
+        return;
+      }
+
+      setIsSubmitting(true);
+      try {
+        const response = await authApi.forgotPassword(email);
+        if (response.resetToken) {
+          setResetToken(response.resetToken);
+          setSuccessMsg("Reset token created. You can set a new password now.");
+          setMode("reset");
+        } else {
+          setSuccessMsg(response.message || "If the account exists, reset instructions have been sent.");
+        }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Password reset request failed.";
+        setErrorMsg(message);
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
+
+    if (mode === "reset") {
+      if (!resetToken || !password || !confirmPassword) {
+        setErrorMsg("Please enter reset token and new password.");
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        setErrorMsg("Passwords do not match.");
+        return;
+      }
+
+      setIsSubmitting(true);
+      try {
+        await authApi.resetPassword({ token: resetToken, newPassword: password });
+        setPassword("");
+        setConfirmPassword("");
+        setResetToken("");
+        setSuccessMsg("Password reset successfully. Please sign in with your new password.");
+        setMode("login");
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Password reset failed.";
+        setErrorMsg(message);
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
 
     if (mode === "register" && password !== confirmPassword) {
       setErrorMsg("Passwords do not match.");
@@ -126,6 +212,7 @@ const Auth = () => {
     }
 
     setIsSubmitting(true);
+
     try {
       if (mode === "login") {
         await login(email, password);
@@ -134,7 +221,7 @@ const Auth = () => {
       }
 
       setSuccessMsg(mode === "login" ? "Signed in successfully." : "Account created successfully.");
-      navigate("/dashboard", { replace: true });
+      navigate(redirectPath, { replace: true });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Authentication failed.";
       setErrorMsg(message);
@@ -144,82 +231,45 @@ const Auth = () => {
   };
 
   return (
-    <div className="h-screen relative overflow-hidden bg-background">
-      <WinterNightBackground snowCount={60} sparkleCount={20} intensity="normal" />
+    <div className="min-h-screen bg-background px-4 pb-10 pt-6 sm:px-6">
+      <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(255,216,207,0.52),transparent_32%),radial-gradient(circle_at_top_right,rgba(201,240,255,0.58),transparent_28%),linear-gradient(180deg,#fffaf4_0%,#fff5ed_40%,#f8f0e8_100%)]" />
 
-      <div className="fixed inset-0 pointer-events-none select-none z-[1]">
-        {BG_KANJI.map((item) => (
-          <span
-            key={item.char}
-            className={`absolute font-black text-foreground/[0.03] ${item.size}`}
-            style={{ left: item.x, top: item.y }}
-          >
-            {item.char}
-          </span>
-        ))}
-      </div>
-
-      <div className="fixed inset-0 pointer-events-none z-[1] overflow-hidden">
-        {PARTICLES.map((particle) => (
-          <div
-            key={`particle-${particle.id}`}
-            className="absolute animate-snow-fall"
-            style={{
-              left: `${particle.x}%`,
-              top: "-20px",
-              animationDuration: `${particle.duration}s`,
-              animationDelay: `${particle.delay}s`,
-              ["--snow-sway" as string]: `${particle.drift}px`,
-              willChange: "transform",
-            }}
-          >
-            {particle.type === "sakura" ? (
-              <div
-                className="rounded-full"
-                style={{
-                  width: particle.size,
-                  height: particle.size * 0.7,
-                  background: "radial-gradient(ellipse, rgba(244,163,187,0.45) 0%, rgba(244,163,187,0) 70%)",
-                }}
-              />
-            ) : (
-              <div
-                className="rounded-full"
-                style={{
-                  width: particle.size,
-                  height: particle.size,
-                  background: "radial-gradient(circle, rgba(147,197,253,0.5) 0%, transparent 70%)",
-                }}
-              />
-            )}
-          </div>
-        ))}
-      </div>
-
-      <div className="fixed inset-0 bg-gradient-to-b from-background/20 via-transparent to-background/20 pointer-events-none z-[1]" />
-
-      <motion.nav
-        initial={{ opacity: 0, y: -16 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="relative z-20 px-6 py-4"
-      >
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <Link
-            to="/"
-            className="flex items-center gap-3 group text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-secondary grid place-items-center text-primary-foreground font-bold text-base shadow-md">
-              日
+      <motion.nav initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} className="mx-auto max-w-[1360px]">
+        <div className="surface-panel flex items-center justify-between bg-white/92 px-5 py-4 backdrop-blur-xl sm:px-6">
+          <Link to="/" className="flex items-center gap-3 text-foreground/76 transition-colors hover:text-foreground">
+            <ArrowLeft className="h-4 w-4" />
+            <div className="flex h-11 w-11 items-center justify-center rounded-[1rem] bg-[#ffcfc6]">
+              <span className="display-font text-2xl font-bold text-foreground">Y</span>
             </div>
-            <span className="font-semibold text-foreground text-sm hidden sm:inline">Yukihon</span>
+            <div>
+              <p className="text-xl font-black tracking-tight text-foreground">Yukihon</p>
+              <p className="hidden text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground sm:block">
+                Light onboarding flow
+              </p>
+            </div>
           </Link>
+
+          <div className="hidden items-center gap-3 rounded-full bg-[#f7f3ee] px-4 py-2 sm:flex">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <span className="text-sm font-semibold text-foreground">Dark mode is parked. Light mode only for now.</span>
+          </div>
         </div>
       </motion.nav>
 
-      <div className="relative z-10 max-w-6xl mx-auto px-6 h-[calc(100vh-80px)] flex items-center">
-        <div className="grid lg:grid-cols-2 gap-12 xl:gap-24 items-center w-full">
-          <AuthHero mode={mode} typingKanji={typingKanji} />
+      <div className="mx-auto mt-8 grid max-w-[1360px] gap-8 lg:grid-cols-[1.02fr_0.98fr]">
+        <div className="hidden lg:block">
+          <div className="surface-panel-soft h-full p-8">
+            <div className="section-kicker">
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              Better first-run experience
+            </div>
+            <div className="mt-8">
+              <AuthHero mode={mode} typingKanji={typingKanji} />
+            </div>
+          </div>
+        </div>
+
+        <div className="surface-panel-soft flex items-center justify-center p-3 sm:p-5 lg:p-6">
           <AuthFormCard
             mode={mode}
             setMode={handleModeChange}
@@ -234,6 +284,8 @@ const Auth = () => {
             setPassword={setPassword}
             confirmPassword={confirmPassword}
             setConfirmPassword={setConfirmPassword}
+            resetToken={resetToken}
+            setResetToken={setResetToken}
             jlptTarget={jlptTarget}
             setJlptTarget={setJlptTarget}
             showPassword={showPassword}

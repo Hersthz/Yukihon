@@ -49,8 +49,10 @@ const AuthHero = ({ mode, typingKanji }: AuthHeroProps) => {
                 className="text-foreground/90 font-medium inline-block"
               >
                 {mode === "login"
-                  ? "Welcome back! I missed our study sessions together 😊"
-                  : "So happy to meet you! Let's start our journey to mastery ✨"}
+                  ? "Welcome back! I missed our study sessions together."
+                  : mode === "register"
+                    ? "So happy to meet you. Let's start our journey to mastery."
+                    : "No worries. We will get your account access cleaned up."}
               </motion.span>
             </AnimatePresence>
           </p>
@@ -87,7 +89,7 @@ const AuthHero = ({ mode, typingKanji }: AuthHeroProps) => {
 
       <div className="flex items-center gap-4 text-sm text-muted-foreground">
         <div className="flex -space-x-2">
-          {["🧑‍🎓", "👩‍💻", "👨‍🎓", "👩‍🏫"].map((emoji, index) => (
+          {["学", "読", "語", "雪"].map((emoji, index) => (
             <motion.div
               key={`${emoji}-${index}`}
               initial={{ scale: 0 }}

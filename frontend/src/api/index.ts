@@ -15,3 +15,6 @@ export * from "./progressApi";
 export * from "./mistakeDnaApi";
 export * from "./creatorModeApi";
 export * from "./learningAnalyticsApi";
+export * from "./kanjiSrsApi";
+export * from "./storyModeApi";
+export * from "./reminderApi";

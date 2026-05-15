@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Eraser } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -6,52 +6,58 @@ interface KanjiPracticeCanvasProps {
   kanji: string;
 }
 
+const CANVAS_SIZE = 520;
+
 const KanjiPracticeCanvas = ({ kanji }: KanjiPracticeCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [drawing, setDrawing] = useState(false);
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
+  const paintGuide = useCallback((canvas: HTMLCanvasElement) => {
     const context = canvas.getContext("2d");
     if (!context) return;
 
-    context.clearRect(0, 0, canvas.width, canvas.height);
+    const ratio = window.devicePixelRatio || 1;
+    canvas.width = CANVAS_SIZE * ratio;
+    canvas.height = CANVAS_SIZE * ratio;
+    canvas.style.width = "100%";
+    canvas.style.aspectRatio = "1 / 1";
+
+    context.setTransform(ratio, 0, 0, ratio, 0, 0);
+    context.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+
     context.fillStyle = "#ffffff";
-    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+
     context.strokeStyle = "#dbeafe";
-    context.lineWidth = 1;
+    context.lineWidth = 1.25;
     context.beginPath();
-    context.moveTo(canvas.width / 2, 0);
-    context.lineTo(canvas.width / 2, canvas.height);
-    context.moveTo(0, canvas.height / 2);
-    context.lineTo(canvas.width, canvas.height / 2);
+    context.moveTo(CANVAS_SIZE / 2, 0);
+    context.lineTo(CANVAS_SIZE / 2, CANVAS_SIZE);
+    context.moveTo(0, CANVAS_SIZE / 2);
+    context.lineTo(CANVAS_SIZE, CANVAS_SIZE / 2);
+    context.moveTo(0, 0);
+    context.lineTo(CANVAS_SIZE, CANVAS_SIZE);
+    context.moveTo(CANVAS_SIZE, 0);
+    context.lineTo(0, CANVAS_SIZE);
     context.stroke();
 
-    context.font = "120px serif";
-    context.fillStyle = "rgba(148, 163, 184, 0.16)";
+    context.font = "172px serif";
+    context.fillStyle = "rgba(100, 116, 139, 0.14)";
     context.textAlign = "center";
     context.textBaseline = "middle";
-    context.fillText(kanji, canvas.width / 2, canvas.height / 2);
+    context.fillText(kanji, CANVAS_SIZE / 2, CANVAS_SIZE / 2 + 6);
   }, [kanji]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    paintGuide(canvas);
+  }, [paintGuide]);
 
   const clearCanvas = () => {
     const canvas = canvasRef.current;
-    const context = canvas?.getContext("2d");
-    if (!canvas || !context) return;
-
-    context.clearRect(0, 0, canvas.width, canvas.height);
-    context.fillStyle = "#ffffff";
-    context.fillRect(0, 0, canvas.width, canvas.height);
-    context.strokeStyle = "#dbeafe";
-    context.lineWidth = 1;
-    context.beginPath();
-    context.moveTo(canvas.width / 2, 0);
-    context.lineTo(canvas.width / 2, canvas.height);
-    context.moveTo(0, canvas.height / 2);
-    context.lineTo(canvas.width, canvas.height / 2);
-    context.stroke();
+    if (!canvas) return;
+    paintGuide(canvas);
   };
 
   const resolvePoint = (clientX: number, clientY: number) => {
@@ -90,39 +96,31 @@ const KanjiPracticeCanvas = ({ kanji }: KanjiPracticeCanvasProps) => {
   };
 
   return (
-    <div className="rounded-[22px] border border-border bg-card p-4">
+    <div className="rounded-lg border border-border bg-card p-4">
       <div className="mb-3 flex items-center justify-between gap-3">
         <div>
           <p className="text-sm font-semibold text-foreground">Writing practice</p>
-          <p className="text-sm text-muted-foreground">Viet thu kanji len khung nay de luyen tay va ghi nho bo cuc.</p>
+          <p className="text-sm text-muted-foreground">Viết thử kanji lên khung này để luyện tay và ghi nhớ bố cục.</p>
         </div>
-        <Button className="rounded-2xl" onClick={clearCanvas} variant="outline">
+        <Button className="shrink-0" onClick={clearCanvas} variant="outline">
           <Eraser className="mr-2 h-4 w-4" />
-          Xoa net
+          Xóa nét
         </Button>
       </div>
 
       <canvas
+        aria-label={`Writing practice canvas for ${kanji}`}
         ref={canvasRef}
-        width={520}
-        height={520}
-        className="w-full rounded-[20px] border border-sky-100 bg-white touch-none"
-        onMouseDown={(event) => startDrawing(event.clientX, event.clientY)}
-        onMouseMove={(event) => draw(event.clientX, event.clientY)}
-        onMouseUp={() => setDrawing(false)}
-        onMouseLeave={() => setDrawing(false)}
-        onTouchEnd={() => setDrawing(false)}
-        onTouchMove={(event) => {
-          const touch = event.touches[0];
-          if (touch) {
-            draw(touch.clientX, touch.clientY);
-          }
+        className="aspect-square w-full touch-none rounded-lg border border-sky-100 bg-white"
+        onPointerDown={(event) => {
+          event.currentTarget.setPointerCapture(event.pointerId);
+          startDrawing(event.clientX, event.clientY);
         }}
-        onTouchStart={(event) => {
-          const touch = event.touches[0];
-          if (touch) {
-            startDrawing(touch.clientX, touch.clientY);
-          }
+        onPointerLeave={() => setDrawing(false)}
+        onPointerMove={(event) => draw(event.clientX, event.clientY)}
+        onPointerUp={(event) => {
+          event.currentTarget.releasePointerCapture(event.pointerId);
+          setDrawing(false);
         }}
       />
     </div>

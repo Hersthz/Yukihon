@@ -7,6 +7,7 @@ import { Route, Routes } from "react-router-dom";
 const AdminContent = lazy(() => import("@/pages/AdminContent"));
 const AdminCreatorMode = lazy(() => import("@/pages/AdminCreatorMode"));
 const AdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
+const AdminStoryMode = lazy(() => import("@/pages/AdminStoryMode"));
 const AdminUsers = lazy(() => import("@/pages/AdminUsers"));
 const AiChat = lazy(() => import("@/pages/AiChat"));
 const Auth = lazy(() => import("@/pages/Auth"));
@@ -72,6 +73,7 @@ export const AppRoutes = () => {
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/users" element={<AdminUsers />} />
           <Route path="/admin/content" element={<AdminContent />} />
+          <Route path="/admin/story-mode" element={<AdminStoryMode />} />
         </Route>
 
         <Route path="*" element={<NotFound />} />

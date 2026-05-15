@@ -12,5 +12,7 @@ spring:
     baseline-on-migrate: true
 
 app:
+  auth:
+    expose-reset-token: false
   seed:
     enabled: false

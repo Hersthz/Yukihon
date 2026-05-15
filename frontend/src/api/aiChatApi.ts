@@ -78,11 +78,10 @@ export const aiChatApi = {
       body: JSON.stringify(data),
     }),
   streamRespond: async (data: AiChatRequestPayload, handlers: StreamHandlers = {}, options: StreamOptions = {}) => {
-    const response = await fetch(`${apiClient.baseURL}/api/ai-chat/respond/stream`, {
+    const response = await apiClient.fetchWithAuth("/api/ai-chat/respond/stream", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...apiClient.getAuthHeader(),
       },
       body: JSON.stringify(data),
       signal: options.signal,

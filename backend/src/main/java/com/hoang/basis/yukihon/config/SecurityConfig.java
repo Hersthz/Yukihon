@@ -43,7 +43,14 @@ public class SecurityConfig {
                 .exceptionHandling(ex ->
                         ex.authenticationEntryPoint(authenticationEntryPoint))
                 .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/google", "/api/auth/refresh").permitAll()
+                    .requestMatchers(
+                            "/api/auth/login",
+                            "/api/auth/register",
+                            "/api/auth/google",
+                            "/api/auth/refresh",
+                            "/api/auth/forgot-password",
+                            "/api/auth/reset-password"
+                    ).permitAll()
                     .requestMatchers("/api/auth/me").authenticated()
                         .requestMatchers("/ws-community-chat/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()

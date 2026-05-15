@@ -1,4 +1,4 @@
-export type AuthMode = "login" | "register";
+export type AuthMode = "login" | "register" | "forgot" | "reset";
 
 export interface AuthMessages {
   error: string | null;
@@ -10,5 +10,6 @@ export interface AuthFormState {
   email: string;
   password: string;
   confirmPassword: string;
+  resetToken: string;
   jlptTarget: string;
 }

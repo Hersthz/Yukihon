@@ -9,7 +9,6 @@ import {
   type CreatorTemplateAuditEvent,
   type CreatorTemplateStatus,
 } from "@/api";
-import WinterNightBackground from "@/components/WinterNightBackground";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -316,10 +315,7 @@ const AdminCreatorMode = () => {
 
   return (
     <DashboardLayout>
-      <div className="relative min-h-screen">
-        <WinterNightBackground snowCount={14} sparkleCount={8} intensity="light" />
-
-        <div className="relative z-10 container mx-auto max-w-7xl px-4 py-8">
+      <div className="mx-auto max-w-[1520px] py-2">
           <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center gap-3">
               <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 p-3">
@@ -691,7 +687,6 @@ const AdminCreatorMode = () => {
               </Card>
             </TabsContent>
           </Tabs>
-        </div>
       </div>
     </DashboardLayout>
   );

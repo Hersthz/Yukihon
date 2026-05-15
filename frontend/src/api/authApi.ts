@@ -23,7 +23,11 @@ export interface ChangePasswordPayload {
   newPassword: string;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+export interface ForgotPasswordResponse {
+  message: string;
+  resetToken?: string | null;
+}
+
 const GOOGLE_REDIRECT_URI = `${window.location.origin}/auth`;
 
 export const authApi = {
@@ -59,23 +63,29 @@ export const authApi = {
     });
   },
 
-  async googleAuth(code: string): Promise<AuthResponse> {
-    const response = await fetch(`${API_BASE_URL}/api/auth/google`, {
+  forgotPassword(email: string) {
+    return apiClient.request<ForgotPasswordResponse>("/api/auth/forgot-password", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+  },
+
+  resetPassword(data: { token: string; newPassword: string }) {
+    return apiClient.request<void>("/api/auth/reset-password", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  async googleAuth(code: string): Promise<AuthResponse> {
+    return apiClient.request<AuthResponse>("/api/auth/google", {
+      method: "POST",
       body: JSON.stringify({ code, redirectUri: GOOGLE_REDIRECT_URI }),
     });
-
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(error || "Google authentication failed.");
-    }
-
-    return (await response.json()) as AuthResponse;
   },
 
   storeAuthData(response: AuthResponse) {
-    apiClient.setAuthData(response.accessToken, response.user);
+    apiClient.setAuthData(response.accessToken, response.user, response.refreshToken);
   },
 
   getGoogleClientId() {
