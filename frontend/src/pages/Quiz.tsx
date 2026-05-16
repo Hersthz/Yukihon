@@ -8,7 +8,7 @@ import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/la
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { quizApi, type QuizAttemptResponse } from "@/api";
+import { quizApi, type QuizAttemptResponse, type QuizSessionResponse } from "@/api";
 import { useToast } from "@/hooks/use-toast";
 import { useMistakeDna } from "@/hooks/learning/useMistakeDna";
 import { cn } from "@/lib/utils";
@@ -78,6 +78,17 @@ const formatPattern = (value?: string) => {
     .join(" ");
 };
 
+const formatSessionMode = (value?: string) => {
+  switch ((value || "").toUpperCase()) {
+    case "MISSED":
+      return "Câu sai";
+    case "QUICK":
+      return "Luyện nhanh";
+    default:
+      return value || "Session";
+  }
+};
+
 type PracticeMode = "quick" | "missed";
 
 interface PracticeSummary {
@@ -125,6 +136,11 @@ const Quiz = () => {
   const { data: recentWrongAttempts = [] } = useQuery({
     queryKey: ["quiz-attempts", "wrong"],
     queryFn: () => quizApi.getRecentAttempts({ correct: false, limit: 50 }),
+  });
+
+  const { data: recentSessions = [] } = useQuery({
+    queryKey: ["quiz-sessions"],
+    queryFn: () => quizApi.getRecentSessions({ limit: 5 }),
   });
 
   const filteredQuizzes = useMemo(() => {
@@ -259,6 +275,20 @@ const Quiz = () => {
     startQuiz(nextQuiz);
   };
 
+  const { mutate: recordSession } = useMutation({
+    mutationFn: quizApi.recordSession,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["quiz-sessions"] });
+    },
+    onError: () => {
+      toast({
+        title: "KhÃ´ng thá»ƒ lÆ°u phiÃªn quiz",
+        description: "Káº¿t quáº£ cÃ¢u váº«n Ä‘Æ°á»£c lÆ°u, nhÆ°ng summary phiÃªn chÆ°a Ä‘Æ°á»£c ghi láº¡i.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const { mutate: recordAttempt, isPending: isSavingAttempt } = useMutation({
     mutationFn: quizApi.recordAttempt,
     onSuccess: (attempt) => {
@@ -272,7 +302,14 @@ const Quiz = () => {
         const nextAttempts = [...practiceAttempts, attempt];
         setPracticeAttempts(nextAttempts);
         if (practiceIndex >= practiceQueue.length - 1) {
-          setPracticeSummary(buildPracticeSummary(nextAttempts, practiceMode));
+          const summary = buildPracticeSummary(nextAttempts, practiceMode);
+          setPracticeSummary(summary);
+          recordSession({
+            mode: summary.mode,
+            totalQuestions: summary.total,
+            correctCount: summary.correct,
+            weakestPattern: summary.weakestPattern,
+          });
         }
       }
       void queryClient.invalidateQueries({ queryKey: ["mistake-dna"] });
@@ -459,6 +496,37 @@ const Quiz = () => {
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Pattern yếu nhất</p>
                 <p className="mt-2 text-2xl font-semibold text-foreground">{formatPattern(practiceSummary.weakestPattern)}</p>
               </div>
+            </div>
+          </PageSection>
+        )}
+
+        {recentSessions.length > 0 && (
+          <PageSection
+            className="mb-4"
+            title="Phiên luyện gần đây"
+            description="Backend lưu cả phiên luyện để bạn xem lại tổng điểm, mode và pattern yếu nhất."
+          >
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+              {recentSessions.map((session: QuizSessionResponse) => (
+                <div key={session.id} className="rounded-[18px] border border-border bg-background p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                      {formatSessionMode(session.mode)}
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                      <Clock3 className="h-3.5 w-3.5" />
+                      {formatAttemptTime(session.completedAt)}
+                    </span>
+                  </div>
+                  <p className="mt-3 text-2xl font-semibold text-foreground">
+                    {session.correctCount}/{session.totalQuestions}
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">{Math.round(session.accuracyRate)}% accuracy</p>
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    Pattern: <span className="font-semibold text-foreground">{formatPattern(session.weakestPattern)}</span>
+                  </p>
+                </div>
+              ))}
             </div>
           </PageSection>
         )}

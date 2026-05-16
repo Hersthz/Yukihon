@@ -9,14 +9,16 @@ import {
   TrendingUp,
   Shield,
   Activity,
+  Download,
   Sparkles,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import LearningFunnelTrendChart from "@/components/admin/LearningFunnelTrendChart";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { adminApi, learningAnalyticsApi, type LearningFunnelResponse } from "@/api";
+import { adminApi, learningAnalyticsApi, type LearningFunnelResponse, type QuizAnalytics } from "@/api";
 import { useAuth } from "@/hooks/use-auth";
 import { Navigate } from "react-router-dom";
 
@@ -34,8 +36,11 @@ const AdminDashboard = () => {
   const { isAdmin } = useAuth();
   const [stats, setStats] = useState<SystemStats | null>(null);
   const [funnel, setFunnel] = useState<LearningFunnelResponse | null>(null);
+  const [quizAnalytics, setQuizAnalytics] = useState<QuizAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [funnelLoading, setFunnelLoading] = useState(true);
+  const [quizAnalyticsLoading, setQuizAnalyticsLoading] = useState(true);
+  const [exportingQuizAnalytics, setExportingQuizAnalytics] = useState(false);
   const [funnelDays, setFunnelDays] = useState("30");
   const [funnelJlpt, setFunnelJlpt] = useState("ALL");
   const [funnelStartDate, setFunnelStartDate] = useState("");
@@ -92,11 +97,58 @@ const AdminDashboard = () => {
     void fetchFunnel();
   }, [fetchFunnel]);
 
+  useEffect(() => {
+    const fetchQuizAnalytics = async () => {
+      setQuizAnalyticsLoading(true);
+      try {
+        const result = await adminApi.getQuizAnalytics();
+        setQuizAnalytics(result);
+      } catch (error) {
+        console.error("Failed to fetch quiz analytics:", error);
+      } finally {
+        setQuizAnalyticsLoading(false);
+      }
+    };
+
+    void fetchQuizAnalytics();
+  }, []);
+
   if (!isAdmin()) {
     return <Navigate to="/dashboard" replace />;
   }
 
   const formatPercent = (value: number | undefined) => `${(value ?? 0).toFixed(1)}%`;
+
+  const formatPattern = (value?: string) => {
+    if (!value) {
+      return "Clean";
+    }
+
+    return value
+      .split(/[-_\s]+/)
+      .filter(Boolean)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ");
+  };
+
+  const handleExportQuizAnalytics = async () => {
+    setExportingQuizAnalytics(true);
+    try {
+      const blob = await adminApi.exportQuizAnalyticsCsv();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = "quiz-attempt-analytics.csv";
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Failed to export quiz analytics:", error);
+    } finally {
+      setExportingQuizAnalytics(false);
+    }
+  };
 
   const statCards = [
     {
@@ -209,6 +261,131 @@ const AdminDashboard = () => {
             ))}
           </div>
         )}
+
+        {/* Quiz Analytics */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45 }}
+          className="mb-8"
+        >
+          <Card className="bg-card/40 backdrop-blur-md border-border/50">
+            <CardHeader className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+              <div>
+                <CardTitle>Quiz Analytics</CardTitle>
+                <CardDescription>
+                  Find noisy questions, repeated mistake patterns, and accuracy by learner cohort.
+                </CardDescription>
+              </div>
+              <Button
+                variant="outline"
+                onClick={handleExportQuizAnalytics}
+                disabled={exportingQuizAnalytics || quizAnalyticsLoading || !quizAnalytics?.totalAttempts}
+              >
+                <Download className="mr-2 h-4 w-4" />
+                {exportingQuizAnalytics ? "Exporting..." : "Export CSV"}
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {quizAnalyticsLoading ? (
+                <div className="flex items-center justify-center py-16">
+                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
+                </div>
+              ) : !quizAnalytics || quizAnalytics.totalAttempts === 0 ? (
+                <div className="rounded-lg border border-dashed border-border/70 p-8 text-center text-sm text-muted-foreground">
+                  No quiz attempts yet. Analytics will appear after learners submit answers.
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+                    <div className="rounded-lg border border-border/60 bg-background/40 p-4">
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">Attempts</p>
+                      <p className="mt-1 text-2xl font-semibold">{quizAnalytics.totalAttempts}</p>
+                    </div>
+                    <div className="rounded-lg border border-border/60 bg-background/40 p-4">
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">Overall Accuracy</p>
+                      <p className="mt-1 text-2xl font-semibold text-emerald-400">{formatPercent(quizAnalytics.overallAccuracy)}</p>
+                    </div>
+                    <div className="rounded-lg border border-border/60 bg-background/40 p-4">
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">Wrong Attempts</p>
+                      <p className="mt-1 text-2xl font-semibold text-amber-400">{quizAnalytics.wrongAttempts}</p>
+                    </div>
+                    <div className="rounded-lg border border-border/60 bg-background/40 p-4">
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">Top Pattern</p>
+                      <p className="mt-1 text-2xl font-semibold">{formatPattern(quizAnalytics.mostCommonPattern)}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 xl:grid-cols-[minmax(0,1.7fr)_minmax(320px,1fr)]">
+                    <div className="rounded-lg border border-border/60 overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Most Missed Question</TableHead>
+                            <TableHead>Level</TableHead>
+                            <TableHead>Difficulty</TableHead>
+                            <TableHead className="text-right">Wrong</TableHead>
+                            <TableHead className="text-right">Accuracy</TableHead>
+                            <TableHead>Pattern</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {quizAnalytics.mostMissedQuestions.map((item) => (
+                            <TableRow key={item.quizId}>
+                              <TableCell className="max-w-[340px] font-medium">
+                                <span className="line-clamp-2">{item.title}</span>
+                              </TableCell>
+                              <TableCell>{item.jlptLevel}</TableCell>
+                              <TableCell>{item.difficultyLevel}</TableCell>
+                              <TableCell className="text-right text-amber-400">{item.wrongAttempts}</TableCell>
+                              <TableCell className="text-right">{formatPercent(item.accuracyRate)}</TableCell>
+                              <TableCell>{formatPattern(item.topPattern)}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+
+                    <div className="grid gap-4">
+                      <div className="rounded-lg border border-border/60 bg-background/30 p-4">
+                        <p className="text-sm font-semibold">Pattern Breakdown</p>
+                        <div className="mt-3 space-y-2">
+                          {quizAnalytics.patternBreakdown.slice(0, 6).map((item) => (
+                            <div key={item.pattern} className="flex items-center justify-between rounded-md border border-border/50 bg-card/50 px-3 py-2 text-sm">
+                              <span>{formatPattern(item.pattern)}</span>
+                              <span className="font-semibold text-amber-400">{item.wrongAttempts}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="rounded-lg border border-border/60 overflow-hidden">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Cohort</TableHead>
+                              <TableHead className="text-right">Attempts</TableHead>
+                              <TableHead className="text-right">Accuracy</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {quizAnalytics.cohortAccuracy.map((item) => (
+                              <TableRow key={`${item.dimension}-${item.value}`}>
+                                <TableCell className="font-medium">{item.dimension}: {item.value}</TableCell>
+                                <TableCell className="text-right">{item.totalAttempts}</TableCell>
+                                <TableCell className="text-right text-emerald-400">{formatPercent(item.accuracyRate)}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
 
         {/* Learning Funnel */}
         <motion.div

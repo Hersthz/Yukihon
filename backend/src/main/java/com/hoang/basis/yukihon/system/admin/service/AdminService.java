@@ -2,6 +2,10 @@ package com.hoang.basis.yukihon.system.admin.service;
 
 import com.hoang.basis.yukihon.system.admin.dto.ContentLevelBreakdownDto;
 import com.hoang.basis.yukihon.system.admin.dto.ContentOverviewDto;
+import com.hoang.basis.yukihon.system.admin.dto.QuizAnalyticsDto;
+import com.hoang.basis.yukihon.system.admin.dto.QuizCohortAccuracyDto;
+import com.hoang.basis.yukihon.system.admin.dto.QuizPatternAnalyticsDto;
+import com.hoang.basis.yukihon.system.admin.dto.QuizQuestionAnalyticsDto;
 import com.hoang.basis.yukihon.system.admin.dto.SystemStatsDto;
 import com.hoang.basis.yukihon.system.admin.dto.UpdateUserRolesRequest;
 import com.hoang.basis.yukihon.system.admin.dto.UpdateUserStatusRequest;
@@ -13,6 +17,8 @@ import com.hoang.basis.yukihon.system.lesson.entity.Lesson;
 import com.hoang.basis.yukihon.system.lesson.repository.LessonRepository;
 import com.hoang.basis.yukihon.system.quiz.entity.Quiz;
 import com.hoang.basis.yukihon.system.quiz.repository.QuizRepository;
+import com.hoang.basis.yukihon.system.quizattempt.entity.QuizAttempt;
+import com.hoang.basis.yukihon.system.quizattempt.repository.QuizAttemptRepository;
 import com.hoang.basis.yukihon.system.user.entity.RoleName;
 import com.hoang.basis.yukihon.system.user.entity.User;
 import com.hoang.basis.yukihon.system.user.repository.UserRepository;
@@ -30,7 +36,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -43,6 +51,7 @@ public class AdminService {
     private final VocabularyRepository vocabularyRepository;
     private final GrammarRepository grammarRepository;
     private final QuizRepository quizRepository;
+    private final QuizAttemptRepository quizAttemptRepository;
 
     /**
      * Get all users with pagination
@@ -190,6 +199,118 @@ public class AdminService {
                 .build();
     }
 
+    public QuizAnalyticsDto getQuizAnalytics() {
+        log.info("Fetching admin quiz analytics");
+
+        List<QuizAttempt> attempts = quizAttemptRepository.findAll();
+        if (attempts.isEmpty()) {
+            return QuizAnalyticsDto.builder()
+                    .totalAttempts(0)
+                    .correctAttempts(0)
+                    .wrongAttempts(0)
+                    .overallAccuracy(0)
+                    .mostCommonPattern(null)
+                    .mostMissedQuestions(List.of())
+                    .patternBreakdown(List.of())
+                    .cohortAccuracy(List.of())
+                    .build();
+        }
+
+        Map<Long, Quiz> quizById = quizRepository.findAllById(attempts.stream()
+                        .map(QuizAttempt::getQuizId)
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toSet()))
+                .stream()
+                .collect(Collectors.toMap(Quiz::getId, Function.identity()));
+
+        Map<Long, QuizQuestionAccumulator> questionMap = new LinkedHashMap<>();
+        Map<String, Long> patternMap = new LinkedHashMap<>();
+        Map<String, CohortAccumulator> cohortMap = new LinkedHashMap<>();
+
+        long correctAttempts = 0;
+        for (QuizAttempt attempt : attempts) {
+            Quiz quiz = quizById.get(attempt.getQuizId());
+            if (attempt.isCorrect()) {
+                correctAttempts++;
+            }
+
+            questionMap.computeIfAbsent(attempt.getQuizId(), quizId -> new QuizQuestionAccumulator(quizId, quiz))
+                    .record(attempt);
+
+            if (!attempt.isCorrect() && attempt.getMistakePattern() != null && !attempt.getMistakePattern().isBlank()) {
+                String pattern = attempt.getMistakePattern().trim().toLowerCase(Locale.ROOT);
+                patternMap.merge(pattern, 1L, Long::sum);
+            }
+
+            recordCohort(cohortMap, "JLPT", normalizeLevel(quiz != null ? quiz.getJlptLevel() : null), attempt.isCorrect());
+            recordCohort(cohortMap, "DIFFICULTY", normalizeCohortValue(quiz != null ? quiz.getDifficultyLevel() : null), attempt.isCorrect());
+        }
+
+        long totalAttempts = attempts.size();
+        long wrongAttempts = totalAttempts - correctAttempts;
+
+        List<QuizPatternAnalyticsDto> patternBreakdown = patternMap.entrySet().stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+                .map(entry -> QuizPatternAnalyticsDto.builder()
+                        .pattern(entry.getKey())
+                        .wrongAttempts(entry.getValue())
+                        .build())
+                .collect(Collectors.toList());
+
+        List<QuizQuestionAnalyticsDto> mostMissedQuestions = questionMap.values().stream()
+                .filter(item -> item.wrongAttempts > 0)
+                .sorted((left, right) -> {
+                    int wrongCompare = Long.compare(right.wrongAttempts, left.wrongAttempts);
+                    return wrongCompare != 0 ? wrongCompare : Long.compare(right.totalAttempts, left.totalAttempts);
+                })
+                .limit(10)
+                .map(QuizQuestionAccumulator::toDto)
+                .collect(Collectors.toList());
+
+        List<QuizCohortAccuracyDto> cohortAccuracy = cohortMap.values().stream()
+                .map(CohortAccumulator::toDto)
+                .collect(Collectors.toList());
+
+        return QuizAnalyticsDto.builder()
+                .totalAttempts(totalAttempts)
+                .correctAttempts(correctAttempts)
+                .wrongAttempts(wrongAttempts)
+                .overallAccuracy(percentage(correctAttempts, totalAttempts))
+                .mostCommonPattern(patternBreakdown.isEmpty() ? null : patternBreakdown.get(0).getPattern())
+                .mostMissedQuestions(mostMissedQuestions)
+                .patternBreakdown(patternBreakdown)
+                .cohortAccuracy(cohortAccuracy)
+                .build();
+    }
+
+    public String exportQuizAnalyticsCsv() {
+        QuizAnalyticsDto analytics = getQuizAnalytics();
+        StringBuilder csv = new StringBuilder();
+        csv.append("quizId,title,jlptLevel,difficultyLevel,quizType,totalAttempts,wrongAttempts,accuracyRate,topPattern\n");
+
+        analytics.getMostMissedQuestions().forEach(item -> csv
+                .append(item.getQuizId() != null ? item.getQuizId() : "")
+                .append(',')
+                .append(csvEscape(item.getTitle()))
+                .append(',')
+                .append(csvEscape(item.getJlptLevel()))
+                .append(',')
+                .append(csvEscape(item.getDifficultyLevel()))
+                .append(',')
+                .append(csvEscape(item.getQuizType()))
+                .append(',')
+                .append(item.getTotalAttempts())
+                .append(',')
+                .append(item.getWrongAttempts())
+                .append(',')
+                .append(String.format(Locale.ROOT, "%.2f", item.getAccuracyRate()))
+                .append(',')
+                .append(csvEscape(item.getTopPattern()))
+                .append('\n'));
+
+        return csv.toString();
+    }
+
     /**
      * Search users by email or display name
      */
@@ -254,6 +375,35 @@ public class AdminService {
         return UserManagementDto.fromEntity(updated);
     }
 
+    private void recordCohort(Map<String, CohortAccumulator> cohortMap, String dimension, String value, boolean correct) {
+        String key = dimension + ":" + value;
+        cohortMap.computeIfAbsent(key, ignored -> new CohortAccumulator(dimension, value))
+                .record(correct);
+    }
+
+    private double percentage(long numerator, long denominator) {
+        if (denominator <= 0) {
+            return 0;
+        }
+        return Math.round((numerator * 10000.0 / denominator)) / 100.0;
+    }
+
+    private String normalizeCohortValue(String value) {
+        if (value == null || value.isBlank()) {
+            return "OTHER";
+        }
+        return value.trim().toUpperCase(Locale.ROOT);
+    }
+
+    private String csvEscape(String value) {
+        if (value == null) {
+            return "";
+        }
+
+        String escaped = value.replace("\"", "\"\"");
+        return "\"" + escaped + "\"";
+    }
+
     private User findUserByIdOrThrow(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
@@ -285,6 +435,81 @@ public class AdminService {
 
         private long total() {
             return lessons + vocabulary + grammar + quizzes;
+        }
+    }
+
+    private final class QuizQuestionAccumulator {
+        private final Long quizId;
+        private final Quiz quiz;
+        private final Map<String, Long> patternCounts = new LinkedHashMap<>();
+        private long totalAttempts;
+        private long correctAttempts;
+        private long wrongAttempts;
+
+        private QuizQuestionAccumulator(Long quizId, Quiz quiz) {
+            this.quizId = quizId;
+            this.quiz = quiz;
+        }
+
+        private void record(QuizAttempt attempt) {
+            totalAttempts++;
+            if (attempt.isCorrect()) {
+                correctAttempts++;
+                return;
+            }
+
+            wrongAttempts++;
+            if (attempt.getMistakePattern() != null && !attempt.getMistakePattern().isBlank()) {
+                patternCounts.merge(attempt.getMistakePattern().trim().toLowerCase(Locale.ROOT), 1L, Long::sum);
+            }
+        }
+
+        private QuizQuestionAnalyticsDto toDto() {
+            String topPattern = patternCounts.entrySet().stream()
+                    .max(Map.Entry.comparingByValue())
+                    .map(Map.Entry::getKey)
+                    .orElse(null);
+
+            return QuizQuestionAnalyticsDto.builder()
+                    .quizId(quizId)
+                    .title(quiz != null ? quiz.getTitle() : "Quiz #" + quizId)
+                    .jlptLevel(quiz != null ? normalizeLevel(quiz.getJlptLevel()) : "OTHER")
+                    .difficultyLevel(quiz != null ? normalizeCohortValue(quiz.getDifficultyLevel()) : "OTHER")
+                    .quizType(quiz != null && quiz.getQuizType() != null ? quiz.getQuizType().name() : "UNKNOWN")
+                    .totalAttempts(totalAttempts)
+                    .wrongAttempts(wrongAttempts)
+                    .accuracyRate(percentage(correctAttempts, totalAttempts))
+                    .topPattern(topPattern)
+                    .build();
+        }
+    }
+
+    private final class CohortAccumulator {
+        private final String dimension;
+        private final String value;
+        private long totalAttempts;
+        private long correctAttempts;
+
+        private CohortAccumulator(String dimension, String value) {
+            this.dimension = dimension;
+            this.value = value;
+        }
+
+        private void record(boolean correct) {
+            totalAttempts++;
+            if (correct) {
+                correctAttempts++;
+            }
+        }
+
+        private QuizCohortAccuracyDto toDto() {
+            return QuizCohortAccuracyDto.builder()
+                    .dimension(dimension)
+                    .value(value)
+                    .totalAttempts(totalAttempts)
+                    .correctAttempts(correctAttempts)
+                    .accuracyRate(percentage(correctAttempts, totalAttempts))
+                    .build();
         }
     }
 }
