@@ -13,6 +13,7 @@ import com.hoang.basis.yukihon.system.userprogress.entity.UserProgress;
 import com.hoang.basis.yukihon.system.userprogress.repository.UserProgressRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -68,7 +69,13 @@ public class QuizAttemptService {
 
     @Transactional(readOnly = true)
     public List<QuizAttemptDto> getRecentAttempts(Long userId) {
-        return quizAttemptRepository.findTop20ByUserIdOrderByAttemptedAtDesc(userId).stream()
+        return getRecentAttempts(userId, 20, null);
+    }
+
+    @Transactional(readOnly = true)
+    public List<QuizAttemptDto> getRecentAttempts(Long userId, Integer limit, Boolean correct) {
+        int safeLimit = Math.max(1, Math.min(limit != null ? limit : 20, 100));
+        return quizAttemptRepository.findRecentByUserIdAndCorrect(userId, correct, PageRequest.of(0, safeLimit)).stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }

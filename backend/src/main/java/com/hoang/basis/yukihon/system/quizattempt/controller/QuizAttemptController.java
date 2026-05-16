@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -41,10 +42,12 @@ public class QuizAttemptController {
 
     @GetMapping
     public ResponseEntity<List<QuizAttemptDto>> getRecentAttempts(
-            @AuthenticationPrincipal UserDetails userDetails
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(defaultValue = "20") Integer limit,
+            @RequestParam(required = false) Boolean correct
     ) {
         Long userId = resolveCurrentUserId(userDetails);
-        return ResponseEntity.ok(quizAttemptService.getRecentAttempts(userId));
+        return ResponseEntity.ok(quizAttemptService.getRecentAttempts(userId, limit, correct));
     }
 
     private Long resolveCurrentUserId(UserDetails userDetails) {

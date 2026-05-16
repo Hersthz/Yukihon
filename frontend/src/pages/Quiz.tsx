@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { CheckCircle2, Filter, Headphones, Image as ImageIcon, RotateCcw, Target, Trophy, XCircle, Zap } from "lucide-react";
+import { CheckCircle2, Clock3, Filter, Headphones, Image as ImageIcon, RotateCcw, Target, Trophy, XCircle, Zap } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -48,6 +48,45 @@ const parseQuizOptions = (value?: string) => {
 
 const normalizeAnswer = (value?: string) => (value || "").trim().toLowerCase();
 
+const formatAttemptTime = (value?: string) => {
+  if (!value) {
+    return "Just now";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "Just now";
+  }
+
+  return new Intl.DateTimeFormat("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+};
+
+const formatPattern = (value?: string) => {
+  if (!value) {
+    return "Clean";
+  }
+
+  return value
+    .split(/[-_\s]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+};
+
+type PracticeMode = "quick" | "missed";
+
+interface PracticeSummary {
+  mode: PracticeMode;
+  total: number;
+  correct: number;
+  weakestPattern?: string;
+}
+
 const difficultyTone: Record<string, string> = {
   BEGINNER: "border-emerald-200 bg-emerald-50 text-emerald-700",
   INTERMEDIATE: "border-amber-200 bg-amber-50 text-amber-700",
@@ -63,6 +102,12 @@ const Quiz = () => {
   const [isAnswered, setIsAnswered] = useState(false);
   const [attemptResult, setAttemptResult] = useState<QuizAttemptResponse | null>(null);
   const [sessionResults, setSessionResults] = useState({ total: 0, correct: 0 });
+  const [practiceMode, setPracticeMode] = useState<PracticeMode | null>(null);
+  const [practiceQueue, setPracticeQueue] = useState<QuizItem[]>([]);
+  const [practiceIndex, setPracticeIndex] = useState(0);
+  const [practiceAttempts, setPracticeAttempts] = useState<QuizAttemptResponse[]>([]);
+  const [practiceSummary, setPracticeSummary] = useState<PracticeSummary | null>(null);
+  const [historyTab, setHistoryTab] = useState<"wrong" | "all">("wrong");
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { data: mistakeDna } = useMistakeDna();
@@ -70,6 +115,16 @@ const Quiz = () => {
   const { data: quizzes = [], isLoading } = useQuery({
     queryKey: ["quizzes"],
     queryFn: () => quizApi.getAll<QuizItem[]>(),
+  });
+
+  const { data: recentAttempts = [], isLoading: isHistoryLoading } = useQuery({
+    queryKey: ["quiz-attempts"],
+    queryFn: () => quizApi.getRecentAttempts({ limit: 50 }),
+  });
+
+  const { data: recentWrongAttempts = [] } = useQuery({
+    queryKey: ["quiz-attempts", "wrong"],
+    queryFn: () => quizApi.getRecentAttempts({ correct: false, limit: 50 }),
   });
 
   const filteredQuizzes = useMemo(() => {
@@ -88,6 +143,35 @@ const Quiz = () => {
     [filteredQuizzes.length, quizzes.length]
   );
 
+  const quizById = useMemo(() => {
+    const next = new Map<number, QuizItem>();
+    quizzes.forEach((quiz: QuizItem) => next.set(quiz.id, quiz));
+    return next;
+  }, [quizzes]);
+
+  const quizTitleById = useMemo(() => {
+    const next = new Map<number, string>();
+    quizzes.forEach((quiz: QuizItem) => next.set(quiz.id, quiz.title));
+    return next;
+  }, [quizzes]);
+
+  const latestAttempts = useMemo(() => recentAttempts.slice(0, 5), [recentAttempts]);
+  const wrongAttempts = useMemo(() => recentWrongAttempts, [recentWrongAttempts]);
+  const visibleHistoryAttempts = historyTab === "wrong" ? wrongAttempts.slice(0, 5) : latestAttempts;
+  const missedReviewQueue = useMemo(() => {
+    const seen = new Set<number>();
+    return wrongAttempts
+      .map((attempt) => quizById.get(attempt.quizId))
+      .filter((quiz): quiz is QuizItem => {
+        if (!quiz || seen.has(quiz.id)) {
+          return false;
+        }
+        seen.add(quiz.id);
+        return true;
+      })
+      .slice(0, 10);
+  }, [quizById, wrongAttempts]);
+
   const activeOptions = useMemo(() => parseQuizOptions(activeQuiz?.options), [activeQuiz?.options]);
   const answerValue = activeOptions.length > 0 ? selectedAnswer : typedAnswer;
   const isCorrect = normalizeAnswer(answerValue) === normalizeAnswer(activeQuiz?.correctAnswer);
@@ -98,9 +182,11 @@ const Quiz = () => {
   const activeQuizIndex = activeQuiz
     ? filteredQuizzes.findIndex((quiz: QuizItem) => quiz.id === activeQuiz.id)
     : -1;
-  const nextQuiz = activeQuizIndex >= 0
+  const nextPracticeQuiz = practiceQueue.length > 0 ? practiceQueue[practiceIndex + 1] ?? null : null;
+  const nextListQuiz = activeQuizIndex >= 0
     ? filteredQuizzes[activeQuizIndex + 1] ?? null
     : null;
+  const nextQuiz = practiceQueue.length > 0 ? nextPracticeQuiz : nextListQuiz;
 
   const resetAttempt = () => {
     setSelectedAnswer("");
@@ -110,8 +196,67 @@ const Quiz = () => {
   };
 
   const startQuiz = (quiz: QuizItem) => {
+    setPracticeMode(null);
+    setPracticeQueue([]);
+    setPracticeIndex(0);
+    setPracticeAttempts([]);
+    setPracticeSummary(null);
     setActiveQuiz(quiz);
     resetAttempt();
+  };
+
+  const buildPracticeSummary = (attempts: QuizAttemptResponse[], mode: PracticeMode): PracticeSummary => {
+    const wrongByPattern = attempts
+      .filter((attempt) => !attempt.correct)
+      .reduce<Record<string, number>>((acc, attempt) => {
+        const key = attempt.mistakePattern || "unknown";
+        acc[key] = (acc[key] || 0) + 1;
+        return acc;
+      }, {});
+
+    const weakestPattern = Object.entries(wrongByPattern)
+      .sort((left, right) => right[1] - left[1])
+      .map(([pattern]) => pattern)[0];
+
+    return {
+      mode,
+      total: attempts.length,
+      correct: attempts.filter((attempt) => attempt.correct).length,
+      weakestPattern,
+    };
+  };
+
+  const startPracticeQueue = (queue: QuizItem[], mode: PracticeMode) => {
+    if (queue.length === 0) {
+      toast({
+        title: mode === "quick" ? "Chưa có quiz để luyện nhanh" : "Chưa có câu sai để luyện lại",
+        description: mode === "quick" ? "Thử nới bộ lọc hoặc thêm quiz mới." : "Làm sai một vài câu trước rồi quay lại luyện lại.",
+      });
+      return;
+    }
+
+    setPracticeMode(mode);
+    setPracticeQueue(queue.slice(0, 10));
+    setPracticeIndex(0);
+    setPracticeAttempts([]);
+    setPracticeSummary(null);
+    setActiveQuiz(queue[0]);
+    resetAttempt();
+  };
+
+  const goToNextQuiz = () => {
+    if (!nextQuiz) {
+      return;
+    }
+
+    if (practiceQueue.length > 0) {
+      setPracticeIndex((current) => current + 1);
+      setActiveQuiz(nextQuiz);
+      resetAttempt();
+      return;
+    }
+
+    startQuiz(nextQuiz);
   };
 
   const { mutate: recordAttempt, isPending: isSavingAttempt } = useMutation({
@@ -123,8 +268,17 @@ const Quiz = () => {
         total: current.total + 1,
         correct: current.correct + (attempt.correct ? 1 : 0),
       }));
+      if (practiceMode && practiceQueue.length > 0) {
+        const nextAttempts = [...practiceAttempts, attempt];
+        setPracticeAttempts(nextAttempts);
+        if (practiceIndex >= practiceQueue.length - 1) {
+          setPracticeSummary(buildPracticeSummary(nextAttempts, practiceMode));
+        }
+      }
       void queryClient.invalidateQueries({ queryKey: ["mistake-dna"] });
       void queryClient.invalidateQueries({ queryKey: ["progress"] });
+      void queryClient.invalidateQueries({ queryKey: ["quiz-attempts"] });
+      void queryClient.invalidateQueries({ queryKey: ["quiz-attempts", "wrong"] });
     },
     onError: () => {
       toast({
@@ -167,14 +321,14 @@ const Quiz = () => {
           checkAnswer();
         } else if (isAnswered && nextQuiz) {
           event.preventDefault();
-          startQuiz(nextQuiz);
+          goToNextQuiz();
         }
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [activeOptions, activeQuiz, answerValue, checkAnswer, isAnswered, isSavingAttempt, nextQuiz]);
+  }, [activeOptions, activeQuiz, answerValue, checkAnswer, goToNextQuiz, isAnswered, isSavingAttempt, nextQuiz]);
 
   return (
     <DashboardLayout>
@@ -184,6 +338,16 @@ const Quiz = () => {
           title="Quiz"
           description="Chuyển về dạng danh mục gọn hơn để bạn lọc nhanh và nhìn nhiều bộ quiz trong một lượt."
           eyebrow="Practice"
+          action={
+            <Button
+              className="rounded-2xl bg-amber-500 text-white hover:bg-amber-400"
+              disabled={filteredQuizzes.length === 0}
+              onClick={() => startPracticeQueue(filteredQuizzes.slice(0, 10), "quick")}
+            >
+              <Zap className="mr-2 h-4 w-4" />
+              Luyện nhanh 10 câu
+            </Button>
+          }
         />
 
         <div className="mb-4 grid gap-3 md:grid-cols-3">
@@ -262,6 +426,43 @@ const Quiz = () => {
           </div>
         </PageSection>
 
+        {practiceSummary && (
+          <PageSection
+            className="mb-4"
+            title={practiceSummary.mode === "quick" ? "Tổng kết luyện nhanh" : "Tổng kết luyện lại câu sai"}
+            description="Điểm tổng và pattern yếu nhất của phiên vừa làm."
+            action={
+              <Button
+                variant="outline"
+                className="rounded-2xl"
+                onClick={() => startPracticeQueue(practiceSummary.mode === "quick" ? filteredQuizzes.slice(0, 10) : missedReviewQueue, practiceSummary.mode)}
+              >
+                <RotateCcw className="mr-2 h-4 w-4" />
+                Luyện lại phiên này
+              </Button>
+            }
+          >
+            <div className="grid gap-3 md:grid-cols-3">
+              <div className="rounded-[20px] border border-border bg-background p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Điểm tổng</p>
+                <p className="mt-2 text-3xl font-semibold text-foreground">
+                  {practiceSummary.correct}/{practiceSummary.total}
+                </p>
+              </div>
+              <div className="rounded-[20px] border border-border bg-background p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Accuracy</p>
+                <p className="mt-2 text-3xl font-semibold text-foreground">
+                  {practiceSummary.total ? Math.round((practiceSummary.correct / practiceSummary.total) * 100) : 0}%
+                </p>
+              </div>
+              <div className="rounded-[20px] border border-border bg-background p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Pattern yếu nhất</p>
+                <p className="mt-2 text-2xl font-semibold text-foreground">{formatPattern(practiceSummary.weakestPattern)}</p>
+              </div>
+            </div>
+          </PageSection>
+        )}
+
         {activeQuiz && (
           <PageSection
             className="mb-4"
@@ -285,6 +486,11 @@ const Quiz = () => {
                   <span className="rounded-full border border-violet-200 bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700">
                     {activeQuiz.quizType.replaceAll("_", " ")}
                   </span>
+                  {practiceQueue.length > 0 && (
+                    <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
+                      Câu {practiceIndex + 1}/{practiceQueue.length}
+                    </span>
+                  )}
                 </div>
 
                 {activeQuiz.imageUrl && (
@@ -381,7 +587,7 @@ const Quiz = () => {
                     Làm lại
                   </Button>
                   {isAnswered && nextQuiz && (
-                    <Button variant="outline" className="rounded-2xl" onClick={() => startQuiz(nextQuiz)}>
+                    <Button variant="outline" className="rounded-2xl" onClick={goToNextQuiz}>
                       Bài tiếp theo
                     </Button>
                   )}
@@ -425,6 +631,91 @@ const Quiz = () => {
             </div>
           </PageSection>
         )}
+
+        <PageSection
+          className="mb-4"
+          title="Quiz history"
+          description="5 lần làm gần nhất, gồm đúng/sai, pattern lỗi và thời điểm làm bài."
+          action={
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant={historyTab === "wrong" ? "default" : "outline"}
+                className="rounded-2xl"
+                onClick={() => setHistoryTab("wrong")}
+              >
+                Câu sai
+              </Button>
+              <Button
+                variant={historyTab === "all" ? "default" : "outline"}
+                className="rounded-2xl"
+                onClick={() => setHistoryTab("all")}
+              >
+                Tất cả
+              </Button>
+              <Button
+                className="rounded-2xl bg-rose-500 text-white hover:bg-rose-400"
+                disabled={missedReviewQueue.length === 0}
+                onClick={() => startPracticeQueue(missedReviewQueue, "missed")}
+              >
+                <RotateCcw className="mr-2 h-4 w-4" />
+                Luyện lại câu sai
+              </Button>
+            </div>
+          }
+        >
+          {isHistoryLoading ? (
+            <div className="grid gap-3 md:grid-cols-5">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <div key={index} className="h-28 animate-pulse rounded-[18px] border border-border bg-muted" />
+              ))}
+            </div>
+          ) : visibleHistoryAttempts.length === 0 ? (
+            <div className="rounded-[20px] border border-dashed border-border bg-muted px-4 py-8 text-center">
+              <p className="text-sm font-semibold text-foreground">Chưa có lịch sử quiz</p>
+              <p className="mt-1 text-sm text-muted-foreground">Làm một câu quiz để bắt đầu ghi lại tiến độ thật.</p>
+            </div>
+          ) : (
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+              {visibleHistoryAttempts.map((attempt) => {
+                const quizTitle = quizTitleById.get(attempt.quizId) || `Quiz #${attempt.quizId}`;
+
+                return (
+                  <div
+                    key={attempt.id}
+                    className={cn(
+                      "rounded-[18px] border p-4",
+                      attempt.correct ? "border-emerald-200 bg-emerald-50/80" : "border-rose-200 bg-rose-50/80"
+                    )}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <span
+                        className={cn(
+                          "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold",
+                          attempt.correct ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"
+                        )}
+                      >
+                        {attempt.correct ? <CheckCircle2 className="h-3.5 w-3.5" /> : <XCircle className="h-3.5 w-3.5" />}
+                        {attempt.correct ? "Đúng" : "Sai"}
+                      </span>
+                      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                        <Clock3 className="h-3.5 w-3.5" />
+                        {formatAttemptTime(attempt.attemptedAt)}
+                      </span>
+                    </div>
+
+                    <p className="mt-3 line-clamp-2 text-sm font-semibold leading-5 text-foreground">{quizTitle}</p>
+                    <p className="mt-2 truncate text-xs text-muted-foreground">
+                      Answer: <span className="font-semibold text-foreground">{attempt.answer}</span>
+                    </p>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Pattern: <span className="font-semibold text-foreground">{formatPattern(attempt.mistakePattern)}</span>
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </PageSection>
 
         <PageSection title="Danh sách quiz" description="Card thấp hơn và action rõ hơn để đỡ ngột ngạt khi danh sách dài.">
           {isLoading ? (
