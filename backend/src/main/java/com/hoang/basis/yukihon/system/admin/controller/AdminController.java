@@ -1,6 +1,7 @@
 package com.hoang.basis.yukihon.system.admin.controller;
 
 import com.hoang.basis.yukihon.system.admin.dto.ContentOverviewDto;
+import com.hoang.basis.yukihon.system.admin.dto.QuizAnalyticsDto;
 import com.hoang.basis.yukihon.system.admin.dto.SystemStatsDto;
 import com.hoang.basis.yukihon.system.admin.dto.UpdateUserRolesRequest;
 import com.hoang.basis.yukihon.system.admin.dto.UpdateUserStatusRequest;
@@ -13,6 +14,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -133,5 +136,22 @@ public class AdminController {
     public ResponseEntity<ContentOverviewDto> getContentOverview() {
         log.info("Admin request: Get content overview");
         return ResponseEntity.ok(adminService.getContentOverview());
+    }
+
+    @GetMapping("/quiz-analytics")
+    @PreAuthorize("hasAuthority('ADMIN_DASHBOARD_READ')")
+    public ResponseEntity<QuizAnalyticsDto> getQuizAnalytics() {
+        log.info("Admin request: Get quiz analytics");
+        return ResponseEntity.ok(adminService.getQuizAnalytics());
+    }
+
+    @GetMapping(value = "/quiz-analytics/export", produces = "text/csv")
+    @PreAuthorize("hasAuthority('ADMIN_DASHBOARD_READ')")
+    public ResponseEntity<String> exportQuizAnalytics() {
+        log.info("Admin request: Export quiz analytics CSV");
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=quiz-attempt-analytics.csv")
+                .contentType(MediaType.parseMediaType("text/csv; charset=UTF-8"))
+                .body(adminService.exportQuizAnalyticsCsv());
     }
 }
