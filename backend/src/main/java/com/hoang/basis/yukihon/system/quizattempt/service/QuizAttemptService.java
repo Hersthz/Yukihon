@@ -18,9 +18,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -48,7 +50,7 @@ public class QuizAttemptService {
                 .orElseThrow(() -> new ResourceNotFoundException("Quiz not found with id: " + request.getQuizId()));
 
         String answer = request.getAnswer().trim();
-        boolean correct = isCorrect(answer, quiz.getCorrectAnswer());
+        boolean correct = isCorrect(answer, quiz.getCorrectAnswer(), quiz.getQuizType());
         String mistakePattern = correct ? null : inferMistakePattern(quiz);
         int score = correct ? MAX_SCORE : 0;
 
@@ -80,8 +82,23 @@ public class QuizAttemptService {
                 .collect(Collectors.toList());
     }
 
-    private boolean isCorrect(String submittedAnswer, String correctAnswer) {
+    private boolean isCorrect(String submittedAnswer, String correctAnswer, Quiz.QuizType quizType) {
+        // MATCHING answers are unordered sets of pairs ("A->1, B->2"); compare order-insensitively.
+        if (quizType == Quiz.QuizType.MATCHING) {
+            return tokenSet(submittedAnswer).equals(tokenSet(correctAnswer));
+        }
         return normalizeAnswer(submittedAnswer).equals(normalizeAnswer(correctAnswer));
+    }
+
+    private Set<String> tokenSet(String value) {
+        String normalized = normalizeAnswer(value);
+        if (normalized.isEmpty()) {
+            return Set.of();
+        }
+        return Arrays.stream(normalized.split("[,;|/]+"))
+                .map(String::trim)
+                .filter(token -> !token.isEmpty())
+                .collect(Collectors.toCollection(TreeSet::new));
     }
 
     private String normalizeAnswer(String value) {

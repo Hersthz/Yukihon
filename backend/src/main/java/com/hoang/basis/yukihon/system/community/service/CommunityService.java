@@ -20,6 +20,7 @@ import com.hoang.basis.yukihon.system.community.repository.PostLikeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -51,8 +52,17 @@ public class CommunityService {
 
     // ==================== POSTS ====================
 
+    /**
+     * The post-listing repository methods already define ORDER BY created_at desc (via method name
+     * or JPQL). If the incoming Pageable also carries a created_at sort, Hibernate emits a duplicate
+     * ORDER BY column and SQL Server rejects it (error 169). Drop the sort and let the query own it.
+     */
+    private Pageable withoutSort(Pageable pageable) {
+        return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+    }
+
     public Page<PostDto> getAllPosts(Long currentUserId, Pageable pageable) {
-        Page<CommunityPost> posts = postRepository.findAllByOrderByCreatedAtDesc(pageable);
+        Page<CommunityPost> posts = postRepository.findAllByOrderByCreatedAtDesc(withoutSort(pageable));
         Set<Long> likedPostIds = findLikedPostIds(posts, currentUserId);
         Set<Long> bookmarkedPostIds = findBookmarkedPostIds(posts, currentUserId);
 
@@ -64,7 +74,7 @@ public class CommunityService {
     }
 
     public Page<PostDto> getPostsByCategory(String category, Long currentUserId, Pageable pageable) {
-        Page<CommunityPost> posts = postRepository.findByCategoryOrderByCreatedAtDesc(category, pageable);
+        Page<CommunityPost> posts = postRepository.findByCategoryOrderByCreatedAtDesc(category, withoutSort(pageable));
         Set<Long> likedPostIds = findLikedPostIds(posts, currentUserId);
         Set<Long> bookmarkedPostIds = findBookmarkedPostIds(posts, currentUserId);
 
@@ -81,8 +91,8 @@ public class CommunityService {
         String normalizedSearch = normalizeOptional(search);
 
         Page<CommunityPost> posts = bookmarkedOnly
-                ? postRepository.findBookmarkedPostsByUserId(currentUserId, normalizedCategory, normalizedJlptLevel, normalizedSearch, pageable)
-                : postRepository.searchPosts(normalizedCategory, normalizedJlptLevel, normalizedSearch, pageable);
+                ? postRepository.findBookmarkedPostsByUserId(currentUserId, normalizedCategory, normalizedJlptLevel, normalizedSearch, withoutSort(pageable))
+                : postRepository.searchPosts(normalizedCategory, normalizedJlptLevel, normalizedSearch, withoutSort(pageable));
         Set<Long> likedPostIds = findLikedPostIds(posts, currentUserId);
         Set<Long> bookmarkedPostIds = findBookmarkedPostIds(posts, currentUserId);
 
@@ -94,7 +104,7 @@ public class CommunityService {
     }
 
     public Page<PostDto> getPostsByUser(Long userId, Long currentUserId, Pageable pageable) {
-        Page<CommunityPost> posts = postRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable);
+        Page<CommunityPost> posts = postRepository.findByUserIdOrderByCreatedAtDesc(userId, withoutSort(pageable));
         Set<Long> likedPostIds = findLikedPostIds(posts, currentUserId);
         Set<Long> bookmarkedPostIds = findBookmarkedPostIds(posts, currentUserId);
 

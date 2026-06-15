@@ -236,7 +236,7 @@ const LessonDetail = () => {
       const score = Math.round((correctCount / relatedQuizzes.length) * 100);
       const passed = score >= 70;
 
-      const analyticsEvents: LearningAnalyticsEventPayload[] = relatedQuizzes.flatMap((quiz) => {
+      const analyticsEvents: LearningAnalyticsEventPayload[] = relatedQuizzes.flatMap((quiz): LearningAnalyticsEventPayload[] => {
         const selectedAnswer = quizAnswers[quiz.id];
         const isCorrect = selectedAnswer === quiz.correctAnswer;
         const existing = quizProgressByQuizId.get(quiz.id);

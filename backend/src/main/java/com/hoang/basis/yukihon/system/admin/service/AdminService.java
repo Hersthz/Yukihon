@@ -83,11 +83,23 @@ public class AdminService {
                 .map(RoleName::valueOf)
                 .collect(Collectors.toSet());
 
+        if (!roles.contains(RoleName.ADMIN)) {
+            ensureNotRemovingLastAdmin(user);
+        }
         user.setRoles(roles);
         User updated = userRepository.save(user);
-        
+
         log.info("Successfully updated roles for user {}", userId);
         return UserManagementDto.fromEntity(updated);
+    }
+
+    /** Guards against the system being left with zero administrators. */
+    private void ensureNotRemovingLastAdmin(User user) {
+        if (user.getRoles() != null
+                && user.getRoles().contains(RoleName.ADMIN)
+                && userRepository.countUsersByRole(RoleName.ADMIN) <= 1) {
+            throw new IllegalArgumentException("Cannot remove or disable the last administrator");
+        }
     }
 
     /**
@@ -99,6 +111,9 @@ public class AdminService {
         
         User user = findUserByIdOrThrow(userId);
 
+        if (Boolean.FALSE.equals(request.getEnabled())) {
+            ensureNotRemovingLastAdmin(user);
+        }
         user.setEnabled(request.getEnabled());
         User updated = userRepository.save(user);
         
@@ -115,9 +130,10 @@ public class AdminService {
         
         User user = findUserByIdOrThrow(userId);
 
+        ensureNotRemovingLastAdmin(user);
         user.setEnabled(false);
         userRepository.save(user);
-        
+
         log.info("Successfully disabled user {}", userId);
     }
 
@@ -362,6 +378,7 @@ public class AdminService {
         
         User user = findUserByIdOrThrow(userId);
 
+        ensureNotRemovingLastAdmin(user);
         Set<RoleName> roles = new HashSet<>(user.getRoles());
         roles.remove(RoleName.ADMIN);
         if (roles.isEmpty()) {

@@ -162,3 +162,7 @@ Thumbs.db
 # Bỏ qua thư mục IDE
 .vscode/
 .idea/
+
+# Bỏ qua file CLAUDE.md và ARCHITECTURE.md
+ARCHITECTURE.md
+CLAUDE.md

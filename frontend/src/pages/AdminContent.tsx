@@ -564,7 +564,7 @@ const AdminContent = () => {
                 <DynamicTable
                   columns={tableConfig[tab].columns}
                   data={tableConfig[tab].data}
-                  onEdit={(row) => void openEditor(tab, row as EditableItem)}
+                  onEdit={(row) => void openEditor(tab, row as unknown as EditableItem)}
                   onDelete={(id) => deleteItem(tab, id)}
                   loading={loading}
                   pageSize={8}

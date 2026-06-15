@@ -25,22 +25,22 @@ public class Vocabulary {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 100, unique = true)
+    @Column(nullable = false, unique = true, columnDefinition = "NVARCHAR(100)")
     private String kanji;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, columnDefinition = "NVARCHAR(100)")
     private String hiragana;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, columnDefinition = "NVARCHAR(100)")
     private String romaji;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(nullable = false, columnDefinition = "NVARCHAR(MAX)")
     private String meaning;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "NVARCHAR(MAX)")
     private String exampleSentenceJP;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "NVARCHAR(MAX)")
     private String exampleSentenceEN;
 
     @Column(length = 20)
@@ -49,7 +49,7 @@ public class Vocabulary {
     @Column(length = 5)
     private String jlptLevel; // N1, N2, N3, N4, N5
 
-    @Column(length = 500)
+    @Column(columnDefinition = "NVARCHAR(500)")
     private String additionalNotes;
 
     @Column(nullable = false, updatable = false)
