@@ -18,6 +18,7 @@ import {
   LogOut,
   Menu,
   Search,
+  Settings,
   Shield,
   Sparkles,
   Trophy,
@@ -106,6 +107,7 @@ const PAGE_META: Record<string, { eyebrow: string; title: string }> = {
   "/admin/content": { eyebrow: "Editorial workspace", title: "Content CMS" },
   "/admin/story-mode": { eyebrow: "Narrative CMS", title: "StoryMode Admin" },
   "/admin/creator-mode": { eyebrow: "Builder workspace", title: "Creator Studio" },
+  "/admin/app-settings": { eyebrow: "System config", title: "App Settings" },
 };
 
 const isItemActive = (pathname: string, itemPath: string) =>
@@ -311,6 +313,22 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
                   <Shield className="h-4 w-4" />
                 </div>
                 {!compact && <span className="text-sm font-semibold">Admin Panel</span>}
+              </Link>
+            )}
+            {isAdmin() && (
+              <Link
+                to="/admin/app-settings"
+                onClick={() => setMobileOpen(false)}
+                className={cn(
+                  "group flex items-center rounded-[1.2rem] transition-all duration-200",
+                  compact ? "justify-center px-2 py-2.5" : "gap-3 px-3 py-3",
+                  "bg-[#eef6ff] text-foreground hover:bg-[#e0efff]"
+                )}
+              >
+                <div className="flex h-11 w-11 items-center justify-center rounded-[1rem] bg-[#cfe6ff] text-foreground">
+                  <Settings className="h-4 w-4" />
+                </div>
+                {!compact && <span className="text-sm font-semibold">App Settings</span>}
               </Link>
             )}
           </div>

@@ -18,3 +18,5 @@ export * from "./learningAnalyticsApi";
 export * from "./kanjiSrsApi";
 export * from "./storyModeApi";
 export * from "./reminderApi";
+export * from "./metaApi";
+export * from "./autoCrudApi";
