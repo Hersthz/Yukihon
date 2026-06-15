@@ -24,6 +24,7 @@ import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Reflection-driven CRUD backed by {@link SimpleJpaRepository}. One service handles every
@@ -45,8 +46,8 @@ public class GenericCrudService {
     }
 
     @Transactional(readOnly = true)
-    public Page<Object> list(CrudDescriptor descriptor, String search, Pageable pageable) {
-        Specification<Object> spec = buildSpecification(descriptor, search);
+    public Page<Object> list(CrudDescriptor descriptor, String search, Map<String, String> filters, Pageable pageable) {
+        Specification<Object> spec = buildSpecification(descriptor, search, filters);
         return repositoryFor(descriptor).findAll(spec, pageable);
     }
 
@@ -113,7 +114,7 @@ public class GenericCrudService {
 
     // --- helpers -------------------------------------------------------------
 
-    private Specification<Object> buildSpecification(CrudDescriptor descriptor, String search) {
+    private Specification<Object> buildSpecification(CrudDescriptor descriptor, String search, Map<String, String> filters) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -130,8 +131,60 @@ public class GenericCrudService {
                 predicates.add(cb.or(ors.toArray(new Predicate[0])));
             }
 
+            if (filters != null) {
+                for (Map.Entry<String, String> entry : filters.entrySet()) {
+                    Object converted = convertFilterValue(descriptor.getEntityClass(), entry.getKey(), entry.getValue());
+                    if (converted != null) {
+                        predicates.add(cb.equal(root.get(entry.getKey()), converted));
+                    }
+                }
+            }
+
             return cb.and(predicates.toArray(new Predicate[0]));
         };
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private Object convertFilterValue(Class<?> entityClass, String field, String raw) {
+        if (raw == null) {
+            return null;
+        }
+        try {
+            Class<?> type = resolveFieldType(entityClass, field);
+            if (type == null || type == String.class) {
+                return raw;
+            }
+            if (type == Boolean.class || type == boolean.class) {
+                return Boolean.valueOf(raw);
+            }
+            if (type == Long.class || type == long.class) {
+                return Long.valueOf(raw);
+            }
+            if (type == Integer.class || type == int.class) {
+                return Integer.valueOf(raw);
+            }
+            if (type == Double.class || type == double.class) {
+                return Double.valueOf(raw);
+            }
+            if (type.isEnum()) {
+                return Enum.valueOf((Class<Enum>) type, raw);
+            }
+            return raw;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private Class<?> resolveFieldType(Class<?> entityClass, String field) {
+        Class<?> current = entityClass;
+        while (current != null && current != Object.class) {
+            try {
+                return current.getDeclaredField(field).getType();
+            } catch (NoSuchFieldException ignored) {
+                current = current.getSuperclass();
+            }
+        }
+        return null;
     }
 
     private void publish(CrudDescriptor descriptor, Object entity, EntityChangeType type) {

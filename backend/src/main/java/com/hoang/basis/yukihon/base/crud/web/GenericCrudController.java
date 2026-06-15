@@ -22,7 +22,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Single dispatch controller serving every {@code @AutoCrud} entity under {@code /api/auto/{resource}}.
@@ -43,15 +46,28 @@ public class GenericCrudController {
                 .orElseThrow(() -> new ResourceNotFoundException("Unknown resource: " + resource));
     }
 
+    private static final Set<String> RESERVED_PARAMS = Set.of("page", "size", "sort", "search");
+
     @GetMapping("/{resource}")
     public Page<Object> list(
             @PathVariable String resource,
             @RequestParam(required = false) String search,
+            @RequestParam(required = false) Map<String, String> allParams,
             Pageable pageable
     ) {
         CrudDescriptor descriptor = resolve(resource);
         permissionChecker.check(descriptor, Action.READ);
-        return service.list(descriptor, search, pageable)
+
+        Map<String, String> filters = new HashMap<>();
+        if (allParams != null) {
+            allParams.forEach((key, value) -> {
+                if (!RESERVED_PARAMS.contains(key) && descriptor.getFilterableFields().contains(key)) {
+                    filters.put(key, value);
+                }
+            });
+        }
+
+        return service.list(descriptor, search, filters, pageable)
                 .map(entity -> mapper.toResponse(descriptor, entity));
     }
 

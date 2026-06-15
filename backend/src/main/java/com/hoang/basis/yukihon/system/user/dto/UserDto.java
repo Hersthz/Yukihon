@@ -19,6 +19,7 @@ public class UserDto {
     private String email;
     private String displayName;
     private Set<String> roles;
+    private Set<String> permissions;
 
     public static UserDto fromEntity(User user) {
         return UserDto.builder()

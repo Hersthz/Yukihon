@@ -35,9 +35,23 @@ export interface EntityMetadata {
   fields: FieldMetadata[];
 }
 
+export interface AutoMenuItem {
+  title: string;
+  url: string;
+  icon: string;
+  order: number;
+  permission: string | null;
+}
+
+export interface AutoMenuGroup {
+  group: string;
+  items: AutoMenuItem[];
+}
+
 export const metaApi = {
   getEntities: () => apiClient.request<EntityMetadata[]>("/api/meta/entities"),
   getEntity: (name: string) => apiClient.request<EntityMetadata>(`/api/meta/entities/${encodeURIComponent(name)}`),
+  getMenu: () => apiClient.request<AutoMenuGroup[]>("/api/meta/menu"),
 };
 
 export default metaApi;

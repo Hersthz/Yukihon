@@ -4,6 +4,7 @@ import com.hoang.basis.yukihon.base.annotation.AuditEnabled;
 import com.hoang.basis.yukihon.base.annotation.AutoCrud;
 import com.hoang.basis.yukihon.base.annotation.EntityLabel;
 import com.hoang.basis.yukihon.base.annotation.FieldMeta;
+import com.hoang.basis.yukihon.base.annotation.Filterable;
 import com.hoang.basis.yukihon.base.annotation.ResourceMenu;
 import com.hoang.basis.yukihon.base.annotation.ResourcePermission;
 import com.hoang.basis.yukihon.base.annotation.Searchable;
@@ -36,6 +37,7 @@ import lombok.Setter;
 @EntityLabel(name = "App Setting", plural = "App Settings", description = "Key/value application configuration")
 @ResourceMenu(title = "App Settings", group = "System", icon = "settings", url = "/admin/app-settings", order = 90, permission = "APP_SETTING_READ")
 @Searchable(fields = {"settingKey", "category", "description"})
+@Filterable(fields = {"category"})
 @Sortable(fields = {"settingKey", "category", "createdAt", "updatedAt"})
 public class AppSetting extends BaseEntity {
 

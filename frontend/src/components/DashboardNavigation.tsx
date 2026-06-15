@@ -33,6 +33,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
+import { useAutoMenu } from "@/hooks/useAutoMenu";
 import { useRealtimeChat } from "@/hooks/community/useRealtimeChat";
 import { useReminders } from "@/hooks/use-reminders";
 
@@ -110,6 +111,17 @@ const PAGE_META: Record<string, { eyebrow: string; title: string }> = {
   "/admin/app-settings": { eyebrow: "System config", title: "App Settings" },
 };
 
+const AUTO_MENU_ICONS: Record<string, ElementType> = {
+  settings: Settings,
+  dashboard: LayoutDashboard,
+  users: Users,
+  trophy: Trophy,
+  book: BookOpen,
+  table: LayoutDashboard,
+};
+
+const resolveAutoIcon = (name: string): ElementType => AUTO_MENU_ICONS[name] ?? Settings;
+
 const isItemActive = (pathname: string, itemPath: string) =>
   pathname === itemPath || pathname.startsWith(`${itemPath}/`);
 
@@ -118,6 +130,7 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
   const location = useLocation();
   const navigate = useNavigate();
   const { isAdmin, isAuthenticated, logout, user } = useAuth();
+  const { data: autoMenu = [] } = useAutoMenu();
 
   const onCommunityPage = isItemActive(location.pathname, "/community");
 
@@ -259,6 +272,21 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
           </div>
         ))}
 
+        {autoMenu.map((group) => (
+          <div key={group.group} className="mb-5">
+            {!compact && (
+              <p className="px-3 pb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+                {group.group}
+              </p>
+            )}
+            <div className="space-y-1.5">
+              {group.items.map((item) =>
+                renderItem({ label: item.title, path: item.url, icon: resolveAutoIcon(item.icon) }, compact)
+              )}
+            </div>
+          </div>
+        ))}
+
         <div className="mb-4">
           {!compact && (
             <p className="px-3 pb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
@@ -313,22 +341,6 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
                   <Shield className="h-4 w-4" />
                 </div>
                 {!compact && <span className="text-sm font-semibold">Admin Panel</span>}
-              </Link>
-            )}
-            {isAdmin() && (
-              <Link
-                to="/admin/app-settings"
-                onClick={() => setMobileOpen(false)}
-                className={cn(
-                  "group flex items-center rounded-[1.2rem] transition-all duration-200",
-                  compact ? "justify-center px-2 py-2.5" : "gap-3 px-3 py-3",
-                  "bg-[#eef6ff] text-foreground hover:bg-[#e0efff]"
-                )}
-              >
-                <div className="flex h-11 w-11 items-center justify-center rounded-[1rem] bg-[#cfe6ff] text-foreground">
-                  <Settings className="h-4 w-4" />
-                </div>
-                {!compact && <span className="text-sm font-semibold">App Settings</span>}
               </Link>
             )}
           </div>

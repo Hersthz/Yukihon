@@ -14,6 +14,7 @@ interface AuthContextType {
   refreshUser: () => Promise<void>;
   isAdmin: () => boolean;
   hasRole: (role: string) => boolean;
+  hasPermission: (permission: string) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -128,6 +129,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return user?.roles?.includes(role.toUpperCase()) || false;
   }, [user]);
 
+  const hasPermission = useCallback((permission: string) => {
+    if (user?.roles?.includes("ADMIN")) {
+      return true;
+    }
+    return user?.permissions?.includes(permission) || false;
+  }, [user]);
+
   const value: AuthContextType = {
     user,
     isAuthenticated,
@@ -140,6 +148,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     refreshUser,
     isAdmin,
     hasRole,
+    hasPermission,
   };
 
   return (

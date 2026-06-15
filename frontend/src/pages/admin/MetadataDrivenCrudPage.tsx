@@ -43,6 +43,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import { metaApi, type EntityMetadata, type FieldMetadata } from "@/api/metaApi";
 import { createAutoCrudApi, type AutoCrudRow } from "@/api/autoCrudApi";
 
@@ -79,6 +80,7 @@ const coerce = (field: FieldMetadata, value: unknown): unknown => {
 
 const MetadataDrivenCrudPage = ({ entityName }: MetadataDrivenCrudPageProps) => {
   const { toast } = useToast();
+  const { hasPermission } = useAuth();
 
   const [meta, setMeta] = useState<EntityMetadata | null>(null);
   const [rows, setRows] = useState<AutoCrudRow[]>([]);
@@ -103,6 +105,17 @@ const MetadataDrivenCrudPage = ({ entityName }: MetadataDrivenCrudPageProps) => 
     () => (meta ? meta.fields.filter(isFormField) : []),
     [meta]
   );
+
+  const can = useCallback(
+    (action: string) => {
+      const prefix = meta?.permissionPrefix;
+      return !prefix || hasPermission(`${prefix}_${action}`);
+    },
+    [meta, hasPermission]
+  );
+  const canCreate = can("CREATE");
+  const canUpdate = can("UPDATE");
+  const canDelete = can("DELETE");
 
   // Load metadata once per entity.
   useEffect(() => {
@@ -296,9 +309,11 @@ const MetadataDrivenCrudPage = ({ entityName }: MetadataDrivenCrudPageProps) => 
                   </Button>
                 </div>
               )}
-              <Button onClick={openCreate} disabled={!meta}>
-                <Plus className="mr-1 h-4 w-4" /> Thêm
-              </Button>
+              {canCreate && (
+                <Button onClick={openCreate} disabled={!meta}>
+                  <Plus className="mr-1 h-4 w-4" /> Thêm
+                </Button>
+              )}
             </div>
           </CardHeader>
           <CardContent>
@@ -335,17 +350,21 @@ const MetadataDrivenCrudPage = ({ entityName }: MetadataDrivenCrudPageProps) => 
                         ))}
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-1">
-                            <Button variant="ghost" size="icon" onClick={() => openEdit(row)}>
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="text-destructive hover:text-destructive"
-                              onClick={() => setDeleteTarget(row)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                            {canUpdate && (
+                              <Button variant="ghost" size="icon" onClick={() => openEdit(row)}>
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                            )}
+                            {canDelete && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-destructive hover:text-destructive"
+                                onClick={() => setDeleteTarget(row)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>
