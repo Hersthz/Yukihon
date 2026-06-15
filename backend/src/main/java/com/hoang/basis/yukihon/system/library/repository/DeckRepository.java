@@ -8,4 +8,6 @@ import java.util.List;
 public interface DeckRepository extends JpaRepository<Deck, Long> {
 
     List<Deck> findByUserIdAndIsDeletedFalseOrderByUpdatedAtDesc(Long userId);
+
+    List<Deck> findByVisibilityAndIsDeletedFalseOrderByUpdatedAtDesc(String visibility);
 }

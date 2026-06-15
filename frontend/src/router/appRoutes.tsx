@@ -10,6 +10,8 @@ const AdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
 const AdminStoryMode = lazy(() => import("@/pages/AdminStoryMode"));
 const AdminUsers = lazy(() => import("@/pages/AdminUsers"));
 const MetadataDrivenCrudPage = lazy(() => import("@/pages/admin/MetadataDrivenCrudPage"));
+const DecksPage = lazy(() => import("@/pages/decks/DecksPage"));
+const DeckStudyPage = lazy(() => import("@/pages/decks/DeckStudyPage"));
 const AiChat = lazy(() => import("@/pages/AiChat"));
 const Auth = lazy(() => import("@/pages/Auth"));
 const Community = lazy(() => import("@/pages/Community"));
@@ -51,6 +53,8 @@ export const AppRoutes = () => {
         <Route path="/dashboard" element={withProtectedRoute(<Dashboard />)} />
         <Route path="/ai-chat" element={withProtectedRoute(<AiChat />)} />
         <Route path="/vocabulary" element={withProtectedRoute(<Vocabulary />)} />
+        <Route path="/decks" element={withProtectedRoute(<DecksPage />)} />
+        <Route path="/decks/:deckId/study" element={withProtectedRoute(<DeckStudyPage />)} />
         <Route path="/grammar" element={withProtectedRoute(<Grammar />)} />
         <Route path="/quiz" element={withProtectedRoute(<Quiz />)} />
         <Route path="/calendar" element={withProtectedRoute(<StudyCalendar />)} />

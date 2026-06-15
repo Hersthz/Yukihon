@@ -14,6 +14,7 @@ import {
   Flame,
   Globe2,
   GraduationCap,
+  Layers,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -75,6 +76,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: "Practice",
     items: [
+      { label: "Học SRS", path: "/decks", icon: Layers, badge: "New" },
       { label: "Vocabulary", path: "/vocabulary", icon: BookOpen },
       { label: "Grammar", path: "/grammar", icon: Brain },
       { label: "Quiz", path: "/quiz", icon: Trophy, badge: "Hot" },
@@ -97,6 +99,7 @@ const PAGE_META: Record<string, { eyebrow: string; title: string }> = {
   "/mistake-dna": { eyebrow: "Pattern insights", title: "Mistake DNA" },
   "/jlpt-lessons": { eyebrow: "Structured learning", title: "JLPT Paths" },
   "/vocabulary": { eyebrow: "Words and review", title: "Vocabulary" },
+  "/decks": { eyebrow: "Spaced repetition", title: "Học SRS" },
   "/grammar": { eyebrow: "Pattern library", title: "Grammar" },
   "/quiz": { eyebrow: "Quick checks", title: "Quiz" },
   "/courses": { eyebrow: "Full programs", title: "Courses" },
