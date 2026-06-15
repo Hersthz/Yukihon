@@ -1,5 +1,6 @@
 package com.hoang.basis.yukihon.system.appsetting.entity;
 
+import com.hoang.basis.yukihon.base.annotation.AuditEnabled;
 import com.hoang.basis.yukihon.base.annotation.AutoCrud;
 import com.hoang.basis.yukihon.base.annotation.EntityLabel;
 import com.hoang.basis.yukihon.base.annotation.FieldMeta;
@@ -30,6 +31,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AutoCrud(path = "app-settings")
 @SoftDelete
+@AuditEnabled
 @ResourcePermission("APP_SETTING")
 @EntityLabel(name = "App Setting", plural = "App Settings", description = "Key/value application configuration")
 @ResourceMenu(title = "App Settings", group = "System", icon = "settings", url = "/admin/app-settings", order = 90, permission = "APP_SETTING_READ")

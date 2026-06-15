@@ -9,6 +9,7 @@ const AdminCreatorMode = lazy(() => import("@/pages/AdminCreatorMode"));
 const AdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
 const AdminStoryMode = lazy(() => import("@/pages/AdminStoryMode"));
 const AdminUsers = lazy(() => import("@/pages/AdminUsers"));
+const MetadataDrivenCrudPage = lazy(() => import("@/pages/admin/MetadataDrivenCrudPage"));
 const AiChat = lazy(() => import("@/pages/AiChat"));
 const Auth = lazy(() => import("@/pages/Auth"));
 const Community = lazy(() => import("@/pages/Community"));
@@ -74,6 +75,7 @@ export const AppRoutes = () => {
           <Route path="/admin/users" element={<AdminUsers />} />
           <Route path="/admin/content" element={<AdminContent />} />
           <Route path="/admin/story-mode" element={<AdminStoryMode />} />
+          <Route path="/admin/app-settings" element={<MetadataDrivenCrudPage entityName="AppSetting" />} />
         </Route>
 
         <Route path="*" element={<NotFound />} />

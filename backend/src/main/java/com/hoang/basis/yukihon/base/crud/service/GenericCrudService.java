@@ -3,16 +3,21 @@ package com.hoang.basis.yukihon.base.crud.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hoang.basis.yukihon.base.crud.registry.CrudDescriptor;
+import com.hoang.basis.yukihon.base.event.EntityChangeType;
+import com.hoang.basis.yukihon.base.event.EntityChangedEvent;
 import com.hoang.basis.yukihon.exception.ResourceNotFoundException;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -32,6 +37,7 @@ public class GenericCrudService {
     private EntityManager entityManager;
 
     private final ObjectMapper objectMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private SimpleJpaRepository<Object, Long> repositoryFor(CrudDescriptor descriptor) {
@@ -63,7 +69,9 @@ public class GenericCrudService {
             throw new IllegalArgumentException("Invalid payload for " + descriptor.getPath() + ": " + e.getMessage());
         }
         clearIdentity(entity);
-        return repositoryFor(descriptor).save(entity);
+        Object saved = repositoryFor(descriptor).save(entity);
+        publish(descriptor, saved, EntityChangeType.CREATED);
+        return saved;
     }
 
     @Transactional
@@ -78,7 +86,9 @@ public class GenericCrudService {
         } catch (Exception e) {
             throw new IllegalArgumentException("Invalid payload for " + descriptor.getPath() + ": " + e.getMessage());
         }
-        return repository.save(existing);
+        Object saved = repository.save(existing);
+        publish(descriptor, saved, EntityChangeType.UPDATED);
+        return saved;
     }
 
     @Transactional
@@ -91,6 +101,7 @@ public class GenericCrudService {
         } else {
             repository.delete(existing);
         }
+        publish(descriptor, existing, EntityChangeType.DELETED);
     }
 
     @Transactional
@@ -121,6 +132,37 @@ public class GenericCrudService {
 
             return cb.and(predicates.toArray(new Predicate[0]));
         };
+    }
+
+    private void publish(CrudDescriptor descriptor, Object entity, EntityChangeType type) {
+        Long id = asLong(tryGet(entity, "id"));
+        String snapshot = null;
+        try {
+            snapshot = objectMapper.writeValueAsString(entity);
+        } catch (Exception ignored) {
+            // entity not serializable (e.g. lazy proxies); record without snapshot
+        }
+        eventPublisher.publishEvent(new EntityChangedEvent(
+                descriptor.getEntityClass(),
+                descriptor.getEntityClass().getSimpleName(),
+                id,
+                type,
+                snapshot,
+                currentActor()
+        ));
+    }
+
+    private String currentActor() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()
+                || "anonymousUser".equals(authentication.getPrincipal())) {
+            return "system";
+        }
+        return authentication.getName();
+    }
+
+    private Long asLong(Object value) {
+        return value instanceof Number number ? number.longValue() : null;
     }
 
     private void clearIdentity(Object entity) {
