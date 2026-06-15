@@ -301,7 +301,19 @@ public class DataInitializer implements CommandLineRunner {
                         .category("reading")
                         .status(Lesson.LessonStatus.PUBLISHED)
                         .orderIndex(6)
-                        .build()
+                        .build(),
+                Lesson.builder().title("N5 Numbers and Counting").description("Count objects, people, and money in Japanese")
+                        .content("Native numbers 1-10, Sino-Japanese numbers, and common counters (つ, 人, 円).")
+                        .jlptLevel("N5").category("vocabulary").status(Lesson.LessonStatus.PUBLISHED).orderIndex(7).build(),
+                Lesson.builder().title("N5 Days, Months and Time").description("Tell the date, day of week, and time")
+                        .content("Days of the week, 月 for months, and reading clock time with 時 and 分.")
+                        .jlptLevel("N5").category("vocabulary").status(Lesson.LessonStatus.PUBLISHED).orderIndex(8).build(),
+                Lesson.builder().title("N4 Te-form Mastery").description("Connect actions and make requests with the te-form")
+                        .content("Forming the te-form for all verb groups and using -te kudasai, -te imasu, -te mo ii.")
+                        .jlptLevel("N4").category("grammar").status(Lesson.LessonStatus.PUBLISHED).orderIndex(9).build(),
+                Lesson.builder().title("N3 Keigo Basics").description("Introduction to polite and humble speech")
+                        .content("Sonkeigo and kenjougo basics for everyday business and service situations.")
+                        .jlptLevel("N3").category("conversation").status(Lesson.LessonStatus.PUBLISHED).orderIndex(10).build()
         );
 
         lessonRepository.saveAll(lessons);
@@ -373,7 +385,43 @@ public class DataInitializer implements CommandLineRunner {
                         .jlptLevel("N3")
                         .exampleSentenceJP("試験の結果を見ました。")
                         .exampleSentenceEN("I checked the exam result.")
-                        .build()
+                        .build(),
+                Vocabulary.builder().kanji("水").hiragana("みず").romaji("mizu").meaning("water")
+                        .wordType("noun").jlptLevel("N5").exampleSentenceJP("水を飲みます。").exampleSentenceEN("I drink water.").build(),
+                Vocabulary.builder().kanji("火").hiragana("ひ").romaji("hi").meaning("fire")
+                        .wordType("noun").jlptLevel("N5").exampleSentenceJP("火に気をつけてください。").exampleSentenceEN("Please be careful with fire.").build(),
+                Vocabulary.builder().kanji("木").hiragana("き").romaji("ki").meaning("tree, wood")
+                        .wordType("noun").jlptLevel("N5").exampleSentenceJP("木が高いです。").exampleSentenceEN("The tree is tall.").build(),
+                Vocabulary.builder().kanji("山").hiragana("やま").romaji("yama").meaning("mountain")
+                        .wordType("noun").jlptLevel("N5").exampleSentenceJP("山に登ります。").exampleSentenceEN("I climb the mountain.").build(),
+                Vocabulary.builder().kanji("川").hiragana("かわ").romaji("kawa").meaning("river")
+                        .wordType("noun").jlptLevel("N5").exampleSentenceJP("川で泳ぎます。").exampleSentenceEN("I swim in the river.").build(),
+                Vocabulary.builder().kanji("食べる").hiragana("たべる").romaji("taberu").meaning("to eat")
+                        .wordType("verb").jlptLevel("N5").exampleSentenceJP("ご飯を食べます。").exampleSentenceEN("I eat rice.").build(),
+                Vocabulary.builder().kanji("飲む").hiragana("のむ").romaji("nomu").meaning("to drink")
+                        .wordType("verb").jlptLevel("N5").exampleSentenceJP("お茶を飲みます。").exampleSentenceEN("I drink tea.").build(),
+                Vocabulary.builder().kanji("行く").hiragana("いく").romaji("iku").meaning("to go")
+                        .wordType("verb").jlptLevel("N5").exampleSentenceJP("学校に行きます。").exampleSentenceEN("I go to school.").build(),
+                Vocabulary.builder().kanji("来る").hiragana("くる").romaji("kuru").meaning("to come")
+                        .wordType("verb").jlptLevel("N5").exampleSentenceJP("友達が来ます。").exampleSentenceEN("A friend is coming.").build(),
+                Vocabulary.builder().kanji("見る").hiragana("みる").romaji("miru").meaning("to see, to watch")
+                        .wordType("verb").jlptLevel("N5").exampleSentenceJP("映画を見ます。").exampleSentenceEN("I watch a movie.").build(),
+                Vocabulary.builder().kanji("大きい").hiragana("おおきい").romaji("ookii").meaning("big")
+                        .wordType("adjective").jlptLevel("N5").exampleSentenceJP("大きい家です。").exampleSentenceEN("It is a big house.").build(),
+                Vocabulary.builder().kanji("小さい").hiragana("ちいさい").romaji("chiisai").meaning("small")
+                        .wordType("adjective").jlptLevel("N5").exampleSentenceJP("小さい犬です。").exampleSentenceEN("It is a small dog.").build(),
+                Vocabulary.builder().kanji("友達").hiragana("ともだち").romaji("tomodachi").meaning("friend")
+                        .wordType("noun").jlptLevel("N5").exampleSentenceJP("友達と話します。").exampleSentenceEN("I talk with a friend.").build(),
+                Vocabulary.builder().kanji("家").hiragana("いえ").romaji("ie").meaning("house, home")
+                        .wordType("noun").jlptLevel("N5").exampleSentenceJP("家に帰ります。").exampleSentenceEN("I return home.").build(),
+                Vocabulary.builder().kanji("車").hiragana("くるま").romaji("kuruma").meaning("car")
+                        .wordType("noun").jlptLevel("N5").exampleSentenceJP("車を運転します。").exampleSentenceEN("I drive a car.").build(),
+                Vocabulary.builder().kanji("電車").hiragana("でんしゃ").romaji("densha").meaning("train")
+                        .wordType("noun").jlptLevel("N5").exampleSentenceJP("電車に乗ります。").exampleSentenceEN("I ride the train.").build(),
+                Vocabulary.builder().kanji("時間").hiragana("じかん").romaji("jikan").meaning("time, hour")
+                        .wordType("noun").jlptLevel("N5").exampleSentenceJP("時間がありません。").exampleSentenceEN("I don't have time.").build(),
+                Vocabulary.builder().kanji("今日").hiragana("きょう").romaji("kyou").meaning("today")
+                        .wordType("noun").jlptLevel("N5").exampleSentenceJP("今日は晴れです。").exampleSentenceEN("Today is sunny.").build()
         );
 
         vocabularyRepository.saveAll(vocabulary);
@@ -445,7 +493,31 @@ public class DataInitializer implements CommandLineRunner {
                         .exampleEN("Because it is raining, I stay home.")
                         .jlptLevel("N3")
                         .relatedPatterns("〜から")
-                        .build()
+                        .build(),
+                Grammar.builder().title("Desire").pattern("〜たい")
+                        .explanation("Express what the speaker wants to do.").usage("Verb stem + たいです")
+                        .exampleJP("日本へ行きたいです。").exampleEN("I want to go to Japan.")
+                        .jlptLevel("N5").relatedPatterns("〜たくない").build(),
+                Grammar.builder().title("Suggestion").pattern("〜ましょう")
+                        .explanation("Invite or suggest doing something together.").usage("Verb stem + ましょう")
+                        .exampleJP("一緒に行きましょう。").exampleEN("Let's go together.")
+                        .jlptLevel("N5").relatedPatterns("〜ませんか").build(),
+                Grammar.builder().title("Obligation").pattern("〜なければなりません")
+                        .explanation("Express that something must be done.").usage("Verb nai-form (drop ない) + なければなりません")
+                        .exampleJP("毎日勉強しなければなりません。").exampleEN("I must study every day.")
+                        .jlptLevel("N4").relatedPatterns("〜なくてもいい").build(),
+                Grammar.builder().title("Ability").pattern("〜ことができる")
+                        .explanation("Express ability or possibility.").usage("Verb dictionary form + ことができます")
+                        .exampleJP("日本語を話すことができます。").exampleEN("I can speak Japanese.")
+                        .jlptLevel("N4").relatedPatterns("Potential form").build(),
+                Grammar.builder().title("Past Experience").pattern("〜たことがある")
+                        .explanation("Express having done something before.").usage("Verb ta-form + ことがあります")
+                        .exampleJP("日本に行ったことがあります。").exampleEN("I have been to Japan.")
+                        .jlptLevel("N4").relatedPatterns("〜たことがない").build(),
+                Grammar.builder().title("Simultaneous Action").pattern("〜ながら")
+                        .explanation("Do two actions at the same time.").usage("Verb stem + ながら")
+                        .exampleJP("音楽を聞きながら勉強します。").exampleEN("I study while listening to music.")
+                        .jlptLevel("N4").relatedPatterns("〜つつ").build()
         );
 
         grammarRepository.saveAll(grammar);
@@ -524,7 +596,31 @@ public class DataInitializer implements CommandLineRunner {
                         .options("[\"ので\",\"でも\",\"しか\",\"ほど\"]")
                         .correctAnswer("ので")
                         .explanation("ので expresses a reason in a softer, explanatory tone.")
-                        .build()
+                        .build(),
+                Quiz.builder().title("N5 Reading of 学校").description("Choose the correct reading")
+                        .quizType(Quiz.QuizType.MULTIPLE_CHOICE).difficultyLevel("BEGINNER").jlptLevel("N5")
+                        .question("「学校」の読み方はどれですか。").options("[\"がっこう\",\"がこう\",\"がくこう\",\"がっこ\"]")
+                        .correctAnswer("がっこう").explanation("学校 is read がっこう (gakkou).").build(),
+                Quiz.builder().title("N5 Word Meaning: water").description("Pick the word that means 'water'")
+                        .quizType(Quiz.QuizType.MULTIPLE_CHOICE).difficultyLevel("BEGINNER").jlptLevel("N5")
+                        .question("Which word means \"water\"?").options("[\"水\",\"火\",\"木\",\"山\"]")
+                        .correctAnswer("水").explanation("水 (みず) means water.").build(),
+                Quiz.builder().title("N5 Topic Particle").description("Select the correct particle")
+                        .quizType(Quiz.QuizType.FILL_IN_BLANK).difficultyLevel("BEGINNER").jlptLevel("N5")
+                        .question("わたし__学生です。").options("[\"は\",\"を\",\"に\",\"で\"]")
+                        .correctAnswer("は").explanation("は marks the topic of the sentence.").build(),
+                Quiz.builder().title("N5 Verb Meaning: to eat").description("Pick the verb meaning 'to eat'")
+                        .quizType(Quiz.QuizType.MULTIPLE_CHOICE).difficultyLevel("BEGINNER").jlptLevel("N5")
+                        .question("Which verb means \"to eat\"?").options("[\"飲む\",\"食べる\",\"見る\",\"行く\"]")
+                        .correctAnswer("食べる").explanation("食べる (たべる) means to eat.").build(),
+                Quiz.builder().title("N4 Ability Pattern").description("Complete the ability expression")
+                        .quizType(Quiz.QuizType.FILL_IN_BLANK).difficultyLevel("INTERMEDIATE").jlptLevel("N4")
+                        .question("日本語を話す__できます。").options("[\"ことが\",\"のが\",\"ように\",\"そうに\"]")
+                        .correctAnswer("ことが").explanation("〜ことができる expresses ability.").build(),
+                Quiz.builder().title("N4 Te-form of 食べる").description("Choose the correct te-form")
+                        .quizType(Quiz.QuizType.MULTIPLE_CHOICE).difficultyLevel("INTERMEDIATE").jlptLevel("N4")
+                        .question("「食べる」のて形はどれですか。").options("[\"食べて\",\"食べた\",\"食べない\",\"食べます\"]")
+                        .correctAnswer("食べて").explanation("Ru-verbs drop る and add て: 食べて.").build()
         );
 
         quizRepository.saveAll(quizzes);
