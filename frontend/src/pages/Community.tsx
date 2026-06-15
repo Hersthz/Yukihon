@@ -13,6 +13,7 @@ import CommunityFilters from "@/pages/community/CommunityFilters";
 import CommunityLeaderboard from "@/pages/community/CommunityLeaderboard";
 import CommunityRealtimeChat from "@/pages/community/CommunityRealtimeChat";
 import CommunityChatRooms from "@/pages/community/CommunityChatRooms";
+import { FriendAndPmMessenger } from "@/pages/community/FriendAndPmMessenger";
 import { DEFAULT_CHAT_ROOMS, JLPT_OPTIONS } from "@/pages/community/constants";
 import { ChatRoom, Comment, CommunityStats, LeaderboardEntry, PagedComments, PagedPosts, Post } from "@/pages/community/types";
 
@@ -336,6 +337,7 @@ const Community = () => {
           onPageChange={(nextPage) => void fetchPosts(nextPage)}
         />
       </div>
+      <FriendAndPmMessenger />
     </DashboardLayout>
   );
 };

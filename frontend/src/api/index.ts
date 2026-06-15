@@ -22,3 +22,5 @@ export * from "./metaApi";
 export * from "./autoCrudApi";
 export * from "./srsApi";
 export * from "./deckApi";
+export * from "./friendApi";
+export * from "./privateChatApi";
