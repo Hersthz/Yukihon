@@ -10,4 +10,6 @@ public interface DeckItemRepository extends JpaRepository<DeckItem, Long> {
     List<DeckItem> findByDeckIdAndIsDeletedFalseOrderByOrderIndexAsc(Long deckId);
 
     long countByDeckIdAndIsDeletedFalse(Long deckId);
+
+    java.util.Optional<DeckItem> findByDeckIdAndFlashcardIdAndIsDeletedFalse(Long deckId, Long flashcardId);
 }

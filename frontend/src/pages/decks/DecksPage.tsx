@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { BookOpen, Plus, Play, Globe2, Lock, Loader2, Layers } from "lucide-react";
+import { BookOpen, Plus, Play, Globe2, Lock, Loader2, Layers, Pencil } from "lucide-react";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,7 +22,15 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { deckApi, type Deck } from "@/api/deckApi";
 
-const DeckCard = ({ deck, onStudy }: { deck: Deck; onStudy: (id: number) => void }) => (
+const DeckCard = ({
+  deck,
+  onStudy,
+  onManage,
+}: {
+  deck: Deck;
+  onStudy: (id: number) => void;
+  onManage: (id: number) => void;
+}) => (
   <Card className="flex flex-col border-border/70 transition hover:shadow-md">
     <CardHeader>
       <div className="flex items-start justify-between gap-2">
@@ -37,11 +45,16 @@ const DeckCard = ({ deck, onStudy }: { deck: Deck; onStudy: (id: number) => void
       <CardTitle className="mt-2 text-lg">{deck.title}</CardTitle>
       {deck.description && <CardDescription className="line-clamp-2">{deck.description}</CardDescription>}
     </CardHeader>
-    <CardContent className="mt-auto flex items-center justify-between">
+    <CardContent className="mt-auto flex items-center justify-between gap-2">
       <span className="text-sm text-muted-foreground">{deck.totalCards} thẻ</span>
-      <Button size="sm" onClick={() => onStudy(deck.id)}>
-        <Play className="mr-1 h-4 w-4" /> Học
-      </Button>
+      <div className="flex gap-2">
+        <Button size="sm" variant="outline" onClick={() => onManage(deck.id)}>
+          <Pencil className="mr-1 h-4 w-4" /> Quản lý
+        </Button>
+        <Button size="sm" onClick={() => onStudy(deck.id)} disabled={deck.totalCards === 0}>
+          <Play className="mr-1 h-4 w-4" /> Học
+        </Button>
+      </div>
     </CardContent>
   </Card>
 );
@@ -72,6 +85,7 @@ const DecksPage = () => {
   });
 
   const study = (id: number) => navigate(`/decks/${id}/study`);
+  const manage = (id: number) => navigate(`/decks/${id}/cards`);
 
   const mineDecks = mine.data ?? [];
   const otherPublic = (publicDecks.data ?? []).filter((d) => !mineDecks.some((m) => m.id === d.id));
@@ -104,7 +118,7 @@ const DecksPage = () => {
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {mineDecks.map((deck) => (
-              <DeckCard key={deck.id} deck={deck} onStudy={study} />
+              <DeckCard key={deck.id} deck={deck} onStudy={study} onManage={manage} />
             ))}
           </div>
         )}
@@ -114,7 +128,7 @@ const DecksPage = () => {
             <h2 className="text-lg font-semibold">Khám phá (công khai)</h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {otherPublic.map((deck) => (
-                <DeckCard key={deck.id} deck={deck} onStudy={study} />
+                <DeckCard key={deck.id} deck={deck} onStudy={study} onManage={manage} />
               ))}
             </div>
           </div>
