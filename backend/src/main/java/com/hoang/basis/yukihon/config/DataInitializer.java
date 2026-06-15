@@ -17,6 +17,14 @@ import com.hoang.basis.yukihon.system.userlearningstats.repository.UserLearningS
 import com.hoang.basis.yukihon.system.usersettings.repository.UserSettingsRepository;
 import com.hoang.basis.yukihon.system.vocabulary.entity.Vocabulary;
 import com.hoang.basis.yukihon.system.vocabulary.repository.VocabularyRepository;
+import com.hoang.basis.yukihon.system.library.entity.Deck;
+import com.hoang.basis.yukihon.system.library.entity.DeckItem;
+import com.hoang.basis.yukihon.system.library.entity.Flashcard;
+import com.hoang.basis.yukihon.system.library.repository.DeckItemRepository;
+import com.hoang.basis.yukihon.system.library.repository.DeckRepository;
+import com.hoang.basis.yukihon.system.library.repository.FlashcardRepository;
+import com.hoang.basis.yukihon.system.srs.entity.SrsAlgorithmConfig;
+import com.hoang.basis.yukihon.system.srs.repository.SrsAlgorithmConfigRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -46,6 +54,11 @@ public class DataInitializer implements CommandLineRunner {
     private final GrammarRepository grammarRepository;
     private final QuizRepository quizRepository;
 
+    private final SrsAlgorithmConfigRepository srsAlgorithmConfigRepository;
+    private final DeckRepository deckRepository;
+    private final FlashcardRepository flashcardRepository;
+    private final DeckItemRepository deckItemRepository;
+
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -57,7 +70,85 @@ public class DataInitializer implements CommandLineRunner {
         initializeVocabulary();
         initializeGrammar();
         initializeQuizzes();
+        initializeSrsConfig();
+        initializeDemoDeck();
         log.info("Data initialization completed");
+    }
+
+    private void initializeSrsConfig() {
+        if (srsAlgorithmConfigRepository.findByCode("SM2_DEFAULT").isEmpty()) {
+            SrsAlgorithmConfig sm2 = new SrsAlgorithmConfig();
+            sm2.setCode("SM2_DEFAULT");
+            sm2.setName("SM-2 (Anki-like)");
+            sm2.setAlgorithmType("SM2");
+            sm2.setEnabled(true);
+            sm2.setConfigJson("{"
+                    + "\"learningSteps\":[1,10],"
+                    + "\"relearningSteps\":[10],"
+                    + "\"graduatingIntervalDays\":1,"
+                    + "\"easyIntervalDays\":4,"
+                    + "\"startingEase\":2.5,"
+                    + "\"minEase\":1.3,"
+                    + "\"easyBonus\":1.3,"
+                    + "\"hardInterval\":1.2,"
+                    + "\"intervalModifier\":1.0,"
+                    + "\"newInterval\":0.0,"
+                    + "\"maxIntervalDays\":36500}");
+            srsAlgorithmConfigRepository.save(sm2);
+            log.info("Initialized SRS algorithm config: SM2_DEFAULT");
+        }
+    }
+
+    private void initializeDemoDeck() {
+        User learner = userRepository.findByEmail("learner@yukihon.local").orElse(null);
+        if (learner == null) {
+            return;
+        }
+        if (!deckRepository.findByUserIdAndIsDeletedFalseOrderByUpdatedAtDesc(learner.getId()).isEmpty()) {
+            return;
+        }
+
+        Deck deck = new Deck();
+        deck.setUserId(learner.getId());
+        deck.setTitle("N5 Starter Deck");
+        deck.setDescription("Bộ thẻ N5 cơ bản để bắt đầu học theo SRS.");
+        deck.setVisibility("PUBLIC");
+        deck.setSourceLanguage("ja");
+        deck.setTargetLanguage("vi");
+        Deck savedDeck = deckRepository.save(deck);
+
+        String[][] cards = {
+                {"学校", "がっこう", "school / trường học"},
+                {"先生", "せんせい", "teacher / giáo viên"},
+                {"水", "みず", "water / nước"},
+                {"食べる", "たべる", "to eat / ăn"},
+                {"友達", "ともだち", "friend / bạn bè"},
+                {"今日", "きょう", "today / hôm nay"},
+                {"勉強", "べんきょう", "study / học tập"},
+                {"電車", "でんしゃ", "train / tàu điện"}
+        };
+
+        int order = 0;
+        for (String[] c : cards) {
+            Flashcard fc = new Flashcard();
+            fc.setCardType("BASIC");
+            fc.setItemType("VOCAB");
+            fc.setFront(c[0]);
+            fc.setBack(c[2]);
+            fc.setHint(c[1]);
+            Flashcard savedFc = flashcardRepository.save(fc);
+
+            DeckItem item = new DeckItem();
+            item.setDeckId(savedDeck.getId());
+            item.setFlashcardId(savedFc.getId());
+            item.setOrderIndex(order++);
+            deckItemRepository.save(item);
+        }
+
+        savedDeck.setTotalCards(cards.length);
+        deckRepository.save(savedDeck);
+        log.info("Initialized demo deck '{}' with {} cards (deckId={})",
+                savedDeck.getTitle(), cards.length, savedDeck.getId());
     }
 
     private void initializePermissions() {
