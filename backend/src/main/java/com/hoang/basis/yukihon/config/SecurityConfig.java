@@ -21,7 +21,9 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Configuration
 @EnableMethodSecurity
@@ -33,6 +35,9 @@ public class SecurityConfig {
 
     @Value("${app.frontend-url}")
     private String frontendUrl;
+
+    @Value("${app.cors.allowed-origins:}")
+    private String allowedOrigins;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -49,16 +54,15 @@ public class SecurityConfig {
                             "/api/auth/google",
                             "/api/auth/refresh",
                             "/api/auth/forgot-password",
-                            "/api/auth/reset-password"
+                            "/api/auth/reset-password",
+                            "/api/health"
                     ).permitAll()
                     .requestMatchers("/api/auth/me").authenticated()
-                        .requestMatchers("/ws-community-chat/**").permitAll()
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/admin/creator-mode/**").hasRole("ADMIN")
-                        // Admin endpoints - require ADMIN role
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        // User endpoints - require authenticated users
-                        .anyRequest().authenticated())
+                    .requestMatchers("/ws-community-chat/**").permitAll()
+                    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                    .requestMatchers("/api/admin/creator-mode/**").hasRole("ADMIN")
+                    .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                    .anyRequest().authenticated())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .httpBasic(basic -> basic.disable())
                 .formLogin(form -> form.disable());
@@ -83,7 +87,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(frontendUrl));
+        config.setAllowedOrigins(resolveAllowedOrigins());
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
@@ -97,5 +101,16 @@ public class SecurityConfig {
     @Bean
     public RestTemplate restTemplate() {
         return new RestTemplate();
+    }
+
+    private List<String> resolveAllowedOrigins() {
+        String configuredOrigins = allowedOrigins == null || allowedOrigins.isBlank()
+                ? frontendUrl
+                : allowedOrigins;
+
+        return Arrays.stream(configuredOrigins.split(","))
+                .map(String::trim)
+                .filter(origin -> !origin.isEmpty())
+                .collect(Collectors.toList());
     }
 }
