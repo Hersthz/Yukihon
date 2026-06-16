@@ -79,6 +79,10 @@ export const apiClient = {
     return localStorage.getItem(REFRESH_TOKEN_KEY);
   },
 
+  getToken(): string | null {
+    return localStorage.getItem(ACCESS_TOKEN_KEY);
+  },
+
   async refreshAccessToken(): Promise<StoredAuthResponse | null> {
     const refreshToken = this.getRefreshToken();
     if (!refreshToken) {

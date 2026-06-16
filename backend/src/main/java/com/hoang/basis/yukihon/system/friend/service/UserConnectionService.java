@@ -35,7 +35,12 @@ public class UserConnectionService {
         User receiver = userRepository.findById(receiverId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Receiver not found"));
 
-        if (userConnectionRepository.findByRequesterAndReceiverAndType(requester, receiver, type).isPresent()) {
+        // FRIEND is symmetric: block a request in either direction (incl. when already friends or a
+        // reverse request is pending). FOLLOW is directional, so only the same direction is a duplicate.
+        boolean duplicate = userConnectionRepository.findByRequesterAndReceiverAndType(requester, receiver, type).isPresent()
+                || (type == ConnectionType.FRIEND
+                && userConnectionRepository.findByRequesterAndReceiverAndType(receiver, requester, type).isPresent());
+        if (duplicate) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Connection already exists");
         }
         

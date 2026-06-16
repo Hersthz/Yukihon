@@ -10,6 +10,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -96,6 +97,27 @@ public class GlobalExceptionHandler {
             HttpServletRequest request
     ) {
         return buildErrorResponse(HttpStatus.SERVICE_UNAVAILABLE, ErrorCode.SERVICE_UNAVAILABLE, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ApiError> handleResponseStatus(
+            ResponseStatusException ex,
+            HttpServletRequest request
+    ) {
+        HttpStatus status = HttpStatus.resolve(ex.getStatusCode().value());
+        if (status == null) {
+            status = HttpStatus.INTERNAL_SERVER_ERROR;
+        }
+        ErrorCode code = switch (status) {
+            case NOT_FOUND -> ErrorCode.NOT_FOUND;
+            case CONFLICT -> ErrorCode.CONFLICT;
+            case FORBIDDEN -> ErrorCode.ACCESS_DENIED;
+            case UNAUTHORIZED -> ErrorCode.UNAUTHORIZED;
+            case BAD_REQUEST -> ErrorCode.BAD_REQUEST;
+            default -> ErrorCode.INTERNAL_ERROR;
+        };
+        String message = ex.getReason() != null ? ex.getReason() : status.getReasonPhrase();
+        return buildErrorResponse(status, code, message, request);
     }
 
     @ExceptionHandler(Exception.class)
