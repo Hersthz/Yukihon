@@ -163,6 +163,7 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Bỏ qua file CLAUDE.md và ARCHITECTURE.md
+# Bỏ qua file CLAUDE.md và ARCHITECTURE.md và CONVENTIONS.md
+CONVENTIONS.md
 ARCHITECTURE.md
 CLAUDE.md

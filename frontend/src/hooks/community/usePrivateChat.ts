@@ -133,7 +133,9 @@ export function usePrivateChat(options: UsePrivateChatOptions = {}) {
           if (parsed && (parsed.sender.id === otherUserId || parsed.receiver.id === otherUserId)) {
             setMessages((prev) => [...prev, parsed]);
           }
-        } catch (e) {}
+        } catch (e) {
+          console.error("Failed to parse private message", e);
+        }
       });
 
       // typing
@@ -143,7 +145,9 @@ export function usePrivateChat(options: UsePrivateChatOptions = {}) {
           if (body.senderId === otherUserId) {
             setIsTyping(body.typing);
           }
-        } catch (e) {}
+        } catch (e) {
+          console.error("Failed to parse typing event", e);
+        }
       });
     };
 

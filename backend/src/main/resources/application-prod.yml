@@ -11,8 +11,17 @@ spring:
     enabled: true
     baseline-on-migrate: true
 
+  # Disable API docs / Swagger UI in production.
+  # (springdoc lives under the top-level `springdoc` key, sibling of `spring`.)
+
 app:
   auth:
     expose-reset-token: false
   seed:
+    enabled: false
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
     enabled: false

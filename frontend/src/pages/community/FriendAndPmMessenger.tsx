@@ -37,7 +37,9 @@ export const FriendAndPmMessenger = () => {
     try {
       setFriends(await friendApi.getFriends());
       setPending(await friendApi.getPendingRequests());
-    } catch (e) {}
+    } catch (e) {
+      console.error("Failed to load friends", e);
+    }
   };
 
   useEffect(() => {
@@ -52,8 +54,8 @@ export const FriendAndPmMessenger = () => {
       await friendApi.sendRequest(Number(findUserId));
       setFindUserId("");
       alert("Friend request sent!");
-    } catch (e: any) {
-      alert(e.message || "Failed to send request");
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed to send request");
     }
   };
 
@@ -61,7 +63,9 @@ export const FriendAndPmMessenger = () => {
     try {
       await friendApi.acceptRequest(id);
       loadFriends();
-    } catch (e) {}
+    } catch (e) {
+      console.error("Failed to accept request", e);
+    }
   };
 
   return (

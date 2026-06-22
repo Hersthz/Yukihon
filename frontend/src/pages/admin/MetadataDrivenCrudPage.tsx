@@ -239,7 +239,7 @@ const MetadataDrivenCrudPage = ({ entityName }: MetadataDrivenCrudPageProps) => 
       return (
         <div className="flex items-center gap-3">
           <Switch checked={Boolean(value)} onCheckedChange={setValue} />
-          <span className="text-sm text-muted-foreground">{Boolean(value) ? "Bật" : "Tắt"}</span>
+          <span className="text-sm text-muted-foreground">{value ? "Bật" : "Tắt"}</span>
         </div>
       );
     }
