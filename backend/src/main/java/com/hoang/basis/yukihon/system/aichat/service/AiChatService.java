@@ -182,9 +182,8 @@ public class AiChatService {
                                     }
 
                                     if ("response.completed".equals(type)) {
-                                        if (assistantReply.length() > 0) {
-                                            persistExchange(user, conversation, normalizedMode, latestUserMessage.getText().trim(), assistantReply.toString());
-                                        }
+                                        // Persistence happens in finally so a partial reply is still saved
+                                        // if the client aborts the stream mid-response.
                                         writeSseEvent(writer, "done", objectMapper.writeValueAsString(Map.of(
                                                 "model", openAiModel,
                                                 "mode", normalizedMode,
@@ -213,7 +212,19 @@ public class AiChatService {
                         "message", "AI chat is temporarily unavailable. Please try again in a moment."
                 )));
             } finally {
-                writer.flush();
+                if (assistantReply.length() > 0) {
+                    try {
+                        persistExchange(user, conversation, normalizedMode,
+                                latestUserMessage.getText().trim(), assistantReply.toString());
+                    } catch (Exception persistError) {
+                        log.warn("Failed to persist AI chat exchange for userId={}", userId, persistError);
+                    }
+                }
+                try {
+                    writer.flush();
+                } catch (Exception ignored) {
+                    // client likely disconnected; nothing to flush
+                }
             }
         };
     }

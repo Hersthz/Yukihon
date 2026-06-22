@@ -45,6 +45,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final UserLearningStatsService userLearningStatsService;
     private final UserSettingsService userSettingsService;
+    private final PasswordResetEmailService passwordResetEmailService;
 
     private static final Pattern EMAIL_PATTERN = 
             Pattern.compile("^[A-Za-z0-9+_.-]+@(.+)$");
@@ -193,6 +194,9 @@ public class AuthService {
                         user.setPasswordResetRequestedAt(Instant.now());
                         user.setPasswordResetExpiresAt(Instant.now().plusSeconds(PASSWORD_RESET_TOKEN_TTL_SECONDS));
                         userRepository.save(user);
+
+                        // Send the reset link by email (or log it in dev when SMTP is not configured).
+                        passwordResetEmailService.sendResetLink(email, token);
 
                         if (exposeResetToken) {
                             log.info("Development password reset token for {}: {}", email, token);

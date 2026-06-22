@@ -100,7 +100,14 @@ public class SecurityConfig {
 
     @Bean
     public RestTemplate restTemplate() {
-        return new RestTemplate();
+        // Connect timeout guards against unreachable hosts. The read timeout is a per-read
+        // (inter-chunk) socket timeout, so it is safe for long-lived AI streaming responses
+        // (tokens arrive continuously) while still aborting a stalled external call (e.g. translation).
+        org.springframework.http.client.SimpleClientHttpRequestFactory factory =
+                new org.springframework.http.client.SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(10_000);
+        factory.setReadTimeout(60_000);
+        return new RestTemplate(factory);
     }
 
     private List<String> resolveAllowedOrigins() {

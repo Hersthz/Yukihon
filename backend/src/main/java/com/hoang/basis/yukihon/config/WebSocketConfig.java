@@ -20,11 +20,22 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Value("${app.frontend-url}")
     private String frontendUrl;
 
+    @Value("${app.cors.allowed-origins:}")
+    private String allowedOrigins;
+
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws-community-chat")
-                .setAllowedOrigins(frontendUrl)
+                .setAllowedOrigins(resolveAllowedOrigins())
                 .withSockJS();
+    }
+
+    private String[] resolveAllowedOrigins() {
+        String configured = allowedOrigins == null || allowedOrigins.isBlank() ? frontendUrl : allowedOrigins;
+        return java.util.Arrays.stream(configured.split(","))
+                .map(String::trim)
+                .filter(origin -> !origin.isEmpty())
+                .toArray(String[]::new);
     }
 
     @Override
