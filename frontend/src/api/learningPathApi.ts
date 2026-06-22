@@ -43,5 +43,5 @@ export interface LearningPathResponse {
 }
 
 export const learningPathApi = {
-  getCurrent: () => apiClient.request<LearningPathResponse>("/api/learning-path"),
+  getCurrent: () => apiClient.get<LearningPathResponse>("/api/learning-path"),
 };

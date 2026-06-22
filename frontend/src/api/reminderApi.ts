@@ -18,5 +18,5 @@ export interface ReminderSummary {
 }
 
 export const reminderApi = {
-  getSummary: () => apiClient.request<ReminderSummary>("/api/reminders"),
+  getSummary: () => apiClient.get<ReminderSummary>("/api/reminders"),
 };

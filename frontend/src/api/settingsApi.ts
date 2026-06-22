@@ -19,10 +19,7 @@ export interface UpdateUserSettingsPayload extends Partial<UserSettingsResponse>
 }
 
 export const settingsApi = {
-  get: () => apiClient.request<UserSettingsResponse>("/api/settings"),
+  get: () => apiClient.get<UserSettingsResponse>("/api/settings"),
   update: (data: UpdateUserSettingsPayload) =>
-    apiClient.request<UserSettingsResponse>("/api/settings", {
-      method: "PUT",
-      body: JSON.stringify(data),
-    }),
+    apiClient.put<UserSettingsResponse>("/api/settings", data),
 };

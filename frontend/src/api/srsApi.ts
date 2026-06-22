@@ -42,12 +42,8 @@ export interface ReviewPayload {
 }
 
 export const srsApi = {
-  getQueue: (deckId: number) => apiClient.request<StudyQueue>(`/api/anki/study/${deckId}`),
-  review: (payload: ReviewPayload) =>
-    apiClient.request<StudyCard>("/api/anki/study/review", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    }),
+  getQueue: (deckId: number) => apiClient.get<StudyQueue>(`/api/anki/study/${deckId}`),
+  review: (payload: ReviewPayload) => apiClient.post<StudyCard>("/api/anki/study/review", payload),
 };
 
 export default srsApi;

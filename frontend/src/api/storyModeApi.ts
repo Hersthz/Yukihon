@@ -24,26 +24,17 @@ const toClientStory = (story: StoryModeAdminStory): StoryModeStory => ({
 
 export const storyModeApi = {
   getPublishedStories: async () => {
-    const stories = await apiClient.request<StoryModeAdminStory[]>("/api/story-mode/stories");
+    const stories = await apiClient.get<StoryModeAdminStory[]>("/api/story-mode/stories");
     return stories.map(toClientStory);
   },
   admin: {
-    getStories: () => apiClient.request<StoryModeAdminStory[]>("/api/admin/story-mode/stories"),
+    getStories: () => apiClient.get<StoryModeAdminStory[]>("/api/admin/story-mode/stories"),
     getStory: (id: number) =>
-      apiClient.request<StoryModeAdminStory>(`/api/admin/story-mode/stories/${id}`),
+      apiClient.get<StoryModeAdminStory>(`/api/admin/story-mode/stories/${id}`),
     createStory: (story: StoryModeAdminStory) =>
-      apiClient.request<StoryModeAdminStory>("/api/admin/story-mode/stories", {
-        method: "POST",
-        body: JSON.stringify(story),
-      }),
+      apiClient.post<StoryModeAdminStory>("/api/admin/story-mode/stories", story),
     updateStory: (id: number, story: StoryModeAdminStory) =>
-      apiClient.request<StoryModeAdminStory>(`/api/admin/story-mode/stories/${id}`, {
-        method: "PUT",
-        body: JSON.stringify(story),
-      }),
-    deleteStory: (id: number) =>
-      apiClient.request<void>(`/api/admin/story-mode/stories/${id}`, {
-        method: "DELETE",
-      }),
+      apiClient.put<StoryModeAdminStory>(`/api/admin/story-mode/stories/${id}`, story),
+    deleteStory: (id: number) => apiClient.del<void>(`/api/admin/story-mode/stories/${id}`),
   },
 };

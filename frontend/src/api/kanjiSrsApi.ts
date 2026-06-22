@@ -42,28 +42,14 @@ export interface KanjiSrsDashboard {
 }
 
 export const kanjiSrsApi = {
-  getAll: () => apiClient.request<KanjiSrsServerRecord[]>("/api/kanji-srs"),
-  getDashboard: () => apiClient.request<KanjiSrsDashboard>("/api/kanji-srs/dashboard"),
-  add: (character: string) =>
-    apiClient.request<KanjiSrsServerRecord>("/api/kanji-srs", {
-      method: "POST",
-      body: JSON.stringify({ character }),
-    }),
+  getAll: () => apiClient.get<KanjiSrsServerRecord[]>("/api/kanji-srs"),
+  getDashboard: () => apiClient.get<KanjiSrsDashboard>("/api/kanji-srs/dashboard"),
+  add: (character: string) => apiClient.post<KanjiSrsServerRecord>("/api/kanji-srs", { character }),
   importRecords: (records: KanjiSrsRecord[]) =>
-    apiClient.request<KanjiSrsServerRecord[]>("/api/kanji-srs/import", {
-      method: "POST",
-      body: JSON.stringify({ records }),
-    }),
+    apiClient.post<KanjiSrsServerRecord[]>("/api/kanji-srs/import", { records }),
   review: (character: string, rating: KanjiReviewRating) =>
-    apiClient.request<KanjiSrsServerRecord>(
-      `/api/kanji-srs/${encodeURIComponent(character)}/review`,
-      {
-        method: "POST",
-        body: JSON.stringify({ rating }),
-      }
-    ),
-  remove: (character: string) =>
-    apiClient.request(`/api/kanji-srs/${encodeURIComponent(character)}`, {
-      method: "DELETE",
+    apiClient.post<KanjiSrsServerRecord>(`/api/kanji-srs/${encodeURIComponent(character)}/review`, {
+      rating,
     }),
+  remove: (character: string) => apiClient.del(`/api/kanji-srs/${encodeURIComponent(character)}`),
 };

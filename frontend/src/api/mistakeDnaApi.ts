@@ -27,5 +27,5 @@ export interface MistakeDnaResponse {
 }
 
 export const mistakeDnaApi = {
-  getCurrent: () => apiClient.request<MistakeDnaResponse>("/api/mistake-dna"),
+  getCurrent: () => apiClient.get<MistakeDnaResponse>("/api/mistake-dna"),
 };

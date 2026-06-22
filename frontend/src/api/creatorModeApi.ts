@@ -149,43 +149,24 @@ const buildAuditTimelineQuery = (filters?: CreatorTemplateAuditTimelineFilters) 
 export const creatorModeApi = {
   getTemplates: (
     params: { status?: CreatorTemplateStatus; contentType?: CreatorContentType } = {}
-  ) =>
-    apiClient.request<CreatorTemplate[]>(`/api/admin/creator-mode/templates${buildQuery(params)}`),
+  ) => apiClient.get<CreatorTemplate[]>(`/api/admin/creator-mode/templates${buildQuery(params)}`),
   getTemplate: (id: number) =>
-    apiClient.request<CreatorTemplate>(`/api/admin/creator-mode/templates/${id}`),
+    apiClient.get<CreatorTemplate>(`/api/admin/creator-mode/templates/${id}`),
   createTemplate: (payload: CreatorTemplateUpsertPayload) =>
-    apiClient.request<CreatorTemplate>("/api/admin/creator-mode/templates", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    }),
+    apiClient.post<CreatorTemplate>("/api/admin/creator-mode/templates", payload),
   updateTemplate: (id: number, payload: CreatorTemplateUpsertPayload) =>
-    apiClient.request<CreatorTemplate>(`/api/admin/creator-mode/templates/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(payload),
-    }),
+    apiClient.put<CreatorTemplate>(`/api/admin/creator-mode/templates/${id}`, payload),
   submitForReview: (id: number) =>
-    apiClient.request<CreatorTemplate>(`/api/admin/creator-mode/templates/${id}/submit`, {
-      method: "POST",
-    }),
+    apiClient.post<CreatorTemplate>(`/api/admin/creator-mode/templates/${id}/submit`),
   reviewDecision: (id: number, payload: CreatorTemplateReviewPayload) =>
-    apiClient.request<CreatorTemplate>(`/api/admin/creator-mode/templates/${id}/review`, {
-      method: "POST",
-      body: JSON.stringify(payload),
-    }),
+    apiClient.post<CreatorTemplate>(`/api/admin/creator-mode/templates/${id}/review`, payload),
   recordMetrics: (id: number, payload: CreatorTemplateMetricPayload) =>
-    apiClient.request<CreatorTemplate>(`/api/admin/creator-mode/templates/${id}/metrics`, {
-      method: "POST",
-      body: JSON.stringify(payload),
-    }),
-  deleteTemplate: (id: number) =>
-    apiClient.request<void>(`/api/admin/creator-mode/templates/${id}`, {
-      method: "DELETE",
-    }),
+    apiClient.post<CreatorTemplate>(`/api/admin/creator-mode/templates/${id}/metrics`, payload),
+  deleteTemplate: (id: number) => apiClient.del<void>(`/api/admin/creator-mode/templates/${id}`),
   getTemplateAuditTimeline: (id: number, filters?: CreatorTemplateAuditTimelineFilters) =>
-    apiClient.request<CreatorTemplateAuditEvent[]>(
+    apiClient.get<CreatorTemplateAuditEvent[]>(
       `/api/admin/creator-mode/templates/${id}/audit-timeline${buildAuditTimelineQuery(filters)}`
     ),
-  getReviewQueue: () =>
-    apiClient.request<CreatorTemplate[]>("/api/admin/creator-mode/review-queue"),
-  getAnalytics: () => apiClient.request<CreatorAnalytics>("/api/admin/creator-mode/analytics"),
+  getReviewQueue: () => apiClient.get<CreatorTemplate[]>("/api/admin/creator-mode/review-queue"),
+  getAnalytics: () => apiClient.get<CreatorAnalytics>("/api/admin/creator-mode/analytics"),
 };

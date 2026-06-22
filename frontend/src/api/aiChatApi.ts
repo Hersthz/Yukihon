@@ -83,10 +83,7 @@ const parseSseBlock = (block: string) => {
 
 export const aiChatApi = {
   respond: (data: AiChatRequestPayload) =>
-    apiClient.request<AiChatResponse>("/api/ai-chat/respond", {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
+    apiClient.post<AiChatResponse>("/api/ai-chat/respond", data),
   streamRespond: async (
     data: AiChatRequestPayload,
     handlers: StreamHandlers = {},
@@ -171,18 +168,14 @@ export const aiChatApi = {
       });
     }
   },
-  getConversations: () => apiClient.request<AiChatConversation[]>("/api/ai-chat/conversations"),
-  createConversation: () =>
-    apiClient.request<AiChatConversation>("/api/ai-chat/conversations", { method: "POST" }),
+  getConversations: () => apiClient.get<AiChatConversation[]>("/api/ai-chat/conversations"),
+  createConversation: () => apiClient.post<AiChatConversation>("/api/ai-chat/conversations"),
   getConversationMessages: (conversationId: number) =>
-    apiClient.request<AiChatHistoryItem[]>(`/api/ai-chat/conversations/${conversationId}/messages`),
+    apiClient.get<AiChatHistoryItem[]>(`/api/ai-chat/conversations/${conversationId}/messages`),
   renameConversation: (conversationId: number, title: string) =>
-    apiClient.request<AiChatConversation>(`/api/ai-chat/conversations/${conversationId}`, {
-      method: "PATCH",
-      body: JSON.stringify({ title }),
-    }),
+    apiClient.patch<AiChatConversation>(`/api/ai-chat/conversations/${conversationId}`, { title }),
   deleteConversation: (conversationId: number) =>
-    apiClient.request(`/api/ai-chat/conversations/${conversationId}`, { method: "DELETE" }),
-  getHistory: () => apiClient.request<AiChatHistoryItem[]>("/api/ai-chat/history"),
-  clearHistory: () => apiClient.request("/api/ai-chat/history", { method: "DELETE" }),
+    apiClient.del(`/api/ai-chat/conversations/${conversationId}`),
+  getHistory: () => apiClient.get<AiChatHistoryItem[]>("/api/ai-chat/history"),
+  clearHistory: () => apiClient.del("/api/ai-chat/history"),
 };

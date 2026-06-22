@@ -37,33 +37,16 @@ export interface QuizAnalytics {
 }
 
 export const adminApi = {
-  getUsers: (page = 0, size = 20) =>
-    apiClient.request(`/api/admin/users?page=${page}&size=${size}`),
-  getUserById: (userId: number) => apiClient.request(`/api/admin/users/${userId}`),
-  searchUsers: (query: string) =>
-    apiClient.request(`/api/admin/users/search?query=${encodeURIComponent(query)}`),
+  getUsers: (page = 0, size = 20) => apiClient.get(`/api/admin/users`, { page, size }),
+  getUserById: (userId: number) => apiClient.get(`/api/admin/users/${userId}`),
+  searchUsers: (query: string) => apiClient.get(`/api/admin/users/search`, { query }),
   updateUserRoles: (userId: number, roles: string[]) =>
-    apiClient.request(`/api/admin/users/${userId}/roles`, {
-      method: "PUT",
-      body: JSON.stringify({ roles }),
-    }),
+    apiClient.put(`/api/admin/users/${userId}/roles`, { roles }),
   updateUserStatus: (userId: number, enabled: boolean) =>
-    apiClient.request(`/api/admin/users/${userId}/status`, {
-      method: "PUT",
-      body: JSON.stringify({ enabled }),
-    }),
-  promoteToAdmin: (userId: number) =>
-    apiClient.request(`/api/admin/users/${userId}/promote`, {
-      method: "POST",
-    }),
-  demoteFromAdmin: (userId: number) =>
-    apiClient.request(`/api/admin/users/${userId}/demote`, {
-      method: "POST",
-    }),
-  deleteUser: (userId: number) =>
-    apiClient.request(`/api/admin/users/${userId}`, {
-      method: "DELETE",
-    }),
+    apiClient.put(`/api/admin/users/${userId}/status`, { enabled }),
+  promoteToAdmin: (userId: number) => apiClient.post(`/api/admin/users/${userId}/promote`),
+  demoteFromAdmin: (userId: number) => apiClient.post(`/api/admin/users/${userId}/demote`),
+  deleteUser: (userId: number) => apiClient.del(`/api/admin/users/${userId}`),
   uploadMedia: async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
@@ -80,9 +63,9 @@ export const adminApi = {
         return response.json();
       });
   },
-  getSystemStats: () => apiClient.request("/api/admin/stats"),
-  getContentOverview: () => apiClient.request("/api/admin/content/overview"),
-  getQuizAnalytics: () => apiClient.request<QuizAnalytics>("/api/admin/quiz-analytics"),
+  getSystemStats: () => apiClient.get("/api/admin/stats"),
+  getContentOverview: () => apiClient.get("/api/admin/content/overview"),
+  getQuizAnalytics: () => apiClient.get<QuizAnalytics>("/api/admin/quiz-analytics"),
   exportQuizAnalyticsCsv: async () => {
     const response = await apiClient.fetchWithAuth("/api/admin/quiz-analytics/export");
     if (!response.ok) {

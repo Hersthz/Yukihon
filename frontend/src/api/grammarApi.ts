@@ -13,16 +13,12 @@ export interface GrammarDto {
 }
 
 export const grammarApi = {
-  getAll: () => apiClient.request<GrammarDto[]>("/api/grammar"),
-  getById: (id: number) => apiClient.request<GrammarDto>(`/api/grammar/${id}`),
-  getByLevel: (level: string) => apiClient.request<GrammarDto[]>(`/api/grammar/level/${level}`),
-  getLevels: () => apiClient.request<string[]>("/api/grammar/levels"),
-  create: (data: Record<string, unknown>) =>
-    apiClient.request<GrammarDto>("/api/grammar", { method: "POST", body: JSON.stringify(data) }),
+  getAll: () => apiClient.get<GrammarDto[]>("/api/grammar"),
+  getById: (id: number) => apiClient.get<GrammarDto>(`/api/grammar/${id}`),
+  getByLevel: (level: string) => apiClient.get<GrammarDto[]>(`/api/grammar/level/${level}`),
+  getLevels: () => apiClient.get<string[]>("/api/grammar/levels"),
+  create: (data: Record<string, unknown>) => apiClient.post<GrammarDto>("/api/grammar", data),
   update: (id: number, data: Record<string, unknown>) =>
-    apiClient.request<GrammarDto>(`/api/grammar/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(data),
-    }),
-  delete: (id: number) => apiClient.request<void>(`/api/grammar/${id}`, { method: "DELETE" }),
+    apiClient.put<GrammarDto>(`/api/grammar/${id}`, data),
+  delete: (id: number) => apiClient.del<void>(`/api/grammar/${id}`),
 };

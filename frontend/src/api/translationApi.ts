@@ -39,21 +39,13 @@ export interface TranslationHistoryItem {
 
 export const translationApi = {
   translate: (data: TranslatePayload) =>
-    apiClient.request<TranslateResponse>("/api/translation/translate", {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
+    apiClient.post<TranslateResponse>("/api/translation/translate", data),
   getHistory: (page = 0, size = 20) =>
-    apiClient.request<TranslationHistoryResponse>(
-      `/api/translation/history?page=${page}&size=${size}`
-    ),
-  getBookmarks: () => apiClient.request<TranslationHistoryItem[]>("/api/translation/bookmarks"),
+    apiClient.get<TranslationHistoryResponse>("/api/translation/history", { page, size }),
+  getBookmarks: () => apiClient.get<TranslationHistoryItem[]>("/api/translation/bookmarks"),
   toggleBookmark: (historyId: number) =>
-    apiClient.request<TranslationHistoryItem>(`/api/translation/history/${historyId}/bookmark`, {
-      method: "POST",
-    }),
-  deleteHistory: (historyId: number) =>
-    apiClient.request(`/api/translation/history/${historyId}`, { method: "DELETE" }),
-  clearHistory: () => apiClient.request("/api/translation/history", { method: "DELETE" }),
-  getStats: () => apiClient.request<TranslationStats>("/api/translation/stats"),
+    apiClient.post<TranslationHistoryItem>(`/api/translation/history/${historyId}/bookmark`),
+  deleteHistory: (historyId: number) => apiClient.del(`/api/translation/history/${historyId}`),
+  clearHistory: () => apiClient.del("/api/translation/history"),
+  getStats: () => apiClient.get<TranslationStats>("/api/translation/stats"),
 };

@@ -25,36 +25,23 @@ export const communityApi = {
     if (filters?.search) params.set("search", filters.search);
     if (filters?.bookmarkedOnly) params.set("bookmarkedOnly", "true");
 
-    return apiClient.request(`/api/community/posts?${params}`);
+    return apiClient.get(`/api/community/posts?${params}`);
   },
-  getPost: (postId: number) => apiClient.request(`/api/community/posts/${postId}`),
+  getPost: (postId: number) => apiClient.get(`/api/community/posts/${postId}`),
   getUserPosts: (userId: number, page = 0) =>
-    apiClient.request(`/api/community/posts/user/${userId}?page=${page}`),
-  createPost: (data: CreatePostPayload) =>
-    apiClient.request("/api/community/posts", {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
-  deletePost: (postId: number) =>
-    apiClient.request(`/api/community/posts/${postId}`, { method: "DELETE" }),
-  toggleLike: (postId: number) =>
-    apiClient.request(`/api/community/posts/${postId}/like`, { method: "POST" }),
-  toggleBookmark: (postId: number) =>
-    apiClient.request(`/api/community/posts/${postId}/bookmark`, { method: "POST" }),
+    apiClient.get(`/api/community/posts/user/${userId}`, { page }),
+  createPost: (data: CreatePostPayload) => apiClient.post("/api/community/posts", data),
+  deletePost: (postId: number) => apiClient.del(`/api/community/posts/${postId}`),
+  toggleLike: (postId: number) => apiClient.post(`/api/community/posts/${postId}/like`),
+  toggleBookmark: (postId: number) => apiClient.post(`/api/community/posts/${postId}/bookmark`),
   getComments: (postId: number, page = 0) =>
-    apiClient.request(`/api/community/posts/${postId}/comments?page=${page}`),
+    apiClient.get(`/api/community/posts/${postId}/comments`, { page }),
   addComment: (postId: number, content: string) =>
-    apiClient.request(`/api/community/posts/${postId}/comments`, {
-      method: "POST",
-      body: JSON.stringify({ content }),
-    }),
-  deleteComment: (commentId: number) =>
-    apiClient.request(`/api/community/comments/${commentId}`, { method: "DELETE" }),
-  getChatRooms: () => apiClient.request("/api/community/chat/rooms"),
+    apiClient.post(`/api/community/posts/${postId}/comments`, { content }),
+  deleteComment: (commentId: number) => apiClient.del(`/api/community/comments/${commentId}`),
+  getChatRooms: () => apiClient.get("/api/community/chat/rooms"),
   getChatMessages: (roomId = "general", limit = 50) =>
-    apiClient.request(
-      `/api/community/chat/messages?roomId=${encodeURIComponent(roomId)}&limit=${limit}`
-    ),
-  getStats: () => apiClient.request("/api/community/stats"),
-  getLeaderboard: () => apiClient.request("/api/community/leaderboard"),
+    apiClient.get(`/api/community/chat/messages`, { roomId, limit }),
+  getStats: () => apiClient.get("/api/community/stats"),
+  getLeaderboard: () => apiClient.get("/api/community/leaderboard"),
 };

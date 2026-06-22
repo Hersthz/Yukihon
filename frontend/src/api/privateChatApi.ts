@@ -20,9 +20,10 @@ export interface MessagePage<T> {
 
 export const privateChatApi = {
   getHistory: (otherUserId: number, page = 0, size = 50) =>
-    apiClient.request<MessagePage<PrivateMessage>>(
-      `/api/v1/private-chat/history/${otherUserId}?page=${page}&size=${size}`
-    ),
+    apiClient.get<MessagePage<PrivateMessage>>(`/api/v1/private-chat/history/${otherUserId}`, {
+      page,
+      size,
+    }),
 };
 
 export default privateChatApi;

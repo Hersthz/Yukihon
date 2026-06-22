@@ -22,25 +22,21 @@ export interface UserConnection {
 }
 
 export const friendApi = {
-  getFriends: () => apiClient.request<UserConnection[]>("/api/v1/connections/friends"),
+  getFriends: () => apiClient.get<UserConnection[]>("/api/v1/connections/friends"),
 
-  getFollowing: () => apiClient.request<UserConnection[]>("/api/v1/connections/following"),
+  getFollowing: () => apiClient.get<UserConnection[]>("/api/v1/connections/following"),
 
   getPendingRequests: (type: ConnectionType = ConnectionType.FRIEND) =>
-    apiClient.request<UserConnection[]>(`/api/v1/connections/pending?type=${type}`),
+    apiClient.get<UserConnection[]>("/api/v1/connections/pending", { type }),
 
   sendRequest: (receiverId: number, type: ConnectionType = ConnectionType.FRIEND) =>
-    apiClient.request<UserConnection>(`/api/v1/connections/request/${receiverId}?type=${type}`, {
-      method: "POST",
-    }),
+    apiClient.post<UserConnection>(`/api/v1/connections/request/${receiverId}?type=${type}`),
 
   acceptRequest: (connectionId: number) =>
-    apiClient.request<UserConnection>(`/api/v1/connections/accept/${connectionId}`, {
-      method: "POST",
-    }),
+    apiClient.post<UserConnection>(`/api/v1/connections/accept/${connectionId}`),
 
   removeConnection: (connectionId: number) =>
-    apiClient.request<void>(`/api/v1/connections/${connectionId}`, { method: "DELETE" }),
+    apiClient.del<void>(`/api/v1/connections/${connectionId}`),
 };
 
 export default friendApi;

@@ -136,16 +136,13 @@ const buildQuery = (query: LearningFunnelQuery) => {
 
 export const learningAnalyticsApi = {
   trackEvent: (payload: LearningAnalyticsEventPayload) =>
-    apiClient.request<void>("/api/analytics/events", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    }),
+    apiClient.post<void>("/api/analytics/events", payload),
 
   getFunnel: (query: LearningFunnelQuery = {}) =>
-    apiClient.request<LearningFunnelResponse>(
+    apiClient.get<LearningFunnelResponse>(
       `/api/admin/analytics/learning-funnel${buildQuery(query)}`
     ),
 
   getStudyCalendar: (query: StudyCalendarQuery = {}) =>
-    apiClient.request<StudyCalendarResponse>(`/api/analytics/study-calendar${buildQuery(query)}`),
+    apiClient.get<StudyCalendarResponse>(`/api/analytics/study-calendar${buildQuery(query)}`),
 };

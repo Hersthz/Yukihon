@@ -29,20 +29,16 @@ export interface LessonVersionDto {
 }
 
 export const lessonApi = {
-  getAll: () => apiClient.request<LessonDto[]>("/api/lessons"),
-  getPublished: () => apiClient.request<LessonDto[]>("/api/lessons/published"),
-  getById: (id: number) => apiClient.request<LessonDto>(`/api/lessons/${id}`),
-  getVersions: (id: number) => apiClient.request<LessonVersionDto[]>(`/api/lessons/${id}/versions`),
+  getAll: () => apiClient.get<LessonDto[]>("/api/lessons"),
+  getPublished: () => apiClient.get<LessonDto[]>("/api/lessons/published"),
+  getById: (id: number) => apiClient.get<LessonDto>(`/api/lessons/${id}`),
+  getVersions: (id: number) => apiClient.get<LessonVersionDto[]>(`/api/lessons/${id}/versions`),
   getByLevel: (level: string) =>
-    apiClient.request<LessonDto[]>(`/api/lessons/published/level/${level}`),
+    apiClient.get<LessonDto[]>(`/api/lessons/published/level/${level}`),
   getByCategory: (category: string) =>
-    apiClient.request<LessonDto[]>(`/api/lessons/published/category/${category}`),
-  create: (data: Record<string, unknown>) =>
-    apiClient.request<LessonDto>("/api/lessons", { method: "POST", body: JSON.stringify(data) }),
+    apiClient.get<LessonDto[]>(`/api/lessons/published/category/${category}`),
+  create: (data: Record<string, unknown>) => apiClient.post<LessonDto>("/api/lessons", data),
   update: (id: number, data: Record<string, unknown>) =>
-    apiClient.request<LessonDto>(`/api/lessons/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(data),
-    }),
-  delete: (id: number) => apiClient.request<void>(`/api/lessons/${id}`, { method: "DELETE" }),
+    apiClient.put<LessonDto>(`/api/lessons/${id}`, data),
+  delete: (id: number) => apiClient.del<void>(`/api/lessons/${id}`),
 };

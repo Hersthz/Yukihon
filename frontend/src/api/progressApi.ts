@@ -35,19 +35,13 @@ const buildStoryModePayload = (notes: string): UserProgressPayload => ({
 });
 
 export const progressApi = {
-  getMine: () => apiClient.request<UserProgress[]>("/api/progress"),
+  getMine: () => apiClient.get<UserProgress[]>("/api/progress"),
   createForUser: (userId: number, payload: UserProgressPayload) =>
-    apiClient.request<UserProgress>(`/api/progress/user/${userId}`, {
-      method: "POST",
-      body: JSON.stringify(payload),
-    }),
+    apiClient.post<UserProgress>(`/api/progress/user/${userId}`, payload),
   update: (id: number, payload: UserProgressPayload) =>
-    apiClient.request<UserProgress>(`/api/progress/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(payload),
-    }),
+    apiClient.put<UserProgress>(`/api/progress/${id}`, payload),
   getStoryModeProgress: async () => {
-    const progress = await apiClient.request<UserProgress[]>("/api/progress");
+    const progress = await apiClient.get<UserProgress[]>("/api/progress");
     return progress.find((item) => item.vocabularyId === STORY_MODE_PROGRESS_VOCABULARY_ID) ?? null;
   },
   upsertStoryModeProgress: async (params: {
@@ -58,23 +52,14 @@ export const progressApi = {
     const payload = buildStoryModePayload(params.notes);
 
     if (params.progressId) {
-      return apiClient.request<UserProgress>(`/api/progress/${params.progressId}`, {
-        method: "PUT",
-        body: JSON.stringify(payload),
-      });
+      return apiClient.put<UserProgress>(`/api/progress/${params.progressId}`, payload);
     }
 
     const existing = await progressApi.getStoryModeProgress();
     if (existing?.id) {
-      return apiClient.request<UserProgress>(`/api/progress/${existing.id}`, {
-        method: "PUT",
-        body: JSON.stringify(payload),
-      });
+      return apiClient.put<UserProgress>(`/api/progress/${existing.id}`, payload);
     }
 
-    return apiClient.request<UserProgress>(`/api/progress/user/${params.userId}`, {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
+    return apiClient.post<UserProgress>(`/api/progress/user/${params.userId}`, payload);
   },
 };

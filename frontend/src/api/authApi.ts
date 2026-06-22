@@ -38,55 +38,37 @@ export const authApi = {
     displayName: string;
     jlptTargetLevel?: string;
   }) {
-    return apiClient.request<AuthResponse>("/api/auth/register", {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
+    return apiClient.post<AuthResponse>("/api/auth/register", data);
   },
 
   login(data: { email: string; password: string }) {
-    return apiClient.request<AuthResponse>("/api/auth/login", {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
+    return apiClient.post<AuthResponse>("/api/auth/login", data);
   },
 
   getCurrentUser() {
-    return apiClient.request<AuthUser>("/api/auth/me");
+    return apiClient.get<AuthUser>("/api/auth/me");
   },
 
   updateProfile(data: UpdateProfilePayload) {
-    return apiClient.request<AuthUser>("/api/auth/profile", {
-      method: "PUT",
-      body: JSON.stringify(data),
-    });
+    return apiClient.put<AuthUser>("/api/auth/profile", data);
   },
 
   changePassword(data: ChangePasswordPayload) {
-    return apiClient.request<void>("/api/auth/password", {
-      method: "PUT",
-      body: JSON.stringify(data),
-    });
+    return apiClient.put<void>("/api/auth/password", data);
   },
 
   forgotPassword(email: string) {
-    return apiClient.request<ForgotPasswordResponse>("/api/auth/forgot-password", {
-      method: "POST",
-      body: JSON.stringify({ email }),
-    });
+    return apiClient.post<ForgotPasswordResponse>("/api/auth/forgot-password", { email });
   },
 
   resetPassword(data: { token: string; newPassword: string }) {
-    return apiClient.request<void>("/api/auth/reset-password", {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
+    return apiClient.post<void>("/api/auth/reset-password", data);
   },
 
   async googleAuth(code: string): Promise<AuthResponse> {
-    return apiClient.request<AuthResponse>("/api/auth/google", {
-      method: "POST",
-      body: JSON.stringify({ code, redirectUri: GOOGLE_REDIRECT_URI }),
+    return apiClient.post<AuthResponse>("/api/auth/google", {
+      code,
+      redirectUri: GOOGLE_REDIRECT_URI,
     });
   },
 
