@@ -144,7 +144,11 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
     loadHistory: false,
     trackUnread: true,
   });
-  const { summary: reminderSummary, loading: remindersLoading, refresh: refreshReminders } = useReminders(isAuthenticated);
+  const {
+    summary: reminderSummary,
+    loading: remindersLoading,
+    refresh: refreshReminders,
+  } = useReminders(isAuthenticated);
 
   useEffect(() => {
     if (onCommunityPage) {
@@ -194,7 +198,9 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
           <div
             className={cn(
               "flex h-11 w-11 items-center justify-center rounded-[1rem] transition-colors",
-              active ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground group-hover:bg-secondary"
+              active
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground group-hover:bg-secondary"
             )}
           >
             <Icon className="h-4 w-4" />
@@ -212,7 +218,9 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
         </div>
 
         {!compact && !computedBadge && (
-          <ChevronRight className={cn("h-4 w-4", active ? "text-primary" : "text-muted-foreground")} />
+          <ChevronRight
+            className={cn("h-4 w-4", active ? "text-primary" : "text-muted-foreground")}
+          />
         )}
       </Link>
     );
@@ -231,7 +239,9 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
           </div>
           {!compact && (
             <div className="min-w-0">
-              <p className="truncate text-[1.35rem] font-black tracking-tight text-foreground">Yukihon</p>
+              <p className="truncate text-[1.35rem] font-black tracking-tight text-foreground">
+                Yukihon
+              </p>
               <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                 Light study system
               </p>
@@ -271,7 +281,9 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
                 {group.label}
               </p>
             )}
-            <div className="space-y-1.5">{group.items.map((item) => renderItem(item, compact))}</div>
+            <div className="space-y-1.5">
+              {group.items.map((item) => renderItem(item, compact))}
+            </div>
           </div>
         ))}
 
@@ -284,7 +296,10 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
             )}
             <div className="space-y-1.5">
               {group.items.map((item) =>
-                renderItem({ label: item.title, path: item.url, icon: resolveAutoIcon(item.icon) }, compact)
+                renderItem(
+                  { label: item.title, path: item.url, icon: resolveAutoIcon(item.icon) },
+                  compact
+                )
               )}
             </div>
           </div>
@@ -394,14 +409,20 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
               onClick={onToggleCollapse}
               type="button"
             >
-              {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+              {collapsed ? (
+                <ChevronRight className="h-4 w-4" />
+              ) : (
+                <ChevronLeft className="h-4 w-4" />
+              )}
             </button>
 
             <div>
               <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
                 {pageMeta.eyebrow}
               </p>
-              <h1 className="display-font text-[2rem] leading-none text-foreground">{pageMeta.title}</h1>
+              <h1 className="display-font text-[2rem] leading-none text-foreground">
+                {pageMeta.title}
+              </h1>
             </div>
           </div>
 
@@ -430,13 +451,20 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
                   )}
                 </button>
               </PopoverTrigger>
-              <PopoverContent align="end" className="w-[360px] rounded-[1.4rem] border-border/80 bg-white p-3">
+              <PopoverContent
+                align="end"
+                className="w-[360px] rounded-[1.4rem] border-border/80 bg-white p-3"
+              >
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold text-foreground">Reminders</p>
-                    <p className="text-xs text-muted-foreground">Due reviews, story progress, and chat signals.</p>
+                    <p className="text-xs text-muted-foreground">
+                      Due reviews, story progress, and chat signals.
+                    </p>
                   </div>
-                  {reminderSummary.urgentCount > 0 ? <Badge className="bg-rose-500 text-white">Urgent</Badge> : null}
+                  {reminderSummary.urgentCount > 0 ? (
+                    <Badge className="bg-rose-500 text-white">Urgent</Badge>
+                  ) : null}
                 </div>
 
                 <div className="space-y-2">
@@ -451,8 +479,12 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="text-sm font-semibold text-foreground">Tin nhắn cộng đồng mới</p>
-                          <p className="mt-1 text-xs leading-5 text-muted-foreground">{unreadCount} tin chưa đọc trong phòng general.</p>
+                          <p className="text-sm font-semibold text-foreground">
+                            Tin nhắn cộng đồng mới
+                          </p>
+                          <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                            {unreadCount} tin chưa đọc trong phòng general.
+                          </p>
                         </div>
                         <Badge variant="outline">{unreadCount}</Badge>
                       </div>
@@ -460,47 +492,56 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
                   )}
 
                   {remindersLoading && (
-                    <div className="rounded-[1rem] border border-border bg-muted/40 p-3 text-sm text-muted-foreground">Đang tải reminder...</div>
+                    <div className="rounded-[1rem] border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
+                      Đang tải reminder...
+                    </div>
                   )}
 
                   {!remindersLoading && reminderSummary.items.length === 0 && unreadCount === 0 && (
                     <div className="rounded-[1rem] border border-border bg-muted/30 p-4 text-center">
                       <p className="text-sm font-semibold text-foreground">Không có gì đến hạn</p>
-                      <p className="mt-1 text-xs text-muted-foreground">Hàng đợi đang sạch. Một cảnh hiếm gặp, tận hưởng đi.</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Hàng đợi đang sạch. Một cảnh hiếm gặp, tận hưởng đi.
+                      </p>
                     </div>
                   )}
 
-                  {!remindersLoading && reminderSummary.items.map((item) => (
-                    <button
-                      key={item.id}
-                      className="w-full rounded-[1rem] border border-border bg-card p-3 text-left transition hover:bg-muted/40"
-                      onClick={() => navigate(item.actionPath)}
-                      type="button"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <p className="text-sm font-semibold text-foreground">{item.title}</p>
-                            <Badge
-                              variant="outline"
-                              className={
-                                item.priority === "HIGH"
-                                  ? "border-rose-200 bg-rose-50 text-rose-700"
-                                  : item.priority === "MEDIUM"
-                                    ? "border-amber-200 bg-amber-50 text-amber-700"
-                                    : "border-sky-200 bg-sky-50 text-sky-700"
-                              }
-                            >
-                              {item.priority}
-                            </Badge>
+                  {!remindersLoading &&
+                    reminderSummary.items.map((item) => (
+                      <button
+                        key={item.id}
+                        className="w-full rounded-[1rem] border border-border bg-card p-3 text-left transition hover:bg-muted/40"
+                        onClick={() => navigate(item.actionPath)}
+                        type="button"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm font-semibold text-foreground">{item.title}</p>
+                              <Badge
+                                variant="outline"
+                                className={
+                                  item.priority === "HIGH"
+                                    ? "border-rose-200 bg-rose-50 text-rose-700"
+                                    : item.priority === "MEDIUM"
+                                      ? "border-amber-200 bg-amber-50 text-amber-700"
+                                      : "border-sky-200 bg-sky-50 text-sky-700"
+                                }
+                              >
+                                {item.priority}
+                              </Badge>
+                            </div>
+                            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                              {item.description}
+                            </p>
+                            <p className="mt-2 text-xs font-semibold text-primary">
+                              {item.actionLabel}
+                            </p>
                           </div>
-                          <p className="mt-1 text-xs leading-5 text-muted-foreground">{item.description}</p>
-                          <p className="mt-2 text-xs font-semibold text-primary">{item.actionLabel}</p>
+                          <Badge variant="outline">{item.count}</Badge>
                         </div>
-                        <Badge variant="outline">{item.count}</Badge>
-                      </div>
-                    </button>
-                  ))}
+                      </button>
+                    ))}
                 </div>
               </PopoverContent>
             </Popover>
@@ -520,7 +561,9 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
 
       <div className="fixed inset-x-0 top-0 z-50 flex items-center justify-between px-4 pt-4 lg:hidden">
         <div className="rounded-[1.2rem] border-2 border-border/80 bg-white/92 px-4 py-3 shadow-[0_18px_46px_-28px_rgba(32,48,74,0.3)] backdrop-blur-xl">
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">{pageMeta.eyebrow}</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+            {pageMeta.eyebrow}
+          </p>
           <p className="display-font text-2xl leading-none">{pageMeta.title}</p>
         </div>
 

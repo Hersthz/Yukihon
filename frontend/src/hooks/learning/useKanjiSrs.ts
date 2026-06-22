@@ -62,12 +62,23 @@ const buildLocalDashboard = (records: KanjiSrsRecord[]): KanjiSrsDashboard => {
   return {
     ...emptyDashboard,
     deckCount: records.length,
-    dueTodayCount: records.filter((record) => !record.nextReviewAt || new Date(record.nextReviewAt).getTime() <= endOfToday.getTime()).length,
-    overdueCount: records.filter((record) => !record.nextReviewAt || new Date(record.nextReviewAt).getTime() <= now).length,
+    dueTodayCount: records.filter(
+      (record) =>
+        !record.nextReviewAt || new Date(record.nextReviewAt).getTime() <= endOfToday.getTime()
+    ).length,
+    overdueCount: records.filter(
+      (record) => !record.nextReviewAt || new Date(record.nextReviewAt).getTime() <= now
+    ).length,
     masteredCount,
     learningCount: Math.max(0, records.length - masteredCount),
     weakCount: weakKanji.length,
-    reviewStreakDays: records.some((record) => record.lastReviewedAt && now - new Date(record.lastReviewedAt).getTime() < 48 * 60 * 60 * 1000) ? 1 : 0,
+    reviewStreakDays: records.some(
+      (record) =>
+        record.lastReviewedAt &&
+        now - new Date(record.lastReviewedAt).getTime() < 48 * 60 * 60 * 1000
+    )
+      ? 1
+      : 0,
     totalReviews,
     retentionRate: totalReviews > 0 ? Math.round((stableReviews * 1000) / totalReviews) / 10 : 0,
     weakKanji,
@@ -122,15 +133,9 @@ export const useKanjiSrs = (catalog: KanjiEntry[]) => {
     [records]
   );
 
-  const dueToday = useMemo(
-    () => records.filter(isKanjiDue),
-    [records]
-  );
+  const dueToday = useMemo(() => records.filter(isKanjiDue), [records]);
 
-  const masteredCount = useMemo(
-    () => records.filter(isKanjiMastered).length,
-    [records]
-  );
+  const masteredCount = useMemo(() => records.filter(isKanjiMastered).length, [records]);
 
   const deck = useMemo(
     () =>
@@ -140,62 +145,83 @@ export const useKanjiSrs = (catalog: KanjiEntry[]) => {
           return kanji ? { ...kanji, srs: record } : null;
         })
         .filter((item): item is KanjiEntry & { srs: KanjiSrsRecord } => Boolean(item))
-        .sort((left, right) => new Date(left.srs.nextReviewAt).getTime() - new Date(right.srs.nextReviewAt).getTime()),
+        .sort(
+          (left, right) =>
+            new Date(left.srs.nextReviewAt).getTime() - new Date(right.srs.nextReviewAt).getTime()
+        ),
     [catalog, records]
   );
 
-  const addToSrs = useCallback(async (character: string) => {
-    const optimisticRecords = saveKanjiToSrs(character);
-    setRecords(optimisticRecords);
-    setDashboard(buildLocalDashboard(optimisticRecords));
+  const addToSrs = useCallback(
+    async (character: string) => {
+      const optimisticRecords = saveKanjiToSrs(character);
+      setRecords(optimisticRecords);
+      setDashboard(buildLocalDashboard(optimisticRecords));
 
-    if (!isAuthenticated) return;
+      if (!isAuthenticated) return;
 
-    try {
-      const saved = await kanjiSrsApi.add(character);
-      setRecords((current) => syncKanjiSrsRecords([saved, ...current.filter((record) => record.character !== character)]));
-      setDashboard(await kanjiSrsApi.getDashboard());
-      setSyncError(null);
-    } catch (error) {
-      setSyncError(error instanceof Error ? error.message : "Không thêm được kanji vào SRS");
-      void refresh();
-    }
-  }, [isAuthenticated, refresh]);
+      try {
+        const saved = await kanjiSrsApi.add(character);
+        setRecords((current) =>
+          syncKanjiSrsRecords([
+            saved,
+            ...current.filter((record) => record.character !== character),
+          ])
+        );
+        setDashboard(await kanjiSrsApi.getDashboard());
+        setSyncError(null);
+      } catch (error) {
+        setSyncError(error instanceof Error ? error.message : "Không thêm được kanji vào SRS");
+        void refresh();
+      }
+    },
+    [isAuthenticated, refresh]
+  );
 
-  const removeFromSrs = useCallback(async (character: string) => {
-    const nextRecords = removeKanjiFromSrs(character);
-    setRecords(nextRecords);
-    setDashboard(buildLocalDashboard(nextRecords));
+  const removeFromSrs = useCallback(
+    async (character: string) => {
+      const nextRecords = removeKanjiFromSrs(character);
+      setRecords(nextRecords);
+      setDashboard(buildLocalDashboard(nextRecords));
 
-    if (!isAuthenticated) return;
+      if (!isAuthenticated) return;
 
-    try {
-      await kanjiSrsApi.remove(character);
-      setDashboard(await kanjiSrsApi.getDashboard());
-      setSyncError(null);
-    } catch (error) {
-      setSyncError(error instanceof Error ? error.message : "Không xóa được kanji khỏi SRS");
-      void refresh();
-    }
-  }, [isAuthenticated, refresh]);
+      try {
+        await kanjiSrsApi.remove(character);
+        setDashboard(await kanjiSrsApi.getDashboard());
+        setSyncError(null);
+      } catch (error) {
+        setSyncError(error instanceof Error ? error.message : "Không xóa được kanji khỏi SRS");
+        void refresh();
+      }
+    },
+    [isAuthenticated, refresh]
+  );
 
-  const review = useCallback(async (character: string, rating: KanjiReviewRating) => {
-    const optimisticRecords = reviewKanji(character, rating);
-    setRecords(optimisticRecords);
-    setDashboard(buildLocalDashboard(optimisticRecords));
+  const review = useCallback(
+    async (character: string, rating: KanjiReviewRating) => {
+      const optimisticRecords = reviewKanji(character, rating);
+      setRecords(optimisticRecords);
+      setDashboard(buildLocalDashboard(optimisticRecords));
 
-    if (!isAuthenticated) return;
+      if (!isAuthenticated) return;
 
-    try {
-      const reviewed = await kanjiSrsApi.review(character, rating);
-      setRecords((current) => syncKanjiSrsRecords(current.map((record) => (record.character === character ? reviewed : record))));
-      setDashboard(await kanjiSrsApi.getDashboard());
-      setSyncError(null);
-    } catch (error) {
-      setSyncError(error instanceof Error ? error.message : "Không lưu được kết quả review");
-      void refresh();
-    }
-  }, [isAuthenticated, refresh]);
+      try {
+        const reviewed = await kanjiSrsApi.review(character, rating);
+        setRecords((current) =>
+          syncKanjiSrsRecords(
+            current.map((record) => (record.character === character ? reviewed : record))
+          )
+        );
+        setDashboard(await kanjiSrsApi.getDashboard());
+        setSyncError(null);
+      } catch (error) {
+        setSyncError(error instanceof Error ? error.message : "Không lưu được kết quả review");
+        void refresh();
+      }
+    },
+    [isAuthenticated, refresh]
+  );
 
   return {
     records,

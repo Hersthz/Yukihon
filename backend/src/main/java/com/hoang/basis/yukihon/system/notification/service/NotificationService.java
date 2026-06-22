@@ -31,7 +31,8 @@ public class NotificationService {
 
     @Transactional(readOnly = true)
     public Page<NotificationDto> list(Long userId, Pageable pageable) {
-        return notificationRepository.findByUserIdOrderByIdDesc(userId, pageable)
+        return notificationRepository
+                .findByUserIdOrderByIdDesc(userId, pageable)
                 .map(NotificationDto::fromEntity);
     }
 
@@ -42,7 +43,8 @@ public class NotificationService {
 
     @Transactional
     public NotificationDto markRead(Long id, Long userId) {
-        Notification notification = notificationRepository.findByIdAndUserId(id, userId)
+        Notification notification = notificationRepository
+                .findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Notification not found: " + id));
         notification.setRead(true);
         return NotificationDto.fromEntity(notificationRepository.save(notification));

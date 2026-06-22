@@ -4,13 +4,12 @@ import com.hoang.basis.yukihon.system.quiz.dto.QuizDto;
 import com.hoang.basis.yukihon.system.quiz.dto.QuizRequest;
 import com.hoang.basis.yukihon.system.quiz.entity.Quiz;
 import com.hoang.basis.yukihon.system.quiz.repository.QuizRepository;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -22,55 +21,48 @@ public class QuizService {
 
     @Transactional(readOnly = true)
     public QuizDto getQuizById(Long id) {
-        return quizRepository.findById(id)
+        return quizRepository
+                .findById(id)
                 .map(this::convertToDto)
                 .orElseThrow(() -> new RuntimeException("Quiz not found with id: " + id));
     }
 
     @Transactional(readOnly = true)
     public List<QuizDto> getAll() {
-        return quizRepository.findAll()
-                .stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
+        return quizRepository.findAll().stream().map(this::convertToDto).collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public List<QuizDto> getByType(String quizType) {
-        return quizRepository.findByQuizType(Quiz.QuizType.valueOf(quizType))
-                .stream()
+        return quizRepository.findByQuizType(Quiz.QuizType.valueOf(quizType)).stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public List<QuizDto> getByDifficultyLevel(String difficultyLevel) {
-        return quizRepository.findByDifficultyLevel(difficultyLevel)
-                .stream()
+        return quizRepository.findByDifficultyLevel(difficultyLevel).stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public List<QuizDto> getByJlptLevel(String jlptLevel) {
-        return quizRepository.findByJlptLevel(jlptLevel)
-                .stream()
+        return quizRepository.findByJlptLevel(jlptLevel).stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public List<QuizDto> getByLessonId(Long lessonId) {
-        return quizRepository.findByLessonIdOrderByCreatedAtAsc(lessonId)
-                .stream()
+        return quizRepository.findByLessonIdOrderByCreatedAtAsc(lessonId).stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public List<QuizDto> getByLevelAndDifficulty(String level, String difficulty) {
-        return quizRepository.findByLevelAndDifficulty(level, difficulty)
-                .stream()
+        return quizRepository.findByLevelAndDifficulty(level, difficulty).stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
@@ -102,8 +94,8 @@ public class QuizService {
     }
 
     public QuizDto updateQuiz(Long id, QuizRequest request) {
-        Quiz quiz = quizRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Quiz not found with id: " + id));
+        Quiz quiz =
+                quizRepository.findById(id).orElseThrow(() -> new RuntimeException("Quiz not found with id: " + id));
 
         quiz.setTitle(request.getTitle());
         quiz.setDescription(request.getDescription());

@@ -1,6 +1,12 @@
 import { useState } from "react";
 import type { LearningFunnelDailyPoint } from "@/api/learningAnalyticsApi";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   ChartContainer,
   ChartLegend,
@@ -75,16 +81,17 @@ const LearningFunnelTrendChart = ({ dailyTrend }: LearningFunnelTrendChartProps)
       <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div>
           <p className="text-sm font-medium">Daily Retention Trend</p>
-          <p className="text-xs text-muted-foreground">
-            {metricFocusDescriptions[metricFocus]}
-          </p>
+          <p className="text-xs text-muted-foreground">{metricFocusDescriptions[metricFocus]}</p>
         </div>
 
         <div className="w-full md:w-[220px]">
           <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Metric focus
           </label>
-          <Select value={metricFocus} onValueChange={(value) => setMetricFocus(value as MetricFocus)}>
+          <Select
+            value={metricFocus}
+            onValueChange={(value) => setMetricFocus(value as MetricFocus)}
+          >
             <SelectTrigger className="h-9">
               <SelectValue placeholder="Choose metric" />
             </SelectTrigger>
@@ -107,7 +114,13 @@ const LearningFunnelTrendChart = ({ dailyTrend }: LearningFunnelTrendChartProps)
             minTickGap={20}
             tickFormatter={(value: string) => toShortDate(value)}
           />
-          <YAxis yAxisId="count" tickLine={false} axisLine={false} allowDecimals={false} width={42} />
+          <YAxis
+            yAxisId="count"
+            tickLine={false}
+            axisLine={false}
+            allowDecimals={false}
+            width={42}
+          />
           <YAxis
             yAxisId="percent"
             orientation="right"
@@ -128,14 +141,23 @@ const LearningFunnelTrendChart = ({ dailyTrend }: LearningFunnelTrendChartProps)
                   }
 
                   const isPercent = name !== "startedCount";
-                  return [isPercent ? `${value.toFixed(1)}%` : value.toLocaleString(), String(name)];
+                  return [
+                    isPercent ? `${value.toFixed(1)}%` : value.toLocaleString(),
+                    String(name),
+                  ];
                 }}
               />
             }
           />
           <ChartLegend content={<ChartLegendContent />} />
 
-          <Bar yAxisId="count" dataKey="startedCount" fill="var(--color-startedCount)" barSize={16} radius={[4, 4, 0, 0]} />
+          <Bar
+            yAxisId="count"
+            dataKey="startedCount"
+            fill="var(--color-startedCount)"
+            barSize={16}
+            radius={[4, 4, 0, 0]}
+          />
           <Line
             yAxisId="percent"
             type="monotone"

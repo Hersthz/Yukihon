@@ -49,10 +49,30 @@ const MistakeDna = () => {
         ) : (
           <>
             <div className="mb-4 grid gap-3 md:grid-cols-4">
-              <MetricCard label="Risk score" value={`${data.overallRiskScore}%`} icon={<Radar className="h-4 w-4 text-rose-500" />} hint="Combined pressure from quiz, lesson, and SRS signals" />
-              <MetricCard label="Quiz accuracy" value={`${data.averageQuizAccuracy}%`} icon={<Target className="h-4 w-4 text-sky-500" />} hint="Average across checkpoint attempts" />
-              <MetricCard label="Due reviews" value={data.dueReviews} icon={<Brain className="h-4 w-4 text-amber-500" />} hint="Cards asking to be revisited now" />
-              <MetricCard label="Open lessons" value={data.inProgressLessons} icon={<Sparkles className="h-4 w-4 text-violet-500" />} hint="Learning loops still left unfinished" />
+              <MetricCard
+                label="Risk score"
+                value={`${data.overallRiskScore}%`}
+                icon={<Radar className="h-4 w-4 text-rose-500" />}
+                hint="Combined pressure from quiz, lesson, and SRS signals"
+              />
+              <MetricCard
+                label="Quiz accuracy"
+                value={`${data.averageQuizAccuracy}%`}
+                icon={<Target className="h-4 w-4 text-sky-500" />}
+                hint="Average across checkpoint attempts"
+              />
+              <MetricCard
+                label="Due reviews"
+                value={data.dueReviews}
+                icon={<Brain className="h-4 w-4 text-amber-500" />}
+                hint="Cards asking to be revisited now"
+              />
+              <MetricCard
+                label="Open lessons"
+                value={data.inProgressLessons}
+                icon={<Sparkles className="h-4 w-4 text-violet-500" />}
+                hint="Learning loops still left unfinished"
+              />
             </div>
 
             <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
@@ -61,7 +81,9 @@ const MistakeDna = () => {
                 description={data.dominantPatternDescription}
                 action={
                   data.patterns[0] ? (
-                    <Badge className={`rounded-full border ${severityTone[data.patterns[0].severity]}`}>
+                    <Badge
+                      className={`rounded-full border ${severityTone[data.patterns[0].severity]}`}
+                    >
                       {severityLabel[data.patterns[0].severity]}
                     </Badge>
                   ) : null
@@ -90,12 +112,16 @@ const MistakeDna = () => {
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      Higher confidence means the profile has enough repeated signals from your recent study activity.
+                      Higher confidence means the profile has enough repeated signals from your
+                      recent study activity.
                     </p>
 
                     <div className="mt-4 space-y-3">
                       {data.nextMoves.map((move) => (
-                        <div key={move} className="rounded-2xl border border-border bg-card px-3 py-3">
+                        <div
+                          key={move}
+                          className="rounded-2xl border border-border bg-card px-3 py-3"
+                        >
                           <p className="text-sm text-foreground">{move}</p>
                         </div>
                       ))}
@@ -104,14 +130,20 @@ const MistakeDna = () => {
                 </div>
               </PageSection>
 
-              <PageSection title="How to read it" description="Each pattern stays tied to evidence so the profile feels useful, not magical.">
+              <PageSection
+                title="How to read it"
+                description="Each pattern stays tied to evidence so the profile feels useful, not magical."
+              >
                 <div className="space-y-3">
                   {[
                     "Quiz patterns come from your checkpoint scores and quiz type history.",
                     "JLPT pressure points are inferred from where your scores or unfinished lessons cluster.",
                     "Memory friction comes from due reviews, low ease cards, and shallow repetition history.",
                   ].map((item) => (
-                    <div key={item} className="rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground">
+                    <div
+                      key={item}
+                      className="rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground"
+                    >
                       {item}
                     </div>
                   ))}

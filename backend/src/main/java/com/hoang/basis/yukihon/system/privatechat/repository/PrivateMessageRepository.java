@@ -11,7 +11,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface PrivateMessageRepository extends JpaRepository<PrivateMessage, Long> {
 
-    @Query("SELECT m FROM PrivateMessage m WHERE (m.sender = :user1 AND m.receiver = :user2) OR (m.sender = :user2 AND m.receiver = :user1) ORDER BY m.createdAt DESC")
+    @Query(
+            "SELECT m FROM PrivateMessage m WHERE (m.sender = :user1 AND m.receiver = :user2) OR (m.sender = :user2 AND m.receiver = :user1) ORDER BY m.createdAt DESC")
     Page<PrivateMessage> findConversation(User user1, User user2, Pageable pageable);
-
 }

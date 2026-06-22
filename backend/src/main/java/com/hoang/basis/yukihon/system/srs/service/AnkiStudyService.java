@@ -20,11 +20,6 @@ import com.hoang.basis.yukihon.system.srs.repository.AnkiReviewLogRepository;
 import com.hoang.basis.yukihon.system.srs.repository.AnkiSrsProgressRepository;
 import com.hoang.basis.yukihon.system.srs.repository.AnkiSrsSettingRepository;
 import com.hoang.basis.yukihon.system.srs.repository.SrsAlgorithmConfigRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -33,6 +28,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Anki-style SM-2 scheduler: loads the study queue and applies ratings (AGAIN/HARD/GOOD/EASY),
@@ -61,7 +60,8 @@ public class AnkiStudyService {
 
     @Transactional(readOnly = true)
     public AnkiStudyQueueDto getStudyQueue(Long userId, Long deckId) {
-        Deck deck = deckRepository.findById(deckId)
+        Deck deck = deckRepository
+                .findById(deckId)
                 .orElseThrow(() -> new ResourceNotFoundException("Deck not found: " + deckId));
 
         List<DeckItem> items = deckItemRepository.findByDeckIdAndIsDeletedFalseOrderByOrderIndexAsc(deck.getId());
@@ -70,10 +70,11 @@ public class AnkiStudyService {
                 .collect(Collectors.toMap(Flashcard::getId, f -> f));
 
         List<AnkiSrsProgress> progressList = progressRepository.findByUserIdAndDeckId(userId, deckId);
-        Map<Long, AnkiSrsProgress> progressMap = progressList.stream()
-                .collect(Collectors.toMap(AnkiSrsProgress::getFlashcardId, p -> p));
+        Map<Long, AnkiSrsProgress> progressMap =
+                progressList.stream().collect(Collectors.toMap(AnkiSrsProgress::getFlashcardId, p -> p));
 
-        AnkiSrsSetting setting = settingRepository.findByUserIdAndDeckId(userId, deckId).orElse(null);
+        AnkiSrsSetting setting =
+                settingRepository.findByUserIdAndDeckId(userId, deckId).orElse(null);
         SchedulingConfig config = resolveConfig(setting);
         LocalDateTime now = LocalDateTime.now();
 
@@ -85,7 +86,8 @@ public class AnkiStudyService {
         long reviewedToday = progressList.stream()
                 .filter(p -> p.getLastReviewedAt() != null)
                 .filter(p -> today.equals(p.getLastReviewedAt().toLocalDate()))
-                .filter(p -> p.getFirstLearnedAt() == null || !today.equals(p.getFirstLearnedAt().toLocalDate()))
+                .filter(p -> p.getFirstLearnedAt() == null
+                        || !today.equals(p.getFirstLearnedAt().toLocalDate()))
                 .count();
 
         int newLimit = setting != null && setting.getMaxItemsPerDay() != null
@@ -160,12 +162,15 @@ public class AnkiStudyService {
     // ===================== REVIEW =====================
 
     public AnkiStudyCardDto review(Long userId, AnkiReviewRequest request) {
-        Flashcard flashcard = flashcardRepository.findById(request.getFlashcardId())
+        Flashcard flashcard = flashcardRepository
+                .findById(request.getFlashcardId())
                 .orElseThrow(() -> new ResourceNotFoundException("Flashcard not found: " + request.getFlashcardId()));
-        Deck deck = deckRepository.findById(request.getDeckId())
+        Deck deck = deckRepository
+                .findById(request.getDeckId())
                 .orElseThrow(() -> new ResourceNotFoundException("Deck not found: " + request.getDeckId()));
 
-        AnkiSrsSetting setting = settingRepository.findByUserIdAndDeckId(userId, deck.getId()).orElse(null);
+        AnkiSrsSetting setting =
+                settingRepository.findByUserIdAndDeckId(userId, deck.getId()).orElse(null);
         SchedulingConfig config = resolveConfig(setting);
         LocalDateTime now = LocalDateTime.now();
 
@@ -195,7 +200,8 @@ public class AnkiStudyService {
         applyAnkiSm2(progress, request.getRating(), config, now);
 
         // leech detection (algorithm-agnostic)
-        if (setting != null && progress.getLapses() != null
+        if (setting != null
+                && progress.getLapses() != null
                 && progress.getLapses() >= nvl(setting.getLeechThreshold(), 8)
                 && !Boolean.TRUE.equals(progress.getIsLeech())) {
             progress.setIsLeech(true);
@@ -253,8 +259,8 @@ public class AnkiStudyService {
         progress.setMemoryScore(memoryScore(progress.getEaseFactor(), config));
     }
 
-    private void applyLearningAnswer(AnkiSrsProgress progress, String rating, SchedulingConfig config,
-                                     LocalDateTime now, boolean relearning) {
+    private void applyLearningAnswer(
+            AnkiSrsProgress progress, String rating, SchedulingConfig config, LocalDateTime now, boolean relearning) {
         List<Duration> steps = relearning ? config.relearningSteps : config.learningSteps;
 
         if (steps.isEmpty()) {
@@ -274,20 +280,27 @@ public class AnkiStudyService {
                 Duration againDelay = steps.get(currentStep);
                 Duration goodDelay = currentStep + 1 < steps.size()
                         ? steps.get(currentStep + 1)
-                        : Duration.ofDays(Math.max(1, relearning
-                                ? nvl(progress.getIntervalDays(), 1)
-                                : config.graduatingIntervalDays));
+                        : Duration.ofDays(Math.max(
+                                1, relearning ? nvl(progress.getIntervalDays(), 1) : config.graduatingIntervalDays));
                 Duration hardDelay = average(againDelay, goodDelay);
                 progress.setState(relearning ? "RELEARNING" : "LEARNING");
                 progress.setLearningStepIndex(currentStep);
                 progress.setNextReviewAt(now.plus(hardDelay));
             }
-            case "EASY" -> graduate(progress, relearning
-                    ? Math.max(nvl(progress.getIntervalDays(), 1), config.graduatingIntervalDays)
-                    : config.easyIntervalDays, config, now);
+            case "EASY" -> graduate(
+                    progress,
+                    relearning
+                            ? Math.max(nvl(progress.getIntervalDays(), 1), config.graduatingIntervalDays)
+                            : config.easyIntervalDays,
+                    config,
+                    now);
             default -> {
                 if (currentStep + 1 >= steps.size()) {
-                    graduate(progress, relearning ? progress.getIntervalDays() : config.graduatingIntervalDays, config, now);
+                    graduate(
+                            progress,
+                            relearning ? progress.getIntervalDays() : config.graduatingIntervalDays,
+                            config,
+                            now);
                 } else {
                     int nextStep = currentStep + 1;
                     progress.setState(relearning ? "RELEARNING" : "LEARNING");
@@ -298,11 +311,13 @@ public class AnkiStudyService {
         }
     }
 
-    private void applyReviewAnswer(AnkiSrsProgress progress, String rating, SchedulingConfig config, LocalDateTime now) {
+    private void applyReviewAnswer(
+            AnkiSrsProgress progress, String rating, SchedulingConfig config, LocalDateTime now) {
         int currentInterval = Math.max(1, nvl(progress.getIntervalDays(), 1));
-        int daysLate = progress.getNextReviewAt() != null && progress.getNextReviewAt().isBefore(now)
-                ? (int) Math.max(0, ChronoUnit.DAYS.between(progress.getNextReviewAt(), now))
-                : 0;
+        int daysLate =
+                progress.getNextReviewAt() != null && progress.getNextReviewAt().isBefore(now)
+                        ? (int) Math.max(0, ChronoUnit.DAYS.between(progress.getNextReviewAt(), now))
+                        : 0;
         double ease = Math.max(config.minEase, nvl(progress.getEaseFactor(), config.startingEase));
         double intervalModifier = config.intervalModifier * retentionModifier(config.targetRetention);
 
@@ -314,7 +329,8 @@ public class AnkiStudyService {
 
                 int relearnInterval = config.newInterval <= 0
                         ? 1
-                        : clampInterval((int) Math.round(currentInterval * config.newInterval), 1, config.maxIntervalDays);
+                        : clampInterval(
+                                (int) Math.round(currentInterval * config.newInterval), 1, config.maxIntervalDays);
                 progress.setIntervalDays(relearnInterval);
 
                 if (config.relearningSteps.isEmpty()) {
@@ -327,12 +343,14 @@ public class AnkiStudyService {
             }
             case "HARD" -> {
                 progress.setEaseFactor(Math.max(config.minEase, ease - 0.15));
-                int nextInterval = nextReviewInterval(currentInterval, daysLate, 0.25, config.hardInterval, intervalModifier, config);
+                int nextInterval = nextReviewInterval(
+                        currentInterval, daysLate, 0.25, config.hardInterval, intervalModifier, config);
                 scheduleReview(progress, nextInterval, now);
             }
             case "EASY" -> {
                 progress.setEaseFactor(ease + 0.15);
-                int nextInterval = nextReviewInterval(currentInterval, daysLate, 1.0, ease * config.easyBonus, intervalModifier, config);
+                int nextInterval = nextReviewInterval(
+                        currentInterval, daysLate, 1.0, ease * config.easyBonus, intervalModifier, config);
                 scheduleReview(progress, nextInterval, now);
             }
             default -> {
@@ -343,8 +361,13 @@ public class AnkiStudyService {
         }
     }
 
-    private int nextReviewInterval(int currentInterval, int daysLate, double lateMultiplier,
-                                   double answerMultiplier, double intervalModifier, SchedulingConfig config) {
+    private int nextReviewInterval(
+            int currentInterval,
+            int daysLate,
+            double lateMultiplier,
+            double answerMultiplier,
+            double intervalModifier,
+            SchedulingConfig config) {
         double base = currentInterval + (daysLate * lateMultiplier);
         int computed = (int) Math.round(base * answerMultiplier * intervalModifier);
         return clampInterval(computed, currentInterval + 1, config.maxIntervalDays);
@@ -395,7 +418,12 @@ public class AnkiStudyService {
                     .memoryScore(progress.getMemoryScore())
                     .nextReviewAt(progress.getNextReviewAt());
         } else {
-            b.state("NEW").easeFactor(config.startingEase).intervalDays(0).reviewCount(0).lapses(0).memoryScore(0.0);
+            b.state("NEW")
+                    .easeFactor(config.startingEase)
+                    .intervalDays(0)
+                    .reviewCount(0)
+                    .lapses(0)
+                    .memoryScore(0.0);
         }
 
         b.againPreview(previewLabel(progress, fc, "AGAIN", config));
@@ -495,12 +523,16 @@ public class AnkiStudyService {
     private SchedulingConfig resolveConfig(AnkiSrsSetting setting) {
         String configJson = null;
         if (setting != null && setting.getAlgorithmConfigId() != null) {
-            configJson = algorithmConfigRepository.findById(setting.getAlgorithmConfigId())
-                    .map(SrsAlgorithmConfig::getConfigJson).orElse(null);
+            configJson = algorithmConfigRepository
+                    .findById(setting.getAlgorithmConfigId())
+                    .map(SrsAlgorithmConfig::getConfigJson)
+                    .orElse(null);
         }
         if (configJson == null) {
-            configJson = algorithmConfigRepository.findByCode(DEFAULT_CONFIG_CODE)
-                    .map(SrsAlgorithmConfig::getConfigJson).orElse(null);
+            configJson = algorithmConfigRepository
+                    .findByCode(DEFAULT_CONFIG_CODE)
+                    .map(SrsAlgorithmConfig::getConfigJson)
+                    .orElse(null);
         }
         return SchedulingConfig.from(setting, configJson, objectMapper);
     }

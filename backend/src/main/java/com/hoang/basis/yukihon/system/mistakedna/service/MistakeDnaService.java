@@ -14,10 +14,6 @@ import com.hoang.basis.yukihon.system.userlearningstats.entity.UserLearningStats
 import com.hoang.basis.yukihon.system.userlearningstats.repository.UserLearningStatsRepository;
 import com.hoang.basis.yukihon.system.userprogress.entity.UserProgress;
 import com.hoang.basis.yukihon.system.userprogress.repository.UserProgressRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -30,6 +26,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -59,28 +58,30 @@ public class MistakeDnaService {
         Set<Long> quizIds = extractIds(quizProgressEntries, UserProgress::getQuizId);
         quizIds.addAll(extractAttemptQuizIds(quizAttempts));
 
-        Map<Long, Quiz> quizzesById = quizRepository.findAllById(quizIds).stream()
-                .collect(Collectors.toMap(Quiz::getId, quiz -> quiz));
-        Map<Long, Lesson> lessonsById = lessonRepository.findAllById(extractIds(lessonProgressEntries, UserProgress::getLessonId)).stream()
-                .collect(Collectors.toMap(Lesson::getId, lesson -> lesson));
+        Map<Long, Quiz> quizzesById =
+                quizRepository.findAllById(quizIds).stream().collect(Collectors.toMap(Quiz::getId, quiz -> quiz));
+        Map<Long, Lesson> lessonsById =
+                lessonRepository.findAllById(extractIds(lessonProgressEntries, UserProgress::getLessonId)).stream()
+                        .collect(Collectors.toMap(Lesson::getId, lesson -> lesson));
         Optional<UserLearningStats> stats = userLearningStatsRepository.findByUserId(userId);
 
         List<MistakePatternDto> patterns = new ArrayList<>();
 
         if (quizAttempts.isEmpty()) {
             buildWeakestQuizTypePattern(quizProgressEntries, quizzesById).ifPresent(patterns::add);
-            buildWeakestJlptPattern(quizProgressEntries, quizzesById, lessonProgressEntries, lessonsById).ifPresent(patterns::add);
+            buildWeakestJlptPattern(quizProgressEntries, quizzesById, lessonProgressEntries, lessonsById)
+                    .ifPresent(patterns::add);
         } else {
             buildRepeatedMistakePattern(quizAttempts, quizzesById).ifPresent(patterns::add);
             buildWeakestQuizTypePatternFromAttempts(quizAttempts, quizzesById).ifPresent(patterns::add);
-            buildWeakestJlptPatternFromAttempts(quizAttempts, quizzesById, lessonProgressEntries, lessonsById).ifPresent(patterns::add);
+            buildWeakestJlptPatternFromAttempts(quizAttempts, quizzesById, lessonProgressEntries, lessonsById)
+                    .ifPresent(patterns::add);
         }
         buildMemoryFrictionPattern(savedWords).ifPresent(patterns::add);
         buildCompletionDriftPattern(lessonProgressEntries, quizProgressEntries).ifPresent(patterns::add);
 
-        patterns.sort(Comparator
-                .comparingInt(this::patternPriority).reversed()
-                .thenComparing(MistakePatternDto::getTitle));
+        patterns.sort(
+                Comparator.comparingInt(this::patternPriority).reversed().thenComparing(MistakePatternDto::getTitle));
 
         MistakePatternDto dominantPattern = patterns.isEmpty() ? null : patterns.get(0);
         int averageQuizAccuracy = quizAttempts.isEmpty()
@@ -102,25 +103,28 @@ public class MistakeDnaService {
                 .dueReviews(dueReviews)
                 .inProgressLessons(inProgressLessons)
                 .dominantPatternTitle(dominantPattern != null ? dominantPattern.getTitle() : "No repeated weakness yet")
-                .dominantPatternDescription(dominantPattern != null
-                        ? dominantPattern.getDescription()
-                        : "Keep completing lessons and checkpoint quizzes to reveal a clearer pattern.")
+                .dominantPatternDescription(
+                        dominantPattern != null
+                                ? dominantPattern.getDescription()
+                                : "Keep completing lessons and checkpoint quizzes to reveal a clearer pattern.")
                 .nextMoves(buildNextMoves(patterns, averageQuizAccuracy, dueReviews, inProgressLessons))
-                .studySignals(buildStudySignals(quizAttempts, quizProgressEntries, lessonProgressEntries, savedWords, stats))
+                .studySignals(
+                        buildStudySignals(quizAttempts, quizProgressEntries, lessonProgressEntries, savedWords, stats))
                 .patterns(patterns)
                 .build();
     }
 
-    private Optional<MistakePatternDto> buildRepeatedMistakePattern(List<QuizAttempt> quizAttempts, Map<Long, Quiz> quizzesById) {
-        List<QuizAttempt> wrongAttempts = quizAttempts.stream()
-                .filter(attempt -> !attempt.isCorrect())
-                .collect(Collectors.toList());
+    private Optional<MistakePatternDto> buildRepeatedMistakePattern(
+            List<QuizAttempt> quizAttempts, Map<Long, Quiz> quizzesById) {
+        List<QuizAttempt> wrongAttempts =
+                quizAttempts.stream().filter(attempt -> !attempt.isCorrect()).collect(Collectors.toList());
         if (wrongAttempts.isEmpty()) {
             return Optional.empty();
         }
 
         Map<String, List<QuizAttempt>> wrongByPattern = wrongAttempts.stream()
-                .collect(Collectors.groupingBy(attempt -> resolveMistakePattern(attempt, quizzesById), HashMap::new, Collectors.toList()));
+                .collect(Collectors.groupingBy(
+                        attempt -> resolveMistakePattern(attempt, quizzesById), HashMap::new, Collectors.toList()));
 
         return wrongByPattern.entrySet().stream()
                 .max(Comparator.comparingInt(entry -> entry.getValue().size()))
@@ -129,7 +133,8 @@ public class MistakeDnaService {
                     List<QuizAttempt> attempts = entry.getValue();
                     int wrongCount = attempts.size();
                     int patternTotal = (int) quizAttempts.stream()
-                            .filter(attempt -> resolveMistakePattern(attempt, quizzesById).equals(patternKey))
+                            .filter(attempt ->
+                                    resolveMistakePattern(attempt, quizzesById).equals(patternKey))
                             .count();
                     int wrongRate = patternTotal > 0 ? Math.round((wrongCount * 100.0f) / patternTotal) : 0;
                     List<String> evidence = attempts.stream()
@@ -146,19 +151,22 @@ public class MistakeDnaService {
                     return MistakePatternDto.builder()
                             .key("repeated-" + patternKey + "-mistakes")
                             .title(titleForMistakePattern(patternKey))
-                            .description("Recent wrong answers cluster around " + humanizeMistakePattern(patternKey).toLowerCase(Locale.ROOT)
+                            .description("Recent wrong answers cluster around "
+                                    + humanizeMistakePattern(patternKey).toLowerCase(Locale.ROOT)
                                     + ", so this is the clearest live mistake signal from quiz attempts.")
                             .severity(severityFromMistakeRate(wrongCount, wrongRate))
                             .metricLabel("Wrong attempts")
                             .metricValue(wrongCount)
-                            .insight("This pattern is generated from saved quiz_attempts, not placeholder dashboard data.")
+                            .insight(
+                                    "This pattern is generated from saved quiz_attempts, not placeholder dashboard data.")
                             .recommendedAction(recommendActionForMistakePattern(patternKey))
                             .evidence(evidence)
                             .build();
                 });
     }
 
-    private Optional<MistakePatternDto> buildWeakestQuizTypePatternFromAttempts(List<QuizAttempt> quizAttempts, Map<Long, Quiz> quizzesById) {
+    private Optional<MistakePatternDto> buildWeakestQuizTypePatternFromAttempts(
+            List<QuizAttempt> quizAttempts, Map<Long, Quiz> quizzesById) {
         List<AccuracySample> samples = buildAttemptSamples(quizAttempts, quizzesById);
         if (samples.isEmpty()) {
             return Optional.empty();
@@ -174,18 +182,19 @@ public class MistakeDnaService {
                     return MistakePatternDto.builder()
                             .key("weakest-quiz-type")
                             .title(humanizeQuizType(quizType) + " pressure")
-                            .description("Accuracy dips the most on " + humanizeQuizType(quizType).toLowerCase(Locale.ROOT)
+                            .description("Accuracy dips the most on "
+                                    + humanizeQuizType(quizType).toLowerCase(Locale.ROOT)
                                     + " quizzes in the saved attempt history.")
                             .severity(severityFromAccuracy(averageAccuracy))
                             .metricLabel("Average accuracy")
                             .metricValue(averageAccuracy)
-                            .insight("This pattern is based on " + entry.getValue().size() + " saved quiz attempts.")
+                            .insight("This pattern is based on "
+                                    + entry.getValue().size() + " saved quiz attempts.")
                             .recommendedAction(recommendActionForQuizType(quizType))
                             .evidence(List.of(
                                     averageAccuracy + "% average score",
                                     entry.getValue().size() + " attempts tracked",
-                                    "Most common quiz type under pressure: " + humanizeQuizType(quizType)
-                            ))
+                                    "Most common quiz type under pressure: " + humanizeQuizType(quizType)))
                             .build();
                 })
                 .min(Comparator.comparingInt(MistakePatternDto::getMetricValue));
@@ -195,15 +204,16 @@ public class MistakeDnaService {
             List<QuizAttempt> quizAttempts,
             Map<Long, Quiz> quizzesById,
             List<UserProgress> lessonProgressEntries,
-            Map<Long, Lesson> lessonsById
-    ) {
+            Map<Long, Lesson> lessonsById) {
         Map<String, List<Integer>> jlptAccuracy = new HashMap<>();
 
         for (AccuracySample sample : buildAttemptSamples(quizAttempts, quizzesById)) {
             if (sample.jlptLevel == null || sample.jlptLevel.isBlank()) {
                 continue;
             }
-            jlptAccuracy.computeIfAbsent(sample.jlptLevel, ignored -> new ArrayList<>()).add(sample.accuracy);
+            jlptAccuracy
+                    .computeIfAbsent(sample.jlptLevel, ignored -> new ArrayList<>())
+                    .add(sample.accuracy);
         }
 
         if (!jlptAccuracy.isEmpty()) {
@@ -218,13 +228,13 @@ public class MistakeDnaService {
                                 .severity(severityFromAccuracy(averageAccuracy))
                                 .metricLabel("Average accuracy")
                                 .metricValue(averageAccuracy)
-                                .insight("This is calculated from persisted quiz_attempts linked to " + entry.getKey() + ".")
+                                .insight("This is calculated from persisted quiz_attempts linked to " + entry.getKey()
+                                        + ".")
                                 .recommendedAction("Review one " + entry.getKey()
                                         + " lesson, then re-run a short checkpoint before moving to fresh content.")
                                 .evidence(List.of(
                                         averageAccuracy + "% average score at " + entry.getKey(),
-                                        entry.getValue().size() + " saved attempts mapped to this level"
-                                ))
+                                        entry.getValue().size() + " saved attempts mapped to this level"))
                                 .build();
                     })
                     .min(Comparator.comparingInt(MistakePatternDto::getMetricValue));
@@ -233,7 +243,8 @@ public class MistakeDnaService {
         return buildWeakestJlptPattern(List.of(), Map.of(), lessonProgressEntries, lessonsById);
     }
 
-    private Optional<MistakePatternDto> buildWeakestQuizTypePattern(List<UserProgress> quizProgressEntries, Map<Long, Quiz> quizzesById) {
+    private Optional<MistakePatternDto> buildWeakestQuizTypePattern(
+            List<UserProgress> quizProgressEntries, Map<Long, Quiz> quizzesById) {
         List<AccuracySample> samples = buildQuizSamples(quizProgressEntries, quizzesById);
         if (samples.isEmpty()) {
             return Optional.empty();
@@ -249,18 +260,19 @@ public class MistakeDnaService {
                     return MistakePatternDto.builder()
                             .key("weakest-quiz-type")
                             .title(humanizeQuizType(quizType) + " pressure")
-                            .description("Accuracy dips the most on " + humanizeQuizType(quizType).toLowerCase(Locale.ROOT)
+                            .description("Accuracy dips the most on "
+                                    + humanizeQuizType(quizType).toLowerCase(Locale.ROOT)
                                     + " quizzes, so this looks like the main place where mistakes repeat.")
                             .severity(severityFromAccuracy(averageAccuracy))
                             .metricLabel("Average accuracy")
                             .metricValue(averageAccuracy)
-                            .insight("This pattern is based on " + entry.getValue().size() + " checkpoint attempts.")
+                            .insight("This pattern is based on "
+                                    + entry.getValue().size() + " checkpoint attempts.")
                             .recommendedAction(recommendActionForQuizType(quizType))
                             .evidence(List.of(
                                     averageAccuracy + "% average score",
                                     entry.getValue().size() + " quiz attempts tracked",
-                                    "Most common quiz type under pressure: " + humanizeQuizType(quizType)
-                            ))
+                                    "Most common quiz type under pressure: " + humanizeQuizType(quizType)))
                             .build();
                 })
                 .min(Comparator.comparingInt(MistakePatternDto::getMetricValue));
@@ -270,15 +282,16 @@ public class MistakeDnaService {
             List<UserProgress> quizProgressEntries,
             Map<Long, Quiz> quizzesById,
             List<UserProgress> lessonProgressEntries,
-            Map<Long, Lesson> lessonsById
-    ) {
+            Map<Long, Lesson> lessonsById) {
         Map<String, List<Integer>> jlptAccuracy = new HashMap<>();
 
         for (AccuracySample sample : buildQuizSamples(quizProgressEntries, quizzesById)) {
             if (sample.jlptLevel == null || sample.jlptLevel.isBlank()) {
                 continue;
             }
-            jlptAccuracy.computeIfAbsent(sample.jlptLevel, ignored -> new ArrayList<>()).add(sample.accuracy);
+            jlptAccuracy
+                    .computeIfAbsent(sample.jlptLevel, ignored -> new ArrayList<>())
+                    .add(sample.accuracy);
         }
 
         if (!jlptAccuracy.isEmpty()) {
@@ -298,8 +311,7 @@ public class MistakeDnaService {
                                         + " lesson, then re-run a short checkpoint before moving to fresh content.")
                                 .evidence(List.of(
                                         averageAccuracy + "% average score at " + entry.getKey(),
-                                        entry.getValue().size() + " accuracy samples mapped to this level"
-                                ))
+                                        entry.getValue().size() + " accuracy samples mapped to this level"))
                                 .build();
                     })
                     .min(Comparator.comparingInt(MistakePatternDto::getMetricValue));
@@ -308,7 +320,9 @@ public class MistakeDnaService {
         Map<String, Long> lessonDriftByLevel = lessonProgressEntries.stream()
                 .filter(progress -> progress.getStatus() == UserProgress.ProgressStatus.IN_PROGRESS)
                 .map(progress -> lessonsById.get(progress.getLessonId()))
-                .filter(lesson -> lesson != null && lesson.getJlptLevel() != null && !lesson.getJlptLevel().isBlank())
+                .filter(lesson -> lesson != null
+                        && lesson.getJlptLevel() != null
+                        && !lesson.getJlptLevel().isBlank())
                 .collect(Collectors.groupingBy(Lesson::getJlptLevel, Collectors.counting()));
 
         return lessonDriftByLevel.entrySet().stream()
@@ -322,12 +336,11 @@ public class MistakeDnaService {
                         .metricLabel("In-progress lessons")
                         .metricValue(Math.toIntExact(entry.getValue()))
                         .insight("This fallback pattern appears when quiz history is still too thin.")
-                        .recommendedAction("Close one unfinished " + entry.getKey()
-                                + " lesson before opening a new track.")
+                        .recommendedAction(
+                                "Close one unfinished " + entry.getKey() + " lesson before opening a new track.")
                         .evidence(List.of(
                                 entry.getValue() + " unfinished lessons at " + entry.getKey(),
-                                "Lesson activity shows stronger drop-off than quiz evidence so far"
-                        ))
+                                "Lesson activity shows stronger drop-off than quiz evidence so far"))
                         .build());
     }
 
@@ -338,7 +351,8 @@ public class MistakeDnaService {
 
         Instant now = Instant.now();
         long dueReviews = savedWords.stream()
-                .filter(word -> word.getNextReviewAt() == null || !word.getNextReviewAt().isAfter(now))
+                .filter(word -> word.getNextReviewAt() == null
+                        || !word.getNextReviewAt().isAfter(now))
                 .count();
         long fragileKanji = savedWords.stream()
                 .filter(this::hasKanji)
@@ -357,23 +371,25 @@ public class MistakeDnaService {
         return Optional.of(MistakePatternDto.builder()
                 .key("memory-friction")
                 .title(fragileKanji > fragileVocabulary ? "Kanji memory is under load" : "Review debt is building up")
-                .description("The SRS queue suggests recall is getting shaky, especially on items that have stayed due or low-ease for too long.")
+                .description(
+                        "The SRS queue suggests recall is getting shaky, especially on items that have stayed due or low-ease for too long.")
                 .severity(severityFromReviewPressure(metricValue, fragileKanji + fragileVocabulary))
                 .metricLabel("Due reviews")
                 .metricValue(metricValue)
                 .insight("This pattern uses due cards, low ease factor, and short repetition history.")
-                .recommendedAction(fragileKanji > fragileVocabulary
-                        ? "Start the next study block with a kanji-only review sweep before new lessons."
-                        : "Clear a short review queue first so fresh lessons are not competing with overdue memory work.")
+                .recommendedAction(
+                        fragileKanji > fragileVocabulary
+                                ? "Start the next study block with a kanji-only review sweep before new lessons."
+                                : "Clear a short review queue first so fresh lessons are not competing with overdue memory work.")
                 .evidence(List.of(
                         dueReviews + " cards due now",
                         fragileKanji + " fragile kanji cards",
-                        fragileVocabulary + " fragile vocabulary cards"
-                ))
+                        fragileVocabulary + " fragile vocabulary cards"))
                 .build());
     }
 
-    private Optional<MistakePatternDto> buildCompletionDriftPattern(List<UserProgress> lessonProgressEntries, List<UserProgress> quizProgressEntries) {
+    private Optional<MistakePatternDto> buildCompletionDriftPattern(
+            List<UserProgress> lessonProgressEntries, List<UserProgress> quizProgressEntries) {
         long inProgressLessons = lessonProgressEntries.stream()
                 .filter(progress -> progress.getStatus() == UserProgress.ProgressStatus.IN_PROGRESS)
                 .count();
@@ -390,7 +406,8 @@ public class MistakeDnaService {
         return Optional.of(MistakePatternDto.builder()
                 .key("completion-drift")
                 .title("Start strong, finish late")
-                .description("You are engaging with content, but some learning loops stay open longer than they should.")
+                .description(
+                        "You are engaging with content, but some learning loops stay open longer than they should.")
                 .severity(pressure >= 4 ? "HIGH" : "MEDIUM")
                 .metricLabel("Open loops")
                 .metricValue(pressure)
@@ -398,22 +415,24 @@ public class MistakeDnaService {
                 .recommendedAction("Finish one open lesson and one retried quiz before adding new material.")
                 .evidence(List.of(
                         inProgressLessons + " lessons still in progress",
-                        repeatedQuizAttempts + " quizzes retried without completion"
-                ))
+                        repeatedQuizAttempts + " quizzes retried without completion"))
                 .build());
     }
 
     private List<AccuracySample> buildQuizSamples(List<UserProgress> quizProgressEntries, Map<Long, Quiz> quizzesById) {
         return quizProgressEntries.stream()
-                .filter(progress -> progress.getScore() != null && progress.getTotalScore() != null && progress.getTotalScore() > 0)
+                .filter(progress ->
+                        progress.getScore() != null && progress.getTotalScore() != null && progress.getTotalScore() > 0)
                 .map(progress -> {
                     Quiz quiz = quizzesById.get(progress.getQuizId());
-                    int accuracy = Math.max(0, Math.min(100, Math.round((progress.getScore() * 100.0f) / progress.getTotalScore())));
+                    int accuracy = Math.max(
+                            0, Math.min(100, Math.round((progress.getScore() * 100.0f) / progress.getTotalScore())));
                     return new AccuracySample(
-                            quiz != null && quiz.getQuizType() != null ? quiz.getQuizType().name() : "GENERAL",
+                            quiz != null && quiz.getQuizType() != null
+                                    ? quiz.getQuizType().name()
+                                    : "GENERAL",
                             quiz != null ? quiz.getJlptLevel() : null,
-                            accuracy
-                    );
+                            accuracy);
                 })
                 .collect(Collectors.toList());
     }
@@ -425,15 +444,17 @@ public class MistakeDnaService {
                     Quiz quiz = quizzesById.get(resolveAttemptQuizId(attempt));
                     int accuracy = Math.max(0, Math.min(100, attempt.getScore()));
                     return new AccuracySample(
-                            quiz != null && quiz.getQuizType() != null ? quiz.getQuizType().name() : "GENERAL",
+                            quiz != null && quiz.getQuizType() != null
+                                    ? quiz.getQuizType().name()
+                                    : "GENERAL",
                             quiz != null ? quiz.getJlptLevel() : null,
-                            accuracy
-                    );
+                            accuracy);
                 })
                 .collect(Collectors.toList());
     }
 
-    private <T> Set<Long> extractIds(List<UserProgress> progressEntries, java.util.function.Function<UserProgress, Long> extractor) {
+    private <T> Set<Long> extractIds(
+            List<UserProgress> progressEntries, java.util.function.Function<UserProgress, Long> extractor) {
         return progressEntries.stream()
                 .map(extractor)
                 .filter(id -> id != null && id > 0)
@@ -449,8 +470,10 @@ public class MistakeDnaService {
 
     private int computeAverageQuizAccuracy(List<UserProgress> quizProgressEntries) {
         List<Integer> accuracies = quizProgressEntries.stream()
-                .filter(progress -> progress.getScore() != null && progress.getTotalScore() != null && progress.getTotalScore() > 0)
-                .map(progress -> Math.max(0, Math.min(100, Math.round((progress.getScore() * 100.0f) / progress.getTotalScore()))))
+                .filter(progress ->
+                        progress.getScore() != null && progress.getTotalScore() != null && progress.getTotalScore() > 0)
+                .map(progress -> Math.max(
+                        0, Math.min(100, Math.round((progress.getScore() * 100.0f) / progress.getTotalScore()))))
                 .collect(Collectors.toList());
         return average(accuracies);
     }
@@ -465,7 +488,8 @@ public class MistakeDnaService {
     private int countDueReviews(List<SavedWord> savedWords) {
         Instant now = Instant.now();
         return (int) savedWords.stream()
-                .filter(word -> word.getNextReviewAt() == null || !word.getNextReviewAt().isAfter(now))
+                .filter(word -> word.getNextReviewAt() == null
+                        || !word.getNextReviewAt().isAfter(now))
                 .count();
     }
 
@@ -491,23 +515,27 @@ public class MistakeDnaService {
         return Math.max(0, Math.min(100, baseRisk + Math.min(12, dueReviews) + Math.min(10, inProgressLessons * 2)));
     }
 
-    private String buildSummary(MistakePatternDto dominantPattern, String confidence, int dueReviews, int inProgressLessons) {
+    private String buildSummary(
+            MistakePatternDto dominantPattern, String confidence, int dueReviews, int inProgressLessons) {
         if (dominantPattern == null) {
             return "Not enough signals yet. Complete a few quizzes or SRS reviews and the profile will start showing repeated weak spots.";
         }
 
-        return dominantPattern.getTitle() + " stands out most right now. Confidence is " + confidence.toLowerCase(Locale.ROOT)
-                + ", with " + dueReviews + " reviews due and " + inProgressLessons + " open lesson loops still active.";
+        return dominantPattern.getTitle() + " stands out most right now. Confidence is "
+                + confidence.toLowerCase(Locale.ROOT) + ", with " + dueReviews + " reviews due and " + inProgressLessons
+                + " open lesson loops still active.";
     }
 
-    private List<String> buildNextMoves(List<MistakePatternDto> patterns, int averageQuizAccuracy, int dueReviews, int inProgressLessons) {
+    private List<String> buildNextMoves(
+            List<MistakePatternDto> patterns, int averageQuizAccuracy, int dueReviews, int inProgressLessons) {
         LinkedHashSet<String> nextMoves = patterns.stream()
                 .limit(3)
                 .map(MistakePatternDto::getRecommendedAction)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
 
         if (averageQuizAccuracy > 0 && averageQuizAccuracy < 70) {
-            nextMoves.add("Slow down on checkpoint speed and aim for one clean 80%+ retry before unlocking more volume.");
+            nextMoves.add(
+                    "Slow down on checkpoint speed and aim for one clean 80%+ retry before unlocking more volume.");
         }
         if (dueReviews >= 5) {
             nextMoves.add("Use the next 10 minutes on due reviews first so memory debt does not compound.");
@@ -528,8 +556,7 @@ public class MistakeDnaService {
             List<UserProgress> quizProgressEntries,
             List<UserProgress> lessonProgressEntries,
             List<SavedWord> savedWords,
-            Optional<UserLearningStats> stats
-    ) {
+            Optional<UserLearningStats> stats) {
         int completedLessons = (int) lessonProgressEntries.stream()
                 .filter(progress -> progress.getStatus() == UserProgress.ProgressStatus.COMPLETED)
                 .count();
@@ -544,7 +571,8 @@ public class MistakeDnaService {
                 .count();
         long taggedMistakes = quizAttempts.stream()
                 .filter(attempt -> !attempt.isCorrect())
-                .filter(attempt -> attempt.getMistakePattern() != null && !attempt.getMistakePattern().isBlank())
+                .filter(attempt -> attempt.getMistakePattern() != null
+                        && !attempt.getMistakePattern().isBlank())
                 .count();
 
         List<String> signals = new ArrayList<>();
@@ -591,7 +619,9 @@ public class MistakeDnaService {
         return switch (quiz.getQuizType()) {
             case LISTENING -> "listening";
             case FILL_IN_BLANK, TRANSLATION, WRITING -> "grammar";
-            default -> HAN_PATTERN.matcher(joinText(quiz.getQuestion(), quiz.getCorrectAnswer())).find()
+            default -> HAN_PATTERN
+                            .matcher(joinText(quiz.getQuestion(), quiz.getCorrectAnswer()))
+                            .find()
                     ? "reading"
                     : "vocabulary";
         };
@@ -710,9 +740,8 @@ public class MistakeDnaService {
 
     private int patternPriority(MistakePatternDto pattern) {
         int metricValue = pattern.getMetricValue() != null ? pattern.getMetricValue() : 0;
-        int normalizedMetric = "Average accuracy".equalsIgnoreCase(pattern.getMetricLabel())
-                ? 100 - metricValue
-                : metricValue;
+        int normalizedMetric =
+                "Average accuracy".equalsIgnoreCase(pattern.getMetricLabel()) ? 100 - metricValue : metricValue;
         return severityWeight(pattern.getSeverity()) * 100 + normalizedMetric;
     }
 
@@ -724,9 +753,9 @@ public class MistakeDnaService {
         if (values.isEmpty()) {
             return 0;
         }
-        return Math.round((float) values.stream().mapToInt(Integer::intValue).average().orElse(0));
+        return Math.round(
+                (float) values.stream().mapToInt(Integer::intValue).average().orElse(0));
     }
 
-    private record AccuracySample(String quizType, String jlptLevel, int accuracy) {
-    }
+    private record AccuracySample(String quizType, String jlptLevel, int accuracy) {}
 }

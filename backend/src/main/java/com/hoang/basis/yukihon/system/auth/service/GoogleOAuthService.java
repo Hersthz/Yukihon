@@ -1,5 +1,6 @@
 package com.hoang.basis.yukihon.system.auth.service;
 
+import com.hoang.basis.yukihon.security.JwtService;
 import com.hoang.basis.yukihon.system.auth.dto.AuthResponse;
 import com.hoang.basis.yukihon.system.auth.dto.GoogleTokenResponse;
 import com.hoang.basis.yukihon.system.auth.dto.GoogleUserInfo;
@@ -7,7 +8,7 @@ import com.hoang.basis.yukihon.system.user.dto.UserDto;
 import com.hoang.basis.yukihon.system.user.entity.RoleName;
 import com.hoang.basis.yukihon.system.user.entity.User;
 import com.hoang.basis.yukihon.system.user.repository.UserRepository;
-import com.hoang.basis.yukihon.security.JwtService;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,12 +16,10 @@ import org.springframework.http.*;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
-
-import java.util.List;
 
 @Service
 @Slf4j
@@ -48,7 +47,7 @@ public class GoogleOAuthService {
         try {
             // 1. Exchange code for tokens
             GoogleTokenResponse tokenResponse = exchangeCodeForToken(code, redirectUri);
-            
+
             if (tokenResponse.getError() != null) {
                 throw new IllegalArgumentException("Google OAuth Error: " + tokenResponse.getErrorDescription());
             }
@@ -57,7 +56,8 @@ public class GoogleOAuthService {
             GoogleUserInfo googleUserInfo = getUserInfo(tokenResponse.getAccessToken());
 
             // 3. Find or create user
-            User user = userRepository.findByEmail(googleUserInfo.getEmail().toLowerCase())
+            User user = userRepository
+                    .findByEmail(googleUserInfo.getEmail().toLowerCase())
                     .orElseGet(() -> createUserFromGoogleInfo(googleUserInfo));
 
             // 4. Return auth response
@@ -68,14 +68,12 @@ public class GoogleOAuthService {
         }
     }
 
-        private GoogleTokenResponse exchangeCodeForToken(String code, String redirectUri) {
+    private GoogleTokenResponse exchangeCodeForToken(String code, String redirectUri) {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-            String effectiveRedirectUri = StringUtils.hasText(redirectUri)
-                ? redirectUri
-                : googleRedirectUri;
+            String effectiveRedirectUri = StringUtils.hasText(redirectUri) ? redirectUri : googleRedirectUri;
 
             MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
             body.add("code", code);
@@ -85,11 +83,8 @@ public class GoogleOAuthService {
             body.add("grant_type", "authorization_code");
 
             HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
-            ResponseEntity<GoogleTokenResponse> response = restTemplate.postForEntity(
-                    GOOGLE_TOKEN_URL,
-                    request,
-                    GoogleTokenResponse.class
-            );
+            ResponseEntity<GoogleTokenResponse> response =
+                    restTemplate.postForEntity(GOOGLE_TOKEN_URL, request, GoogleTokenResponse.class);
 
             return response.getBody();
         } catch (Exception e) {
@@ -104,12 +99,8 @@ public class GoogleOAuthService {
             headers.setBearerAuth(accessToken);
 
             HttpEntity<?> request = new HttpEntity<>(headers);
-            ResponseEntity<GoogleUserInfo> response = restTemplate.exchange(
-                    GOOGLE_USERINFO_URL,
-                    HttpMethod.GET,
-                    request,
-                    GoogleUserInfo.class
-            );
+            ResponseEntity<GoogleUserInfo> response =
+                    restTemplate.exchange(GOOGLE_USERINFO_URL, HttpMethod.GET, request, GoogleUserInfo.class);
 
             return response.getBody();
         } catch (Exception e) {
@@ -130,22 +121,18 @@ public class GoogleOAuthService {
                 .password(unusablePassword)
                 .enabled(true)
                 .build();
-        
+
         user.getRoles().add(RoleName.USER);
         return userRepository.save(user);
     }
 
     private AuthResponse buildAuthResponse(User user) {
-        List<SimpleGrantedAuthority> authorities = user.getRoles()
-                .stream()
+        List<SimpleGrantedAuthority> authorities = user.getRoles().stream()
                 .map(role -> new SimpleGrantedAuthority("ROLE_" + role.name()))
                 .toList();
 
         var springUser = new org.springframework.security.core.userdetails.User(
-                user.getEmail(),
-                user.getPassword(),
-                authorities
-        );
+                user.getEmail(), user.getPassword(), authorities);
 
         String accessToken = jwtService.generateAccessToken(springUser);
         String refreshToken = jwtService.generateRefreshToken(springUser);
@@ -154,7 +141,7 @@ public class GoogleOAuthService {
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .tokenType("Bearer")
-            .user(UserDto.fromEntity(user))
+                .user(UserDto.fromEntity(user))
                 .build();
     }
 }

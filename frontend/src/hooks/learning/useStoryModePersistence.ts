@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { progressApi } from "@/api";
-import { parseStoryModeSnapshot, type StoryModeSnapshot } from "@/features/story-mode/storyModeSnapshot";
+import {
+  parseStoryModeSnapshot,
+  type StoryModeSnapshot,
+} from "@/features/story-mode/storyModeSnapshot";
 
 const STORY_MODE_SYNC_DELAY_MS = 1200;
 

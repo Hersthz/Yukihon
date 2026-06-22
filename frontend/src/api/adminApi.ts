@@ -37,9 +37,11 @@ export interface QuizAnalytics {
 }
 
 export const adminApi = {
-  getUsers: (page = 0, size = 20) => apiClient.request(`/api/admin/users?page=${page}&size=${size}`),
+  getUsers: (page = 0, size = 20) =>
+    apiClient.request(`/api/admin/users?page=${page}&size=${size}`),
   getUserById: (userId: number) => apiClient.request(`/api/admin/users/${userId}`),
-  searchUsers: (query: string) => apiClient.request(`/api/admin/users/search?query=${encodeURIComponent(query)}`),
+  searchUsers: (query: string) =>
+    apiClient.request(`/api/admin/users/search?query=${encodeURIComponent(query)}`),
   updateUserRoles: (userId: number, roles: string[]) =>
     apiClient.request(`/api/admin/users/${userId}/roles`, {
       method: "PUT",
@@ -66,15 +68,17 @@ export const adminApi = {
     const formData = new FormData();
     formData.append("file", file);
 
-    return apiClient.fetchWithAuth("/api/admin/media/upload", {
-      method: "POST",
-      body: formData,
-    }).then(async (response) => {
-      if (!response.ok) {
-        throw new Error(await response.text());
-      }
-      return response.json();
-    });
+    return apiClient
+      .fetchWithAuth("/api/admin/media/upload", {
+        method: "POST",
+        body: formData,
+      })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(await response.text());
+        }
+        return response.json();
+      });
   },
   getSystemStats: () => apiClient.request("/api/admin/stats"),
   getContentOverview: () => apiClient.request("/api/admin/content/overview"),

@@ -3,10 +3,12 @@ package com.hoang.basis.yukihon.system.translation.controller;
 import com.hoang.basis.yukihon.system.translation.dto.TranslateRequest;
 import com.hoang.basis.yukihon.system.translation.dto.TranslateResponse;
 import com.hoang.basis.yukihon.system.translation.dto.TranslationHistoryDto;
+import com.hoang.basis.yukihon.system.translation.service.TranslationService;
 import com.hoang.basis.yukihon.system.user.entity.User;
 import com.hoang.basis.yukihon.system.user.repository.UserRepository;
-import com.hoang.basis.yukihon.system.translation.service.TranslationService;
 import jakarta.validation.Valid;
+import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -18,9 +20,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Map;
-
 @RestController
 @RequestMapping("/api/translation")
 @RequiredArgsConstructor
@@ -31,7 +30,8 @@ public class TranslationController {
     private final UserRepository userRepository;
 
     private Long getUserId(UserDetails userDetails) {
-        User user = userRepository.findByEmail(userDetails.getUsername())
+        User user = userRepository
+                .findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new com.hoang.basis.yukihon.exception.ResourceNotFoundException("User not found"));
         return user.getId();
     }
@@ -41,9 +41,7 @@ public class TranslationController {
      */
     @PostMapping("/translate")
     public ResponseEntity<TranslateResponse> translate(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @Valid @RequestBody TranslateRequest request
-    ) {
+            @AuthenticationPrincipal UserDetails userDetails, @Valid @RequestBody TranslateRequest request) {
         Long userId = getUserId(userDetails);
         log.info("User {} requested translation: {} → {}", userId, request.getSourceLang(), request.getTargetLang());
         return ResponseEntity.ok(translationService.translate(userId, request));
@@ -55,9 +53,7 @@ public class TranslationController {
     @GetMapping("/history")
     public ResponseEntity<Page<TranslationHistoryDto>> getHistory(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
-            Pageable pageable
-    ) {
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         Long userId = getUserId(userDetails);
         return ResponseEntity.ok(translationService.getHistory(userId, pageable));
     }
@@ -66,9 +62,7 @@ public class TranslationController {
      * Lấy danh sách bản dịch đã bookmark
      */
     @GetMapping("/bookmarks")
-    public ResponseEntity<List<TranslationHistoryDto>> getBookmarks(
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
+    public ResponseEntity<List<TranslationHistoryDto>> getBookmarks(@AuthenticationPrincipal UserDetails userDetails) {
         Long userId = getUserId(userDetails);
         return ResponseEntity.ok(translationService.getBookmarks(userId));
     }
@@ -78,9 +72,7 @@ public class TranslationController {
      */
     @PostMapping("/history/{historyId}/bookmark")
     public ResponseEntity<TranslationHistoryDto> toggleBookmark(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable Long historyId
-    ) {
+            @AuthenticationPrincipal UserDetails userDetails, @PathVariable Long historyId) {
         Long userId = getUserId(userDetails);
         return ResponseEntity.ok(translationService.toggleBookmark(userId, historyId));
     }
@@ -90,9 +82,7 @@ public class TranslationController {
      */
     @DeleteMapping("/history/{historyId}")
     public ResponseEntity<Void> deleteHistoryItem(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable Long historyId
-    ) {
+            @AuthenticationPrincipal UserDetails userDetails, @PathVariable Long historyId) {
         Long userId = getUserId(userDetails);
         translationService.deleteHistoryItem(userId, historyId);
         return ResponseEntity.noContent().build();
@@ -102,9 +92,7 @@ public class TranslationController {
      * Xoá toàn bộ lịch sử dịch
      */
     @DeleteMapping("/history")
-    public ResponseEntity<Void> clearAllHistory(
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
+    public ResponseEntity<Void> clearAllHistory(@AuthenticationPrincipal UserDetails userDetails) {
         Long userId = getUserId(userDetails);
         translationService.clearAllHistory(userId);
         return ResponseEntity.noContent().build();
@@ -114,9 +102,7 @@ public class TranslationController {
      * Thống kê dịch thuật của user
      */
     @GetMapping("/stats")
-    public ResponseEntity<Map<String, Object>> getStats(
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
+    public ResponseEntity<Map<String, Object>> getStats(@AuthenticationPrincipal UserDetails userDetails) {
         Long userId = getUserId(userDetails);
         return ResponseEntity.ok(translationService.getStats(userId));
     }

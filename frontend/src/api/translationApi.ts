@@ -44,13 +44,16 @@ export const translationApi = {
       body: JSON.stringify(data),
     }),
   getHistory: (page = 0, size = 20) =>
-    apiClient.request<TranslationHistoryResponse>(`/api/translation/history?page=${page}&size=${size}`),
+    apiClient.request<TranslationHistoryResponse>(
+      `/api/translation/history?page=${page}&size=${size}`
+    ),
   getBookmarks: () => apiClient.request<TranslationHistoryItem[]>("/api/translation/bookmarks"),
   toggleBookmark: (historyId: number) =>
     apiClient.request<TranslationHistoryItem>(`/api/translation/history/${historyId}/bookmark`, {
       method: "POST",
     }),
-  deleteHistory: (historyId: number) => apiClient.request(`/api/translation/history/${historyId}`, { method: "DELETE" }),
+  deleteHistory: (historyId: number) =>
+    apiClient.request(`/api/translation/history/${historyId}`, { method: "DELETE" }),
   clearHistory: () => apiClient.request("/api/translation/history", { method: "DELETE" }),
   getStats: () => apiClient.request<TranslationStats>("/api/translation/stats"),
 };

@@ -8,6 +8,7 @@ import com.hoang.basis.yukihon.system.library.repository.DeckRepository;
 import com.hoang.basis.yukihon.system.user.entity.User;
 import com.hoang.basis.yukihon.system.user.repository.UserRepository;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,8 +21,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-
 /** User-facing deck library: list/own/public decks and create a deck scoped to the current user. */
 @RestController
 @RequestMapping("/api/decks")
@@ -32,7 +31,8 @@ public class DeckController {
     private final UserRepository userRepository;
 
     private Long getUserId(UserDetails userDetails) {
-        User user = userRepository.findByEmail(userDetails.getUsername())
+        User user = userRepository
+                .findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         return user.getId();
     }
@@ -40,22 +40,25 @@ public class DeckController {
     @GetMapping("/mine")
     public ResponseEntity<List<DeckDto>> myDecks(@AuthenticationPrincipal UserDetails userDetails) {
         Long userId = getUserId(userDetails);
-        List<DeckDto> decks = deckRepository.findByUserIdAndIsDeletedFalseOrderByUpdatedAtDesc(userId)
-                .stream().map(DeckDto::fromEntity).toList();
+        List<DeckDto> decks = deckRepository.findByUserIdAndIsDeletedFalseOrderByUpdatedAtDesc(userId).stream()
+                .map(DeckDto::fromEntity)
+                .toList();
         return ResponseEntity.ok(decks);
     }
 
     @GetMapping("/public")
     public ResponseEntity<List<DeckDto>> publicDecks() {
-        List<DeckDto> decks = deckRepository.findByVisibilityAndIsDeletedFalseOrderByUpdatedAtDesc("PUBLIC")
-                .stream().map(DeckDto::fromEntity).toList();
+        List<DeckDto> decks = deckRepository.findByVisibilityAndIsDeletedFalseOrderByUpdatedAtDesc("PUBLIC").stream()
+                .map(DeckDto::fromEntity)
+                .toList();
         return ResponseEntity.ok(decks);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<DeckDto> getDeck(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
         Long userId = getUserId(userDetails);
-        Deck deck = deckRepository.findById(id)
+        Deck deck = deckRepository
+                .findById(id)
                 .filter(d -> !Boolean.TRUE.equals(d.getIsDeleted()))
                 .orElseThrow(() -> new ResourceNotFoundException("Deck not found: " + id));
         if (!deck.getUserId().equals(userId) && !"PUBLIC".equals(deck.getVisibility())) {
@@ -66,9 +69,7 @@ public class DeckController {
 
     @PostMapping
     public ResponseEntity<DeckDto> create(
-            @Valid @RequestBody CreateDeckRequest request,
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
+            @Valid @RequestBody CreateDeckRequest request, @AuthenticationPrincipal UserDetails userDetails) {
         Long userId = getUserId(userDetails);
         Deck deck = new Deck();
         deck.setUserId(userId);

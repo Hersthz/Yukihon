@@ -1,12 +1,11 @@
 package com.hoang.basis.yukihon.system.savedword.repository;
 
 import com.hoang.basis.yukihon.system.savedword.entity.SavedWord;
-import org.springframework.data.jpa.repository.JpaRepository;
-
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface SavedWordRepository extends JpaRepository<SavedWord, Long> {
 
@@ -18,7 +17,8 @@ public interface SavedWordRepository extends JpaRepository<SavedWord, Long> {
 
     List<SavedWord> findByUserIdAndMasteredOrderByCreatedAtDesc(Long userId, boolean mastered);
 
-    List<SavedWord> findByUserIdAndNextReviewAtLessThanEqualOrderByNextReviewAtAscCreatedAtDesc(Long userId, Instant nextReviewAt);
+    List<SavedWord> findByUserIdAndNextReviewAtLessThanEqualOrderByNextReviewAtAscCreatedAtDesc(
+            Long userId, Instant nextReviewAt);
 
     Optional<SavedWord> findByUserIdAndVocabularyId(Long userId, Long vocabularyId);
 

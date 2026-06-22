@@ -12,6 +12,4 @@ public record FieldMetadata(
         String placeholder,
         List<String> enumValues,
         boolean listVisible,
-        boolean readOnly
-) {
-}
+        boolean readOnly) {}

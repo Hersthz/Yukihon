@@ -1,7 +1,12 @@
 import { GripVertical, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CREATOR_BLOCK_LABELS, CREATOR_BLOCK_TYPES, type CreatorBlock, type CreatorBlockType } from "@/features/creator-mode/types";
+import {
+  CREATOR_BLOCK_LABELS,
+  CREATOR_BLOCK_TYPES,
+  type CreatorBlock,
+  type CreatorBlockType,
+} from "@/features/creator-mode/types";
 
 interface CreatorCanvasProps {
   blocks: CreatorBlock[];
@@ -35,7 +40,14 @@ const CreatorCanvas = ({
         <CardTitle className="text-base">Builder Canvas</CardTitle>
         <div className="grid grid-cols-2 gap-2 xl:grid-cols-5">
           {CREATOR_BLOCK_TYPES.map((type) => (
-            <Button key={type} type="button" variant="outline" size="sm" onClick={() => onAddBlock(type)} className="justify-start">
+            <Button
+              key={type}
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => onAddBlock(type)}
+              className="justify-start"
+            >
               <Plus className="mr-2 h-3.5 w-3.5" />
               {CREATOR_BLOCK_LABELS[type]}
             </Button>
@@ -61,8 +73,12 @@ const CreatorCanvas = ({
           >
             <GripVertical className="mt-0.5 h-4 w-4 text-muted-foreground" />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-foreground">{block.heading || CREATOR_BLOCK_LABELS[block.type]}</p>
-              <p className="text-xs text-muted-foreground">{CREATOR_BLOCK_LABELS[block.type]} • Block #{index + 1}</p>
+              <p className="truncate text-sm font-semibold text-foreground">
+                {block.heading || CREATOR_BLOCK_LABELS[block.type]}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {CREATOR_BLOCK_LABELS[block.type]} • Block #{index + 1}
+              </p>
             </div>
             <Button
               type="button"

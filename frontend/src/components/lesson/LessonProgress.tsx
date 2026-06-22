@@ -15,9 +15,7 @@ const LessonProgress = ({ current, total, completedItems }: LessonProgressProps)
         <span className="font-medium text-foreground">
           Progress: {current} / {total}
         </span>
-        <span className="text-muted-foreground">
-          {completedItems} completed
-        </span>
+        <span className="text-muted-foreground">{completedItems} completed</span>
       </div>
       <Progress value={percentage} className="h-2" />
     </div>

@@ -1,18 +1,18 @@
 package com.hoang.basis.yukihon.system.vocabulary.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.time.Instant;
+import lombok.*;
 
 /**
  * Vocabulary entity for Japanese language learning
  */
 @Entity
-@Table(name = "vocabulary",
+@Table(
+        name = "vocabulary",
         indexes = {
-                @Index(name = "idx_vocab_jlpt_level", columnList = "jlpt_level"),
-                @Index(name = "idx_vocab_kanji", columnList = "kanji")
+            @Index(name = "idx_vocab_jlpt_level", columnList = "jlpt_level"),
+            @Index(name = "idx_vocab_kanji", columnList = "kanji")
         })
 @Getter
 @Setter

@@ -4,13 +4,12 @@ import com.hoang.basis.yukihon.system.quiz.dto.QuizDto;
 import com.hoang.basis.yukihon.system.quiz.dto.QuizRequest;
 import com.hoang.basis.yukihon.system.quiz.service.QuizService;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/quizzes")
@@ -63,9 +62,7 @@ public class QuizController {
     @GetMapping("/level/{level}/difficulty/{difficulty}")
     @PreAuthorize("hasAnyAuthority('CONTENT_READ','CONTENT_MANAGE')")
     public ResponseEntity<List<QuizDto>> getByLevelAndDifficulty(
-            @PathVariable String level,
-            @PathVariable String difficulty
-    ) {
+            @PathVariable String level, @PathVariable String difficulty) {
         List<QuizDto> quizzes = quizService.getByLevelAndDifficulty(level, difficulty);
         return ResponseEntity.ok(quizzes);
     }
@@ -86,10 +83,7 @@ public class QuizController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('CONTENT_MANAGE')")
-    public ResponseEntity<QuizDto> updateQuiz(
-            @PathVariable Long id,
-            @Valid @RequestBody QuizRequest request
-    ) {
+    public ResponseEntity<QuizDto> updateQuiz(@PathVariable Long id, @Valid @RequestBody QuizRequest request) {
         QuizDto updated = quizService.updateQuiz(id, request);
         return ResponseEntity.ok(updated);
     }

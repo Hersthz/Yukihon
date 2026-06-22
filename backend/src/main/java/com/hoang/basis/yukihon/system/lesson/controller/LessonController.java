@@ -5,13 +5,12 @@ import com.hoang.basis.yukihon.system.lesson.dto.LessonRequest;
 import com.hoang.basis.yukihon.system.lesson.dto.LessonVersionDto;
 import com.hoang.basis.yukihon.system.lesson.service.LessonService;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/lessons")
@@ -84,10 +83,7 @@ public class LessonController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('CONTENT_MANAGE')")
-    public ResponseEntity<LessonDto> updateLesson(
-            @PathVariable Long id,
-            @Valid @RequestBody LessonRequest request
-    ) {
+    public ResponseEntity<LessonDto> updateLesson(@PathVariable Long id, @Valid @RequestBody LessonRequest request) {
         LessonDto updated = lessonService.updateLesson(id, request);
         return ResponseEntity.ok(updated);
     }

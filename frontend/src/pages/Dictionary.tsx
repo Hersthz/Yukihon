@@ -20,7 +20,10 @@ const levelClass: Record<string, string> = {
 };
 
 const normalizeSavedStatuses = (statuses: Record<string, boolean>) =>
-  Object.fromEntries(Object.entries(statuses).map(([id, saved]) => [Number(id), saved])) as Record<number, boolean>;
+  Object.fromEntries(Object.entries(statuses).map(([id, saved]) => [Number(id), saved])) as Record<
+    number,
+    boolean
+  >;
 
 const Dictionary = () => {
   const { toast } = useToast();
@@ -71,7 +74,10 @@ const Dictionary = () => {
 
   const handleSaveWord = async (word: DictionaryEntry) => {
     if (savedStatuses[word.id]) {
-      toast({ title: "Đã có trong sổ tay", description: `${word.kanji || word.hiragana} đang nằm trong My Words rồi.` });
+      toast({
+        title: "Đã có trong sổ tay",
+        description: `${word.kanji || word.hiragana} đang nằm trong My Words rồi.`,
+      });
       return;
     }
 
@@ -89,7 +95,11 @@ const Dictionary = () => {
         ),
       });
     } catch {
-      toast({ title: "Lưu chưa thành công", description: "Vui lòng thử lại sau ít phút.", variant: "destructive" });
+      toast({
+        title: "Lưu chưa thành công",
+        description: "Vui lòng thử lại sau ít phút.",
+        variant: "destructive",
+      });
     } finally {
       setSavingWordId(null);
     }
@@ -97,9 +107,24 @@ const Dictionary = () => {
 
   const quickStats = useMemo(
     () => [
-      { label: "Kết quả", value: searched ? results.length : "-", icon: <Search className="h-4 w-4 text-sky-500" />, hint: "Số mục phù hợp" },
-      { label: "Từ khóa", value: query.trim() ? query.trim().slice(0, 14) : "-", icon: <Star className="h-4 w-4 text-violet-500" />, hint: "Từ đang tra cứu" },
-      { label: "Chế độ", value: "Nhật - Việt", icon: <BookOpen className="h-4 w-4 text-emerald-500" />, hint: "Tra nhanh trong một khung" },
+      {
+        label: "Kết quả",
+        value: searched ? results.length : "-",
+        icon: <Search className="h-4 w-4 text-sky-500" />,
+        hint: "Số mục phù hợp",
+      },
+      {
+        label: "Từ khóa",
+        value: query.trim() ? query.trim().slice(0, 14) : "-",
+        icon: <Star className="h-4 w-4 text-violet-500" />,
+        hint: "Từ đang tra cứu",
+      },
+      {
+        label: "Chế độ",
+        value: "Nhật - Việt",
+        icon: <BookOpen className="h-4 w-4 text-emerald-500" />,
+        hint: "Tra nhanh trong một khung",
+      },
     ],
     [query, results.length, searched]
   );
@@ -113,7 +138,10 @@ const Dictionary = () => {
           description="Giữ giao diện gọn, nhìn được nhiều kết quả hơn và mở nhanh phần chi tiết khi cần."
           eyebrow="Dictionary"
           action={
-            <Button className="rounded-2xl bg-sky-500 text-white hover:bg-sky-400" onClick={handleSearch}>
+            <Button
+              className="rounded-2xl bg-sky-500 text-white hover:bg-sky-400"
+              onClick={handleSearch}
+            >
               <Search className="mr-2 h-4 w-4" />
               Tra cứu
             </Button>
@@ -122,11 +150,21 @@ const Dictionary = () => {
 
         <div className="mb-4 grid gap-3 md:grid-cols-3">
           {quickStats.map((item) => (
-            <MetricCard key={item.label} hint={item.hint} icon={item.icon} label={item.label} value={item.value} />
+            <MetricCard
+              key={item.label}
+              hint={item.hint}
+              icon={item.icon}
+              label={item.label}
+              value={item.value}
+            />
           ))}
         </div>
 
-        <PageSection className="mb-4" title="Ô tìm kiếm" description="Nhập kanji, hiragana, romaji hoặc nghĩa tiếng Việt.">
+        <PageSection
+          className="mb-4"
+          title="Ô tìm kiếm"
+          description="Nhập kanji, hiragana, romaji hoặc nghĩa tiếng Việt."
+        >
           <div className="flex flex-col gap-3 lg:flex-row">
             <div className="relative flex-1">
               <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -138,14 +176,20 @@ const Dictionary = () => {
                 value={query}
               />
             </div>
-            <Button className="h-12 rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleSearch}>
+            <Button
+              className="h-12 rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90"
+              onClick={handleSearch}
+            >
               <Search className="mr-2 h-4 w-4" />
               Tìm ngay
             </Button>
           </div>
         </PageSection>
 
-        <PageSection title="Kết quả" description="Card thấp, rõ nghĩa và đủ metadata để quét nhanh.">
+        <PageSection
+          title="Kết quả"
+          description="Card thấp, rõ nghĩa và đủ metadata để quét nhanh."
+        >
           {loading ? (
             <div className="flex items-center justify-center py-20">
               <div className="h-12 w-12 rounded-full border-4 border-sky-100 border-t-sky-500 animate-spin" />
@@ -176,13 +220,17 @@ const Dictionary = () => {
                     >
                       <div className="mb-3 flex items-start justify-between gap-3">
                         <div>
-                          <p className="text-[1.65rem] font-semibold text-foreground">{word.kanji || word.hiragana}</p>
+                          <p className="text-[1.65rem] font-semibold text-foreground">
+                            {word.kanji || word.hiragana}
+                          </p>
                           <p className="text-sm text-sky-700">
                             {word.hiragana} · {word.romaji}
                           </p>
                         </div>
                         {word.jlptLevel && (
-                          <Badge className={`rounded-full border ${levelClass[word.jlptLevel] || "border-border bg-muted text-foreground/80"}`}>
+                          <Badge
+                            className={`rounded-full border ${levelClass[word.jlptLevel] || "border-border bg-muted text-foreground/80"}`}
+                          >
                             {word.jlptLevel}
                           </Badge>
                         )}
@@ -192,7 +240,9 @@ const Dictionary = () => {
 
                       <div className="mt-3 flex items-center justify-between gap-2">
                         {word.wordType ? (
-                          <Badge className="rounded-full border border-border bg-muted text-muted-foreground">{word.wordType}</Badge>
+                          <Badge className="rounded-full border border-border bg-muted text-muted-foreground">
+                            {word.wordType}
+                          </Badge>
                         ) : (
                           <span className="text-xs text-muted-foreground">Nhấn để xem ví dụ</span>
                         )}
@@ -207,7 +257,11 @@ const Dictionary = () => {
                           variant="ghost"
                           disabled={isSaved || isSaving}
                         >
-                          {isSaved ? <Check className="mr-1 h-4 w-4" /> : <Plus className="mr-1 h-4 w-4" />}
+                          {isSaved ? (
+                            <Check className="mr-1 h-4 w-4" />
+                          ) : (
+                            <Plus className="mr-1 h-4 w-4" />
+                          )}
                           {isSaved ? "Đã lưu" : isSaving ? "Đang lưu..." : "Lưu"}
                         </Button>
                       </div>
@@ -237,33 +291,50 @@ const Dictionary = () => {
               >
                 <div className="mb-5 flex items-start justify-between gap-4">
                   <div>
-                    <p className="text-[2.2rem] font-semibold leading-none text-foreground">{selectedWord.kanji || selectedWord.hiragana}</p>
+                    <p className="text-[2.2rem] font-semibold leading-none text-foreground">
+                      {selectedWord.kanji || selectedWord.hiragana}
+                    </p>
                     <p className="mt-2 text-sm text-sky-700">
                       {selectedWord.hiragana} · {selectedWord.romaji}
                     </p>
                   </div>
-                  <Button className="rounded-xl" onClick={() => setSelectedWord(null)} size="icon" variant="ghost">
+                  <Button
+                    className="rounded-xl"
+                    onClick={() => setSelectedWord(null)}
+                    size="icon"
+                    variant="ghost"
+                  >
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
 
                 <div className="space-y-4">
                   <div className="rounded-[20px] border border-border bg-muted p-4">
-                    <p className="mb-1 text-xs uppercase tracking-[0.18em] text-muted-foreground">Nghĩa</p>
+                    <p className="mb-1 text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                      Nghĩa
+                    </p>
                     <p className="text-base text-foreground">{selectedWord.meaning}</p>
                   </div>
 
                   {selectedWord.exampleSentenceJP && (
                     <div className="rounded-[20px] border border-border bg-card p-4">
-                      <p className="mb-1 text-xs uppercase tracking-[0.18em] text-muted-foreground">Ví dụ</p>
+                      <p className="mb-1 text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                        Ví dụ
+                      </p>
                       <p className="text-sm text-foreground">{selectedWord.exampleSentenceJP}</p>
-                      {selectedWord.exampleSentenceEN && <p className="mt-2 text-sm text-muted-foreground">{selectedWord.exampleSentenceEN}</p>}
+                      {selectedWord.exampleSentenceEN && (
+                        <p className="mt-2 text-sm text-muted-foreground">
+                          {selectedWord.exampleSentenceEN}
+                        </p>
+                      )}
                     </div>
                   )}
 
                   {selectedWord.additionalNotes && (
                     <div className="rounded-[20px] border border-border bg-violet-50/70 p-4">
-                      <p className="mb-1 text-xs uppercase tracking-[0.18em] text-muted-foreground">Ghi chú</p>
+                      <p className="mb-1 text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                        Ghi chú
+                      </p>
                       <p className="text-sm text-foreground/80">{selectedWord.additionalNotes}</p>
                     </div>
                   )}
@@ -272,12 +343,25 @@ const Dictionary = () => {
                     <Button
                       className="rounded-2xl bg-sky-500 text-white hover:bg-sky-400 disabled:bg-emerald-500"
                       onClick={() => void handleSaveWord(selectedWord)}
-                      disabled={!!savedStatuses[selectedWord.id] || savingWordId === selectedWord.id}
+                      disabled={
+                        !!savedStatuses[selectedWord.id] || savingWordId === selectedWord.id
+                      }
                     >
-                      {savedStatuses[selectedWord.id] ? <Check className="mr-2 h-4 w-4" /> : <Star className="mr-2 h-4 w-4" />}
-                      {savedStatuses[selectedWord.id] ? "Đã có trong sổ tay" : savingWordId === selectedWord.id ? "Đang lưu..." : "Thêm vào sổ tay"}
+                      {savedStatuses[selectedWord.id] ? (
+                        <Check className="mr-2 h-4 w-4" />
+                      ) : (
+                        <Star className="mr-2 h-4 w-4" />
+                      )}
+                      {savedStatuses[selectedWord.id]
+                        ? "Đã có trong sổ tay"
+                        : savingWordId === selectedWord.id
+                          ? "Đang lưu..."
+                          : "Thêm vào sổ tay"}
                     </Button>
-                    <Button className="rounded-2xl border-border bg-white text-foreground/80" variant="outline">
+                    <Button
+                      className="rounded-2xl border-border bg-white text-foreground/80"
+                      variant="outline"
+                    >
                       <Volume2 className="mr-2 h-4 w-4" />
                       Phát âm
                     </Button>

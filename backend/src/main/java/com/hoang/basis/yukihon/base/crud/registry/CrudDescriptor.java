@@ -1,10 +1,9 @@
 package com.hoang.basis.yukihon.base.crud.registry;
 
 import com.hoang.basis.yukihon.base.crud.domain.BaseEntity;
+import java.util.List;
 import lombok.Builder;
 import lombok.Getter;
-
-import java.util.List;
 
 /** Immutable description of a single auto-CRUD resource, built once at startup. */
 @Getter
@@ -13,8 +12,8 @@ public class CrudDescriptor {
 
     private final Class<?> entityClass;
     private final String path;
-    private final Class<?> dtoClass;        // null when responses serialize the entity directly
-    private final String permissionPrefix;  // null when no @ResourcePermission
+    private final Class<?> dtoClass; // null when responses serialize the entity directly
+    private final String permissionPrefix; // null when no @ResourcePermission
 
     private final List<String> searchableFields;
     private final List<String> sortableFields;

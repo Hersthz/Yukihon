@@ -44,13 +44,15 @@ const Footer = () => {
                 </div>
                 <div>
                   <p className="text-3xl font-black tracking-tight text-foreground">Yukihon</p>
-                  <p className="text-sm text-muted-foreground">A light-first Japanese learning workspace.</p>
+                  <p className="text-sm text-muted-foreground">
+                    A light-first Japanese learning workspace.
+                  </p>
                 </div>
               </div>
 
               <p className="mt-5 max-w-lg text-sm leading-7 text-muted-foreground">
-                Built around quick sessions, strong visual hierarchy, and calm study momentum. The whole product now
-                follows one warm, clean light theme from landing to dashboard.
+                Built around quick sessions, strong visual hierarchy, and calm study momentum. The
+                whole product now follows one warm, clean light theme from landing to dashboard.
               </p>
 
               <div className="mt-6 flex items-center gap-3">
@@ -69,7 +71,9 @@ const Footer = () => {
             <div className="grid gap-8 sm:grid-cols-3">
               {footerColumns.map((column) => (
                 <div key={column.title}>
-                  <p className="text-sm font-black uppercase tracking-[0.18em] text-foreground">{column.title}</p>
+                  <p className="text-sm font-black uppercase tracking-[0.18em] text-foreground">
+                    {column.title}
+                  </p>
                   <div className="mt-4 space-y-3">
                     {column.links.map((link) => (
                       <Link

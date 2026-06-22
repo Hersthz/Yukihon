@@ -15,13 +15,25 @@ import {
   Volume2,
   X,
 } from "lucide-react";
-import { dictionaryApi, myWordsApi, translationApi, type DictionaryEntry, type TranslationHistoryItem } from "@/api";
+import {
+  dictionaryApi,
+  myWordsApi,
+  translationApi,
+  type DictionaryEntry,
+  type TranslationHistoryItem,
+} from "@/api";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ToastAction } from "@/components/ui/toast";
 import { useToast } from "@/hooks/use-toast";
@@ -57,7 +69,10 @@ const timeAgo = (dateStr: string) => {
 };
 
 const normalizeSavedStatuses = (statuses: Record<string, boolean>) =>
-  Object.fromEntries(Object.entries(statuses).map(([id, saved]) => [Number(id), saved])) as Record<number, boolean>;
+  Object.fromEntries(Object.entries(statuses).map(([id, saved]) => [Number(id), saved])) as Record<
+    number,
+    boolean
+  >;
 
 const JAPANESE_GROUP_REGEX = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}ー]+/gu;
 const HAN_GROUP_REGEX = /\p{Script=Han}+/gu;
@@ -85,7 +100,9 @@ const extractJapaneseFragments = (text: string) => {
     });
   });
 
-  return Array.from(new Set(fragments.map((item) => item.trim()).filter((item) => item.length >= 2))).slice(0, 12);
+  return Array.from(
+    new Set(fragments.map((item) => item.trim()).filter((item) => item.length >= 2))
+  ).slice(0, 12);
 };
 
 const splitSuggestionCandidates = (text: string) => {
@@ -98,14 +115,28 @@ const splitSuggestionCandidates = (text: string) => {
     .map((token) => token.trim())
     .filter((token) => token.length >= 2);
 
-  return Array.from(new Set([normalized, ...extractJapaneseFragments(normalized), ...tokens])).slice(0, 8);
+  return Array.from(
+    new Set([normalized, ...extractJapaneseFragments(normalized), ...tokens])
+  ).slice(0, 8);
 };
 
-const buildSuggestionQueries = (sourceLang: string, targetLang: string, sourceText: string, translatedText: string) => {
-  const japaneseCandidate = sourceLang === "ja" ? sourceText : targetLang === "ja" ? translatedText : "";
-  const meaningCandidate = sourceLang === "ja" ? translatedText : targetLang === "ja" ? sourceText : "";
+const buildSuggestionQueries = (
+  sourceLang: string,
+  targetLang: string,
+  sourceText: string,
+  translatedText: string
+) => {
+  const japaneseCandidate =
+    sourceLang === "ja" ? sourceText : targetLang === "ja" ? translatedText : "";
+  const meaningCandidate =
+    sourceLang === "ja" ? translatedText : targetLang === "ja" ? sourceText : "";
 
-  return Array.from(new Set([...splitSuggestionCandidates(japaneseCandidate), ...splitSuggestionCandidates(meaningCandidate)])).slice(0, 5);
+  return Array.from(
+    new Set([
+      ...splitSuggestionCandidates(japaneseCandidate),
+      ...splitSuggestionCandidates(meaningCandidate),
+    ])
+  ).slice(0, 5);
 };
 
 const Translation = () => {
@@ -124,7 +155,9 @@ const Translation = () => {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyPage, setHistoryPage] = useState(0);
   const [historyTotalPages, setHistoryTotalPages] = useState(0);
-  const [stats, setStats] = useState<{ totalTranslations: number; totalBookmarks: number } | null>(null);
+  const [stats, setStats] = useState<{ totalTranslations: number; totalBookmarks: number } | null>(
+    null
+  );
   const [suggestions, setSuggestions] = useState<DictionaryEntry[]>([]);
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
   const [savedStatuses, setSavedStatuses] = useState<Record<number, boolean>>({});
@@ -152,8 +185,18 @@ const Translation = () => {
   }, []);
 
   const loadSuggestionWords = useCallback(
-    async (nextSourceLang: string, nextTargetLang: string, nextSourceText: string, nextTranslatedText: string) => {
-      const queries = buildSuggestionQueries(nextSourceLang, nextTargetLang, nextSourceText, nextTranslatedText);
+    async (
+      nextSourceLang: string,
+      nextTargetLang: string,
+      nextSourceText: string,
+      nextTranslatedText: string
+    ) => {
+      const queries = buildSuggestionQueries(
+        nextSourceLang,
+        nextTargetLang,
+        nextSourceText,
+        nextTranslatedText
+      );
       setHasSuggestionLookup(true);
 
       if (queries.length === 0) {
@@ -209,7 +252,11 @@ const Translation = () => {
         setHistoryPage(response.number);
         setHistoryTotalPages(response.totalPages);
       } catch {
-        toast({ title: "Không tải được lịch sử", description: "Vui lòng thử lại.", variant: "destructive" });
+        toast({
+          title: "Không tải được lịch sử",
+          description: "Vui lòng thử lại.",
+          variant: "destructive",
+        });
       } finally {
         setHistoryLoading(false);
       }
@@ -229,11 +276,19 @@ const Translation = () => {
   const handleTranslate = useCallback(async () => {
     if (!sourceText.trim()) return;
     if (sourceText.length > MAX_CHARS) {
-      toast({ title: "Văn bản quá dài", description: `Tối đa ${MAX_CHARS} ký tự.`, variant: "destructive" });
+      toast({
+        title: "Văn bản quá dài",
+        description: `Tối đa ${MAX_CHARS} ký tự.`,
+        variant: "destructive",
+      });
       return;
     }
     if (sourceLang === targetLang) {
-      toast({ title: "Chọn hai ngôn ngữ khác nhau", description: "Nguồn và đích không thể trùng nhau.", variant: "destructive" });
+      toast({
+        title: "Chọn hai ngôn ngữ khác nhau",
+        description: "Nguồn và đích không thể trùng nhau.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -246,7 +301,12 @@ const Translation = () => {
       });
       setTranslatedText(response.translatedText);
       void loadStats();
-      void loadSuggestionWords(response.sourceLang, response.targetLang, response.sourceText, response.translatedText);
+      void loadSuggestionWords(
+        response.sourceLang,
+        response.targetLang,
+        response.sourceText,
+        response.translatedText
+      );
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : "Không thể dịch lúc này.";
       setTranslatedText("");
@@ -302,7 +362,11 @@ const Translation = () => {
       });
       void loadStats();
     } catch {
-      toast({ title: "Không cập nhật được bookmark", description: "Vui lòng thử lại.", variant: "destructive" });
+      toast({
+        title: "Không cập nhật được bookmark",
+        description: "Vui lòng thử lại.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -313,7 +377,11 @@ const Translation = () => {
       setBookmarks((prev) => prev.filter((item) => item.id !== id));
       void loadStats();
     } catch {
-      toast({ title: "Không xoá được mục này", description: "Vui lòng thử lại.", variant: "destructive" });
+      toast({
+        title: "Không xoá được mục này",
+        description: "Vui lòng thử lại.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -325,7 +393,11 @@ const Translation = () => {
       void loadStats();
       toast({ title: "Đã xoá lịch sử", description: "Lịch sử dịch đã được làm trống." });
     } catch {
-      toast({ title: "Không thể xoá lịch sử", description: "Vui lòng thử lại.", variant: "destructive" });
+      toast({
+        title: "Không thể xoá lịch sử",
+        description: "Vui lòng thử lại.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -335,12 +407,20 @@ const Translation = () => {
     setSourceText(item.sourceText);
     setTranslatedText(item.translatedText);
     setShowHistory(false);
-    void loadSuggestionWords(item.sourceLang, item.targetLang, item.sourceText, item.translatedText);
+    void loadSuggestionWords(
+      item.sourceLang,
+      item.targetLang,
+      item.sourceText,
+      item.translatedText
+    );
   };
 
   const handleSaveSuggestedWord = async (word: DictionaryEntry) => {
     if (savedStatuses[word.id]) {
-      toast({ title: "Đã có trong sổ tay", description: `${word.kanji || word.hiragana} đang nằm trong My Words rồi.` });
+      toast({
+        title: "Đã có trong sổ tay",
+        description: `${word.kanji || word.hiragana} đang nằm trong My Words rồi.`,
+      });
       return;
     }
 
@@ -369,7 +449,11 @@ const Translation = () => {
         ),
       });
     } catch {
-      toast({ title: "Lưu chưa thành công", description: "Vui lòng thử lại.", variant: "destructive" });
+      toast({
+        title: "Lưu chưa thành công",
+        description: "Vui lòng thử lại.",
+        variant: "destructive",
+      });
     } finally {
       setSavingWordId(null);
     }
@@ -397,7 +481,11 @@ const Translation = () => {
                 <History className="mr-2 h-4 w-4" />
                 {showHistory ? "Ẩn lịch sử" : "Mở lịch sử"}
               </Button>
-              <Button className="rounded-2xl bg-violet-500 text-white hover:bg-violet-400" disabled={loading} onClick={() => void handleTranslate()}>
+              <Button
+                className="rounded-2xl bg-violet-500 text-white hover:bg-violet-400"
+                disabled={loading}
+                onClick={() => void handleTranslate()}
+              >
                 <Languages className="mr-2 h-4 w-4" />
                 {loading ? "Dang dich..." : "Dịch ngay"}
               </Button>
@@ -406,14 +494,32 @@ const Translation = () => {
         />
 
         <div className="mb-4 grid gap-3 md:grid-cols-3">
-          <MetricCard hint="Tổng số lần đã dịch" icon={<Languages className="h-4 w-4 text-sky-500" />} label="Lượt dịch" value={stats?.totalTranslations ?? "-"} />
-          <MetricCard hint="Bookmark đang lưu" icon={<BookmarkCheck className="h-4 w-4 text-amber-500" />} label="Đã lưu" value={stats?.totalBookmarks ?? "-"} />
-          <MetricCard hint="Phím tắt Ctrl/Cmd + Enter" icon={<Clock className="h-4 w-4 text-violet-500" />} label="Tốc độ" value="Nhanh" />
+          <MetricCard
+            hint="Tổng số lần đã dịch"
+            icon={<Languages className="h-4 w-4 text-sky-500" />}
+            label="Lượt dịch"
+            value={stats?.totalTranslations ?? "-"}
+          />
+          <MetricCard
+            hint="Bookmark đang lưu"
+            icon={<BookmarkCheck className="h-4 w-4 text-amber-500" />}
+            label="Đã lưu"
+            value={stats?.totalBookmarks ?? "-"}
+          />
+          <MetricCard
+            hint="Phím tắt Ctrl/Cmd + Enter"
+            icon={<Clock className="h-4 w-4 text-violet-500" />}
+            label="Tốc độ"
+            value="Nhanh"
+          />
         </div>
 
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
           <div className="space-y-4">
-            <PageSection title="Khung dịch" description="Hai ô dịch đặt ngang để dễ so sánh và tránh mất nhịp đọc.">
+            <PageSection
+              title="Khung dịch"
+              description="Hai ô dịch đặt ngang để dễ so sánh và tránh mất nhịp đọc."
+            >
               <div className="mb-3 flex flex-wrap items-center gap-3">
                 <Select onValueChange={setSourceLang} value={sourceLang}>
                   <SelectTrigger className="h-11 w-[180px] rounded-2xl border-border bg-card text-foreground/80">
@@ -428,7 +534,12 @@ const Translation = () => {
                   </SelectContent>
                 </Select>
 
-                <Button className="rounded-2xl border-border bg-white text-foreground/80" onClick={swapLanguages} size="icon" variant="outline">
+                <Button
+                  className="rounded-2xl border-border bg-white text-foreground/80"
+                  onClick={swapLanguages}
+                  size="icon"
+                  variant="outline"
+                >
                   <ArrowRightLeft className="h-4 w-4" />
                 </Button>
 
@@ -457,7 +568,9 @@ const Translation = () => {
                     value={sourceText}
                   />
                   <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
-                    <span>{sourceText.length} / {MAX_CHARS} ký tự</span>
+                    <span>
+                      {sourceText.length} / {MAX_CHARS} ký tự
+                    </span>
                     {sourceText.length > MAX_CHARS * 0.9 && (
                       <span className="inline-flex items-center gap-1 text-amber-600">
                         <AlertCircle className="h-3.5 w-3.5" />
@@ -475,8 +588,17 @@ const Translation = () => {
                     value={translatedText}
                   />
                   {translatedText && (
-                    <Button className="absolute right-5 top-5 rounded-xl" onClick={copyToClipboard} size="icon" variant="ghost">
-                      {copied ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4 text-muted-foreground" />}
+                    <Button
+                      className="absolute right-5 top-5 rounded-xl"
+                      onClick={copyToClipboard}
+                      size="icon"
+                      variant="ghost"
+                    >
+                      {copied ? (
+                        <Check className="h-4 w-4 text-emerald-500" />
+                      ) : (
+                        <Copy className="h-4 w-4 text-muted-foreground" />
+                      )}
                     </Button>
                   )}
                 </div>
@@ -505,21 +627,32 @@ const Translation = () => {
                       const isSaving = savingWordId === word.id;
 
                       return (
-                        <div key={word.id} className="rounded-[20px] border border-border bg-card p-4">
+                        <div
+                          key={word.id}
+                          className="rounded-[20px] border border-border bg-card p-4"
+                        >
                           <div className="flex items-start justify-between gap-3">
                             <div>
-                              <p className="text-lg font-semibold text-foreground">{word.kanji || word.hiragana}</p>
+                              <p className="text-lg font-semibold text-foreground">
+                                {word.kanji || word.hiragana}
+                              </p>
                               <p className="mt-1 text-sm text-sky-700">
                                 {word.hiragana} · {word.romaji}
                               </p>
                             </div>
-                            {word.jlptLevel ? <Badge className="rounded-full border border-violet-200 bg-violet-50 text-violet-700">{word.jlptLevel}</Badge> : null}
+                            {word.jlptLevel ? (
+                              <Badge className="rounded-full border border-violet-200 bg-violet-50 text-violet-700">
+                                {word.jlptLevel}
+                              </Badge>
+                            ) : null}
                           </div>
 
                           <p className="mt-3 text-sm text-muted-foreground">{word.meaning}</p>
 
                           <div className="mt-4 flex items-center justify-between gap-3">
-                            <span className="text-xs text-muted-foreground">{word.wordType || "Vocabulary"}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {word.wordType || "Vocabulary"}
+                            </span>
                             <Button
                               className="rounded-xl bg-violet-50 text-violet-700 hover:bg-violet-100 disabled:bg-emerald-50 disabled:text-emerald-700"
                               onClick={() => void handleSaveSuggestedWord(word)}
@@ -527,7 +660,11 @@ const Translation = () => {
                               variant="ghost"
                               disabled={isSaved || isSaving}
                             >
-                              {isSaved ? <Check className="mr-1 h-4 w-4" /> : <Plus className="mr-1 h-4 w-4" />}
+                              {isSaved ? (
+                                <Check className="mr-1 h-4 w-4" />
+                              ) : (
+                                <Plus className="mr-1 h-4 w-4" />
+                              )}
                               {isSaved ? "Đã lưu" : isSaving ? "Đang lưu..." : "Lưu vào My Words"}
                             </Button>
                           </div>
@@ -539,7 +676,10 @@ const Translation = () => {
               </PageSection>
             )}
 
-            <PageSection title="Cụm mẫu thường dùng" description="Giữ sẵn vài cụm ngắn để dịch nhanh và học bằng ví dụ thật.">
+            <PageSection
+              title="Cụm mẫu thường dùng"
+              description="Giữ sẵn vài cụm ngắn để dịch nhanh và học bằng ví dụ thật."
+            >
               <div className="grid gap-3 md:grid-cols-2">
                 {QUICK_PHRASES.map((phrase) => (
                   <button
@@ -570,7 +710,12 @@ const Translation = () => {
                   <PageSection
                     action={
                       historyTab === "all" && history.length > 0 ? (
-                        <Button className="rounded-xl text-rose-600 hover:text-rose-700" onClick={handleClearAll} size="sm" variant="ghost">
+                        <Button
+                          className="rounded-xl text-rose-600 hover:text-rose-700"
+                          onClick={handleClearAll}
+                          size="sm"
+                          variant="ghost"
+                        >
                           <Trash2 className="mr-1 h-4 w-4" />
                           Xoá tất cả
                         </Button>
@@ -581,7 +726,11 @@ const Translation = () => {
                   >
                     <div className="mb-3 flex gap-2">
                       <Button
-                        className={historyTab === "all" ? "rounded-xl bg-primary text-primary-foreground hover:bg-primary/90" : "rounded-xl border-border bg-white text-muted-foreground"}
+                        className={
+                          historyTab === "all"
+                            ? "rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
+                            : "rounded-xl border-border bg-white text-muted-foreground"
+                        }
                         onClick={() => setHistoryTab("all")}
                         size="sm"
                         variant={historyTab === "all" ? "default" : "outline"}
@@ -590,7 +739,11 @@ const Translation = () => {
                         Tất cả
                       </Button>
                       <Button
-                        className={historyTab === "bookmarks" ? "rounded-xl bg-amber-500 text-white hover:bg-amber-400" : "rounded-xl border-border bg-white text-muted-foreground"}
+                        className={
+                          historyTab === "bookmarks"
+                            ? "rounded-xl bg-amber-500 text-white hover:bg-amber-400"
+                            : "rounded-xl border-border bg-white text-muted-foreground"
+                        }
                         onClick={() => setHistoryTab("bookmarks")}
                         size="sm"
                         variant={historyTab === "bookmarks" ? "default" : "outline"}
@@ -628,14 +781,35 @@ const Translation = () => {
                                   <span>•</span>
                                   <span>{timeAgo(item.createdAt)}</span>
                                 </div>
-                                <p className="truncate text-sm text-foreground">{item.sourceText}</p>
-                                <p className="mt-1 truncate text-sm text-sky-700">{item.translatedText}</p>
+                                <p className="truncate text-sm text-foreground">
+                                  {item.sourceText}
+                                </p>
+                                <p className="mt-1 truncate text-sm text-sky-700">
+                                  {item.translatedText}
+                                </p>
                               </div>
-                              <div className="flex shrink-0 items-center gap-1" onClick={(event) => event.stopPropagation()}>
-                                <Button className="h-8 w-8 rounded-xl" onClick={() => void handleToggleBookmark(item.id)} size="icon" variant="ghost">
-                                  {item.bookmarked ? <BookmarkCheck className="h-4 w-4 text-amber-500" /> : <Bookmark className="h-4 w-4 text-muted-foreground" />}
+                              <div
+                                className="flex shrink-0 items-center gap-1"
+                                onClick={(event) => event.stopPropagation()}
+                              >
+                                <Button
+                                  className="h-8 w-8 rounded-xl"
+                                  onClick={() => void handleToggleBookmark(item.id)}
+                                  size="icon"
+                                  variant="ghost"
+                                >
+                                  {item.bookmarked ? (
+                                    <BookmarkCheck className="h-4 w-4 text-amber-500" />
+                                  ) : (
+                                    <Bookmark className="h-4 w-4 text-muted-foreground" />
+                                  )}
                                 </Button>
-                                <Button className="h-8 w-8 rounded-xl" onClick={() => void handleDeleteHistory(item.id)} size="icon" variant="ghost">
+                                <Button
+                                  className="h-8 w-8 rounded-xl"
+                                  onClick={() => void handleDeleteHistory(item.id)}
+                                  size="icon"
+                                  variant="ghost"
+                                >
                                   <X className="h-4 w-4 text-rose-500" />
                                 </Button>
                               </div>
@@ -647,7 +821,13 @@ const Translation = () => {
 
                     {historyTab === "all" && historyTotalPages > 1 && (
                       <div className="mt-3 flex items-center justify-center gap-2">
-                        <Button className="rounded-xl" disabled={historyPage === 0} onClick={() => void loadHistory(historyPage - 1)} size="sm" variant="outline">
+                        <Button
+                          className="rounded-xl"
+                          disabled={historyPage === 0}
+                          onClick={() => void loadHistory(historyPage - 1)}
+                          size="sm"
+                          variant="outline"
+                        >
                           Trước
                         </Button>
                         <span className="text-xs text-muted-foreground">
@@ -669,21 +849,33 @@ const Translation = () => {
               )}
             </AnimatePresence>
 
-            <PageSection title="Gợi ý dùng nhanh" description="Một vài nguyên tắc để thao tác ít hơn nhưng vẫn hiệu quả.">
+            <PageSection
+              title="Gợi ý dùng nhanh"
+              description="Một vài nguyên tắc để thao tác ít hơn nhưng vẫn hiệu quả."
+            >
               <div className="space-y-3">
                 <div className="rounded-[18px] border border-violet-200 bg-violet-50/70 p-4">
                   <p className="text-sm font-semibold text-violet-800">Ctrl/Cmd + Enter</p>
-                  <p className="mt-1 text-sm text-muted-foreground">Dịch ngay mà không cần rê chuột xuống nút bấm.</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Dịch ngay mà không cần rê chuột xuống nút bấm.
+                  </p>
                 </div>
                 <div className="rounded-[18px] border border-sky-200 bg-sky-50/70 p-4">
                   <p className="text-sm font-semibold text-sky-800">Swap ngôn ngữ</p>
-                  <p className="mt-1 text-sm text-muted-foreground">Đảo chiều dịch khi cần đối chiếu nhanh hai chiều Việt - Nhật.</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Đảo chiều dịch khi cần đối chiếu nhanh hai chiều Việt - Nhật.
+                  </p>
                 </div>
                 <div className="rounded-[18px] border border-amber-200 bg-amber-50/70 p-4">
                   <p className="text-sm font-semibold text-amber-800">Lưu bản dịch tốt</p>
-                  <p className="mt-1 text-sm text-muted-foreground">Bookmark những câu bạn muốn ôn lại sau để biến lịch sử thành tài liệu học.</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Bookmark những câu bạn muốn ôn lại sau để biến lịch sử thành tài liệu học.
+                  </p>
                 </div>
-                <Button className="w-full rounded-2xl border-border bg-white text-foreground/80" variant="outline">
+                <Button
+                  className="w-full rounded-2xl border-border bg-white text-foreground/80"
+                  variant="outline"
+                >
                   <Volume2 className="mr-2 h-4 w-4" />
                   Phát âm văn bản sau khi dịch
                 </Button>

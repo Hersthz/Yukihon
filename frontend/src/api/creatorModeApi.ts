@@ -1,7 +1,12 @@
 import apiClient from "@/lib/apiClient";
 
 export type CreatorContentType = "MINI_LESSON" | "QUIZ" | "STORY_BRANCH";
-export type CreatorTemplateStatus = "DRAFT" | "PENDING_REVIEW" | "APPROVED" | "REJECTED" | "PUBLISHED";
+export type CreatorTemplateStatus =
+  | "DRAFT"
+  | "PENDING_REVIEW"
+  | "APPROVED"
+  | "REJECTED"
+  | "PUBLISHED";
 
 export interface CreatorTemplate {
   id: number;
@@ -31,8 +36,17 @@ export interface CreatorTemplate {
   lastPublishedAt: string | null;
 }
 
-export type CreatorAuditStage = "AUTHORING" | "REVIEW_SUBMISSION" | "REVIEWER_REVIEW" | "ADMIN_APPROVAL";
-export type CreatorAuditAction = "CREATED" | "UPDATED_DRAFT" | "SUBMITTED_FOR_REVIEW" | "REVIEW_DECISION" | "ADMIN_DECISION";
+export type CreatorAuditStage =
+  | "AUTHORING"
+  | "REVIEW_SUBMISSION"
+  | "REVIEWER_REVIEW"
+  | "ADMIN_APPROVAL";
+export type CreatorAuditAction =
+  | "CREATED"
+  | "UPDATED_DRAFT"
+  | "SUBMITTED_FOR_REVIEW"
+  | "REVIEW_DECISION"
+  | "ADMIN_DECISION";
 
 export interface CreatorTemplateAuditTimelineFilters {
   stage?: CreatorAuditStage;
@@ -99,7 +113,10 @@ export interface CreatorAnalytics {
   topTemplates: CreatorAnalyticsItem[];
 }
 
-const buildQuery = (params: { status?: CreatorTemplateStatus; contentType?: CreatorContentType }) => {
+const buildQuery = (params: {
+  status?: CreatorTemplateStatus;
+  contentType?: CreatorContentType;
+}) => {
   const query = new URLSearchParams();
   if (params.status) {
     query.set("status", params.status);
@@ -130,9 +147,12 @@ const buildAuditTimelineQuery = (filters?: CreatorTemplateAuditTimelineFilters) 
 };
 
 export const creatorModeApi = {
-  getTemplates: (params: { status?: CreatorTemplateStatus; contentType?: CreatorContentType } = {}) =>
+  getTemplates: (
+    params: { status?: CreatorTemplateStatus; contentType?: CreatorContentType } = {}
+  ) =>
     apiClient.request<CreatorTemplate[]>(`/api/admin/creator-mode/templates${buildQuery(params)}`),
-  getTemplate: (id: number) => apiClient.request<CreatorTemplate>(`/api/admin/creator-mode/templates/${id}`),
+  getTemplate: (id: number) =>
+    apiClient.request<CreatorTemplate>(`/api/admin/creator-mode/templates/${id}`),
   createTemplate: (payload: CreatorTemplateUpsertPayload) =>
     apiClient.request<CreatorTemplate>("/api/admin/creator-mode/templates", {
       method: "POST",
@@ -165,6 +185,7 @@ export const creatorModeApi = {
     apiClient.request<CreatorTemplateAuditEvent[]>(
       `/api/admin/creator-mode/templates/${id}/audit-timeline${buildAuditTimelineQuery(filters)}`
     ),
-  getReviewQueue: () => apiClient.request<CreatorTemplate[]>("/api/admin/creator-mode/review-queue"),
+  getReviewQueue: () =>
+    apiClient.request<CreatorTemplate[]>("/api/admin/creator-mode/review-queue"),
   getAnalytics: () => apiClient.request<CreatorAnalytics>("/api/admin/creator-mode/analytics"),
 };

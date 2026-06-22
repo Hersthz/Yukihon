@@ -2,7 +2,13 @@ import { Bookmark, Search } from "lucide-react";
 import { PageSection } from "@/components/layout/UserPage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { CATEGORIES, JLPT_OPTIONS } from "./constants";
 
 interface CommunityFiltersProps {
@@ -28,7 +34,10 @@ const CommunityFilters = ({
   onSearchSubmit,
   onToggleBookmarked,
 }: CommunityFiltersProps) => (
-  <PageSection title="Bo loc thong minh" description="Tim bai theo topic, JLPT, tu khoa va bookmark ma khong can roi khoi feed.">
+  <PageSection
+    title="Bo loc thong minh"
+    description="Tim bai theo topic, JLPT, tu khoa va bookmark ma khong can roi khoi feed."
+  >
     <div className="space-y-3">
       <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_180px_180px]">
         <div className="relative">
@@ -42,7 +51,10 @@ const CommunityFilters = ({
           />
         </div>
 
-        <Select value={jlptFilter} onValueChange={(value) => onJlptFilterChange(value as (typeof JLPT_OPTIONS)[number])}>
+        <Select
+          value={jlptFilter}
+          onValueChange={(value) => onJlptFilterChange(value as (typeof JLPT_OPTIONS)[number])}
+        >
           <SelectTrigger className="h-11 rounded-2xl border-border bg-card text-foreground/80">
             <SelectValue />
           </SelectTrigger>
@@ -70,7 +82,9 @@ const CommunityFilters = ({
             <button
               key={category.label}
               className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-medium transition ${
-                active ? category.tone : "border-border bg-card text-muted-foreground hover:bg-muted"
+                active
+                  ? category.tone
+                  : "border-border bg-card text-muted-foreground hover:bg-muted"
               }`}
               onClick={() => onActiveCategoryChange(category.value)}
               type="button"
@@ -83,7 +97,9 @@ const CommunityFilters = ({
 
         <button
           className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-medium transition ${
-            showBookmarkedOnly ? "border-amber-200 bg-amber-50 text-amber-700" : "border-border bg-card text-muted-foreground hover:bg-muted"
+            showBookmarkedOnly
+              ? "border-amber-200 bg-amber-50 text-amber-700"
+              : "border-border bg-card text-muted-foreground hover:bg-muted"
           }`}
           onClick={onToggleBookmarked}
           type="button"

@@ -8,14 +8,13 @@ import com.hoang.basis.yukihon.system.friend.repository.UserConnectionRepository
 import com.hoang.basis.yukihon.system.user.dto.UserDto;
 import com.hoang.basis.yukihon.system.user.entity.User;
 import com.hoang.basis.yukihon.system.user.repository.UserRepository;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -30,20 +29,26 @@ public class UserConnectionService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot act on yourself");
         }
 
-        User requester = userRepository.findById(requesterId)
+        User requester = userRepository
+                .findById(requesterId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Requester not found"));
-        User receiver = userRepository.findById(receiverId)
+        User receiver = userRepository
+                .findById(receiverId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Receiver not found"));
 
         // FRIEND is symmetric: block a request in either direction (incl. when already friends or a
         // reverse request is pending). FOLLOW is directional, so only the same direction is a duplicate.
-        boolean duplicate = userConnectionRepository.findByRequesterAndReceiverAndType(requester, receiver, type).isPresent()
+        boolean duplicate = userConnectionRepository
+                        .findByRequesterAndReceiverAndType(requester, receiver, type)
+                        .isPresent()
                 || (type == ConnectionType.FRIEND
-                && userConnectionRepository.findByRequesterAndReceiverAndType(receiver, requester, type).isPresent());
+                        && userConnectionRepository
+                                .findByRequesterAndReceiverAndType(receiver, requester, type)
+                                .isPresent());
         if (duplicate) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Connection already exists");
         }
-        
+
         ConnectionStatus status = type == ConnectionType.FOLLOW ? ConnectionStatus.ACCEPTED : ConnectionStatus.PENDING;
 
         UserConnection connection = UserConnection.builder()
@@ -58,7 +63,8 @@ public class UserConnectionService {
 
     @Transactional
     public UserConnectionDto acceptConnection(Long receiverId, Long connectionId) {
-        UserConnection connection = userConnectionRepository.findById(connectionId)
+        UserConnection connection = userConnectionRepository
+                .findById(connectionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Connection not found"));
 
         if (!connection.getReceiver().getId().equals(receiverId)) {
@@ -71,10 +77,12 @@ public class UserConnectionService {
 
     @Transactional
     public void deleteConnection(Long userId, Long connectionId) {
-        UserConnection connection = userConnectionRepository.findById(connectionId)
+        UserConnection connection = userConnectionRepository
+                .findById(connectionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Connection not found"));
 
-        if (!connection.getRequester().getId().equals(userId) && !connection.getReceiver().getId().equals(userId)) {
+        if (!connection.getRequester().getId().equals(userId)
+                && !connection.getReceiver().getId().equals(userId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not authorized to delete this connection");
         }
 
@@ -83,18 +91,22 @@ public class UserConnectionService {
 
     @Transactional(readOnly = true)
     public List<UserConnectionDto> getConnections(Long userId, ConnectionType type, ConnectionStatus status) {
-        User user = userRepository.findById(userId)
+        User user = userRepository
+                .findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-        return userConnectionRepository.findConnectionsByUser(user, type, status)
-                .stream().map(this::mapToDto).collect(Collectors.toList());
+        return userConnectionRepository.findConnectionsByUser(user, type, status).stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
     }
-    
+
     @Transactional(readOnly = true)
     public List<UserConnectionDto> getPendingRequests(Long userId, ConnectionType type) {
-        User user = userRepository.findById(userId)
+        User user = userRepository
+                .findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-        return userConnectionRepository.findByReceiverAndTypeAndStatus(user, type, ConnectionStatus.PENDING)
-                .stream().map(this::mapToDto).collect(Collectors.toList());
+        return userConnectionRepository.findByReceiverAndTypeAndStatus(user, type, ConnectionStatus.PENDING).stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
     }
 
     private UserConnectionDto mapToDto(UserConnection connection) {

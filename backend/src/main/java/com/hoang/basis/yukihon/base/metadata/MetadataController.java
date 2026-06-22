@@ -4,12 +4,6 @@ import com.hoang.basis.yukihon.base.annotation.FieldMeta;
 import com.hoang.basis.yukihon.base.crud.registry.AutoCrudRegistry;
 import com.hoang.basis.yukihon.base.crud.registry.CrudDescriptor;
 import com.hoang.basis.yukihon.exception.ResourceNotFoundException;
-import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.time.Instant;
@@ -18,6 +12,11 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Introspection API powering the metadata-driven frontend. Lists auto-CRUD resources and exposes
@@ -65,8 +64,7 @@ public class MetadataController {
                 descriptor.getSearchableFields(),
                 descriptor.getSortableFields(),
                 menu,
-                describeFields(descriptor.getEntityClass())
-        );
+                describeFields(descriptor.getEntityClass()));
     }
 
     private List<FieldMetadata> describeFields(Class<?> entityClass) {
@@ -89,8 +87,7 @@ public class MetadataController {
                     meta != null ? meta.placeholder() : "",
                     enumValues,
                     meta == null || meta.listVisible(),
-                    meta != null && meta.readOnly()
-            ));
+                    meta != null && meta.readOnly()));
         }
         fields.sort(Comparator.comparingInt(FieldMetadata::order));
         return fields;
@@ -115,7 +112,10 @@ public class MetadataController {
             return "boolean";
         }
         if (Number.class.isAssignableFrom(type)
-                || type == int.class || type == long.class || type == double.class || type == float.class) {
+                || type == int.class
+                || type == long.class
+                || type == double.class
+                || type == float.class) {
             return "number";
         }
         if (type == Instant.class || type == LocalDate.class || type == LocalDateTime.class) {

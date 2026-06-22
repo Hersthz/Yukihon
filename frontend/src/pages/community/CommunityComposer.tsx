@@ -2,7 +2,13 @@ import { Send } from "lucide-react";
 import { PageSection } from "@/components/layout/UserPage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { CATEGORIES } from "./constants";
 
@@ -37,7 +43,10 @@ const CommunityComposer = ({
   onCancel,
   onSubmit,
 }: CommunityComposerProps) => (
-  <PageSection title="Tao bai viet moi" description="Them title va tags de feed co cau truc hon va de tim lai hon.">
+  <PageSection
+    title="Tao bai viet moi"
+    description="Them title va tags de feed co cau truc hon va de tim lai hon."
+  >
     <div className="space-y-3">
       <Input
         className="h-11 rounded-2xl border-border bg-card text-foreground placeholder:text-muted-foreground"
@@ -87,10 +96,18 @@ const CommunityComposer = ({
         />
 
         <div className="flex gap-2">
-          <Button className="flex-1 rounded-2xl border-border bg-white text-muted-foreground" onClick={onCancel} variant="outline">
+          <Button
+            className="flex-1 rounded-2xl border-border bg-white text-muted-foreground"
+            onClick={onCancel}
+            variant="outline"
+          >
             Huy
           </Button>
-          <Button className="flex-1 rounded-2xl bg-pink-500 text-white hover:bg-pink-400" disabled={posting || !newContent.trim()} onClick={onSubmit}>
+          <Button
+            className="flex-1 rounded-2xl bg-pink-500 text-white hover:bg-pink-400"
+            disabled={posting || !newContent.trim()}
+            onClick={onSubmit}
+          >
             <Send className="mr-2 h-4 w-4" />
             Dang
           </Button>

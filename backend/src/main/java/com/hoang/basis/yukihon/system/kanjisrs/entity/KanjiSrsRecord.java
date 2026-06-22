@@ -2,16 +2,19 @@ package com.hoang.basis.yukihon.system.kanjisrs.entity;
 
 import com.hoang.basis.yukihon.system.user.entity.User;
 import jakarta.persistence.*;
+import java.time.Instant;
 import lombok.*;
 
-import java.time.Instant;
-
 @Entity
-@Table(name = "kanji_srs_records",
-        uniqueConstraints = @UniqueConstraint(name = "uk_kanji_srs_user_character", columnNames = {"user_id", "kanji_character"}),
+@Table(
+        name = "kanji_srs_records",
+        uniqueConstraints =
+                @UniqueConstraint(
+                        name = "uk_kanji_srs_user_character",
+                        columnNames = {"user_id", "kanji_character"}),
         indexes = {
-                @Index(name = "idx_kanji_srs_user", columnList = "user_id"),
-                @Index(name = "idx_kanji_srs_next_review", columnList = "next_review_at")
+            @Index(name = "idx_kanji_srs_user", columnList = "user_id"),
+            @Index(name = "idx_kanji_srs_next_review", columnList = "next_review_at")
         })
 @Getter
 @Setter

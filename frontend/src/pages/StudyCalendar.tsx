@@ -21,9 +21,15 @@ const parseDateKey = (value: string) => {
   const [year, month, day] = value.split("-").map(Number);
   return new Date(year, month - 1, day);
 };
-const formatMonthLabel = (date: Date) => new Intl.DateTimeFormat("vi-VN", { month: "long", year: "numeric" }).format(date);
+const formatMonthLabel = (date: Date) =>
+  new Intl.DateTimeFormat("vi-VN", { month: "long", year: "numeric" }).format(date);
 const formatDateLabel = (value: string) =>
-  new Intl.DateTimeFormat("vi-VN", { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(parseDateKey(value));
+  new Intl.DateTimeFormat("vi-VN", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(parseDateKey(value));
 
 const StudyCalendar = () => {
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
@@ -62,7 +68,7 @@ const StudyCalendar = () => {
   }, [data, dayMap, selectedDate]);
 
   const selectedKey = selectedDate ? toDateKey(selectedDate) : null;
-  const selectedDay = selectedKey ? dayMap.get(selectedKey) ?? null : null;
+  const selectedDay = selectedKey ? (dayMap.get(selectedKey) ?? null) : null;
 
   const modifierDates = useMemo(() => {
     if (!data) {
@@ -76,10 +82,18 @@ const StudyCalendar = () => {
     }
 
     return {
-      light: data.days.filter((day) => day.intensity === "light").map((day) => parseDateKey(day.date)),
-      medium: data.days.filter((day) => day.intensity === "medium").map((day) => parseDateKey(day.date)),
-      strong: data.days.filter((day) => day.intensity === "strong").map((day) => parseDateKey(day.date)),
-      recommended: data.days.filter((day) => day.isRecommendedStudyDay).map((day) => parseDateKey(day.date)),
+      light: data.days
+        .filter((day) => day.intensity === "light")
+        .map((day) => parseDateKey(day.date)),
+      medium: data.days
+        .filter((day) => day.intensity === "medium")
+        .map((day) => parseDateKey(day.date)),
+      strong: data.days
+        .filter((day) => day.intensity === "strong")
+        .map((day) => parseDateKey(day.date)),
+      recommended: data.days
+        .filter((day) => day.isRecommendedStudyDay)
+        .map((day) => parseDateKey(day.date)),
       deadline: data.days.filter((day) => day.isDeadlineDay).map((day) => parseDateKey(day.date)),
     };
   }, [data]);
@@ -102,7 +116,12 @@ const StudyCalendar = () => {
           action={
             <div className="flex flex-wrap items-center gap-2">
               {data?.deadlineStatus && (
-                <Badge className={cn("rounded-full border px-3 py-1 text-xs font-semibold", deadlineTone)}>
+                <Badge
+                  className={cn(
+                    "rounded-full border px-3 py-1 text-xs font-semibold",
+                    deadlineTone
+                  )}
+                >
                   {data.deadlineStatus === "OFF_TRACK"
                     ? "Cham deadline"
                     : data.deadlineStatus === "AT_RISK"
@@ -114,7 +133,14 @@ const StudyCalendar = () => {
                           : "Dang on"}
                 </Badge>
               )}
-              <Button variant="outline" className="rounded-2xl border-border bg-card text-foreground/80 hover:bg-card" onClick={() => { setMonth(startOfMonth(new Date())); setSelectedDate(new Date()); }}>
+              <Button
+                variant="outline"
+                className="rounded-2xl border-border bg-card text-foreground/80 hover:bg-card"
+                onClick={() => {
+                  setMonth(startOfMonth(new Date()));
+                  setSelectedDate(new Date());
+                }}
+              >
                 Hom nay
               </Button>
             </div>
@@ -122,17 +148,39 @@ const StudyCalendar = () => {
         />
 
         <div className="mb-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <MetricCard label="Current streak" value={data?.currentStreak ?? 0} hint={`Longest ${data?.longestStreak ?? 0} ngay`} icon={<Flame className="h-4 w-4 text-amber-500" />} />
-          <MetricCard label="Ngay active" value={data?.activeDays ?? 0} hint={formatMonthLabel(month)} icon={<CheckCircle2 className="h-4 w-4 text-emerald-500" />} />
-          <MetricCard label="Tong phut hoc" value={data?.totalStudyMinutes ?? 0} hint={`${data?.totalStudyEvents ?? 0} su kien hoc tap`} icon={<Clock3 className="h-4 w-4 text-sky-500" />} />
-          <MetricCard label="Daily target" value={data?.recommendedMinutesPerDay ?? 0} hint={`Muc tieu hien tai ${data?.dailyGoalMinutes ?? 0} phut`} icon={<Target className="h-4 w-4 text-violet-500" />} />
+          <MetricCard
+            label="Current streak"
+            value={data?.currentStreak ?? 0}
+            hint={`Longest ${data?.longestStreak ?? 0} ngay`}
+            icon={<Flame className="h-4 w-4 text-amber-500" />}
+          />
+          <MetricCard
+            label="Ngay active"
+            value={data?.activeDays ?? 0}
+            hint={formatMonthLabel(month)}
+            icon={<CheckCircle2 className="h-4 w-4 text-emerald-500" />}
+          />
+          <MetricCard
+            label="Tong phut hoc"
+            value={data?.totalStudyMinutes ?? 0}
+            hint={`${data?.totalStudyEvents ?? 0} su kien hoc tap`}
+            icon={<Clock3 className="h-4 w-4 text-sky-500" />}
+          />
+          <MetricCard
+            label="Daily target"
+            value={data?.recommendedMinutesPerDay ?? 0}
+            hint={`Muc tieu hien tai ${data?.dailyGoalMinutes ?? 0} phut`}
+            icon={<Target className="h-4 w-4 text-violet-500" />}
+          />
         </div>
 
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
           <PageSection
             title="Month view"
             description={`Theo doi ${formatMonthLabel(month)} voi mau muc do hoc, ngay nen hoc va deadline JLPT.`}
-            action={<p className="text-sm font-medium text-muted-foreground">{formatMonthLabel(month)}</p>}
+            action={
+              <p className="text-sm font-medium text-muted-foreground">{formatMonthLabel(month)}</p>
+            }
           >
             {isLoading ? (
               <div className="flex min-h-[420px] items-center justify-center">
@@ -156,10 +204,13 @@ const StudyCalendar = () => {
                       deadlineDay: modifierDates.deadline,
                     }}
                     modifiersClassNames={{
-                      activityLight: "bg-emerald-100 text-emerald-900 hover:bg-emerald-100 dark:bg-emerald-500/15 dark:text-emerald-200",
-                      activityMedium: "bg-sky-100 text-sky-900 hover:bg-sky-100 dark:bg-sky-500/20 dark:text-sky-100",
+                      activityLight:
+                        "bg-emerald-100 text-emerald-900 hover:bg-emerald-100 dark:bg-emerald-500/15 dark:text-emerald-200",
+                      activityMedium:
+                        "bg-sky-100 text-sky-900 hover:bg-sky-100 dark:bg-sky-500/20 dark:text-sky-100",
                       activityStrong: "bg-primary text-primary-foreground hover:bg-primary",
-                      recommendedStudy: "ring-1 ring-sky-300 ring-offset-2 ring-offset-background border border-dashed border-sky-300",
+                      recommendedStudy:
+                        "ring-1 ring-sky-300 ring-offset-2 ring-offset-background border border-dashed border-sky-300",
                       deadlineDay: "ring-2 ring-rose-400 ring-offset-2 ring-offset-background",
                     }}
                     className="w-full"
@@ -168,13 +219,30 @@ const StudyCalendar = () => {
 
                 <div className="space-y-3">
                   <div className="rounded-[20px] border border-border bg-card p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Chu thich</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                      Chu thich
+                    </p>
                     <div className="mt-3 space-y-3 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-3"><span className="h-4 w-4 rounded bg-emerald-100 dark:bg-emerald-500/15" />Hoc nhe</div>
-                      <div className="flex items-center gap-3"><span className="h-4 w-4 rounded bg-sky-100 dark:bg-sky-500/20" />Hoc deu</div>
-                      <div className="flex items-center gap-3"><span className="h-4 w-4 rounded bg-primary" />Hoc sau</div>
-                      <div className="flex items-center gap-3"><span className="h-4 w-4 rounded border border-dashed border-sky-300" />Ngay nen hoc</div>
-                      <div className="flex items-center gap-3"><span className="h-4 w-4 rounded ring-2 ring-rose-400 ring-offset-2 ring-offset-background" />Deadline JLPT</div>
+                      <div className="flex items-center gap-3">
+                        <span className="h-4 w-4 rounded bg-emerald-100 dark:bg-emerald-500/15" />
+                        Hoc nhe
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="h-4 w-4 rounded bg-sky-100 dark:bg-sky-500/20" />
+                        Hoc deu
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="h-4 w-4 rounded bg-primary" />
+                        Hoc sau
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="h-4 w-4 rounded border border-dashed border-sky-300" />
+                        Ngay nen hoc
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="h-4 w-4 rounded ring-2 ring-rose-400 ring-offset-2 ring-offset-background" />
+                        Deadline JLPT
+                      </div>
                     </div>
                   </div>
 
@@ -184,7 +252,8 @@ const StudyCalendar = () => {
                       <p className="text-sm font-semibold text-amber-800">Goi y nhip hoc</p>
                     </div>
                     <p className="mt-2 text-sm leading-6 text-foreground/80">
-                      {data?.deadlineInsight || "Hay giu it nhat 1 phien hoc ngan moi ngay de duy tri da hoc."}
+                      {data?.deadlineInsight ||
+                        "Hay giu it nhat 1 phien hoc ngan moi ngay de duy tri da hoc."}
                     </p>
                   </div>
                 </div>
@@ -193,7 +262,14 @@ const StudyCalendar = () => {
           </PageSection>
 
           <div className="space-y-4">
-            <PageSection title="Chi tiet ngay" description={selectedDay ? formatDateLabel(selectedDay.date) : "Chon mot ngay trong lich de xem chi tiet."}>
+            <PageSection
+              title="Chi tiet ngay"
+              description={
+                selectedDay
+                  ? formatDateLabel(selectedDay.date)
+                  : "Chon mot ngay trong lich de xem chi tiet."
+              }
+            >
               {selectedDay ? (
                 <div className="space-y-3">
                   <div className="rounded-[20px] border border-border bg-card p-4">
@@ -214,16 +290,28 @@ const StudyCalendar = () => {
 
                     <div className="mt-4 grid gap-3 sm:grid-cols-3">
                       <div className="rounded-2xl border border-border bg-background px-3 py-3">
-                        <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Su kien</p>
-                        <p className="mt-2 text-xl font-semibold text-foreground">{selectedDay.totalEvents}</p>
+                        <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                          Su kien
+                        </p>
+                        <p className="mt-2 text-xl font-semibold text-foreground">
+                          {selectedDay.totalEvents}
+                        </p>
                       </div>
                       <div className="rounded-2xl border border-border bg-background px-3 py-3">
-                        <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Hoan thanh</p>
-                        <p className="mt-2 text-xl font-semibold text-foreground">{selectedDay.completedCount}</p>
+                        <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                          Hoan thanh
+                        </p>
+                        <p className="mt-2 text-xl font-semibold text-foreground">
+                          {selectedDay.completedCount}
+                        </p>
                       </div>
                       <div className="rounded-2xl border border-border bg-background px-3 py-3">
-                        <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Phut hoc</p>
-                        <p className="mt-2 text-xl font-semibold text-foreground">{selectedDay.totalMinutes}</p>
+                        <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                          Phut hoc
+                        </p>
+                        <p className="mt-2 text-xl font-semibold text-foreground">
+                          {selectedDay.totalMinutes}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -236,15 +324,19 @@ const StudyCalendar = () => {
 
                   {selectedDay.isDeadlineDay && (
                     <div className="rounded-[20px] border border-rose-200 bg-rose-50/80 p-4 text-sm leading-6 text-rose-900">
-                      Day la moc deadline JLPT cua ban. Nen danh mot phien hoc tap trung hon binh thuong.
+                      Day la moc deadline JLPT cua ban. Nen danh mot phien hoc tap trung hon binh
+                      thuong.
                     </div>
                   )}
 
-                  {!selectedDay.hasActivity && !selectedDay.isRecommendedStudyDay && !selectedDay.isDeadlineDay && (
-                    <div className="rounded-[20px] border border-border bg-muted/30 p-4 text-sm leading-6 text-muted-foreground">
-                      Khong co su kien nao trong ngay nay. Neu muon giu streak on dinh, hay chen mot phien hoc ngan 10-15 phut.
-                    </div>
-                  )}
+                  {!selectedDay.hasActivity &&
+                    !selectedDay.isRecommendedStudyDay &&
+                    !selectedDay.isDeadlineDay && (
+                      <div className="rounded-[20px] border border-border bg-muted/30 p-4 text-sm leading-6 text-muted-foreground">
+                        Khong co su kien nao trong ngay nay. Neu muon giu streak on dinh, hay chen
+                        mot phien hoc ngan 10-15 phut.
+                      </div>
+                    )}
                 </div>
               ) : (
                 <div className="rounded-[20px] border border-dashed border-border bg-muted/30 px-5 py-10 text-center text-sm text-muted-foreground">
@@ -253,18 +345,27 @@ const StudyCalendar = () => {
               )}
             </PageSection>
 
-            <PageSection title="Tien do muc tieu" description="Tom tat nhanh de biet minh dang o dau trong hanh trinh JLPT.">
+            <PageSection
+              title="Tien do muc tieu"
+              description="Tom tat nhanh de biet minh dang o dau trong hanh trinh JLPT."
+            >
               <div className="space-y-3">
                 <div className="rounded-[20px] border border-border bg-card p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Muc tieu hien tai</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    Muc tieu hien tai
+                  </p>
                   <p className="mt-2 text-lg font-semibold text-foreground">
                     {data?.targetJlptLevel || "N5"} • {data?.dailyGoalMinutes || 0} phut/ngay
                   </p>
                 </div>
 
                 <div className="rounded-[20px] border border-border bg-card p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Deadline</p>
-                  <p className="mt-2 text-lg font-semibold text-foreground">{data?.deadlineDate || "Chua dat"}</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    Deadline
+                  </p>
+                  <p className="mt-2 text-lg font-semibold text-foreground">
+                    {data?.deadlineDate || "Chua dat"}
+                  </p>
                   <p className="mt-1 text-sm text-muted-foreground">
                     {data?.deadlineDate
                       ? `${data.daysRemainingToDeadline} ngay con lai • can ${data.recommendedMinutesPerDay} phut/ngay`
@@ -273,10 +374,16 @@ const StudyCalendar = () => {
                 </div>
 
                 <div className="rounded-[20px] border border-border bg-card p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Best day trong thang</p>
-                  <p className="mt-2 text-lg font-semibold text-foreground">{data?.bestDayDate ? formatDateLabel(data.bestDayDate) : "Chua co"}</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    Best day trong thang
+                  </p>
+                  <p className="mt-2 text-lg font-semibold text-foreground">
+                    {data?.bestDayDate ? formatDateLabel(data.bestDayDate) : "Chua co"}
+                  </p>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    {data?.bestDayDate ? `${data.bestDayMinutes} phut hoc la muc cao nhat trong thang nay.` : "Khi co activity, lich se nhan ra ngay hoc sau nhat cua ban."}
+                    {data?.bestDayDate
+                      ? `${data.bestDayMinutes} phut hoc la muc cao nhat trong thang nay.`
+                      : "Khi co activity, lich se nhan ra ngay hoc sau nhat cua ban."}
                   </p>
                 </div>
               </div>

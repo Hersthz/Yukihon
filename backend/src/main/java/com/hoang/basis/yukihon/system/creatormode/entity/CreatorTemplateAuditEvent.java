@@ -14,19 +14,20 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.Instant;
-
 @Entity
-@Table(name = "creator_template_audit_events", indexes = {
-        @Index(name = "idx_creator_template_audit_template_created", columnList = "template_id, created_at"),
-        @Index(name = "idx_creator_template_audit_actor_created", columnList = "actor_user_id, created_at")
-})
+@Table(
+        name = "creator_template_audit_events",
+        indexes = {
+            @Index(name = "idx_creator_template_audit_template_created", columnList = "template_id, created_at"),
+            @Index(name = "idx_creator_template_audit_actor_created", columnList = "actor_user_id, created_at")
+        })
 @Getter
 @Setter
 @Builder

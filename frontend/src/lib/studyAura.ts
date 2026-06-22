@@ -31,7 +31,12 @@ const getAmbientLabel = (hour: number) => {
   return "Night Focus";
 };
 
-export const buildStudyAura = ({ learningPath, mistakeDna, wordStats, hour = new Date().getHours() }: StudyAuraInput): StudyAuraSnapshot => {
+export const buildStudyAura = ({
+  learningPath,
+  mistakeDna,
+  wordStats,
+  hour = new Date().getHours(),
+}: StudyAuraInput): StudyAuraSnapshot => {
   const dueReviews = wordStats?.dueTodayCount ?? mistakeDna?.dueReviews ?? 0;
   const riskScore = mistakeDna?.overallRiskScore ?? 0;
   const quizAccuracy = mistakeDna?.averageQuizAccuracy ?? 0;
@@ -89,7 +94,10 @@ export const buildStudyAura = ({ learningPath, mistakeDna, wordStats, hour = new
       title: "Hom nay hop de hoc qua truyen",
       description: `Streak ${currentStreak} ngay va risk score dang em. Day la luc tot de hoc trong boi canh, de vocab va grammar di vao nhe hon.`,
       primaryAction: { label: "Mo Story Mode", to: "/story-mode" },
-      secondaryAction: { label: nextLesson ? "Quay lai lesson" : "Mo JLPT", to: nextLesson ? `/lessons/${nextLesson.id}` : "/jlpt-lessons" },
+      secondaryAction: {
+        label: nextLesson ? "Quay lai lesson" : "Mo JLPT",
+        to: nextLesson ? `/lessons/${nextLesson.id}` : "/jlpt-lessons",
+      },
       signals: [
         `${currentStreak} ngay streak`,
         `${learningPath?.completionRate ?? 0}% track hoan thanh`,
@@ -110,7 +118,10 @@ export const buildStudyAura = ({ learningPath, mistakeDna, wordStats, hour = new
     description: nextLesson
       ? `Ban dang co mot lesson phu hop de di tiep mach hoc hien tai. Day la cach nhanh nhat de giu track khong bi dut doan.`
       : `Chua co lesson tiep theo ro rang, nhung lo trinh JLPT san sang de ban mo mot track moi.`,
-    primaryAction: { label: nextLesson ? "Hoc tiep lesson" : "Mo lo trinh", to: nextLesson ? `/lessons/${nextLesson.id}` : "/jlpt-lessons" },
+    primaryAction: {
+      label: nextLesson ? "Hoc tiep lesson" : "Mo lo trinh",
+      to: nextLesson ? `/lessons/${nextLesson.id}` : "/jlpt-lessons",
+    },
     secondaryAction: { label: "Xem Story Mode", to: "/story-mode" },
     signals: [
       `${inProgressLessons} bai dang hoc`,

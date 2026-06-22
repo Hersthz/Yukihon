@@ -8,20 +8,21 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.Instant;
-
 /** In-app notification for a user (study reminders, gamification rewards, system messages). */
 @Entity
-@Table(name = "notifications", indexes = {
-        @Index(name = "idx_notification_user", columnList = "user_id"),
-        @Index(name = "idx_notification_user_read", columnList = "user_id,is_read")
-})
+@Table(
+        name = "notifications",
+        indexes = {
+            @Index(name = "idx_notification_user", columnList = "user_id"),
+            @Index(name = "idx_notification_user_read", columnList = "user_id,is_read")
+        })
 @Getter
 @Setter
 @Builder

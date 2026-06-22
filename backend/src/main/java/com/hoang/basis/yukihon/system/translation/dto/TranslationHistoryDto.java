@@ -1,9 +1,8 @@
 package com.hoang.basis.yukihon.system.translation.dto;
 
 import com.hoang.basis.yukihon.system.translation.entity.TranslationHistory;
-import lombok.*;
-
 import java.time.Instant;
+import lombok.*;
 
 @Getter
 @Setter

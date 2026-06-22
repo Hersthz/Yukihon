@@ -2,15 +2,15 @@ package com.hoang.basis.yukihon.system.aichat.entity;
 
 import com.hoang.basis.yukihon.system.user.entity.User;
 import jakarta.persistence.*;
+import java.time.Instant;
 import lombok.*;
 
-import java.time.Instant;
-
 @Entity
-@Table(name = "ai_chat_messages",
+@Table(
+        name = "ai_chat_messages",
         indexes = {
-                @Index(name = "idx_ai_chat_user_id", columnList = "user_id"),
-                @Index(name = "idx_ai_chat_created_at", columnList = "created_at")
+            @Index(name = "idx_ai_chat_user_id", columnList = "user_id"),
+            @Index(name = "idx_ai_chat_created_at", columnList = "created_at")
         })
 @Getter
 @Setter

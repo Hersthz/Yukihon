@@ -162,7 +162,9 @@ const Auth = () => {
           setSuccessMsg("Reset token created. You can set a new password now.");
           setMode("reset");
         } else {
-          setSuccessMsg(response.message || "If the account exists, reset instructions have been sent.");
+          setSuccessMsg(
+            response.message || "If the account exists, reset instructions have been sent."
+          );
         }
       } catch (error) {
         const message = error instanceof Error ? error.message : "Password reset request failed.";
@@ -234,9 +236,16 @@ const Auth = () => {
     <div className="min-h-screen bg-background px-4 pb-10 pt-6 sm:px-6">
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(255,216,207,0.52),transparent_32%),radial-gradient(circle_at_top_right,rgba(201,240,255,0.58),transparent_28%),linear-gradient(180deg,#fffaf4_0%,#fff5ed_40%,#f8f0e8_100%)]" />
 
-      <motion.nav initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} className="mx-auto max-w-[1360px]">
+      <motion.nav
+        initial={{ opacity: 0, y: -12 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mx-auto max-w-[1360px]"
+      >
         <div className="surface-panel flex items-center justify-between bg-white/92 px-5 py-4 backdrop-blur-xl sm:px-6">
-          <Link to="/" className="flex items-center gap-3 text-foreground/76 transition-colors hover:text-foreground">
+          <Link
+            to="/"
+            className="flex items-center gap-3 text-foreground/76 transition-colors hover:text-foreground"
+          >
             <ArrowLeft className="h-4 w-4" />
             <div className="flex h-11 w-11 items-center justify-center rounded-[1rem] bg-[#ffcfc6]">
               <span className="display-font text-2xl font-bold text-foreground">Y</span>
@@ -251,7 +260,9 @@ const Auth = () => {
 
           <div className="hidden items-center gap-3 rounded-full bg-[#f7f3ee] px-4 py-2 sm:flex">
             <Sparkles className="h-4 w-4 text-primary" />
-            <span className="text-sm font-semibold text-foreground">Dark mode is parked. Light mode only for now.</span>
+            <span className="text-sm font-semibold text-foreground">
+              Dark mode is parked. Light mode only for now.
+            </span>
           </div>
         </div>
       </motion.nav>

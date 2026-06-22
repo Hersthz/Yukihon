@@ -83,7 +83,7 @@ const AudioPlayer = ({ audioUrl }: AudioPlayerProps) => {
   return (
     <Card className="p-6">
       <audio ref={audioRef} src={audioUrl} preload="metadata" />
-      
+
       <div className="space-y-4">
         {/* Progress Bar */}
         <div className="space-y-2">
@@ -102,32 +102,15 @@ const AudioPlayer = ({ audioUrl }: AudioPlayerProps) => {
 
         {/* Controls */}
         <div className="flex items-center justify-center gap-4">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handleRestart}
-            className="h-10 w-10"
-          >
+          <Button variant="outline" size="icon" onClick={handleRestart} className="h-10 w-10">
             <RotateCcw className="h-4 w-4" />
           </Button>
 
-          <Button
-            size="icon"
-            onClick={togglePlay}
-            className="h-14 w-14 rounded-full"
-          >
-            {isPlaying ? (
-              <Pause className="h-6 w-6" />
-            ) : (
-              <Play className="h-6 w-6 ml-0.5" />
-            )}
+          <Button size="icon" onClick={togglePlay} className="h-14 w-14 rounded-full">
+            {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6 ml-0.5" />}
           </Button>
 
-          <Button
-            variant="outline"
-            onClick={toggleSpeed}
-            className="h-10 px-4 min-w-[4rem]"
-          >
+          <Button variant="outline" onClick={toggleSpeed} className="h-10 px-4 min-w-[4rem]">
             {playbackSpeed}x
           </Button>
         </div>

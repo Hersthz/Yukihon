@@ -2,6 +2,12 @@ package com.hoang.basis.yukihon.base.metadata;
 
 import com.hoang.basis.yukihon.base.crud.registry.AutoCrudRegistry;
 import com.hoang.basis.yukihon.base.crud.registry.CrudDescriptor;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -9,13 +15,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Serves the auto-CRUD navigation derived live from {@code @ResourceMenu}, filtered to the entries
@@ -28,11 +27,9 @@ public class MenuController {
 
     private final AutoCrudRegistry registry;
 
-    public record MenuItem(String title, String url, String icon, int order, String permission) {
-    }
+    public record MenuItem(String title, String url, String icon, int order, String permission) {}
 
-    public record MenuGroup(String group, List<MenuItem> items) {
-    }
+    public record MenuGroup(String group, List<MenuItem> items) {}
 
     @GetMapping("/menu")
     public List<MenuGroup> menu() {
@@ -45,9 +42,7 @@ public class MenuController {
                 continue;
             }
             String required = descriptor.getMenuPermission();
-            boolean allowed = admin
-                    || required == null || required.isBlank()
-                    || authorities.contains(required);
+            boolean allowed = admin || required == null || required.isBlank() || authorities.contains(required);
             if (!allowed) {
                 continue;
             }

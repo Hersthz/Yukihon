@@ -1,4 +1,10 @@
-import { CREATOR_BLOCK_LABELS, CREATOR_BLOCK_TYPES, type CreatorBlock, type CreatorBlockType, type CreatorDocument } from "@/features/creator-mode/types";
+import {
+  CREATOR_BLOCK_LABELS,
+  CREATOR_BLOCK_TYPES,
+  type CreatorBlock,
+  type CreatorBlockType,
+  type CreatorDocument,
+} from "@/features/creator-mode/types";
 
 const makeBlockId = () => `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
 
@@ -28,9 +34,14 @@ const sanitizeBlock = (value: unknown): CreatorBlock | null => {
   return {
     id: String(candidate.id),
     type: candidate.type,
-    heading: typeof candidate.heading === "string" ? candidate.heading : CREATOR_BLOCK_LABELS[candidate.type],
+    heading:
+      typeof candidate.heading === "string"
+        ? candidate.heading
+        : CREATOR_BLOCK_LABELS[candidate.type],
     body: typeof candidate.body === "string" ? candidate.body : "",
-    options: Array.isArray(candidate.options) ? candidate.options.map((option) => String(option)) : [],
+    options: Array.isArray(candidate.options)
+      ? candidate.options.map((option) => String(option))
+      : [],
   };
 };
 
@@ -54,10 +65,21 @@ export const parseCreatorDocument = (raw: string | null | undefined): CreatorDoc
   }
 };
 
-export const serializeCreatorDocument = (document: CreatorDocument): string => JSON.stringify(document);
+export const serializeCreatorDocument = (document: CreatorDocument): string =>
+  JSON.stringify(document);
 
-export const moveBlock = (blocks: CreatorBlock[], fromIndex: number, toIndex: number): CreatorBlock[] => {
-  if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0 || fromIndex >= blocks.length || toIndex >= blocks.length) {
+export const moveBlock = (
+  blocks: CreatorBlock[],
+  fromIndex: number,
+  toIndex: number
+): CreatorBlock[] => {
+  if (
+    fromIndex === toIndex ||
+    fromIndex < 0 ||
+    toIndex < 0 ||
+    fromIndex >= blocks.length ||
+    toIndex >= blocks.length
+  ) {
     return blocks;
   }
 

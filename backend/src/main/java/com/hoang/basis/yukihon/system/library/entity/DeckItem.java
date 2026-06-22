@@ -16,11 +16,15 @@ import lombok.Setter;
 
 /** Join between a deck and a flashcard, with ordering. */
 @Entity
-@Table(name = "deck_items",
-        uniqueConstraints = @UniqueConstraint(name = "uk_deck_item", columnNames = {"deck_id", "flashcard_id"}),
+@Table(
+        name = "deck_items",
+        uniqueConstraints =
+                @UniqueConstraint(
+                        name = "uk_deck_item",
+                        columnNames = {"deck_id", "flashcard_id"}),
         indexes = {
-                @Index(name = "idx_deck_items_deck", columnList = "deck_id"),
-                @Index(name = "idx_deck_items_flashcard", columnList = "flashcard_id")
+            @Index(name = "idx_deck_items_deck", columnList = "deck_id"),
+            @Index(name = "idx_deck_items_flashcard", columnList = "flashcard_id")
         })
 @Getter
 @Setter

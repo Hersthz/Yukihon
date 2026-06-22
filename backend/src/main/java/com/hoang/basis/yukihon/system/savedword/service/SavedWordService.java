@@ -1,27 +1,26 @@
 package com.hoang.basis.yukihon.system.savedword.service;
 
+import com.hoang.basis.yukihon.exception.ResourceNotFoundException;
 import com.hoang.basis.yukihon.system.savedword.dto.ReviewSavedWordRequest;
 import com.hoang.basis.yukihon.system.savedword.dto.SaveWordRequest;
 import com.hoang.basis.yukihon.system.savedword.dto.SavedWordDto;
 import com.hoang.basis.yukihon.system.savedword.dto.SavedWordStatsDto;
-import com.hoang.basis.yukihon.exception.ResourceNotFoundException;
-import com.hoang.basis.yukihon.system.user.entity.User;
-import com.hoang.basis.yukihon.system.vocabulary.entity.Vocabulary;
-import com.hoang.basis.yukihon.system.user.repository.UserRepository;
-import com.hoang.basis.yukihon.system.vocabulary.repository.VocabularyRepository;
 import com.hoang.basis.yukihon.system.savedword.entity.SavedWord;
 import com.hoang.basis.yukihon.system.savedword.repository.SavedWordRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
+import com.hoang.basis.yukihon.system.user.entity.User;
+import com.hoang.basis.yukihon.system.user.repository.UserRepository;
+import com.hoang.basis.yukihon.system.vocabulary.entity.Vocabulary;
+import com.hoang.basis.yukihon.system.vocabulary.repository.VocabularyRepository;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -54,7 +53,8 @@ public class SavedWordService {
 
     public List<SavedWordDto> getReviewQueue(Long userId, String mode, boolean dueOnly) {
         List<SavedWord> savedWords = dueOnly
-                ? savedWordRepository.findByUserIdAndNextReviewAtLessThanEqualOrderByNextReviewAtAscCreatedAtDesc(userId, java.time.Instant.now())
+                ? savedWordRepository.findByUserIdAndNextReviewAtLessThanEqualOrderByNextReviewAtAscCreatedAtDesc(
+                        userId, java.time.Instant.now())
                 : savedWordRepository.findByUserIdOrderByNextReviewAtAscCreatedAtDesc(userId);
 
         return savedWords.stream()
@@ -65,7 +65,8 @@ public class SavedWordService {
 
     @Transactional
     public SavedWordDto saveWord(Long userId, SaveWordRequest request) {
-        SavedWord existing = savedWordRepository.findByUserIdAndVocabularyId(userId, request.getVocabularyId())
+        SavedWord existing = savedWordRepository
+                .findByUserIdAndVocabularyId(userId, request.getVocabularyId())
                 .orElse(null);
         if (existing != null) {
             return SavedWordDto.fromEntity(existing);
@@ -202,11 +203,13 @@ public class SavedWordService {
         java.time.Instant now = java.time.Instant.now();
 
         long dueTodayCount = allWords.stream()
-                .filter(savedWord -> savedWord.getNextReviewAt() == null || !savedWord.getNextReviewAt().isAfter(now))
+                .filter(savedWord -> savedWord.getNextReviewAt() == null
+                        || !savedWord.getNextReviewAt().isAfter(now))
                 .count();
         long kanjiDueTodayCount = allWords.stream()
                 .filter(savedWord -> matchesMode(savedWord, "KANJI"))
-                .filter(savedWord -> savedWord.getNextReviewAt() == null || !savedWord.getNextReviewAt().isAfter(now))
+                .filter(savedWord -> savedWord.getNextReviewAt() == null
+                        || !savedWord.getNextReviewAt().isAfter(now))
                 .count();
 
         List<String> folders = allWords.stream()
@@ -227,17 +230,18 @@ public class SavedWordService {
     }
 
     private User findUserByIdOrThrow(Long userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        return userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 
     private Vocabulary findVocabularyByIdOrThrow(Long vocabularyId) {
-        return vocabularyRepository.findById(vocabularyId)
+        return vocabularyRepository
+                .findById(vocabularyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Vocabulary not found"));
     }
 
     private SavedWord findOwnedSavedWordOrThrow(Long savedWordId, Long userId) {
-        SavedWord saved = savedWordRepository.findById(savedWordId)
+        SavedWord saved = savedWordRepository
+                .findById(savedWordId)
                 .orElseThrow(() -> new ResourceNotFoundException("Saved word not found"));
 
         if (!saved.getUser().getId().equals(userId)) {
@@ -247,7 +251,8 @@ public class SavedWordService {
     }
 
     private boolean matchesMode(SavedWord savedWord, String mode) {
-        String normalizedMode = mode == null || mode.isBlank() ? "ALL" : mode.trim().toUpperCase(Locale.ROOT);
+        String normalizedMode =
+                mode == null || mode.isBlank() ? "ALL" : mode.trim().toUpperCase(Locale.ROOT);
         if ("ALL".equals(normalizedMode)) {
             return true;
         }

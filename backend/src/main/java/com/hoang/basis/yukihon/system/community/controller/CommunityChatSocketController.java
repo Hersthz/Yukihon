@@ -6,16 +6,15 @@ import com.hoang.basis.yukihon.system.community.dto.CommunityChatTypingRequest;
 import com.hoang.basis.yukihon.system.community.exception.CommunityChatSocketException;
 import com.hoang.basis.yukihon.system.community.service.CommunityChatService;
 import jakarta.validation.Valid;
+import java.security.Principal;
+import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.stereotype.Controller;
-
-import java.time.Instant;
-import java.security.Principal;
 
 @Controller
 @RequiredArgsConstructor
@@ -27,7 +26,8 @@ public class CommunityChatSocketController {
     @MessageMapping("/community-chat.send")
     public void sendMessage(@Valid @Payload CommunityChatSendRequest request, Principal principal) {
         if (principal == null) {
-            throw new CommunityChatSocketException("UNAUTHORIZED", "Unauthorized chat connection", request.getClientMessageId());
+            throw new CommunityChatSocketException(
+                    "UNAUTHORIZED", "Unauthorized chat connection", request.getClientMessageId());
         }
 
         var savedMessage = communityChatService.createMessage(principal.getName(), request);

@@ -1,9 +1,8 @@
 package com.hoang.basis.yukihon.system.library.repository;
 
 import com.hoang.basis.yukihon.system.library.entity.DeckItem;
-import org.springframework.data.jpa.repository.JpaRepository;
-
 import java.util.List;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface DeckItemRepository extends JpaRepository<DeckItem, Long> {
 

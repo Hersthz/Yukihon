@@ -1,7 +1,13 @@
 import { History, Link2, Workflow } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { JLPT_LEVELS, LESSON_STATUSES } from "./constants";
 import { OptionPicker, MediaField } from "./form-shared";
@@ -23,9 +29,18 @@ interface LessonEditorFormProps {
 
 const statusCopy: Record<Lesson["status"], { label: string; description: string }> = {
   DRAFT: { label: "Draft", description: "Work in progress and not ready for review yet." },
-  REVIEW: { label: "Review", description: "Ready for editorial or teaching review before publishing." },
-  PUBLISHED: { label: "Published", description: "Visible to learners and eligible for learning path recommendations." },
-  ARCHIVED: { label: "Archived", description: "Hidden from active learning flows but preserved for history." },
+  REVIEW: {
+    label: "Review",
+    description: "Ready for editorial or teaching review before publishing.",
+  },
+  PUBLISHED: {
+    label: "Published",
+    description: "Visible to learners and eligible for learning path recommendations.",
+  },
+  ARCHIVED: {
+    label: "Archived",
+    description: "Hidden from active learning flows but preserved for history.",
+  },
 };
 
 const LessonEditorForm = ({
@@ -37,7 +52,10 @@ const LessonEditorForm = ({
   onUploadMedia,
   onRestoreLessonVersion,
 }: LessonEditorFormProps) => {
-  const toggleRelation = (field: "relatedVocabularyIds" | "relatedGrammarIds" | "relatedQuizIds", id: number) => {
+  const toggleRelation = (
+    field: "relatedVocabularyIds" | "relatedGrammarIds" | "relatedQuizIds",
+    id: number
+  ) => {
     const current = item[field];
     const next = current.includes(id) ? current.filter((value) => value !== id) : [...current, id];
     onChange({ ...item, [field]: next });
@@ -50,7 +68,9 @@ const LessonEditorForm = ({
           <Workflow className="h-4 w-4 text-primary" />
           <div>
             <p className="text-sm font-semibold text-foreground">Publishing workflow</p>
-            <p className="text-sm text-muted-foreground">Move the lesson through draft, review, publish, and archive without losing history.</p>
+            <p className="text-sm text-muted-foreground">
+              Move the lesson through draft, review, publish, and archive without losing history.
+            </p>
           </div>
         </div>
 
@@ -61,11 +81,15 @@ const LessonEditorForm = ({
               type="button"
               onClick={() => onChange({ ...item, status })}
               className={`rounded-[20px] border p-4 text-left transition ${
-                item.status === status ? "border-primary bg-primary/10 shadow-[0_0_0_1px_rgba(255,255,255,0.08)]" : "border-border bg-background/40 hover:bg-background/60"
+                item.status === status
+                  ? "border-primary bg-primary/10 shadow-[0_0_0_1px_rgba(255,255,255,0.08)]"
+                  : "border-border bg-background/40 hover:bg-background/60"
               }`}
             >
               <p className="text-sm font-semibold text-foreground">{statusCopy[status].label}</p>
-              <p className="mt-2 text-xs leading-5 text-muted-foreground">{statusCopy[status].description}</p>
+              <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                {statusCopy[status].description}
+              </p>
             </button>
           ))}
         </div>
@@ -74,23 +98,38 @@ const LessonEditorForm = ({
       <div className="grid gap-4 md:grid-cols-2">
         <div>
           <Label>Title</Label>
-          <Input value={item.title} onChange={(event) => onChange({ ...item, title: event.target.value })} className="bg-background/50" />
+          <Input
+            value={item.title}
+            onChange={(event) => onChange({ ...item, title: event.target.value })}
+            className="bg-background/50"
+          />
         </div>
         <div>
           <Label>Category</Label>
-          <Input value={item.category} onChange={(event) => onChange({ ...item, category: event.target.value })} className="bg-background/50" />
+          <Input
+            value={item.category}
+            onChange={(event) => onChange({ ...item, category: event.target.value })}
+            className="bg-background/50"
+          />
         </div>
       </div>
 
       <div>
         <Label>Description</Label>
-        <Textarea value={item.description} onChange={(event) => onChange({ ...item, description: event.target.value })} className="bg-background/50" />
+        <Textarea
+          value={item.description}
+          onChange={(event) => onChange({ ...item, description: event.target.value })}
+          className="bg-background/50"
+        />
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
         <div>
           <Label>JLPT Level</Label>
-          <Select value={item.jlptLevel} onValueChange={(value) => onChange({ ...item, jlptLevel: value })}>
+          <Select
+            value={item.jlptLevel}
+            onValueChange={(value) => onChange({ ...item, jlptLevel: value })}
+          >
             <SelectTrigger className="bg-background/50">
               <SelectValue />
             </SelectTrigger>
@@ -105,7 +144,10 @@ const LessonEditorForm = ({
         </div>
         <div>
           <Label>Workflow Stage</Label>
-          <Select value={item.status} onValueChange={(value) => onChange({ ...item, status: value as Lesson["status"] })}>
+          <Select
+            value={item.status}
+            onValueChange={(value) => onChange({ ...item, status: value as Lesson["status"] })}
+          >
             <SelectTrigger className="bg-background/50">
               <SelectValue />
             </SelectTrigger>
@@ -123,7 +165,9 @@ const LessonEditorForm = ({
           <Input
             type="number"
             value={item.orderIndex}
-            onChange={(event) => onChange({ ...item, orderIndex: Number.parseInt(event.target.value, 10) || 0 })}
+            onChange={(event) =>
+              onChange({ ...item, orderIndex: Number.parseInt(event.target.value, 10) || 0 })
+            }
             className="bg-background/50"
           />
         </div>
@@ -174,7 +218,9 @@ const LessonEditorForm = ({
           <Link2 className="h-4 w-4 text-primary" />
           <div>
             <p className="text-sm font-semibold text-foreground">Related content builder</p>
-            <p className="text-sm text-muted-foreground">Link vocabulary, grammar, and lesson-specific quizzes without typing raw IDs.</p>
+            <p className="text-sm text-muted-foreground">
+              Link vocabulary, grammar, and lesson-specific quizzes without typing raw IDs.
+            </p>
           </div>
         </div>
 
@@ -221,7 +267,10 @@ const LessonEditorForm = ({
             <History className="h-4 w-4 text-primary" />
             <div>
               <p className="text-sm font-semibold text-foreground">Lesson version history</p>
-              <p className="text-sm text-muted-foreground">Each save creates a snapshot. Load a snapshot into the editor to review or restore it before saving again.</p>
+              <p className="text-sm text-muted-foreground">
+                Each save creates a snapshot. Load a snapshot into the editor to review or restore
+                it before saving again.
+              </p>
             </div>
           </div>
 
@@ -230,14 +279,18 @@ const LessonEditorForm = ({
           ) : (
             <div className="space-y-3">
               {lessonVersions.map((version) => (
-                <div key={version.id} className="rounded-[18px] border border-border bg-background/50 p-4">
+                <div
+                  key={version.id}
+                  className="rounded-[18px] border border-border bg-background/50 p-4"
+                >
                   <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <div>
                       <p className="font-medium text-foreground">
                         v{version.versionNumber} · {version.changeAction}
                       </p>
                       <p className="mt-1 text-sm text-muted-foreground">
-                        {version.title} · {version.status} · {new Date(version.createdAt).toLocaleString("vi-VN")}
+                        {version.title} · {version.status} ·{" "}
+                        {new Date(version.createdAt).toLocaleString("vi-VN")}
                       </p>
                     </div>
 
@@ -251,9 +304,15 @@ const LessonEditorForm = ({
                   </div>
 
                   <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground">
-                    <span className="rounded-full border border-border px-2 py-1">{version.relatedVocabularyIds.length} vocab</span>
-                    <span className="rounded-full border border-border px-2 py-1">{version.relatedGrammarIds.length} grammar</span>
-                    <span className="rounded-full border border-border px-2 py-1">{version.relatedQuizIds.length} quizzes</span>
+                    <span className="rounded-full border border-border px-2 py-1">
+                      {version.relatedVocabularyIds.length} vocab
+                    </span>
+                    <span className="rounded-full border border-border px-2 py-1">
+                      {version.relatedGrammarIds.length} grammar
+                    </span>
+                    <span className="rounded-full border border-border px-2 py-1">
+                      {version.relatedQuizIds.length} quizzes
+                    </span>
                   </div>
                 </div>
               ))}

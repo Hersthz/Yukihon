@@ -18,10 +18,7 @@ const parseMessage = (raw: unknown): PrivateMessage | null => {
     return null;
   }
   const candidate = raw as Partial<PrivateMessage>;
-  if (
-    typeof candidate.id !== "number" ||
-    typeof candidate.content !== "string"
-  ) {
+  if (typeof candidate.id !== "number" || typeof candidate.content !== "string") {
     return null;
   }
   return candidate as PrivateMessage;
@@ -50,12 +47,7 @@ const createSockJsInstance = (url: string) => {
 };
 
 export function usePrivateChat(options: UsePrivateChatOptions = {}) {
-  const {
-    otherUserId,
-    currentUserId,
-    enabled = true,
-    loadHistory = true,
-  } = options;
+  const { otherUserId, currentUserId, enabled = true, loadHistory = true } = options;
 
   const stompClientRef = useRef<Client | null>(null);
   const [connectionState, setConnectionState] = useState<ConnectionState>("disconnected");
@@ -75,9 +67,10 @@ export function usePrivateChat(options: UsePrivateChatOptions = {}) {
 
     if (loadHistory) {
       setHistoryLoading(true);
-      privateChatApi.getHistory(otherUserId, 0, 50)
-        .then(page => {
-           // Page comes back sorted desc (newest first). Let's reverse before setting to array pushing
+      privateChatApi
+        .getHistory(otherUserId, 0, 50)
+        .then((page) => {
+          // Page comes back sorted desc (newest first). Let's reverse before setting to array pushing
           const reversed = [...page.content].reverse();
           setMessages(reversed);
           setHasMoreHistory(page.number < page.totalPages - 1);
@@ -88,18 +81,18 @@ export function usePrivateChat(options: UsePrivateChatOptions = {}) {
   }, [enabled, currentUserId, otherUserId, loadHistory]);
 
   const loadMoreHistory = useCallback(async () => {
-     if (!otherUserId || historyLoading || !hasMoreHistory) return;
-     try {
-       setHistoryLoading(true);
-       const nextPage = currentPage + 1;
-       const page = await privateChatApi.getHistory(otherUserId, nextPage, 50);
-       const reversed = [...page.content].reverse();
-       setMessages(prev => [...reversed, ...prev]);
-       setHasMoreHistory(page.number < page.totalPages - 1);
-       setCurrentPage(nextPage);
-     } finally {
-       setHistoryLoading(false);
-     }
+    if (!otherUserId || historyLoading || !hasMoreHistory) return;
+    try {
+      setHistoryLoading(true);
+      const nextPage = currentPage + 1;
+      const page = await privateChatApi.getHistory(otherUserId, nextPage, 50);
+      const reversed = [...page.content].reverse();
+      setMessages((prev) => [...reversed, ...prev]);
+      setHasMoreHistory(page.number < page.totalPages - 1);
+      setCurrentPage(nextPage);
+    } finally {
+      setHistoryLoading(false);
+    }
   }, [otherUserId, currentPage, historyLoading, hasMoreHistory]);
 
   // Connect STOMP
@@ -115,12 +108,12 @@ export function usePrivateChat(options: UsePrivateChatOptions = {}) {
 
     const socketUrl = `${apiClient.baseURL}/ws-community-chat`;
     const token = apiClient.getToken() || "";
-    
+
     // Using STOMP
     const client = new Client({
       webSocketFactory: () => createSockJsInstance(socketUrl),
       connectHeaders: {
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
       },
       reconnectDelay: 2000,
       heartbeatIncoming: 20000,
@@ -138,11 +131,11 @@ export function usePrivateChat(options: UsePrivateChatOptions = {}) {
           const body = JSON.parse(message.body);
           const parsed = parseMessage(body);
           if (parsed && (parsed.sender.id === otherUserId || parsed.receiver.id === otherUserId)) {
-             setMessages(prev => [...prev, parsed]);
+            setMessages((prev) => [...prev, parsed]);
           }
-        } catch(e) {}
+        } catch (e) {}
       });
-      
+
       // typing
       client.subscribe("/user/queue/private-typing", (message: IMessage) => {
         try {
@@ -150,7 +143,7 @@ export function usePrivateChat(options: UsePrivateChatOptions = {}) {
           if (body.senderId === otherUserId) {
             setIsTyping(body.typing);
           }
-        } catch(e) {}
+        } catch (e) {}
       });
     };
 
@@ -161,7 +154,7 @@ export function usePrivateChat(options: UsePrivateChatOptions = {}) {
     client.onWebSocketError = () => {
       setConnectionState("error");
     };
-    
+
     client.onDisconnect = () => {
       setConnectionState("disconnected");
     };
@@ -177,29 +170,35 @@ export function usePrivateChat(options: UsePrivateChatOptions = {}) {
     };
   }, [enabled, currentUserId, otherUserId]);
 
-  const sendMessage = useCallback((content: string) => {
-    if (!stompClientRef.current?.active || !otherUserId) return;
-    
-    stompClientRef.current.publish({
-      destination: "/app/private-chat.send",
-      body: JSON.stringify({
-        receiverId: otherUserId,
-        content
-      })
-    });
-  }, [otherUserId]);
+  const sendMessage = useCallback(
+    (content: string) => {
+      if (!stompClientRef.current?.active || !otherUserId) return;
 
-  const sendTyping = useCallback((isTyping: boolean) => {
-    if (!stompClientRef.current?.active || !otherUserId) return;
-    
-    stompClientRef.current.publish({
-      destination: "/app/private-chat.typing",
-      body: JSON.stringify({
-        receiverId: otherUserId,
-        typing: isTyping
-      })
-    });
-  }, [otherUserId]);
+      stompClientRef.current.publish({
+        destination: "/app/private-chat.send",
+        body: JSON.stringify({
+          receiverId: otherUserId,
+          content,
+        }),
+      });
+    },
+    [otherUserId]
+  );
+
+  const sendTyping = useCallback(
+    (isTyping: boolean) => {
+      if (!stompClientRef.current?.active || !otherUserId) return;
+
+      stompClientRef.current.publish({
+        destination: "/app/private-chat.typing",
+        body: JSON.stringify({
+          receiverId: otherUserId,
+          typing: isTyping,
+        }),
+      });
+    },
+    [otherUserId]
+  );
 
   return {
     connectionState,
@@ -209,6 +208,6 @@ export function usePrivateChat(options: UsePrivateChatOptions = {}) {
     loadMoreHistory,
     sendMessage,
     sendTyping,
-    otherUserTyping: isTyping
+    otherUserTyping: isTyping,
   };
 }

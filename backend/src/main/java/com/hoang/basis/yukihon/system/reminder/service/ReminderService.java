@@ -3,18 +3,17 @@ package com.hoang.basis.yukihon.system.reminder.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hoang.basis.yukihon.system.kanjisrs.repository.KanjiSrsRecordRepository;
+import com.hoang.basis.yukihon.system.reminder.dto.ReminderDto;
+import com.hoang.basis.yukihon.system.reminder.dto.ReminderSummaryDto;
 import com.hoang.basis.yukihon.system.savedword.repository.SavedWordRepository;
 import com.hoang.basis.yukihon.system.storymode.repository.StoryModeStoryRepository;
 import com.hoang.basis.yukihon.system.userprogress.entity.UserProgress;
 import com.hoang.basis.yukihon.system.userprogress.repository.UserProgressRepository;
-import com.hoang.basis.yukihon.system.reminder.dto.ReminderDto;
-import com.hoang.basis.yukihon.system.reminder.dto.ReminderSummaryDto;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
@@ -78,9 +77,8 @@ public class ReminderService {
                     .build());
         }
 
-        long urgentCount = items.stream()
-                .filter(item -> "HIGH".equals(item.getPriority()))
-                .count();
+        long urgentCount =
+                items.stream().filter(item -> "HIGH".equals(item.getPriority())).count();
         int totalCount = items.stream()
                 .mapToInt(item -> item.getCount() != null ? item.getCount() : 1)
                 .sum();
@@ -93,9 +91,12 @@ public class ReminderService {
     }
 
     private int countUnfinishedStories(Long userId) {
-        UserProgress progress = userProgressRepository.findByUserIdAndVocabularyId(userId, STORY_MODE_PROGRESS_VOCABULARY_ID)
+        UserProgress progress = userProgressRepository
+                .findByUserIdAndVocabularyId(userId, STORY_MODE_PROGRESS_VOCABULARY_ID)
                 .orElse(null);
-        if (progress == null || progress.getNotes() == null || progress.getNotes().isBlank()) {
+        if (progress == null
+                || progress.getNotes() == null
+                || progress.getNotes().isBlank()) {
             return 0;
         }
 
@@ -109,7 +110,9 @@ public class ReminderService {
             return (int) storyModeStoryRepository.findByPublishedTrueOrderByUpdatedAtDesc().stream()
                     .filter(story -> {
                         JsonNode unlockedIds = unlockedMap.path(story.getStoryKey());
-                        return unlockedIds.isArray() && unlockedIds.size() > 0 && unlockedIds.size() < readSegmentCount(story.getContentJson());
+                        return unlockedIds.isArray()
+                                && unlockedIds.size() > 0
+                                && unlockedIds.size() < readSegmentCount(story.getContentJson());
                     })
                     .count();
         } catch (Exception ignored) {

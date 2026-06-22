@@ -30,7 +30,9 @@ const LessonNavigation = ({
     </Button>
 
     <div className="text-sm text-muted-foreground">
-      <span className="mr-3">{currentIndex + 1} / {totalItems}</span>
+      <span className="mr-3">
+        {currentIndex + 1} / {totalItems}
+      </span>
       <kbd className="rounded bg-muted px-2 py-1 text-xs">Left</kbd>{" "}
       <kbd className="rounded bg-muted px-2 py-1 text-xs">Right</kbd> to navigate
     </div>

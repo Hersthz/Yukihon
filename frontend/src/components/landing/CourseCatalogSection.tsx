@@ -17,7 +17,8 @@ const CourseCatalogSection = () => (
         </span>
         <h2 className="text-4xl md:text-5xl font-bold mt-6 mb-4">Your Learning Path</h2>
         <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-          From absolute beginner to conversational fluency, our curriculum feels like playing a game rather than studying.
+          From absolute beginner to conversational fluency, our curriculum feels like playing a game
+          rather than studying.
         </p>
       </motion.div>
 
@@ -31,14 +32,20 @@ const CourseCatalogSection = () => (
         >
           {COURSE_CATALOG.map((course, i) => (
             <motion.div key={i} variants={fadeUp} className="relative group">
-              <div className={`clay-card bg-gradient-to-b ${course.color} p-8 h-full text-white ${course.shadow} flex flex-col justify-between overflow-hidden relative group-hover:-translate-y-2 transition-transform duration-500`}>
+              <div
+                className={`clay-card bg-gradient-to-b ${course.color} p-8 h-full text-white ${course.shadow} flex flex-col justify-between overflow-hidden relative group-hover:-translate-y-2 transition-transform duration-500`}
+              >
                 <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/20 rounded-full blur-2xl group-hover:bg-white/30 transition-colors" />
                 <div>
                   <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mb-6 shadow-inner border border-white/30">
                     <course.icon className="w-7 h-7 text-white drop-shadow-md" />
                   </div>
-                  <h3 className="text-2xl font-bold mb-2 tracking-tight drop-shadow-sm">{course.title}</h3>
-                  <div className="text-white/80 text-sm font-medium mb-4 bg-black/10 w-fit px-3 py-1 rounded-full">{course.level}</div>
+                  <h3 className="text-2xl font-bold mb-2 tracking-tight drop-shadow-sm">
+                    {course.title}
+                  </h3>
+                  <div className="text-white/80 text-sm font-medium mb-4 bg-black/10 w-fit px-3 py-1 rounded-full">
+                    {course.level}
+                  </div>
                   <p className="text-white/90 leading-relaxed text-sm">{course.desc}</p>
                 </div>
                 <div className="mt-8 pt-4 border-t border-white/20 font-bold flex items-center justify-between text-white/90 group-hover:text-white group-hover:translate-x-1 transition-all">

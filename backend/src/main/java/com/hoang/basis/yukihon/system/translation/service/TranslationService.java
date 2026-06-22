@@ -10,6 +10,12 @@ import com.hoang.basis.yukihon.system.translation.entity.TranslationHistory;
 import com.hoang.basis.yukihon.system.translation.repository.TranslationHistoryRepository;
 import com.hoang.basis.yukihon.system.user.entity.User;
 import com.hoang.basis.yukihon.system.user.repository.UserRepository;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -18,13 +24,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
-
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -49,8 +48,12 @@ public class TranslationService {
         String sourceLang = request.getSourceLang().trim().toLowerCase();
         String targetLang = request.getTargetLang().trim().toLowerCase();
 
-        log.info("Translation request: {} -> {} | {} chars | userId={}",
-                sourceLang, targetLang, sourceText.length(), userId);
+        log.info(
+                "Translation request: {} -> {} | {} chars | userId={}",
+                sourceLang,
+                targetLang,
+                sourceText.length(),
+                userId);
 
         String translatedText = callTranslationApi(sourceText, sourceLang, targetLang);
         User user = findUserByIdOrThrow(userId);
@@ -76,13 +79,13 @@ public class TranslationService {
     }
 
     public Page<TranslationHistoryDto> getHistory(Long userId, Pageable pageable) {
-        return historyRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable)
+        return historyRepository
+                .findByUserIdOrderByCreatedAtDesc(userId, pageable)
                 .map(TranslationHistoryDto::fromEntity);
     }
 
     public List<TranslationHistoryDto> getBookmarks(Long userId) {
-        return historyRepository.findByUserIdAndBookmarkedTrueOrderByCreatedAtDesc(userId)
-                .stream()
+        return historyRepository.findByUserIdAndBookmarkedTrueOrderByCreatedAtDesc(userId).stream()
                 .map(TranslationHistoryDto::fromEntity)
                 .collect(Collectors.toList());
     }
@@ -117,8 +120,7 @@ public class TranslationService {
 
         return Map.of(
                 "totalTranslations", totalTranslations,
-                "totalBookmarks", totalBookmarks
-        );
+                "totalBookmarks", totalBookmarks);
     }
 
     private String callTranslationApi(String text, String sourceLang, String targetLang) {
@@ -175,12 +177,12 @@ public class TranslationService {
     }
 
     private User findUserByIdOrThrow(Long userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        return userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 
     private TranslationHistory findHistoryByIdAndUserIdOrThrow(Long historyId, Long userId) {
-        return historyRepository.findByIdAndUserId(historyId, userId)
+        return historyRepository
+                .findByIdAndUserId(historyId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Translation not found"));
     }
 }

@@ -2,17 +2,18 @@ package com.hoang.basis.yukihon.system.creatormode.entity;
 
 import com.hoang.basis.yukihon.system.user.entity.User;
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.math.BigDecimal;
 import java.time.Instant;
+import lombok.*;
 
 @Entity
-@Table(name = "creator_templates", indexes = {
-        @Index(name = "idx_creator_templates_status", columnList = "status"),
-        @Index(name = "idx_creator_templates_type", columnList = "content_type"),
-        @Index(name = "idx_creator_templates_creator", columnList = "created_by_user_id")
-})
+@Table(
+        name = "creator_templates",
+        indexes = {
+            @Index(name = "idx_creator_templates_status", columnList = "status"),
+            @Index(name = "idx_creator_templates_type", columnList = "content_type"),
+            @Index(name = "idx_creator_templates_creator", columnList = "created_by_user_id")
+        })
 @Getter
 @Setter
 @Builder

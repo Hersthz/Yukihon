@@ -20,27 +20,32 @@ const accentClasses: Record<string, { shell: string; badge: string; dot: string 
     dot: "bg-sky-500",
   },
   emerald: {
-    shell: "border-emerald-200/80 bg-emerald-50/80 text-emerald-900 hover:border-emerald-300 hover:bg-emerald-100/80",
+    shell:
+      "border-emerald-200/80 bg-emerald-50/80 text-emerald-900 hover:border-emerald-300 hover:bg-emerald-100/80",
     badge: "border-emerald-200 bg-white text-emerald-700",
     dot: "bg-emerald-500",
   },
   amber: {
-    shell: "border-amber-200/80 bg-amber-50/80 text-amber-900 hover:border-amber-300 hover:bg-amber-100/80",
+    shell:
+      "border-amber-200/80 bg-amber-50/80 text-amber-900 hover:border-amber-300 hover:bg-amber-100/80",
     badge: "border-amber-200 bg-white text-amber-700",
     dot: "bg-amber-500",
   },
   violet: {
-    shell: "border-violet-200/80 bg-violet-50/80 text-violet-900 hover:border-violet-300 hover:bg-violet-100/80",
+    shell:
+      "border-violet-200/80 bg-violet-50/80 text-violet-900 hover:border-violet-300 hover:bg-violet-100/80",
     badge: "border-violet-200 bg-white text-violet-700",
     dot: "bg-violet-500",
   },
   rose: {
-    shell: "border-rose-200/80 bg-rose-50/80 text-rose-900 hover:border-rose-300 hover:bg-rose-100/80",
+    shell:
+      "border-rose-200/80 bg-rose-50/80 text-rose-900 hover:border-rose-300 hover:bg-rose-100/80",
     badge: "border-rose-200 bg-white text-rose-700",
     dot: "bg-rose-500",
   },
   cyan: {
-    shell: "border-cyan-200/80 bg-cyan-50/80 text-cyan-900 hover:border-cyan-300 hover:bg-cyan-100/80",
+    shell:
+      "border-cyan-200/80 bg-cyan-50/80 text-cyan-900 hover:border-cyan-300 hover:bg-cyan-100/80",
     badge: "border-cyan-200 bg-white text-cyan-700",
     dot: "bg-cyan-500",
   },
@@ -59,7 +64,9 @@ const CommunityChatRooms = ({
       <div className="flex items-center justify-between gap-3">
         <div>
           <CardTitle className="text-lg font-semibold text-slate-900">Study rooms</CardTitle>
-          <p className="mt-1 text-sm text-slate-500">Chuyen nhanh den dung phong hoc theo muc tieu hom nay.</p>
+          <p className="mt-1 text-sm text-slate-500">
+            Chuyen nhanh den dung phong hoc theo muc tieu hom nay.
+          </p>
         </div>
         <Badge className="border-slate-200 bg-slate-50 text-slate-600" variant="outline">
           <Sparkles className="mr-1.5 h-3.5 w-3.5" />
@@ -98,19 +105,29 @@ const CommunityChatRooms = ({
                       <span className={cn("h-2.5 w-2.5 rounded-full", tone.dot)} />
                       <span className="text-sm font-semibold">{room.title}</span>
                       {isActive ? (
-                        <Badge className={cn("px-2 py-0 text-[10px]", tone.badge)} variant="outline">
+                        <Badge
+                          className={cn("px-2 py-0 text-[10px]", tone.badge)}
+                          variant="outline"
+                        >
                           <Radio className="mr-1 h-3 w-3" />
                           Active
                         </Badge>
                       ) : null}
                     </div>
-                    <p className="mt-2 text-sm leading-relaxed text-slate-600">{room.description}</p>
+                    <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                      {room.description}
+                    </p>
                   </div>
                   <MessageSquareText className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
                 </div>
 
                 <div className="mt-3 flex items-center justify-between gap-2">
-                  <span className={cn("inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold", tone.badge)}>
+                  <span
+                    className={cn(
+                      "inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold",
+                      tone.badge
+                    )}
+                  >
                     {room.focus}
                   </span>
                   <span className="text-xs font-medium text-slate-500">#{room.id}</span>

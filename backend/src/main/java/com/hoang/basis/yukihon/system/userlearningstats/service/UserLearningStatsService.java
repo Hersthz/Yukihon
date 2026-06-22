@@ -1,16 +1,15 @@
 package com.hoang.basis.yukihon.system.userlearningstats.service;
 
-import com.hoang.basis.yukihon.system.userlearningstats.dto.UserLearningStatsDto;
 import com.hoang.basis.yukihon.system.user.entity.User;
+import com.hoang.basis.yukihon.system.user.repository.UserRepository;
+import com.hoang.basis.yukihon.system.userlearningstats.dto.UserLearningStatsDto;
 import com.hoang.basis.yukihon.system.userlearningstats.entity.UserLearningStats;
 import com.hoang.basis.yukihon.system.userlearningstats.repository.UserLearningStatsRepository;
-import com.hoang.basis.yukihon.system.user.repository.UserRepository;
+import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDate;
 
 @Service
 @Slf4j
@@ -23,13 +22,15 @@ public class UserLearningStatsService {
 
     @Transactional(readOnly = true)
     public UserLearningStatsDto getStatsByUserId(Long userId) {
-        return userLearningStatsRepository.findByUserId(userId)
+        return userLearningStatsRepository
+                .findByUserId(userId)
                 .map(this::convertToDto)
                 .orElseThrow(() -> new RuntimeException("Stats not found for user id: " + userId));
     }
 
     public UserLearningStatsDto initializeStatsForNewUser(Long userId) {
-        User user = userRepository.findById(userId)
+        User user = userRepository
+                .findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
 
         UserLearningStats stats = UserLearningStats.builder()
@@ -52,7 +53,8 @@ public class UserLearningStatsService {
     }
 
     public UserLearningStatsDto updateXP(Long userId, Integer xpGained) {
-        UserLearningStats stats = userLearningStatsRepository.findByUserId(userId)
+        UserLearningStats stats = userLearningStatsRepository
+                .findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Stats not found for user id: " + userId));
 
         stats.setTotalXP(stats.getTotalXP() + xpGained);
@@ -62,7 +64,8 @@ public class UserLearningStatsService {
     }
 
     public UserLearningStatsDto updateStreak(Long userId) {
-        UserLearningStats stats = userLearningStatsRepository.findByUserId(userId)
+        UserLearningStats stats = userLearningStatsRepository
+                .findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Stats not found for user id: " + userId));
 
         LocalDate today = LocalDate.now();
@@ -87,7 +90,8 @@ public class UserLearningStatsService {
     }
 
     public UserLearningStatsDto updateLessonCount(Long userId) {
-        UserLearningStats stats = userLearningStatsRepository.findByUserId(userId)
+        UserLearningStats stats = userLearningStatsRepository
+                .findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Stats not found for user id: " + userId));
 
         stats.setLessonsCompleted(stats.getLessonsCompleted() + 1);
@@ -96,7 +100,8 @@ public class UserLearningStatsService {
     }
 
     public UserLearningStatsDto updateQuizCount(Long userId) {
-        UserLearningStats stats = userLearningStatsRepository.findByUserId(userId)
+        UserLearningStats stats = userLearningStatsRepository
+                .findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Stats not found for user id: " + userId));
 
         stats.setQuizzesCompleted(stats.getQuizzesCompleted() + 1);
@@ -105,7 +110,8 @@ public class UserLearningStatsService {
     }
 
     public UserLearningStatsDto updateVocabularyCount(Long userId) {
-        UserLearningStats stats = userLearningStatsRepository.findByUserId(userId)
+        UserLearningStats stats = userLearningStatsRepository
+                .findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Stats not found for user id: " + userId));
 
         stats.setVocabularyLearned(stats.getVocabularyLearned() + 1);
@@ -114,7 +120,8 @@ public class UserLearningStatsService {
     }
 
     public UserLearningStatsDto updateTargetLevel(Long userId, String newLevel) {
-        UserLearningStats stats = userLearningStatsRepository.findByUserId(userId)
+        UserLearningStats stats = userLearningStatsRepository
+                .findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Stats not found for user id: " + userId));
 
         stats.setTargetJLPTLevel(newLevel);
@@ -123,11 +130,14 @@ public class UserLearningStatsService {
         return convertToDto(updated);
     }
 
-    public UserLearningStatsDto recordLessonActivity(Long userId, boolean newlyCompleted, int xpGained, int learningMinutes) {
-        UserLearningStats stats = userLearningStatsRepository.findByUserId(userId)
+    public UserLearningStatsDto recordLessonActivity(
+            Long userId, boolean newlyCompleted, int xpGained, int learningMinutes) {
+        UserLearningStats stats = userLearningStatsRepository
+                .findByUserId(userId)
                 .orElseGet(() -> {
                     initializeStatsForNewUser(userId);
-                    return userLearningStatsRepository.findByUserId(userId)
+                    return userLearningStatsRepository
+                            .findByUserId(userId)
                             .orElseThrow(() -> new RuntimeException("Stats not found for user id: " + userId));
                 });
 
@@ -156,7 +166,12 @@ public class UserLearningStatsService {
         }
 
         UserLearningStats updated = userLearningStatsRepository.save(stats);
-        log.info("Recorded lesson activity for user: {}, completed={}, xp={}, minutes={}", userId, newlyCompleted, xpGained, learningMinutes);
+        log.info(
+                "Recorded lesson activity for user: {}, completed={}, xp={}, minutes={}",
+                userId,
+                newlyCompleted,
+                xpGained,
+                learningMinutes);
         return convertToDto(updated);
     }
 
@@ -167,7 +182,10 @@ public class UserLearningStatsService {
                 .totalXP(stats.getTotalXP())
                 .currentStreak(stats.getCurrentStreak())
                 .longestStreak(stats.getLongestStreak())
-                .lastLearningDate(stats.getLastLearningDate() != null ? stats.getLastLearningDate().toString() : null)
+                .lastLearningDate(
+                        stats.getLastLearningDate() != null
+                                ? stats.getLastLearningDate().toString()
+                                : null)
                 .lessonsCompleted(stats.getLessonsCompleted())
                 .quizzesCompleted(stats.getQuizzesCompleted())
                 .vocabularyLearned(stats.getVocabularyLearned())

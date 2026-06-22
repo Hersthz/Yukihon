@@ -1,23 +1,22 @@
 package com.hoang.basis.yukihon.system.userprogress.service;
 
-import com.hoang.basis.yukihon.system.userprogress.dto.UserProgressDto;
-import com.hoang.basis.yukihon.system.userprogress.dto.UserProgressRequest;
+import com.hoang.basis.yukihon.exception.ResourceNotFoundException;
 import com.hoang.basis.yukihon.system.lesson.entity.Lesson;
 import com.hoang.basis.yukihon.system.lesson.repository.LessonRepository;
 import com.hoang.basis.yukihon.system.user.entity.User;
+import com.hoang.basis.yukihon.system.user.repository.UserRepository;
 import com.hoang.basis.yukihon.system.userlearningstats.service.UserLearningStatsService;
+import com.hoang.basis.yukihon.system.userprogress.dto.UserProgressDto;
+import com.hoang.basis.yukihon.system.userprogress.dto.UserProgressRequest;
 import com.hoang.basis.yukihon.system.userprogress.entity.UserProgress;
 import com.hoang.basis.yukihon.system.userprogress.repository.UserProgressRepository;
-import com.hoang.basis.yukihon.system.user.repository.UserRepository;
-import com.hoang.basis.yukihon.exception.ResourceNotFoundException;
+import java.time.Instant;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Instant;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -32,15 +31,15 @@ public class UserProgressService {
 
     @Transactional(readOnly = true)
     public UserProgressDto getProgressById(Long id) {
-        return userProgressRepository.findById(id)
+        return userProgressRepository
+                .findById(id)
                 .map(this::convertToDto)
                 .orElseThrow(() -> new RuntimeException("Progress not found with id: " + id));
     }
 
     @Transactional(readOnly = true)
     public List<UserProgressDto> getUserProgress(Long userId) {
-        return userProgressRepository.findByUserId(userId)
-                .stream()
+        return userProgressRepository.findByUserId(userId).stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
@@ -48,28 +47,30 @@ public class UserProgressService {
     @Transactional(readOnly = true)
     public List<UserProgressDto> getUserProgressByStatus(Long userId, String status) {
         UserProgress.ProgressStatus progressStatus = UserProgress.ProgressStatus.valueOf(status);
-        return userProgressRepository.findByUserIdAndStatus(userId, progressStatus)
-                .stream()
+        return userProgressRepository.findByUserIdAndStatus(userId, progressStatus).stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public UserProgressDto getLessonProgress(Long userId, Long lessonId) {
-        return userProgressRepository.findByUserIdAndLessonId(userId, lessonId)
+        return userProgressRepository
+                .findByUserIdAndLessonId(userId, lessonId)
                 .map(this::convertToDto)
                 .orElseThrow(() -> new RuntimeException("Progress not found for user and lesson"));
     }
 
     @Transactional(readOnly = true)
     public UserProgressDto getQuizProgress(Long userId, Long quizId) {
-        return userProgressRepository.findByUserIdAndQuizId(userId, quizId)
+        return userProgressRepository
+                .findByUserIdAndQuizId(userId, quizId)
                 .map(this::convertToDto)
                 .orElseThrow(() -> new RuntimeException("Progress not found for user and quiz"));
     }
 
     public UserProgressDto createProgress(Long userId, UserProgressRequest request) {
-        User user = userRepository.findById(userId)
+        User user = userRepository
+                .findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
 
         UserProgress existing = findExistingProgress(userId, request).orElse(null);
@@ -83,7 +84,8 @@ public class UserProgressService {
                 .lessonId(request.getLessonId())
                 .quizId(request.getQuizId())
                 .vocabularyId(request.getVocabularyId())
-                .status(UserProgress.ProgressStatus.valueOf(request.getStatus() != null ? request.getStatus() : "NOT_STARTED"))
+                .status(UserProgress.ProgressStatus.valueOf(
+                        request.getStatus() != null ? request.getStatus() : "NOT_STARTED"))
                 .progressType(resolveProgressType(request))
                 .score(request.getScore())
                 .totalScore(request.getTotalScore())
@@ -96,7 +98,8 @@ public class UserProgressService {
     }
 
     public UserProgressDto updateProgress(Long id, UserProgressRequest request) {
-        UserProgress progress = userProgressRepository.findById(id)
+        UserProgress progress = userProgressRepository
+                .findById(id)
                 .orElseThrow(() -> new RuntimeException("Progress not found with id: " + id));
         return updateEntity(progress, request);
     }
@@ -106,7 +109,8 @@ public class UserProgressService {
         return convertToDto(progress);
     }
 
-    public UserProgressDto updateProgressForUser(Long id, UserProgressRequest request, Long actorUserId, boolean isAdmin) {
+    public UserProgressDto updateProgressForUser(
+            Long id, UserProgressRequest request, Long actorUserId, boolean isAdmin) {
         UserProgress progress = findProgressForActor(id, actorUserId, isAdmin);
         return updateEntity(progress, request);
     }
@@ -127,11 +131,13 @@ public class UserProgressService {
 
     private UserProgress findProgressForActor(Long id, Long actorUserId, boolean isAdmin) {
         if (isAdmin) {
-            return userProgressRepository.findById(id)
+            return userProgressRepository
+                    .findById(id)
                     .orElseThrow(() -> new ResourceNotFoundException("Progress not found with id: " + id));
         }
 
-        return userProgressRepository.findByIdAndUserId(id, actorUserId)
+        return userProgressRepository
+                .findByIdAndUserId(id, actorUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("Progress not found with id: " + id));
     }
 
@@ -165,7 +171,8 @@ public class UserProgressService {
         UserProgress.ProgressStatus previousStatus = progress.getStatus();
         progress.setLessonId(request.getLessonId() != null ? request.getLessonId() : progress.getLessonId());
         progress.setQuizId(request.getQuizId() != null ? request.getQuizId() : progress.getQuizId());
-        progress.setVocabularyId(request.getVocabularyId() != null ? request.getVocabularyId() : progress.getVocabularyId());
+        progress.setVocabularyId(
+                request.getVocabularyId() != null ? request.getVocabularyId() : progress.getVocabularyId());
         String resolvedType = resolveProgressType(request);
         progress.setProgressType("general".equals(resolvedType) ? progress.getProgressType() : resolvedType);
         progress.setScore(request.getScore());
@@ -250,7 +257,10 @@ public class UserProgressService {
                 .attemptCount(progress.getAttemptCount())
                 .notes(progress.getNotes())
                 .createdAt(progress.getCreatedAt().toString())
-                .completedAt(progress.getCompletedAt() != null ? progress.getCompletedAt().toString() : null)
+                .completedAt(
+                        progress.getCompletedAt() != null
+                                ? progress.getCompletedAt().toString()
+                                : null)
                 .build();
     }
 }

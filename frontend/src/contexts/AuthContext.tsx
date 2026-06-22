@@ -9,7 +9,12 @@ interface AuthContextType {
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
   loginWithGoogleCode: (code: string) => Promise<void>;
-  register: (email: string, password: string, displayName: string, jlptTargetLevel?: string) => Promise<void>;
+  register: (
+    email: string,
+    password: string,
+    displayName: string,
+    jlptTargetLevel?: string
+  ) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
   isAdmin: () => boolean;
@@ -21,9 +26,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(() => apiClient.getStoredUser());
-  const [isAuthenticated, setIsAuthenticated] = useState(
-    apiClient.isAuthenticated()
-  );
+  const [isAuthenticated, setIsAuthenticated] = useState(apiClient.isAuthenticated());
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -125,16 +128,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return user?.roles?.includes("ADMIN") || false;
   }, [user]);
 
-  const hasRole = useCallback((role: string) => {
-    return user?.roles?.includes(role.toUpperCase()) || false;
-  }, [user]);
+  const hasRole = useCallback(
+    (role: string) => {
+      return user?.roles?.includes(role.toUpperCase()) || false;
+    },
+    [user]
+  );
 
-  const hasPermission = useCallback((permission: string) => {
-    if (user?.roles?.includes("ADMIN")) {
-      return true;
-    }
-    return user?.permissions?.includes(permission) || false;
-  }, [user]);
+  const hasPermission = useCallback(
+    (permission: string) => {
+      if (user?.roles?.includes("ADMIN")) {
+        return true;
+      }
+      return user?.permissions?.includes(permission) || false;
+    },
+    [user]
+  );
 
   const value: AuthContextType = {
     user,
@@ -151,11 +160,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     hasPermission,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 // Export context for custom hooks

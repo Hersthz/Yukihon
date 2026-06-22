@@ -31,28 +31,30 @@ const QuizMode = ({ questions, onComplete, onRestart }: QuizModeProps) => {
   const [answers, setAnswers] = useState<{ correct: boolean; question: QuizQuestion }[]>([]);
 
   const currentQuestion = questions[currentIndex];
-  const isCorrect = currentQuestion.type === "multiple-choice"
-    ? selectedAnswer === currentQuestion.correctAnswer
-    : typedAnswer.toLowerCase().trim() === currentQuestion.correctAnswer.toLowerCase().trim();
-
-  const handleSubmitAnswer = () => {
-    if (isAnswered) return;
-    
-    const correct = currentQuestion.type === "multiple-choice"
+  const isCorrect =
+    currentQuestion.type === "multiple-choice"
       ? selectedAnswer === currentQuestion.correctAnswer
       : typedAnswer.toLowerCase().trim() === currentQuestion.correctAnswer.toLowerCase().trim();
 
+  const handleSubmitAnswer = () => {
+    if (isAnswered) return;
+
+    const correct =
+      currentQuestion.type === "multiple-choice"
+        ? selectedAnswer === currentQuestion.correctAnswer
+        : typedAnswer.toLowerCase().trim() === currentQuestion.correctAnswer.toLowerCase().trim();
+
     setIsAnswered(true);
-    setAnswers(prev => [...prev, { correct, question: currentQuestion }]);
-    
+    setAnswers((prev) => [...prev, { correct, question: currentQuestion }]);
+
     if (correct) {
-      setScore(prev => prev + 1);
+      setScore((prev) => prev + 1);
     }
   };
 
   const handleNext = () => {
     if (currentIndex < questions.length - 1) {
-      setCurrentIndex(prev => prev + 1);
+      setCurrentIndex((prev) => prev + 1);
       setSelectedAnswer(null);
       setTypedAnswer("");
       setIsAnswered(false);
@@ -76,7 +78,7 @@ const QuizMode = ({ questions, onComplete, onRestart }: QuizModeProps) => {
   if (showResults) {
     const finalScore = score;
     const percentage = Math.round((finalScore / questions.length) * 100);
-    
+
     return (
       <Card className="card-premium max-w-2xl mx-auto">
         <CardContent className="p-8 text-center">
@@ -87,9 +89,13 @@ const QuizMode = ({ questions, onComplete, onRestart }: QuizModeProps) => {
               size="xl"
               className="mx-auto mb-4"
             />
-            
+
             <h2 className="text-2xl font-bold mb-2">
-              {percentage >= 80 ? "Excellent! すごい！" : percentage >= 50 ? "Good job! いいね！" : "Keep practicing! 頑張って！"}
+              {percentage >= 80
+                ? "Excellent! すごい！"
+                : percentage >= 50
+                  ? "Good job! いいね！"
+                  : "Keep practicing! 頑張って！"}
             </h2>
             <p className="text-muted-foreground">
               You scored {finalScore} out of {questions.length} ({percentage}%)
@@ -99,18 +105,18 @@ const QuizMode = ({ questions, onComplete, onRestart }: QuizModeProps) => {
           {/* Kaoruko Message */}
           <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mb-6">
             <p className="text-sm font-medium">
-              {percentage >= 80 
-                ? "Tuyệt vời! Bạn đã nắm vững bài học này rồi! 🎉" 
-                : percentage >= 50 
-                ? "Khá tốt! Hãy ôn tập thêm để hoàn thiện hơn nhé! 📚"
-                : "Đừng nản lòng! Hãy thử lại và bạn sẽ làm tốt hơn! 💪"}
+              {percentage >= 80
+                ? "Tuyệt vời! Bạn đã nắm vững bài học này rồi! 🎉"
+                : percentage >= 50
+                  ? "Khá tốt! Hãy ôn tập thêm để hoàn thiện hơn nhé! 📚"
+                  : "Đừng nản lòng! Hãy thử lại và bạn sẽ làm tốt hơn! 💪"}
             </p>
           </div>
 
           {/* Answer Summary */}
           <div className="space-y-2 mb-6 text-left max-h-60 overflow-y-auto">
             {answers.map((answer, i) => (
-              <div 
+              <div
                 key={i}
                 className={cn(
                   "flex items-center gap-3 p-3 rounded-lg",
@@ -124,7 +130,9 @@ const QuizMode = ({ questions, onComplete, onRestart }: QuizModeProps) => {
                 )}
                 <div className="flex-1 min-w-0">
                   <span className="font-medium">{answer.question.japanese}</span>
-                  <span className="text-muted-foreground ml-2">→ {answer.question.correctAnswer}</span>
+                  <span className="text-muted-foreground ml-2">
+                    → {answer.question.correctAnswer}
+                  </span>
                 </div>
               </div>
             ))}
@@ -135,9 +143,7 @@ const QuizMode = ({ questions, onComplete, onRestart }: QuizModeProps) => {
               <RotateCcw className="h-4 w-4" />
               Try Again
             </Button>
-            <Button onClick={() => window.history.back()}>
-              Finish Lesson
-            </Button>
+            <Button onClick={() => window.history.back()}>Finish Lesson</Button>
           </div>
         </CardContent>
       </Card>
@@ -162,34 +168,36 @@ const QuizMode = ({ questions, onComplete, onRestart }: QuizModeProps) => {
           mood={isAnswered ? (isCorrect ? "correct" : "incorrect") : "thinking"}
           size="md"
           showBubble={isAnswered}
-          message={isAnswered 
-            ? (isCorrect ? "Chính xác! すごい！ 🌟" : "Cố gắng lên! 頑張って！ 💪")
-            : undefined}
+          message={
+            isAnswered
+              ? isCorrect
+                ? "Chính xác! すごい！ 🌟"
+                : "Cố gắng lên! 頑張って！ 💪"
+              : undefined
+          }
           bubblePosition="right"
           className={isAnswered ? (isCorrect ? "animate-wiggle" : "") : ""}
         />
       </div>
 
       {/* Question Card */}
-      <Card className={cn(
-        "card-premium transition-all duration-300",
-        isAnswered && isCorrect && "ring-2 ring-green-500/50",
-        isAnswered && !isCorrect && "ring-2 ring-orange-500/50"
-      )}>
+      <Card
+        className={cn(
+          "card-premium transition-all duration-300",
+          isAnswered && isCorrect && "ring-2 ring-green-500/50",
+          isAnswered && !isCorrect && "ring-2 ring-orange-500/50"
+        )}
+      >
         <CardContent className="p-8">
           {/* Japanese Word */}
           <div className="text-center mb-8">
-            <div className="text-4xl md:text-5xl font-bold mb-2">
-              {currentQuestion.japanese}
-            </div>
-            <div className="text-lg text-muted-foreground">
-              {currentQuestion.reading}
-            </div>
+            <div className="text-4xl md:text-5xl font-bold mb-2">{currentQuestion.japanese}</div>
+            <div className="text-lg text-muted-foreground">{currentQuestion.reading}</div>
           </div>
 
           {/* Question Prompt */}
           <p className="text-center text-muted-foreground mb-6">
-            {currentQuestion.type === "multiple-choice" 
+            {currentQuestion.type === "multiple-choice"
               ? "Select the correct meaning:"
               : "Type the meaning in English:"}
           </p>
@@ -200,7 +208,7 @@ const QuizMode = ({ questions, onComplete, onRestart }: QuizModeProps) => {
               {currentQuestion.options.map((option) => {
                 const isSelected = selectedAnswer === option;
                 const isCorrectOption = option === currentQuestion.correctAnswer;
-                
+
                 return (
                   <Button
                     key={option}
@@ -209,15 +217,16 @@ const QuizMode = ({ questions, onComplete, onRestart }: QuizModeProps) => {
                       "h-auto py-4 px-6 text-left justify-start transition-all",
                       !isAnswered && isSelected && "ring-2 ring-primary",
                       isAnswered && isCorrectOption && "bg-primary/10 border-primary text-primary",
-                      isAnswered && isSelected && !isCorrectOption && "bg-destructive/10 border-destructive text-destructive"
+                      isAnswered &&
+                        isSelected &&
+                        !isCorrectOption &&
+                        "bg-destructive/10 border-destructive text-destructive"
                     )}
                     onClick={() => !isAnswered && setSelectedAnswer(option)}
                     disabled={isAnswered}
                   >
                     {option}
-                    {isAnswered && isCorrectOption && (
-                      <CheckCircle2 className="h-4 w-4 ml-auto" />
-                    )}
+                    {isAnswered && isCorrectOption && <CheckCircle2 className="h-4 w-4 ml-auto" />}
                     {isAnswered && isSelected && !isCorrectOption && (
                       <XCircle className="h-4 w-4 ml-auto" />
                     )}
@@ -245,7 +254,8 @@ const QuizMode = ({ questions, onComplete, onRestart }: QuizModeProps) => {
               />
               {isAnswered && !isCorrect && (
                 <p className="text-center text-sm text-muted-foreground">
-                  Correct answer: <span className="font-medium text-primary">{currentQuestion.correctAnswer}</span>
+                  Correct answer:{" "}
+                  <span className="font-medium text-primary">{currentQuestion.correctAnswer}</span>
                 </p>
               )}
             </div>
@@ -256,9 +266,11 @@ const QuizMode = ({ questions, onComplete, onRestart }: QuizModeProps) => {
       {/* Actions */}
       <div className="flex justify-center gap-3">
         {!isAnswered ? (
-          <Button 
+          <Button
             onClick={handleSubmitAnswer}
-            disabled={currentQuestion.type === "multiple-choice" ? !selectedAnswer : !typedAnswer.trim()}
+            disabled={
+              currentQuestion.type === "multiple-choice" ? !selectedAnswer : !typedAnswer.trim()
+            }
             className="min-w-32"
           >
             Check Answer

@@ -22,9 +22,7 @@ public class LearningPathController {
     private final UserRepository userRepository;
 
     @GetMapping
-    public ResponseEntity<LearningPathDto> getLearningPath(
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
+    public ResponseEntity<LearningPathDto> getLearningPath(@AuthenticationPrincipal UserDetails userDetails) {
         Long userId = resolveCurrentUserId(userDetails);
         return ResponseEntity.ok(learningPathService.getLearningPath(userId));
     }
@@ -34,7 +32,8 @@ public class LearningPathController {
             throw new AccessDeniedException("Authentication required");
         }
 
-        return userRepository.findByEmail(userDetails.getUsername().toLowerCase())
+        return userRepository
+                .findByEmail(userDetails.getUsername().toLowerCase())
                 .map(user -> user.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }

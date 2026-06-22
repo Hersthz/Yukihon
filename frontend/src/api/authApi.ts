@@ -32,7 +32,12 @@ export interface ForgotPasswordResponse {
 const GOOGLE_REDIRECT_URI = `${window.location.origin}/auth`;
 
 export const authApi = {
-  register(data: { email: string; password: string; displayName: string; jlptTargetLevel?: string }) {
+  register(data: {
+    email: string;
+    password: string;
+    displayName: string;
+    jlptTargetLevel?: string;
+  }) {
     return apiClient.request<AuthResponse>("/api/auth/register", {
       method: "POST",
       body: JSON.stringify(data),

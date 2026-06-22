@@ -7,30 +7,29 @@ import com.hoang.basis.yukihon.system.community.dto.CommunityChatRoomDto;
 import com.hoang.basis.yukihon.system.community.dto.CommunityChatSendRequest;
 import com.hoang.basis.yukihon.system.community.dto.CommunityChatTypingEventDto;
 import com.hoang.basis.yukihon.system.community.dto.CommunityChatTypingRequest;
-import com.hoang.basis.yukihon.system.community.exception.CommunityChatSocketException;
 import com.hoang.basis.yukihon.system.community.entity.CommunityChatMessage;
+import com.hoang.basis.yukihon.system.community.exception.CommunityChatSocketException;
 import com.hoang.basis.yukihon.system.community.repository.CommunityChatMessageRepository;
 import com.hoang.basis.yukihon.system.user.entity.User;
 import com.hoang.basis.yukihon.system.user.repository.UserRepository;
 import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.Instant;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.LinkedHashSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -86,18 +85,16 @@ public class CommunityChatService {
         String normalizedRoomId = normalizeSocketRoomId(request.getRoomId(), clientMessageId);
         String normalizedContent = normalizeContent(request.getContent(), clientMessageId);
 
-        User user = userRepository.findByEmail(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user =
+                userRepository.findByEmail(username).orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         assertWithinRateLimit(user.getId(), clientMessageId);
 
-        CommunityChatMessage savedMessage = chatMessageRepository.save(
-                CommunityChatMessage.builder()
-                        .roomId(normalizedRoomId)
-                        .user(user)
-                        .content(normalizedContent)
-                        .build()
-        );
+        CommunityChatMessage savedMessage = chatMessageRepository.save(CommunityChatMessage.builder()
+                .roomId(normalizedRoomId)
+                .user(user)
+                .content(normalizedContent)
+                .build());
 
         return CommunityChatMessageDto.fromEntity(savedMessage, clientMessageId);
     }
@@ -105,8 +102,8 @@ public class CommunityChatService {
     public CommunityChatTypingEventDto createTypingEvent(String username, CommunityChatTypingRequest request) {
         String normalizedRoomId = normalizeSocketRoomId(request.getRoomId(), null);
 
-        User user = userRepository.findByEmail(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user =
+                userRepository.findByEmail(username).orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         return CommunityChatTypingEventDto.builder()
                 .roomId(normalizedRoomId)
@@ -186,7 +183,8 @@ public class CommunityChatService {
         String lowercase = normalized.toLowerCase(Locale.ROOT);
         for (String blockedKeyword : blockedKeywords) {
             if (lowercase.contains(blockedKeyword)) {
-                throw new CommunityChatSocketException("MODERATION", "Message contains blocked keyword", clientMessageId);
+                throw new CommunityChatSocketException(
+                        "MODERATION", "Message contains blocked keyword", clientMessageId);
             }
         }
 
@@ -212,12 +210,38 @@ public class CommunityChatService {
 
     private static Map<String, CommunityChatRoomDto> createSupportedRooms() {
         Map<String, CommunityChatRoomDto> rooms = new LinkedHashMap<>();
-        registerRoom(rooms, "general", "General", "Phong tro chuyen tong hop cho moi nguoi hoc.", "Open discussion", "sky");
-        registerRoom(rooms, "n5", "N5", "Phong lam quen voi ngu phap va tu vung nen tang.", "Starter practice", "emerald");
-        registerRoom(rooms, "n4", "N4", "Phong de tang toc voi mau cau va bai tap trung cap co ban.", "Level-up drills", "amber");
-        registerRoom(rooms, "kanji", "Kanji", "Phong danh rieng cho bo thu, onyomi, kunyomi va ghi nho mat chu.", "Character lab", "violet");
-        registerRoom(rooms, "grammar", "Grammar", "Phong thao luan mau cau, cach dung va cac diem de nham.", "Pattern clinic", "rose");
-        registerRoom(rooms, "speaking", "Speaking", "Phong luyen hoi thoai, shadowing va cac tinh huong giao tiep.", "Conversation club", "cyan");
+        registerRoom(
+                rooms, "general", "General", "Phong tro chuyen tong hop cho moi nguoi hoc.", "Open discussion", "sky");
+        registerRoom(
+                rooms, "n5", "N5", "Phong lam quen voi ngu phap va tu vung nen tang.", "Starter practice", "emerald");
+        registerRoom(
+                rooms,
+                "n4",
+                "N4",
+                "Phong de tang toc voi mau cau va bai tap trung cap co ban.",
+                "Level-up drills",
+                "amber");
+        registerRoom(
+                rooms,
+                "kanji",
+                "Kanji",
+                "Phong danh rieng cho bo thu, onyomi, kunyomi va ghi nho mat chu.",
+                "Character lab",
+                "violet");
+        registerRoom(
+                rooms,
+                "grammar",
+                "Grammar",
+                "Phong thao luan mau cau, cach dung va cac diem de nham.",
+                "Pattern clinic",
+                "rose");
+        registerRoom(
+                rooms,
+                "speaking",
+                "Speaking",
+                "Phong luyen hoi thoai, shadowing va cac tinh huong giao tiep.",
+                "Conversation club",
+                "cyan");
         return Collections.unmodifiableMap(rooms);
     }
 
@@ -227,8 +251,7 @@ public class CommunityChatService {
             String title,
             String description,
             String focus,
-            String accent
-    ) {
+            String accent) {
         rooms.put(
                 id,
                 CommunityChatRoomDto.builder()
@@ -237,7 +260,6 @@ public class CommunityChatService {
                         .description(description)
                         .focus(focus)
                         .accent(accent)
-                        .build()
-        );
+                        .build());
     }
 }

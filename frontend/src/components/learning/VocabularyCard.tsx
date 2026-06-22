@@ -1,6 +1,14 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { BookmarkCheck, BookmarkPlus, Copy, GraduationCap, Trash2, Volume2, Clock3 } from "lucide-react";
+import {
+  BookmarkCheck,
+  BookmarkPlus,
+  Copy,
+  GraduationCap,
+  Trash2,
+  Volume2,
+  Clock3,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { SavedWord } from "@/pages/my-words/types";
@@ -103,12 +111,28 @@ const VocabularyCard = ({
                 initial={{ opacity: 0, scale: 0.85 }}
                 transition={{ delay: 0.1 }}
               >
-                <Badge className="border-sky-200 bg-sky-50 text-sky-700">{item.jlptLevel || "N4"}</Badge>
-                {item.wordType ? <Badge className="border-emerald-200 bg-emerald-50 text-emerald-700">{item.wordType}</Badge> : null}
-                {sourceBadge ? <Badge className={sourceBadge.className}>{sourceBadge.label}</Badge> : null}
-                {isSaved ? <Badge className="border-violet-200 bg-violet-50 text-violet-700">Saved</Badge> : null}
-                {isDue ? <Badge className="border-rose-200 bg-rose-50 text-rose-700">Due</Badge> : null}
-                {isMastered ? <Badge className="border-emerald-200 bg-emerald-50 text-emerald-700">Mastered</Badge> : null}
+                <Badge className="border-sky-200 bg-sky-50 text-sky-700">
+                  {item.jlptLevel || "N4"}
+                </Badge>
+                {item.wordType ? (
+                  <Badge className="border-emerald-200 bg-emerald-50 text-emerald-700">
+                    {item.wordType}
+                  </Badge>
+                ) : null}
+                {sourceBadge ? (
+                  <Badge className={sourceBadge.className}>{sourceBadge.label}</Badge>
+                ) : null}
+                {isSaved ? (
+                  <Badge className="border-violet-200 bg-violet-50 text-violet-700">Saved</Badge>
+                ) : null}
+                {isDue ? (
+                  <Badge className="border-rose-200 bg-rose-50 text-rose-700">Due</Badge>
+                ) : null}
+                {isMastered ? (
+                  <Badge className="border-emerald-200 bg-emerald-50 text-emerald-700">
+                    Mastered
+                  </Badge>
+                ) : null}
               </motion.div>
 
               <motion.div
@@ -209,7 +233,11 @@ const VocabularyCard = ({
               transform: "rotateY(180deg)",
             }}
           >
-            <motion.div animate={{ opacity: 1, y: 0 }} initial={{ opacity: 0, y: 10 }} transition={{ delay: 0.1 }}>
+            <motion.div
+              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 10 }}
+              transition={{ delay: 0.1 }}
+            >
               <p className="mb-4 bg-[linear-gradient(90deg,#8b5cf6,#ec4899)] bg-clip-text text-2xl font-semibold text-transparent">
                 {item.meaning}
               </p>
@@ -219,20 +247,36 @@ const VocabularyCard = ({
                     <span className="font-semibold text-violet-600">Example:</span>
                   </p>
                   <p className="italic text-slate-800">{item.exampleSentenceJP}</p>
-                  {item.exampleSentenceEN && <p className="text-xs text-slate-500">{item.exampleSentenceEN}</p>}
+                  {item.exampleSentenceEN && (
+                    <p className="text-xs text-slate-500">{item.exampleSentenceEN}</p>
+                  )}
                 </div>
               )}
             </motion.div>
 
-            <motion.div animate={{ opacity: 1, y: 0 }} className="space-y-3" initial={{ opacity: 0, y: 10 }} transition={{ delay: 0.2 }}>
+            <motion.div
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-3"
+              initial={{ opacity: 0, y: 10 }}
+              transition={{ delay: 0.2 }}
+            >
               {savedWord ? (
                 <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-3 py-3 text-sm text-slate-700">
                   <div className="flex items-center gap-2 font-medium text-slate-800">
-                    {isMastered ? <BookmarkCheck className="h-4 w-4 text-emerald-600" /> : <Clock3 className="h-4 w-4 text-rose-600" />}
-                    {isMastered ? "This word is marked as mastered." : isDue ? "This word is due for review now." : "This word is in your review system."}
+                    {isMastered ? (
+                      <BookmarkCheck className="h-4 w-4 text-emerald-600" />
+                    ) : (
+                      <Clock3 className="h-4 w-4 text-rose-600" />
+                    )}
+                    {isMastered
+                      ? "This word is marked as mastered."
+                      : isDue
+                        ? "This word is due for review now."
+                        : "This word is in your review system."}
                   </div>
                   <p className="mt-2 text-xs text-slate-500">
-                    Reviews: {savedWord.reviewCount ?? 0} · Interval: {savedWord.reviewIntervalDays ?? 0} day(s)
+                    Reviews: {savedWord.reviewCount ?? 0} · Interval:{" "}
+                    {savedWord.reviewIntervalDays ?? 0} day(s)
                   </p>
                 </div>
               ) : (
@@ -251,7 +295,11 @@ const VocabularyCard = ({
                   }}
                 >
                   <GraduationCap className="h-4 w-4" />
-                  {isTogglingMastered ? "Updating..." : isMastered ? "Unmark Mastered" : "Mark as Mastered"}
+                  {isTogglingMastered
+                    ? "Updating..."
+                    : isMastered
+                      ? "Unmark Mastered"
+                      : "Mark as Mastered"}
                 </Button>
               ) : (
                 <Button

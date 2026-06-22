@@ -7,13 +7,12 @@ import com.hoang.basis.yukihon.system.storymode.dto.StoryModeStoryDto;
 import com.hoang.basis.yukihon.system.storymode.dto.StoryModeStoryRequest;
 import com.hoang.basis.yukihon.system.storymode.entity.StoryModeStory;
 import com.hoang.basis.yukihon.system.storymode.repository.StoryModeStoryRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -79,7 +78,8 @@ public class StoryModeService {
     }
 
     private StoryModeStory findStoryOrThrow(Long id) {
-        return storyModeStoryRepository.findById(id)
+        return storyModeStoryRepository
+                .findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Story mode story not found"));
     }
 
@@ -123,6 +123,9 @@ public class StoryModeService {
     }
 
     private String normalizeStoryKey(String storyKey) {
-        return storyKey.trim().toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9-]+", "-").replaceAll("(^-|-$)", "");
+        return storyKey.trim()
+                .toLowerCase(Locale.ROOT)
+                .replaceAll("[^a-z0-9-]+", "-")
+                .replaceAll("(^-|-$)", "");
     }
 }

@@ -2,9 +2,8 @@ package com.hoang.basis.yukihon.system.privatechat.entity;
 
 import com.hoang.basis.yukihon.system.user.entity.User;
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.time.Instant;
+import lombok.*;
 
 @Entity
 @Table(name = "private_messages")

@@ -6,6 +6,7 @@ import com.hoang.basis.yukihon.system.quizattempt.dto.QuizAttemptRequest;
 import com.hoang.basis.yukihon.system.quizattempt.service.QuizAttemptService;
 import com.hoang.basis.yukihon.system.user.repository.UserRepository;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,8 +21,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/quiz-attempts")
 @RequiredArgsConstructor
@@ -33,9 +32,7 @@ public class QuizAttemptController {
 
     @PostMapping
     public ResponseEntity<QuizAttemptDto> recordAttempt(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @Valid @RequestBody QuizAttemptRequest request
-    ) {
+            @AuthenticationPrincipal UserDetails userDetails, @Valid @RequestBody QuizAttemptRequest request) {
         Long userId = resolveCurrentUserId(userDetails);
         return ResponseEntity.status(HttpStatus.CREATED).body(quizAttemptService.recordAttempt(userId, request));
     }
@@ -44,8 +41,7 @@ public class QuizAttemptController {
     public ResponseEntity<List<QuizAttemptDto>> getRecentAttempts(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(defaultValue = "20") Integer limit,
-            @RequestParam(required = false) Boolean correct
-    ) {
+            @RequestParam(required = false) Boolean correct) {
         Long userId = resolveCurrentUserId(userDetails);
         return ResponseEntity.ok(quizAttemptService.getRecentAttempts(userId, limit, correct));
     }
@@ -55,7 +51,8 @@ public class QuizAttemptController {
             throw new AccessDeniedException("Authentication required");
         }
 
-        return userRepository.findByEmail(userDetails.getUsername().toLowerCase())
+        return userRepository
+                .findByEmail(userDetails.getUsername().toLowerCase())
                 .map(user -> user.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }

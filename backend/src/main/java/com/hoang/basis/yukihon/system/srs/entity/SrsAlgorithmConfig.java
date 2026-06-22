@@ -17,15 +17,25 @@ import lombok.Setter;
 
 /** A reusable SRS algorithm preset (SM2 / FSRS / CUSTOM) with knobs stored as JSON. */
 @Entity
-@Table(name = "srs_algorithm_configs",
+@Table(
+        name = "srs_algorithm_configs",
         uniqueConstraints = @UniqueConstraint(name = "uk_srs_config_code", columnNames = "code"))
 @Getter
 @Setter
 @NoArgsConstructor
 @AutoCrud(path = "srs-algorithm-configs")
 @ResourcePermission("SRS_ALGORITHM_CONFIG")
-@ResourceMenu(title = "SRS Algorithms", group = "Library", icon = "settings", url = "/admin/srs-algorithm-configs", order = 20, permission = "SRS_ALGORITHM_CONFIG_READ")
-@EntityLabel(name = "SRS Algorithm Config", plural = "SRS Algorithm Configs", description = "Reusable SRS algorithm presets")
+@ResourceMenu(
+        title = "SRS Algorithms",
+        group = "Library",
+        icon = "settings",
+        url = "/admin/srs-algorithm-configs",
+        order = 20,
+        permission = "SRS_ALGORITHM_CONFIG_READ")
+@EntityLabel(
+        name = "SRS Algorithm Config",
+        plural = "SRS Algorithm Configs",
+        description = "Reusable SRS algorithm presets")
 @Searchable(fields = {"code", "name"})
 public class SrsAlgorithmConfig extends BaseEntity {
 
@@ -38,7 +48,11 @@ public class SrsAlgorithmConfig extends BaseEntity {
     private String name;
 
     @Column(name = "algorithm_type", nullable = false, length = 20)
-    @FieldMeta(label = "Algorithm Type", type = "select", order = 3, enumValues = {"SM2", "FSRS", "CUSTOM"})
+    @FieldMeta(
+            label = "Algorithm Type",
+            type = "select",
+            order = 3,
+            enumValues = {"SM2", "FSRS", "CUSTOM"})
     private String algorithmType = "SM2";
 
     @Column(name = "config_json", columnDefinition = "NVARCHAR(MAX)")

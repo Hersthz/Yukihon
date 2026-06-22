@@ -57,26 +57,31 @@ const AdminUsers = () => {
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [selectedUser, setSelectedUser] = useState<UserManagement | null>(null);
-  const [actionType, setActionType] = useState<"promote" | "demote" | "disable" | "enable" | null>(null);
+  const [actionType, setActionType] = useState<"promote" | "demote" | "disable" | "enable" | null>(
+    null
+  );
 
-  const fetchUsers = useCallback(async (pageNum = 0) => {
-    try {
-      setLoading(true);
-      const data = await adminApi.getUsers(pageNum, 20) as PagedResponse;
-      setUsers(data.content);
-      setTotalPages(data.totalPages);
-      setPage(data.number);
-    } catch (error) {
-      console.error("Failed to fetch users:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load users",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [toast]);
+  const fetchUsers = useCallback(
+    async (pageNum = 0) => {
+      try {
+        setLoading(true);
+        const data = (await adminApi.getUsers(pageNum, 20)) as PagedResponse;
+        setUsers(data.content);
+        setTotalPages(data.totalPages);
+        setPage(data.number);
+      } catch (error) {
+        console.error("Failed to fetch users:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load users",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    },
+    [toast]
+  );
 
   useEffect(() => {
     fetchUsers();
@@ -90,7 +95,7 @@ const AdminUsers = () => {
 
     try {
       setLoading(true);
-      const data = await adminApi.searchUsers(searchQuery) as UserManagement[];
+      const data = (await adminApi.searchUsers(searchQuery)) as UserManagement[];
       setUsers(data);
       setTotalPages(1);
       setPage(0);
@@ -234,13 +239,19 @@ const AdminUsers = () => {
                         <div className="flex items-center gap-2 mb-1">
                           <span className="font-semibold">{user.displayName}</span>
                           {user.roles.includes("ADMIN") && (
-                            <Badge variant="default" className="bg-purple-500/20 text-purple-400 border-purple-500/30">
+                            <Badge
+                              variant="default"
+                              className="bg-purple-500/20 text-purple-400 border-purple-500/30"
+                            >
                               <Shield className="w-3 h-3 mr-1" />
                               Admin
                             </Badge>
                           )}
                           {!user.enabled && (
-                            <Badge variant="destructive" className="bg-red-500/20 text-red-400 border-red-500/30">
+                            <Badge
+                              variant="destructive"
+                              className="bg-red-500/20 text-red-400 border-red-500/30"
+                            >
                               Disabled
                             </Badge>
                           )}
@@ -331,10 +342,13 @@ const AdminUsers = () => {
       </div>
 
       {/* Confirmation Dialog */}
-      <AlertDialog open={!!selectedUser && !!actionType} onOpenChange={() => {
-        setSelectedUser(null);
-        setActionType(null);
-      }}>
+      <AlertDialog
+        open={!!selectedUser && !!actionType}
+        onOpenChange={() => {
+          setSelectedUser(null);
+          setActionType(null);
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Action</AlertDialogTitle>

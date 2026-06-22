@@ -1,14 +1,13 @@
 package com.hoang.basis.yukihon.base.crud.security;
 
 import com.hoang.basis.yukihon.base.crud.registry.CrudDescriptor;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Enforces {@code <prefix>_<ACTION>} authorities for auto-CRUD resources that declare a
@@ -18,7 +17,12 @@ import java.util.stream.Collectors;
 @Component
 public class CrudPermissionChecker {
 
-    public enum Action {CREATE, READ, UPDATE, DELETE}
+    public enum Action {
+        CREATE,
+        READ,
+        UPDATE,
+        DELETE
+    }
 
     public void check(CrudDescriptor descriptor, Action action) {
         String prefix = descriptor.getPermissionPrefix();

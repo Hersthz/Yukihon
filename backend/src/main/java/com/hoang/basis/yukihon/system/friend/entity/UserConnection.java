@@ -2,14 +2,13 @@ package com.hoang.basis.yukihon.system.friend.entity;
 
 import com.hoang.basis.yukihon.system.user.entity.User;
 import jakarta.persistence.*;
+import java.time.Instant;
 import lombok.*;
 
-import java.time.Instant;
-
 @Entity
-@Table(name = "user_connections", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"requester_id", "receiver_id", "connection_type"})
-})
+@Table(
+        name = "user_connections",
+        uniqueConstraints = {@UniqueConstraint(columnNames = {"requester_id", "receiver_id", "connection_type"})})
 @Getter
 @Setter
 @Builder

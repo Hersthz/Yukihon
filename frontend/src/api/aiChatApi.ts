@@ -40,9 +40,19 @@ export interface AiChatHistoryItem {
 }
 
 interface StreamHandlers {
-  onMeta?: (payload: { model?: string; mode?: AiChatMode; conversationId?: number; conversationTitle?: string }) => void;
+  onMeta?: (payload: {
+    model?: string;
+    mode?: AiChatMode;
+    conversationId?: number;
+    conversationTitle?: string;
+  }) => void;
   onDelta?: (delta: string) => void;
-  onDone?: (payload: { model?: string; mode?: AiChatMode; conversationId?: number; conversationTitle?: string }) => void;
+  onDone?: (payload: {
+    model?: string;
+    mode?: AiChatMode;
+    conversationId?: number;
+    conversationTitle?: string;
+  }) => void;
   onError?: (message: string) => void;
 }
 
@@ -77,7 +87,11 @@ export const aiChatApi = {
       method: "POST",
       body: JSON.stringify(data),
     }),
-  streamRespond: async (data: AiChatRequestPayload, handlers: StreamHandlers = {}, options: StreamOptions = {}) => {
+  streamRespond: async (
+    data: AiChatRequestPayload,
+    handlers: StreamHandlers = {},
+    options: StreamOptions = {}
+  ) => {
     const response = await apiClient.fetchWithAuth("/api/ai-chat/respond/stream", {
       method: "POST",
       headers: {
@@ -150,13 +164,16 @@ export const aiChatApi = {
         }
 
         if (parsed.event === "error") {
-          handlers.onError?.(payload.message || "AI chat is temporarily unavailable. Please try again.");
+          handlers.onError?.(
+            payload.message || "AI chat is temporarily unavailable. Please try again."
+          );
         }
       });
     }
   },
   getConversations: () => apiClient.request<AiChatConversation[]>("/api/ai-chat/conversations"),
-  createConversation: () => apiClient.request<AiChatConversation>("/api/ai-chat/conversations", { method: "POST" }),
+  createConversation: () =>
+    apiClient.request<AiChatConversation>("/api/ai-chat/conversations", { method: "POST" }),
   getConversationMessages: (conversationId: number) =>
     apiClient.request<AiChatHistoryItem[]>(`/api/ai-chat/conversations/${conversationId}/messages`),
   renameConversation: (conversationId: number, title: string) =>

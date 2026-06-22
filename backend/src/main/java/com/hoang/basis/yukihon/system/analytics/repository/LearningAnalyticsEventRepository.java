@@ -1,16 +1,16 @@
 package com.hoang.basis.yukihon.system.analytics.repository;
 
 import com.hoang.basis.yukihon.system.analytics.entity.LearningAnalyticsEvent;
+import java.time.Instant;
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.time.Instant;
-import java.util.List;
-
 public interface LearningAnalyticsEventRepository extends JpaRepository<LearningAnalyticsEvent, Long> {
 
-    @Query("""
+    @Query(
+            """
             SELECT
                 e.contentType AS contentType,
                 e.contentId AS contentId,
@@ -36,10 +36,11 @@ public interface LearningAnalyticsEventRepository extends JpaRepository<Learning
             @Param("completeEvent") LearningAnalyticsEvent.EventType completeEvent,
             @Param("abandonEvent") LearningAnalyticsEvent.EventType abandonEvent,
             @Param("quizWrongEvent") LearningAnalyticsEvent.EventType quizWrongEvent,
-            @Param("quizCorrectedEvent") LearningAnalyticsEvent.EventType quizCorrectedEvent
-    );
+            @Param("quizCorrectedEvent") LearningAnalyticsEvent.EventType quizCorrectedEvent);
 
-        @Query(value = """
+    @Query(
+            value =
+                    """
           SELECT
         CAST(e.created_at AS DATE) AS eventDate,
         SUM(CASE WHEN e.event_type = :startEvent THEN 1 ELSE 0 END) AS startedCount,
@@ -54,20 +55,22 @@ public interface LearningAnalyticsEventRepository extends JpaRepository<Learning
             AND (:jlptLevel IS NULL OR UPPER(e.jlpt_level) = :jlptLevel)
           GROUP BY CAST(e.created_at AS DATE)
           ORDER BY CAST(e.created_at AS DATE)
-          """, nativeQuery = true)
-        List<LearningFunnelDailyTrendProjection> aggregateDailyTrend(
-          @Param("since") Instant since,
-          @Param("until") Instant until,
-          @Param("contentType") String contentType,
-          @Param("jlptLevel") String jlptLevel,
-          @Param("startEvent") String startEvent,
-          @Param("completeEvent") String completeEvent,
-          @Param("abandonEvent") String abandonEvent,
-          @Param("quizWrongEvent") String quizWrongEvent,
-          @Param("quizCorrectedEvent") String quizCorrectedEvent
-        );
+          """,
+            nativeQuery = true)
+    List<LearningFunnelDailyTrendProjection> aggregateDailyTrend(
+            @Param("since") Instant since,
+            @Param("until") Instant until,
+            @Param("contentType") String contentType,
+            @Param("jlptLevel") String jlptLevel,
+            @Param("startEvent") String startEvent,
+            @Param("completeEvent") String completeEvent,
+            @Param("abandonEvent") String abandonEvent,
+            @Param("quizWrongEvent") String quizWrongEvent,
+            @Param("quizCorrectedEvent") String quizCorrectedEvent);
 
-    @Query(value = """
+    @Query(
+            value =
+                    """
           SELECT
             CAST(e.created_at AS DATE) AS eventDate,
             COUNT(*) AS totalEvents,
@@ -80,12 +83,12 @@ public interface LearningAnalyticsEventRepository extends JpaRepository<Learning
             AND (:until IS NULL OR e.created_at < :until)
           GROUP BY CAST(e.created_at AS DATE)
           ORDER BY CAST(e.created_at AS DATE)
-          """, nativeQuery = true)
+          """,
+            nativeQuery = true)
     List<StudyCalendarDayProjection> aggregateStudyCalendarDays(
             @Param("userId") Long userId,
             @Param("since") Instant since,
             @Param("until") Instant until,
             @Param("startEvent") String startEvent,
-            @Param("completeEvent") String completeEvent
-    );
+            @Param("completeEvent") String completeEvent);
 }

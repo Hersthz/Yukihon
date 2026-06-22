@@ -43,21 +43,32 @@ const JLPTLessons = () => {
   }, [learningPath?.targetJlptLevel]);
 
   const lessonsByLevel = useMemo(() => {
-    return (allLessons as LessonSummary[]).reduce((acc: Record<string, LessonSummary[]>, lesson) => {
-      const level = lesson.jlptLevel || "N4";
-      if (!acc[level]) acc[level] = [];
-      acc[level].push(lesson);
-      return acc;
-    }, {});
+    return (allLessons as LessonSummary[]).reduce(
+      (acc: Record<string, LessonSummary[]>, lesson) => {
+        const level = lesson.jlptLevel || "N4";
+        if (!acc[level]) acc[level] = [];
+        acc[level].push(lesson);
+        return acc;
+      },
+      {}
+    );
   }, [allLessons]);
 
   const currentLevelLessons = lessonsByLevel[selectedLevel] || [];
   const progressByLessonId = useMemo(() => {
-    return new Map(progressItems.filter((item) => item.lessonId != null).map((item) => [item.lessonId as number, item]));
+    return new Map(
+      progressItems
+        .filter((item) => item.lessonId != null)
+        .map((item) => [item.lessonId as number, item])
+    );
   }, [progressItems]);
 
-  const completedCount = currentLevelLessons.filter((lesson) => progressByLessonId.get(lesson.id)?.status === "COMPLETED").length;
-  const progress = currentLevelLessons.length ? Math.round((completedCount / currentLevelLessons.length) * 100) : 0;
+  const completedCount = currentLevelLessons.filter(
+    (lesson) => progressByLessonId.get(lesson.id)?.status === "COMPLETED"
+  ).length;
+  const progress = currentLevelLessons.length
+    ? Math.round((completedCount / currentLevelLessons.length) * 100)
+    : 0;
   const nextLessonId = learningPath?.nextLesson?.id;
 
   return (
@@ -69,7 +80,10 @@ const JLPTLessons = () => {
           description="Rút gọn bố cục để bạn nhìn được level, tiến độ và danh sách bài ngay trong một vùng gọn hơn."
           eyebrow="JLPT Path"
           action={
-            <Button className="rounded-2xl bg-sky-500 text-white hover:bg-sky-400" onClick={() => navigate(nextLessonId ? `/lessons/${nextLessonId}` : "/jlpt-lessons")}>
+            <Button
+              className="rounded-2xl bg-sky-500 text-white hover:bg-sky-400"
+              onClick={() => navigate(nextLessonId ? `/lessons/${nextLessonId}` : "/jlpt-lessons")}
+            >
               <PlayCircle className="mr-2 h-4 w-4" />
               {nextLessonId ? "Học tiếp bài gợi ý" : "Bắt đầu lộ trình"}
             </Button>
@@ -77,12 +91,31 @@ const JLPTLessons = () => {
         />
 
         <div className="mb-4 grid gap-3 md:grid-cols-3">
-          <MetricCard hint="Theo level hiện tại" icon={<BookOpen className="h-4 w-4 text-sky-500" />} label="Bài học" value={currentLevelLessons.length} />
-          <MetricCard hint="Khi bắt đầu hoàn thành" icon={<Award className="h-4 w-4 text-emerald-500" />} label="Đã xong" value={completedCount} />
-          <MetricCard hint="Tổng quan nhanh" icon={<TrendingUp className="h-4 w-4 text-violet-500" />} label="Tiến độ" value={`${progress}%`} />
+          <MetricCard
+            hint="Theo level hiện tại"
+            icon={<BookOpen className="h-4 w-4 text-sky-500" />}
+            label="Bài học"
+            value={currentLevelLessons.length}
+          />
+          <MetricCard
+            hint="Khi bắt đầu hoàn thành"
+            icon={<Award className="h-4 w-4 text-emerald-500" />}
+            label="Đã xong"
+            value={completedCount}
+          />
+          <MetricCard
+            hint="Tổng quan nhanh"
+            icon={<TrendingUp className="h-4 w-4 text-violet-500" />}
+            label="Tiến độ"
+            value={`${progress}%`}
+          />
         </div>
 
-        <PageSection className="mb-4" title="Chọn cấp độ" description="Filter ngang gọn thay cho block lớn, giúp chừa diện tích cho danh sách bài.">
+        <PageSection
+          className="mb-4"
+          title="Chọn cấp độ"
+          description="Filter ngang gọn thay cho block lớn, giúp chừa diện tích cho danh sách bài."
+        >
           <div className="flex flex-wrap gap-2">
             {LEVELS.map((level) => {
               const active = selectedLevel === level;
@@ -90,7 +123,9 @@ const JLPTLessons = () => {
                 <button
                   key={level}
                   className={`rounded-2xl border px-4 py-2 text-sm font-medium transition ${
-                    active ? `${levelTone[level]} shadow-[0_10px_20px_rgba(148,163,184,0.10)]` : "border-border bg-card text-muted-foreground hover:bg-muted"
+                    active
+                      ? `${levelTone[level]} shadow-[0_10px_20px_rgba(148,163,184,0.10)]`
+                      : "border-border bg-card text-muted-foreground hover:bg-muted"
                   }`}
                   onClick={() => setSelectedLevel(level)}
                   type="button"
@@ -103,12 +138,18 @@ const JLPTLessons = () => {
         </PageSection>
 
         <div className="grid gap-4 xl:grid-cols-[280px_minmax(0,1fr)]">
-          <PageSection title={`Mục tiêu ${selectedLevel}`} description="Một overview nhỏ để nhắc nhịp học trước khi vào danh sách bài.">
+          <PageSection
+            title={`Mục tiêu ${selectedLevel}`}
+            description="Một overview nhỏ để nhắc nhịp học trước khi vào danh sách bài."
+          >
             <div className="space-y-4">
               <div className="rounded-[20px] border border-sky-200 bg-sky-50/80 p-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-sky-700">Tập trung hôm nay</p>
+                <p className="text-xs uppercase tracking-[0.18em] text-sky-700">
+                  Tập trung hôm nay
+                </p>
                 <p className="mt-2 text-sm leading-6 text-foreground/80">
-                  {learningPath?.recommendationSummary || "Học 1 bài mới, ôn 10 từ và giữ nhịp đều thay vì mở quá nhiều module cùng lúc."}
+                  {learningPath?.recommendationSummary ||
+                    "Học 1 bài mới, ôn 10 từ và giữ nhịp đều thay vì mở quá nhiều module cùng lúc."}
                 </p>
               </div>
               <div className="rounded-[20px] border border-border bg-card p-4">
@@ -141,7 +182,10 @@ const JLPTLessons = () => {
             </div>
           </PageSection>
 
-          <PageSection title="Danh sách bài học" description="Card sáng, thấp và đều giúp quét nhanh hơn trên màn hình rộng.">
+          <PageSection
+            title="Danh sách bài học"
+            description="Card sáng, thấp và đều giúp quét nhanh hơn trên màn hình rộng."
+          >
             {isLoading ? (
               <div className="flex items-center justify-center py-20">
                 <div className="h-12 w-12 rounded-full border-4 border-sky-100 border-t-sky-500 animate-spin" />

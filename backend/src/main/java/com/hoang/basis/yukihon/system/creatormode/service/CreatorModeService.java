@@ -8,23 +8,22 @@ import com.hoang.basis.yukihon.system.creatormode.dto.CreatorTemplateDto;
 import com.hoang.basis.yukihon.system.creatormode.dto.CreatorTemplateMetricsRequest;
 import com.hoang.basis.yukihon.system.creatormode.dto.CreatorTemplateReviewRequest;
 import com.hoang.basis.yukihon.system.creatormode.dto.CreatorTemplateUpsertRequest;
-import com.hoang.basis.yukihon.system.creatormode.entity.CreatorTemplateAuditEvent;
 import com.hoang.basis.yukihon.system.creatormode.entity.CreatorTemplate;
+import com.hoang.basis.yukihon.system.creatormode.entity.CreatorTemplateAuditEvent;
 import com.hoang.basis.yukihon.system.creatormode.repository.CreatorTemplateAuditEventRepository;
 import com.hoang.basis.yukihon.system.creatormode.repository.CreatorTemplateRepository;
 import com.hoang.basis.yukihon.system.user.entity.User;
 import com.hoang.basis.yukihon.system.user.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -46,7 +45,8 @@ public class CreatorModeService {
 
         List<CreatorTemplate> templates;
         if (parsedStatus != null && parsedType != null) {
-            templates = creatorTemplateRepository.findByStatusAndContentTypeOrderByUpdatedAtDesc(parsedStatus, parsedType);
+            templates =
+                    creatorTemplateRepository.findByStatusAndContentTypeOrderByUpdatedAtDesc(parsedStatus, parsedType);
         } else if (parsedStatus != null) {
             templates = creatorTemplateRepository.findByStatusOrderByUpdatedAtDesc(parsedStatus);
         } else if (parsedType != null) {
@@ -60,48 +60,50 @@ public class CreatorModeService {
 
     @Transactional(readOnly = true)
     public CreatorTemplateDto getTemplate(Long id) {
-        CreatorTemplate template = creatorTemplateRepository.findById(id)
+        CreatorTemplate template = creatorTemplateRepository
+                .findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Creator template not found with id: " + id));
         return CreatorTemplateDto.fromEntity(template);
     }
 
     @Transactional(readOnly = true)
     public List<CreatorTemplateAuditEventDto> getTemplateAuditTimeline(Long id, String stage, String actor) {
-        creatorTemplateRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Creator template not found with id: " + id));
+        creatorTemplateRepository
+                .findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Creator template not found with id: " + id));
 
         CreatorTemplateAuditEvent.AuditStage stageFilter = parseAuditStage(stage);
         AuditActorFilter actorFilter = parseAuditActorFilter(actor);
 
         List<CreatorTemplateAuditEvent> events;
         if (stageFilter != null && actorFilter.type() == AuditActorType.SYSTEM) {
-            events = creatorTemplateAuditEventRepository
-                    .findByTemplateIdAndStageAndActorUserIdIsNullOrderByCreatedAtAscIdAsc(id, stageFilter);
+            events =
+                    creatorTemplateAuditEventRepository
+                            .findByTemplateIdAndStageAndActorUserIdIsNullOrderByCreatedAtAscIdAsc(id, stageFilter);
         } else if (stageFilter != null && actorFilter.type() == AuditActorType.USER) {
-            events = creatorTemplateAuditEventRepository
-                    .findByTemplateIdAndStageAndActorUserIdOrderByCreatedAtAscIdAsc(id, stageFilter, actorFilter.actorUserId());
+            events = creatorTemplateAuditEventRepository.findByTemplateIdAndStageAndActorUserIdOrderByCreatedAtAscIdAsc(
+                    id, stageFilter, actorFilter.actorUserId());
         } else if (stageFilter != null) {
-            events = creatorTemplateAuditEventRepository.findByTemplateIdAndStageOrderByCreatedAtAscIdAsc(id, stageFilter);
+            events = creatorTemplateAuditEventRepository.findByTemplateIdAndStageOrderByCreatedAtAscIdAsc(
+                    id, stageFilter);
         } else if (actorFilter.type() == AuditActorType.SYSTEM) {
-            events = creatorTemplateAuditEventRepository.findByTemplateIdAndActorUserIdIsNullOrderByCreatedAtAscIdAsc(id);
+            events = creatorTemplateAuditEventRepository.findByTemplateIdAndActorUserIdIsNullOrderByCreatedAtAscIdAsc(
+                    id);
         } else if (actorFilter.type() == AuditActorType.USER) {
-            events = creatorTemplateAuditEventRepository
-                    .findByTemplateIdAndActorUserIdOrderByCreatedAtAscIdAsc(id, actorFilter.actorUserId());
+            events = creatorTemplateAuditEventRepository.findByTemplateIdAndActorUserIdOrderByCreatedAtAscIdAsc(
+                    id, actorFilter.actorUserId());
         } else {
             events = creatorTemplateAuditEventRepository.findByTemplateIdOrderByCreatedAtAscIdAsc(id);
         }
 
-        return events
-            .stream()
-            .map(CreatorTemplateAuditEventDto::fromEntity)
-            .toList();
+        return events.stream().map(CreatorTemplateAuditEventDto::fromEntity).toList();
     }
 
     @Transactional(readOnly = true)
     public List<CreatorTemplateDto> getReviewQueue() {
-        return creatorTemplateRepository.findByStatusInOrderByUpdatedAtDesc(
-                        List.of(CreatorTemplate.TemplateStatus.PENDING_REVIEW, CreatorTemplate.TemplateStatus.APPROVED)
-                )
+        return creatorTemplateRepository
+                .findByStatusInOrderByUpdatedAtDesc(
+                        List.of(CreatorTemplate.TemplateStatus.PENDING_REVIEW, CreatorTemplate.TemplateStatus.APPROVED))
                 .stream()
                 .map(CreatorTemplateDto::fromEntity)
                 .toList();
@@ -123,8 +125,13 @@ public class CreatorModeService {
                 .build();
 
         CreatorTemplate saved = creatorTemplateRepository.save(template);
-        appendAuditEvent(saved, actor, CreatorTemplateAuditEvent.AuditStage.AUTHORING,
-            CreatorTemplateAuditEvent.AuditAction.CREATED, null, "Template draft created");
+        appendAuditEvent(
+                saved,
+                actor,
+                CreatorTemplateAuditEvent.AuditStage.AUTHORING,
+                CreatorTemplateAuditEvent.AuditAction.CREATED,
+                null,
+                "Template draft created");
         log.info("Creator template created: id={}, actorUserId={}", saved.getId(), actorUserId);
         return CreatorTemplateDto.fromEntity(saved);
     }
@@ -146,8 +153,13 @@ public class CreatorModeService {
         }
 
         CreatorTemplate updated = creatorTemplateRepository.save(template);
-    appendAuditEvent(updated, actor, CreatorTemplateAuditEvent.AuditStage.AUTHORING,
-        CreatorTemplateAuditEvent.AuditAction.UPDATED_DRAFT, null, null);
+        appendAuditEvent(
+                updated,
+                actor,
+                CreatorTemplateAuditEvent.AuditStage.AUTHORING,
+                CreatorTemplateAuditEvent.AuditAction.UPDATED_DRAFT,
+                null,
+                null);
         log.info("Creator template updated: id={}, actorUserId={}", id, actorUserId);
         return CreatorTemplateDto.fromEntity(updated);
     }
@@ -167,15 +179,20 @@ public class CreatorModeService {
         clearAdminReview(template);
 
         CreatorTemplate saved = creatorTemplateRepository.save(template);
-    appendAuditEvent(saved, actor, CreatorTemplateAuditEvent.AuditStage.REVIEW_SUBMISSION,
-        CreatorTemplateAuditEvent.AuditAction.SUBMITTED_FOR_REVIEW,
-        CreatorTemplate.TemplateStatus.PENDING_REVIEW.name(), null);
+        appendAuditEvent(
+                saved,
+                actor,
+                CreatorTemplateAuditEvent.AuditStage.REVIEW_SUBMISSION,
+                CreatorTemplateAuditEvent.AuditAction.SUBMITTED_FOR_REVIEW,
+                CreatorTemplate.TemplateStatus.PENDING_REVIEW.name(),
+                null);
         log.info("Creator template submitted for review: id={}, actorUserId={}", id, actorUserId);
         return CreatorTemplateDto.fromEntity(saved);
     }
 
     public CreatorTemplateDto reviewByAdmin(Long id, CreatorTemplateReviewRequest request, Long adminUserId) {
-        CreatorTemplate template = creatorTemplateRepository.findById(id)
+        CreatorTemplate template = creatorTemplateRepository
+                .findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Creator template not found with id: " + id));
 
         if (template.getStatus() != CreatorTemplate.TemplateStatus.PENDING_REVIEW
@@ -201,14 +218,20 @@ public class CreatorModeService {
         }
 
         CreatorTemplate saved = creatorTemplateRepository.save(template);
-    appendAuditEvent(saved, adminReviewer, CreatorTemplateAuditEvent.AuditStage.ADMIN_APPROVAL,
-        CreatorTemplateAuditEvent.AuditAction.ADMIN_DECISION, decision.name(), request.getReviewNote());
+        appendAuditEvent(
+                saved,
+                adminReviewer,
+                CreatorTemplateAuditEvent.AuditStage.ADMIN_APPROVAL,
+                CreatorTemplateAuditEvent.AuditAction.ADMIN_DECISION,
+                decision.name(),
+                request.getReviewNote());
         log.info("Creator template review decision: id={}, decision={}, adminUserId={}", id, decision, adminUserId);
         return CreatorTemplateDto.fromEntity(saved);
     }
 
     public CreatorTemplateDto recordMetrics(Long id, CreatorTemplateMetricsRequest request) {
-        CreatorTemplate template = creatorTemplateRepository.findById(id)
+        CreatorTemplate template = creatorTemplateRepository
+                .findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Creator template not found with id: " + id));
 
         int attempts = Math.max(1, request.getAttempts() == null ? 1 : request.getAttempts());
@@ -227,7 +250,8 @@ public class CreatorModeService {
                     .max(BigDecimal.ZERO)
                     .min(BigDecimal.valueOf(100));
 
-            BigDecimal weightedTotal = oldAverage.multiply(BigDecimal.valueOf(oldUsage))
+            BigDecimal weightedTotal = oldAverage
+                    .multiply(BigDecimal.valueOf(oldUsage))
                     .add(incomingAverage.multiply(BigDecimal.valueOf(attempts)));
 
             BigDecimal weightedAverage = weightedTotal.divide(BigDecimal.valueOf(newUsage), 2, RoundingMode.HALF_UP);
@@ -260,8 +284,12 @@ public class CreatorModeService {
         long storyBranches = creatorTemplateRepository.countByContentType(CreatorTemplate.ContentType.STORY_BRANCH);
 
         List<CreatorTemplate> allTemplates = creatorTemplateRepository.findAll();
-        long totalUsage = allTemplates.stream().mapToLong(template -> safeInt(template.getUsageCount())).sum();
-        long totalCompletions = allTemplates.stream().mapToLong(template -> safeInt(template.getCompletionCount())).sum();
+        long totalUsage = allTemplates.stream()
+                .mapToLong(template -> safeInt(template.getUsageCount()))
+                .sum();
+        long totalCompletions = allTemplates.stream()
+                .mapToLong(template -> safeInt(template.getCompletionCount()))
+                .sum();
 
         BigDecimal completionRate = totalUsage == 0
                 ? BigDecimal.ZERO
@@ -270,30 +298,37 @@ public class CreatorModeService {
         BigDecimal averageScore = allTemplates.isEmpty()
                 ? BigDecimal.ZERO
                 : allTemplates.stream()
-                .map(template -> template.getAverageScore() == null ? BigDecimal.ZERO : template.getAverageScore())
-                .reduce(BigDecimal.ZERO, BigDecimal::add)
-                .divide(BigDecimal.valueOf(allTemplates.size()), 2, RoundingMode.HALF_UP);
+                        .map(template ->
+                                template.getAverageScore() == null ? BigDecimal.ZERO : template.getAverageScore())
+                        .reduce(BigDecimal.ZERO, BigDecimal::add)
+                        .divide(BigDecimal.valueOf(allTemplates.size()), 2, RoundingMode.HALF_UP);
 
-        List<CreatorTemplateAnalyticsItemDto> topTemplates = creatorTemplateRepository
-                .findTop8ByUsageCountGreaterThanOrderByAverageScoreDescUsageCountDesc(0)
-                .stream()
-                .map(template -> {
-                    BigDecimal templateCompletionRate = safeInt(template.getUsageCount()) == 0
-                            ? BigDecimal.ZERO
-                            : BigDecimal.valueOf(safeInt(template.getCompletionCount()) * 100.0 / safeInt(template.getUsageCount()))
-                            .setScale(2, RoundingMode.HALF_UP);
+        List<CreatorTemplateAnalyticsItemDto> topTemplates =
+                creatorTemplateRepository
+                        .findTop8ByUsageCountGreaterThanOrderByAverageScoreDescUsageCountDesc(0)
+                        .stream()
+                        .map(template -> {
+                            BigDecimal templateCompletionRate = safeInt(template.getUsageCount()) == 0
+                                    ? BigDecimal.ZERO
+                                    : BigDecimal.valueOf(safeInt(template.getCompletionCount())
+                                                    * 100.0
+                                                    / safeInt(template.getUsageCount()))
+                                            .setScale(2, RoundingMode.HALF_UP);
 
-                    return CreatorTemplateAnalyticsItemDto.builder()
-                            .id(template.getId())
-                            .title(template.getTitle())
-                            .contentType(template.getContentType().name())
-                            .usageCount(safeInt(template.getUsageCount()))
-                            .completionCount(safeInt(template.getCompletionCount()))
-                            .completionRate(templateCompletionRate)
-                            .averageScore(template.getAverageScore() == null ? BigDecimal.ZERO : template.getAverageScore())
-                            .build();
-                })
-                .toList();
+                            return CreatorTemplateAnalyticsItemDto.builder()
+                                    .id(template.getId())
+                                    .title(template.getTitle())
+                                    .contentType(template.getContentType().name())
+                                    .usageCount(safeInt(template.getUsageCount()))
+                                    .completionCount(safeInt(template.getCompletionCount()))
+                                    .completionRate(templateCompletionRate)
+                                    .averageScore(
+                                            template.getAverageScore() == null
+                                                    ? BigDecimal.ZERO
+                                                    : template.getAverageScore())
+                                    .build();
+                        })
+                        .toList();
 
         return CreatorTemplateAnalyticsDto.builder()
                 .totalTemplates(allTemplates.size())
@@ -314,12 +349,14 @@ public class CreatorModeService {
     }
 
     private CreatorTemplate findTemplateById(Long id) {
-        return creatorTemplateRepository.findById(id)
+        return creatorTemplateRepository
+                .findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Creator template not found with id: " + id));
     }
 
     private User findUserByIdOrThrow(Long userId) {
-        return userRepository.findById(userId)
+        return userRepository
+                .findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
     }
 
@@ -434,8 +471,7 @@ public class CreatorModeService {
             CreatorTemplateAuditEvent.AuditStage stage,
             CreatorTemplateAuditEvent.AuditAction action,
             String decision,
-            String note
-    ) {
+            String note) {
         CreatorTemplateAuditEvent event = CreatorTemplateAuditEvent.builder()
                 .template(template)
                 .actor(actor)
@@ -453,6 +489,5 @@ public class CreatorModeService {
         USER
     }
 
-    private record AuditActorFilter(AuditActorType type, Long actorUserId) {
-    }
+    private record AuditActorFilter(AuditActorType type, Long actorUserId) {}
 }

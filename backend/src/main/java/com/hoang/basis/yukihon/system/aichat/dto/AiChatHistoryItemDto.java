@@ -1,10 +1,9 @@
 package com.hoang.basis.yukihon.system.aichat.dto;
 
 import com.hoang.basis.yukihon.system.aichat.entity.AiChatMessage;
+import java.time.Instant;
 import lombok.Builder;
 import lombok.Getter;
-
-import java.time.Instant;
 
 @Getter
 @Builder

@@ -9,13 +9,12 @@ import com.hoang.basis.yukihon.system.kanjisrs.service.KanjiSrsService;
 import com.hoang.basis.yukihon.system.user.entity.User;
 import com.hoang.basis.yukihon.system.user.repository.UserRepository;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/kanji-srs")
@@ -26,7 +25,8 @@ public class KanjiSrsController {
     private final UserRepository userRepository;
 
     private Long getUserId(UserDetails userDetails) {
-        User user = userRepository.findByEmail(userDetails.getUsername())
+        User user = userRepository
+                .findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new com.hoang.basis.yukihon.exception.ResourceNotFoundException("User not found"));
         return user.getId();
     }
@@ -43,17 +43,13 @@ public class KanjiSrsController {
 
     @PostMapping
     public ResponseEntity<KanjiSrsDto> addRecord(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @Valid @RequestBody AddKanjiSrsRequest request
-    ) {
+            @AuthenticationPrincipal UserDetails userDetails, @Valid @RequestBody AddKanjiSrsRequest request) {
         return ResponseEntity.ok(kanjiSrsService.addRecord(getUserId(userDetails), request));
     }
 
     @PostMapping("/import")
     public ResponseEntity<List<KanjiSrsDto>> importRecords(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @Valid @RequestBody ImportKanjiSrsRequest request
-    ) {
+            @AuthenticationPrincipal UserDetails userDetails, @Valid @RequestBody ImportKanjiSrsRequest request) {
         return ResponseEntity.ok(kanjiSrsService.importRecords(getUserId(userDetails), request));
     }
 
@@ -61,16 +57,13 @@ public class KanjiSrsController {
     public ResponseEntity<KanjiSrsDto> reviewRecord(
             @PathVariable String character,
             @AuthenticationPrincipal UserDetails userDetails,
-            @Valid @RequestBody ReviewKanjiSrsRequest request
-    ) {
+            @Valid @RequestBody ReviewKanjiSrsRequest request) {
         return ResponseEntity.ok(kanjiSrsService.reviewRecord(getUserId(userDetails), character, request));
     }
 
     @DeleteMapping("/{character}")
     public ResponseEntity<Void> removeRecord(
-            @PathVariable String character,
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
+            @PathVariable String character, @AuthenticationPrincipal UserDetails userDetails) {
         kanjiSrsService.removeRecord(getUserId(userDetails), character);
         return ResponseEntity.noContent().build();
     }

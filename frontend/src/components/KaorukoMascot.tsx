@@ -4,7 +4,14 @@ import kaorukoHappy from "@/assets/kaoruko-happy.png";
 import kaorukoGuide from "@/assets/kaoruko-guide.png";
 import kaorukoExcited from "@/assets/kaoruko-excited.png";
 
-export type KaorukoMood = "welcome" | "happy" | "guide" | "excited" | "correct" | "incorrect" | "thinking";
+export type KaorukoMood =
+  | "welcome"
+  | "happy"
+  | "guide"
+  | "excited"
+  | "correct"
+  | "incorrect"
+  | "thinking";
 
 interface KaorukoMascotProps {
   mood?: KaorukoMood;
@@ -87,11 +94,7 @@ const KaorukoMascot = ({
           mood === "excited" && "animate-bounce-slow"
         )}
       >
-        <img
-          src={moodImages[mood]}
-          alt="Kaoruko"
-          className="w-full h-full object-cover"
-        />
+        <img src={moodImages[mood]} alt="Kaoruko" className="w-full h-full object-cover" />
       </div>
 
       {/* Status indicator */}

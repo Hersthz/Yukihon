@@ -1,19 +1,17 @@
 package com.hoang.basis.yukihon.security;
 
-import org.junit.jupiter.api.Test;
-import org.springframework.security.core.userdetails.User;
-
-import java.util.Base64;
-import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Base64;
+import java.util.List;
+import org.junit.jupiter.api.Test;
+import org.springframework.security.core.userdetails.User;
+
 class JwtServiceTest {
 
-    private static final String SECRET = Base64.getEncoder().encodeToString(
-            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef".getBytes()
-    );
+    private static final String SECRET = Base64.getEncoder()
+            .encodeToString("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef".getBytes());
 
     @Test
     void shouldGenerateAndValidateAccessToken() {

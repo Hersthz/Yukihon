@@ -13,20 +13,20 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.Instant;
-
 @Entity
-@Table(name = "quiz_attempts",
+@Table(
+        name = "quiz_attempts",
         indexes = {
-                @Index(name = "idx_quiz_attempts_user_attempted", columnList = "user_id, attempted_at"),
-                @Index(name = "idx_quiz_attempts_user_quiz", columnList = "user_id, quiz_id"),
-                @Index(name = "idx_quiz_attempts_pattern", columnList = "mistake_pattern")
+            @Index(name = "idx_quiz_attempts_user_attempted", columnList = "user_id, attempted_at"),
+            @Index(name = "idx_quiz_attempts_user_quiz", columnList = "user_id, quiz_id"),
+            @Index(name = "idx_quiz_attempts_pattern", columnList = "mistake_pattern")
         })
 @Getter
 @Setter

@@ -70,14 +70,25 @@ export const quizApi = {
   getById: (id: number) => apiClient.request(`/api/quizzes/${id}`),
   getByLesson: (lessonId: number) => apiClient.request(`/api/quizzes/lesson/${lessonId}`),
   getByLevel: (level: string) => apiClient.request(`/api/quizzes/level/${level}`),
-  getByDifficulty: (difficulty: string) => apiClient.request(`/api/quizzes/difficulty/${difficulty}`),
+  getByDifficulty: (difficulty: string) =>
+    apiClient.request(`/api/quizzes/difficulty/${difficulty}`),
   recordAttempt: (data: QuizAttemptRequest) =>
-    apiClient.request<QuizAttemptResponse>("/api/quiz-attempts", { method: "POST", body: JSON.stringify(data) }),
-  getRecentAttempts: (query?: QuizAttemptQuery) => apiClient.request<QuizAttemptResponse[]>(`/api/quiz-attempts${buildAttemptQuery(query)}`),
+    apiClient.request<QuizAttemptResponse>("/api/quiz-attempts", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  getRecentAttempts: (query?: QuizAttemptQuery) =>
+    apiClient.request<QuizAttemptResponse[]>(`/api/quiz-attempts${buildAttemptQuery(query)}`),
   recordSession: (data: QuizSessionRequest) =>
-    apiClient.request<QuizSessionResponse>("/api/quiz-sessions", { method: "POST", body: JSON.stringify(data) }),
-  getRecentSessions: (query?: QuizSessionQuery) => apiClient.request<QuizSessionResponse[]>(`/api/quiz-sessions${buildSessionQuery(query)}`),
-  create: (data: Record<string, unknown>) => apiClient.request("/api/quizzes", { method: "POST", body: JSON.stringify(data) }),
-  update: (id: number, data: Record<string, unknown>) => apiClient.request(`/api/quizzes/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+    apiClient.request<QuizSessionResponse>("/api/quiz-sessions", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  getRecentSessions: (query?: QuizSessionQuery) =>
+    apiClient.request<QuizSessionResponse[]>(`/api/quiz-sessions${buildSessionQuery(query)}`),
+  create: (data: Record<string, unknown>) =>
+    apiClient.request("/api/quizzes", { method: "POST", body: JSON.stringify(data) }),
+  update: (id: number, data: Record<string, unknown>) =>
+    apiClient.request(`/api/quizzes/${id}`, { method: "PUT", body: JSON.stringify(data) }),
   delete: (id: number) => apiClient.request(`/api/quizzes/${id}`, { method: "DELETE" }),
 };

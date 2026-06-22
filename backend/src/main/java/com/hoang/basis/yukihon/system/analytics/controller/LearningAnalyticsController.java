@@ -33,8 +33,7 @@ public class LearningAnalyticsController {
     @PostMapping("/analytics/events")
     public ResponseEntity<Void> trackLearningEvent(
             @Valid @RequestBody LearningAnalyticsEventRequest request,
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
+            @AuthenticationPrincipal UserDetails userDetails) {
         Long userId = resolveCurrentUserId(userDetails);
         learningAnalyticsService.trackEvent(userId, request);
         return ResponseEntity.noContent().build();
@@ -44,8 +43,7 @@ public class LearningAnalyticsController {
     public ResponseEntity<StudyCalendarDto> getStudyCalendar(
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate,
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
+            @AuthenticationPrincipal UserDetails userDetails) {
         Long userId = resolveCurrentUserId(userDetails);
         return ResponseEntity.ok(learningAnalyticsService.getStudyCalendar(userId, startDate, endDate));
     }
@@ -58,11 +56,9 @@ public class LearningAnalyticsController {
             @RequestParam(defaultValue = "LESSON") String contentType,
             @RequestParam(required = false) String jlptLevel,
             @RequestParam(required = false) String startDate,
-            @RequestParam(required = false) String endDate
-    ) {
+            @RequestParam(required = false) String endDate) {
         return ResponseEntity.ok(
-                learningAnalyticsService.getLearningFunnel(days, limit, contentType, jlptLevel, startDate, endDate)
-        );
+                learningAnalyticsService.getLearningFunnel(days, limit, contentType, jlptLevel, startDate, endDate));
     }
 
     private Long resolveCurrentUserId(UserDetails userDetails) {
@@ -70,7 +66,8 @@ public class LearningAnalyticsController {
             throw new AccessDeniedException("Authentication required");
         }
 
-        return userRepository.findByEmail(userDetails.getUsername().toLowerCase())
+        return userRepository
+                .findByEmail(userDetails.getUsername().toLowerCase())
                 .map(user -> user.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }

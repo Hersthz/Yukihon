@@ -5,22 +5,23 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
+import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.time.LocalDateTime;
 
 /**
  * Append-only log of every review. Stores old/new values for debugging, stats, and future FSRS
  * reschedule replay. sourceType distinguishes ANKI_REVIEW vs GAME (Kana game) vs others.
  */
 @Entity
-@Table(name = "anki_review_logs", indexes = {
-        @Index(name = "idx_anki_log_user", columnList = "user_id"),
-        @Index(name = "idx_anki_log_progress", columnList = "progress_id"),
-        @Index(name = "idx_anki_log_reviewed", columnList = "reviewed_at")
-})
+@Table(
+        name = "anki_review_logs",
+        indexes = {
+            @Index(name = "idx_anki_log_user", columnList = "user_id"),
+            @Index(name = "idx_anki_log_progress", columnList = "progress_id"),
+            @Index(name = "idx_anki_log_reviewed", columnList = "reviewed_at")
+        })
 @Getter
 @Setter
 @NoArgsConstructor

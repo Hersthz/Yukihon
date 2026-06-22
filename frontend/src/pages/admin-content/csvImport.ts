@@ -1,4 +1,9 @@
-import { createEmptyGrammar, createEmptyLesson, createEmptyQuiz, createEmptyVocab } from "./constants";
+import {
+  createEmptyGrammar,
+  createEmptyLesson,
+  createEmptyQuiz,
+  createEmptyVocab,
+} from "./constants";
 import { AdminTab, EditableItem, Lesson } from "./types";
 
 interface BulkImportContext {
@@ -21,9 +26,9 @@ const parseCsvRows = (text: string): string[][] => {
     const char = text[index];
     const nextChar = text[index + 1];
 
-    if (char === "\"") {
-      if (inQuotes && nextChar === "\"") {
-        currentCell += "\"";
+    if (char === '"') {
+      if (inQuotes && nextChar === '"') {
+        currentCell += '"';
         index += 1;
       } else {
         inQuotes = !inQuotes;
@@ -110,7 +115,8 @@ const resolveLessonId = (record: Record<string, string>, context?: BulkImportCon
     return undefined;
   }
 
-  return context.lessons.find((lesson) => lesson.title.toLowerCase() === lessonTitle.toLowerCase())?.id;
+  return context.lessons.find((lesson) => lesson.title.toLowerCase() === lessonTitle.toLowerCase())
+    ?.id;
 };
 
 const parseLessons = (records: Record<string, string>[]) =>
@@ -179,7 +185,11 @@ const parseQuizzes = (records: Record<string, string>[], context?: BulkImportCon
     imageUrl: readField(record, ["imageUrl", "image"]),
   }));
 
-export const parseBulkImportCsv = (tab: AdminTab, text: string, context?: BulkImportContext): EditableItem[] => {
+export const parseBulkImportCsv = (
+  tab: AdminTab,
+  text: string,
+  context?: BulkImportContext
+): EditableItem[] => {
   const records = csvToRecords(text);
 
   switch (tab) {
@@ -201,22 +211,22 @@ export const getCsvTemplate = (tab: AdminTab) => {
     case "lessons":
       return [
         "title,description,jlptLevel,category,status,orderIndex,content,audioUrl,videoUrl,imageUrl,relatedVocabularyIds,relatedGrammarIds,relatedQuizIds",
-        "\"Lesson 1\",\"Greetings and introductions\",N5,conversation,DRAFT,1,\"Lesson markdown or long text\",,,,\"1|2\",\"5\",\"10\"",
+        '"Lesson 1","Greetings and introductions",N5,conversation,DRAFT,1,"Lesson markdown or long text",,,,"1|2","5","10"',
       ].join("\n");
     case "vocabulary":
       return [
         "kanji,hiragana,romaji,meaning,jlptLevel,wordType,exampleSentenceJP,exampleSentenceEN,additionalNotes",
-        "\"学校\",\"がっこう\",\"gakkou\",\"school\",N5,noun,\"学校へ行きます。\",\"I go to school.\",\"Common beginner word\"",
+        '"学校","がっこう","gakkou","school",N5,noun,"学校へ行きます。","I go to school.","Common beginner word"',
       ].join("\n");
     case "grammar":
       return [
         "title,pattern,jlptLevel,explanation,usage,exampleJP,exampleEN,relatedPatterns,notes",
-        "\"Desu form\",\"です\",N5,\"Polite copula\",\"Sentence ending\",\"学生です。\",\"I am a student.\",,",
+        '"Desu form","です",N5,"Polite copula","Sentence ending","学生です。","I am a student.",,',
       ].join("\n");
     case "quizzes":
       return [
         "title,description,quizType,difficultyLevel,jlptLevel,lessonTitle,question,optionA,optionB,optionC,optionD,correctAnswer,explanation,audioUrl,imageUrl",
-        "\"Lesson 1 Checkpoint\",\"Greetings checkpoint\",MULTIPLE_CHOICE,BEGINNER,N5,\"Lesson 1\",\"How do you say hello?\",\"こんにちは\",\"ありがとう\",\"さようなら\",\"おはよう\",A,\"Basic greeting\",,",
+        '"Lesson 1 Checkpoint","Greetings checkpoint",MULTIPLE_CHOICE,BEGINNER,N5,"Lesson 1","How do you say hello?","こんにちは","ありがとう","さようなら","おはよう",A,"Basic greeting",,',
       ].join("\n");
     default:
       return "";

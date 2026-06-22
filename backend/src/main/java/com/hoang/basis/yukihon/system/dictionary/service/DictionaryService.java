@@ -3,13 +3,12 @@ package com.hoang.basis.yukihon.system.dictionary.service;
 import com.hoang.basis.yukihon.system.vocabulary.dto.VocabularyDto;
 import com.hoang.basis.yukihon.system.vocabulary.entity.Vocabulary;
 import com.hoang.basis.yukihon.system.vocabulary.repository.VocabularyRepository;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -38,8 +37,8 @@ public class DictionaryService {
      * Get vocabulary detail by ID
      */
     public VocabularyDto getById(Long id) {
-        Vocabulary v = vocabularyRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Vocabulary not found"));
+        Vocabulary v =
+                vocabularyRepository.findById(id).orElseThrow(() -> new RuntimeException("Vocabulary not found"));
         return toDto(v);
     }
 

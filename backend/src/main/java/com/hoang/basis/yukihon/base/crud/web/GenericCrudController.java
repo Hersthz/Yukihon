@@ -7,6 +7,10 @@ import com.hoang.basis.yukihon.base.crud.security.CrudPermissionChecker;
 import com.hoang.basis.yukihon.base.crud.security.CrudPermissionChecker.Action;
 import com.hoang.basis.yukihon.base.crud.service.GenericCrudService;
 import com.hoang.basis.yukihon.exception.ResourceNotFoundException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,11 +25,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Single dispatch controller serving every {@code @AutoCrud} entity under {@code /api/auto/{resource}}.
@@ -53,22 +52,21 @@ public class GenericCrudController {
             @PathVariable String resource,
             @RequestParam(required = false) String search,
             @RequestParam(required = false) Map<String, String> allParams,
-            Pageable pageable
-    ) {
+            Pageable pageable) {
         CrudDescriptor descriptor = resolve(resource);
         permissionChecker.check(descriptor, Action.READ);
 
         Map<String, String> filters = new HashMap<>();
         if (allParams != null) {
             allParams.forEach((key, value) -> {
-                if (!RESERVED_PARAMS.contains(key) && descriptor.getFilterableFields().contains(key)) {
+                if (!RESERVED_PARAMS.contains(key)
+                        && descriptor.getFilterableFields().contains(key)) {
                     filters.put(key, value);
                 }
             });
         }
 
-        return service.list(descriptor, search, filters, pageable)
-                .map(entity -> mapper.toResponse(descriptor, entity));
+        return service.list(descriptor, search, filters, pageable).map(entity -> mapper.toResponse(descriptor, entity));
     }
 
     @GetMapping("/{resource}/{id}")
@@ -88,10 +86,7 @@ public class GenericCrudController {
 
     @PutMapping("/{resource}/{id}")
     public ResponseEntity<Object> update(
-            @PathVariable String resource,
-            @PathVariable Long id,
-            @RequestBody JsonNode payload
-    ) {
+            @PathVariable String resource, @PathVariable Long id, @RequestBody JsonNode payload) {
         CrudDescriptor descriptor = resolve(resource);
         permissionChecker.check(descriptor, Action.UPDATE);
         Object updated = service.update(descriptor, id, payload);

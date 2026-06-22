@@ -1,11 +1,10 @@
 package com.hoang.basis.yukihon.system.quiz.repository;
 
 import com.hoang.basis.yukihon.system.quiz.entity.Quiz;
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-
-import java.util.List;
 
 public interface QuizRepository extends JpaRepository<Quiz, Long> {
 

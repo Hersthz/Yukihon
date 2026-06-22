@@ -14,11 +14,6 @@ import com.hoang.basis.yukihon.system.kanjisrs.repository.KanjiSrsRecordReposito
 import com.hoang.basis.yukihon.system.kanjisrs.repository.KanjiSrsReviewEventRepository;
 import com.hoang.basis.yukihon.system.user.entity.User;
 import com.hoang.basis.yukihon.system.user.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -28,6 +23,10 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -53,35 +52,38 @@ public class KanjiSrsService {
         Instant trendStart = today.minusDays(13).atStartOfDay(zoneId).toInstant();
         Instant trendEnd = today.plusDays(1).atStartOfDay(zoneId).toInstant();
         List<KanjiSrsReviewEvent> recentEvents =
-                kanjiSrsReviewEventRepository.findByUserIdAndReviewedAtBetweenOrderByReviewedAtAsc(userId, trendStart, trendEnd);
+                kanjiSrsReviewEventRepository.findByUserIdAndReviewedAtBetweenOrderByReviewedAtAsc(
+                        userId, trendStart, trendEnd);
 
         int dueTodayCount = (int) records.stream()
-                .filter(record -> record.getNextReviewAt() == null || !record.getNextReviewAt().isAfter(endOfToday))
+                .filter(record -> record.getNextReviewAt() == null
+                        || !record.getNextReviewAt().isAfter(endOfToday))
                 .count();
         int overdueCount = (int) records.stream()
-                .filter(record -> record.getNextReviewAt() == null || !record.getNextReviewAt().isAfter(now))
+                .filter(record -> record.getNextReviewAt() == null
+                        || !record.getNextReviewAt().isAfter(now))
                 .count();
-        int masteredCount = (int) records.stream()
-                .filter(this::isMastered)
-                .count();
+        int masteredCount = (int) records.stream().filter(this::isMastered).count();
         List<KanjiSrsWeakKanjiDto> weakKanji = records.stream()
                 .filter(this::isWeak)
-                .sorted(Comparator
-                        .comparing((KanjiSrsRecord record) -> record.getEaseFactor() != null ? record.getEaseFactor() : 2.5)
+                .sorted(Comparator.comparing((KanjiSrsRecord record) ->
+                                record.getEaseFactor() != null ? record.getEaseFactor() : 2.5)
                         .thenComparing(record -> record.getIntervalDays() != null ? record.getIntervalDays() : 0)
-                        .thenComparing(Comparator.comparing((KanjiSrsRecord record) -> record.getReviewCount() != null ? record.getReviewCount() : 0).reversed()))
+                        .thenComparing(Comparator.comparing((KanjiSrsRecord record) ->
+                                        record.getReviewCount() != null ? record.getReviewCount() : 0)
+                                .reversed()))
                 .limit(8)
                 .map(this::toWeakKanjiDto)
                 .toList();
 
         int totalReviews = recentEvents.stream().mapToInt(event -> 1).sum();
-        int retainedReviews = (int) recentEvents.stream().filter(KanjiSrsReviewEvent::isSuccessful).count();
+        int retainedReviews = (int)
+                recentEvents.stream().filter(KanjiSrsReviewEvent::isSuccessful).count();
         int fallbackReviews = records.stream()
                 .mapToInt(record -> record.getReviewCount() != null ? record.getReviewCount() : 0)
                 .sum();
-        double retentionRate = totalReviews > 0
-                ? percentage(retainedReviews, totalReviews)
-                : estimateRetentionFromRecords(records);
+        double retentionRate =
+                totalReviews > 0 ? percentage(retainedReviews, totalReviews) : estimateRetentionFromRecords(records);
 
         return KanjiSrsDashboardDto.builder()
                 .deckCount(records.size())
@@ -101,7 +103,8 @@ public class KanjiSrsService {
     @Transactional
     public KanjiSrsDto addRecord(Long userId, AddKanjiSrsRequest request) {
         String character = normalizeCharacter(request.getCharacter());
-        KanjiSrsRecord existing = kanjiSrsRecordRepository.findByUserIdAndCharacter(userId, character)
+        KanjiSrsRecord existing = kanjiSrsRecordRepository
+                .findByUserIdAndCharacter(userId, character)
                 .orElse(null);
         if (existing != null) {
             return KanjiSrsDto.fromEntity(existing);
@@ -132,7 +135,8 @@ public class KanjiSrsService {
         }
 
         request.getRecords().stream()
-                .filter(item -> item.getCharacter() != null && !item.getCharacter().isBlank())
+                .filter(item ->
+                        item.getCharacter() != null && !item.getCharacter().isBlank())
                 .forEach(item -> {
                     String character = normalizeCharacter(item.getCharacter());
                     if (kanjiSrsRecordRepository.existsByUserIdAndCharacter(userId, character)) {
@@ -144,7 +148,8 @@ public class KanjiSrsService {
                             .character(character)
                             .intervalDays(Math.max(0, item.getIntervalDays() != null ? item.getIntervalDays() : 0))
                             .easeFactor(Math.max(1.3, item.getEaseFactor() != null ? item.getEaseFactor() : 2.5))
-                            .repetitionCount(Math.max(0, item.getRepetitionCount() != null ? item.getRepetitionCount() : 0))
+                            .repetitionCount(
+                                    Math.max(0, item.getRepetitionCount() != null ? item.getRepetitionCount() : 0))
                             .reviewCount(Math.max(0, item.getReviewCount() != null ? item.getReviewCount() : 0))
                             .lastReviewedAt(item.getLastReviewedAt())
                             .nextReviewAt(item.getNextReviewAt() != null ? item.getNextReviewAt() : Instant.now())
@@ -226,13 +231,13 @@ public class KanjiSrsService {
     }
 
     private User findUserByIdOrThrow(Long userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        return userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 
     private KanjiSrsRecord findOwnedRecordOrThrow(Long userId, String rawCharacter) {
         String character = normalizeCharacter(rawCharacter);
-        return kanjiSrsRecordRepository.findByUserIdAndCharacter(userId, character)
+        return kanjiSrsRecordRepository
+                .findByUserIdAndCharacter(userId, character)
                 .orElseThrow(() -> new ResourceNotFoundException("Kanji SRS record not found"));
     }
 
@@ -280,16 +285,20 @@ public class KanjiSrsService {
                 .build();
     }
 
-    private List<KanjiSrsRetentionPointDto> buildRetentionTrend(List<KanjiSrsReviewEvent> events, ZoneId zoneId, LocalDate today) {
+    private List<KanjiSrsRetentionPointDto> buildRetentionTrend(
+            List<KanjiSrsReviewEvent> events, ZoneId zoneId, LocalDate today) {
         Map<LocalDate, List<KanjiSrsReviewEvent>> eventsByDate = events.stream()
-                .collect(Collectors.groupingBy(event -> event.getReviewedAt().atZone(zoneId).toLocalDate()));
+                .collect(Collectors.groupingBy(
+                        event -> event.getReviewedAt().atZone(zoneId).toLocalDate()));
 
         return java.util.stream.IntStream.rangeClosed(0, 13)
                 .mapToObj(offset -> {
                     LocalDate date = today.minusDays(13L - offset);
                     List<KanjiSrsReviewEvent> dayEvents = eventsByDate.getOrDefault(date, List.of());
                     int reviewCount = dayEvents.size();
-                    int retainedCount = (int) dayEvents.stream().filter(KanjiSrsReviewEvent::isSuccessful).count();
+                    int retainedCount = (int) dayEvents.stream()
+                            .filter(KanjiSrsReviewEvent::isSuccessful)
+                            .count();
                     int forgottenCount = reviewCount - retainedCount;
                     return KanjiSrsRetentionPointDto.builder()
                             .date(date.toString())
@@ -302,17 +311,20 @@ public class KanjiSrsService {
                 .toList();
     }
 
-    private int calculateReviewStreak(List<KanjiSrsReviewEvent> events, List<KanjiSrsRecord> records, ZoneId zoneId, LocalDate today) {
+    private int calculateReviewStreak(
+            List<KanjiSrsReviewEvent> events, List<KanjiSrsRecord> records, ZoneId zoneId, LocalDate today) {
         Set<LocalDate> reviewedDates = events.stream()
                 .map(event -> event.getReviewedAt().atZone(zoneId).toLocalDate())
                 .collect(Collectors.toSet());
 
         if (reviewedDates.isEmpty()) {
             return records.stream()
-                    .map(KanjiSrsRecord::getLastReviewedAt)
-                    .filter(lastReviewedAt -> lastReviewedAt != null)
-                    .map(lastReviewedAt -> lastReviewedAt.atZone(zoneId).toLocalDate())
-                    .anyMatch(date -> date.equals(today) || date.equals(today.minusDays(1))) ? 1 : 0;
+                            .map(KanjiSrsRecord::getLastReviewedAt)
+                            .filter(lastReviewedAt -> lastReviewedAt != null)
+                            .map(lastReviewedAt -> lastReviewedAt.atZone(zoneId).toLocalDate())
+                            .anyMatch(date -> date.equals(today) || date.equals(today.minusDays(1)))
+                    ? 1
+                    : 0;
         }
 
         LocalDate cursor = reviewedDates.contains(today) ? today : today.minusDays(1);

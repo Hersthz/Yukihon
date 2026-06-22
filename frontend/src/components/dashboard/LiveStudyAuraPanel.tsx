@@ -47,8 +47,14 @@ const LiveStudyAuraPanel = ({ aura, loading }: LiveStudyAuraPanelProps) => {
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-[11px] uppercase tracking-[0.22em] text-white/75">Live Study Aura</p>
-            <h3 className="mt-2 text-2xl font-semibold leading-tight">{loading ? "Dang doc nhiet do hoc..." : aura.title}</h3>
-            <p className="mt-2 text-sm text-white/85">{loading ? "Mình đang ghép tín hiệu từ lesson, review và Mistake DNA." : aura.description}</p>
+            <h3 className="mt-2 text-2xl font-semibold leading-tight">
+              {loading ? "Dang doc nhiet do hoc..." : aura.title}
+            </h3>
+            <p className="mt-2 text-sm text-white/85">
+              {loading
+                ? "Mình đang ghép tín hiệu từ lesson, review và Mistake DNA."
+                : aura.description}
+            </p>
           </div>
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/15">
             <Icon className="h-5 w-5" />
@@ -60,14 +66,19 @@ const LiveStudyAuraPanel = ({ aura, loading }: LiveStudyAuraPanelProps) => {
         <div className="flex flex-wrap gap-2">
           <Badge className={`rounded-full border ${meta.chip}`}>{aura.ambientLabel}</Badge>
           {aura.signals.map((signal) => (
-            <Badge key={signal} className="rounded-full border border-border bg-muted text-muted-foreground">
+            <Badge
+              key={signal}
+              className="rounded-full border border-border bg-muted text-muted-foreground"
+            >
               {loading ? "..." : signal}
             </Badge>
           ))}
         </div>
-          
+
         <div className="rounded-[20px] border border-border bg-muted/35 p-4">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Mood ritual</p>
+          <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+            Mood ritual
+          </p>
           <div className="mt-3 space-y-2">
             {aura.ritual.map((step) => (
               <div key={step} className="flex items-start gap-2 text-sm text-foreground">
@@ -86,7 +97,10 @@ const LiveStudyAuraPanel = ({ aura, loading }: LiveStudyAuraPanelProps) => {
             </Button>
           </Link>
           <Link to={aura.secondaryAction.to} className="flex-1 min-w-[180px]">
-            <Button className="w-full rounded-2xl border-border bg-card text-foreground/80 hover:bg-card" variant="outline">
+            <Button
+              className="w-full rounded-2xl border-border bg-card text-foreground/80 hover:bg-card"
+              variant="outline"
+            >
               {aura.secondaryAction.label}
             </Button>
           </Link>

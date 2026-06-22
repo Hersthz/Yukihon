@@ -30,10 +30,14 @@ export const friendApi = {
     apiClient.request<UserConnection[]>(`/api/v1/connections/pending?type=${type}`),
 
   sendRequest: (receiverId: number, type: ConnectionType = ConnectionType.FRIEND) =>
-    apiClient.request<UserConnection>(`/api/v1/connections/request/${receiverId}?type=${type}`, { method: "POST" }),
+    apiClient.request<UserConnection>(`/api/v1/connections/request/${receiverId}?type=${type}`, {
+      method: "POST",
+    }),
 
   acceptRequest: (connectionId: number) =>
-    apiClient.request<UserConnection>(`/api/v1/connections/accept/${connectionId}`, { method: "POST" }),
+    apiClient.request<UserConnection>(`/api/v1/connections/accept/${connectionId}`, {
+      method: "POST",
+    }),
 
   removeConnection: (connectionId: number) =>
     apiClient.request<void>(`/api/v1/connections/${connectionId}`, { method: "DELETE" }),

@@ -23,9 +23,11 @@ public class PrivateMessageService {
 
     @Transactional
     public PrivateMessageDto saveMessage(Long senderId, Long receiverId, String content) {
-        User sender = userRepository.findById(senderId)
+        User sender = userRepository
+                .findById(senderId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sender not found"));
-        User receiver = userRepository.findById(receiverId)
+        User receiver = userRepository
+                .findById(receiverId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Receiver not found"));
 
         PrivateMessage message = PrivateMessage.builder()
@@ -40,9 +42,11 @@ public class PrivateMessageService {
 
     @Transactional(readOnly = true)
     public Page<PrivateMessageDto> getConversation(Long userId, Long otherUserId, Pageable pageable) {
-        User user1 = userRepository.findById(userId)
+        User user1 = userRepository
+                .findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-        User user2 = userRepository.findById(otherUserId)
+        User user2 = userRepository
+                .findById(otherUserId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Other user not found"));
 
         return privateMessageRepository.findConversation(user1, user2, pageable).map(this::mapToDto);

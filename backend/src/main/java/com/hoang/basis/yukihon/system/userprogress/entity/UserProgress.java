@@ -2,22 +2,26 @@ package com.hoang.basis.yukihon.system.userprogress.entity;
 
 import com.hoang.basis.yukihon.system.user.entity.User;
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.time.Instant;
+import lombok.*;
 
 /**
  * UserProgress entity to track user's learning progress
  */
 @Entity
-@Table(name = "user_progress",
+@Table(
+        name = "user_progress",
         uniqueConstraints = {
-                @UniqueConstraint(name = "uk_user_lesson", columnNames = {"user_id", "lesson_id"}),
-                @UniqueConstraint(name = "uk_user_quiz", columnNames = {"user_id", "quiz_id"})
+            @UniqueConstraint(
+                    name = "uk_user_lesson",
+                    columnNames = {"user_id", "lesson_id"}),
+            @UniqueConstraint(
+                    name = "uk_user_quiz",
+                    columnNames = {"user_id", "quiz_id"})
         },
         indexes = {
-                @Index(name = "idx_user_progress_user_id", columnList = "user_id"),
-                @Index(name = "idx_user_progress_status", columnList = "status")
+            @Index(name = "idx_user_progress_user_id", columnList = "user_id"),
+            @Index(name = "idx_user_progress_status", columnList = "status")
         })
 @Getter
 @Setter

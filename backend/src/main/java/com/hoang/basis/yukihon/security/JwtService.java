@@ -5,15 +5,14 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
+import java.time.Instant;
+import java.util.Date;
+import java.util.List;
+import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
-
-import javax.crypto.SecretKey;
-import java.time.Instant;
-import java.util.Date;
-import java.util.List;
 
 @Component
 public class JwtService {
@@ -31,8 +30,7 @@ public class JwtService {
     public JwtService(
             @Value("${jwt.secret}") String secret,
             @Value("${jwt.access-token-expiration-ms}") long accessTokenExpirationMs,
-            @Value("${jwt.refresh-token-expiration-ms}") long refreshTokenExpirationMs
-    ) {
+            @Value("${jwt.refresh-token-expiration-ms}") long refreshTokenExpirationMs) {
         this.secret = secret;
         this.accessTokenExpirationMs = accessTokenExpirationMs;
         this.refreshTokenExpirationMs = refreshTokenExpirationMs;
@@ -56,8 +54,7 @@ public class JwtService {
         Instant now = Instant.now();
         Instant expiry = now.plusMillis(expirationMs);
 
-        List<String> roles = userDetails.getAuthorities()
-                .stream()
+        List<String> roles = userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .toList();
 
@@ -104,10 +101,6 @@ public class JwtService {
     }
 
     private Claims getClaims(String token) {
-        return Jwts.parser()
-                .verifyWith(key)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
+        return Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
     }
 }

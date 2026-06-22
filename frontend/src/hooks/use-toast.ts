@@ -70,7 +70,9 @@ export const reducer = (state: State, action: Action): State => {
     case "UPDATE_TOAST":
       return {
         ...state,
-        toasts: state.toasts.map((toast) => (toast.id === action.toast.id ? { ...toast, ...action.toast } : toast)),
+        toasts: state.toasts.map((toast) =>
+          toast.id === action.toast.id ? { ...toast, ...action.toast } : toast
+        ),
       };
 
     case "DISMISS_TOAST": {

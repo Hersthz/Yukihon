@@ -43,8 +43,7 @@ const Grammar = () => {
       const levelMatch = selectedLevel === "all" || item.jlptLevel === selectedLevel;
       const q = searchQuery.toLowerCase();
       const searchMatch =
-        item.title.toLowerCase().includes(q) ||
-        item.pattern.toLowerCase().includes(q);
+        item.title.toLowerCase().includes(q) || item.pattern.toLowerCase().includes(q);
       return levelMatch && searchMatch;
     });
   }, [grammarList, selectedLevel, searchQuery]);
@@ -128,7 +127,9 @@ const Grammar = () => {
                       <h3 className="text-xl font-semibold text-foreground">{item.pattern}</h3>
                       <p className="mt-1 text-sm text-muted-foreground">{item.title}</p>
                     </div>
-                    <Badge className={`border ${levelColors[item.jlptLevel] || "bg-muted text-foreground/80 border-border"}`}>
+                    <Badge
+                      className={`border ${levelColors[item.jlptLevel] || "bg-muted text-foreground/80 border-border"}`}
+                    >
                       {item.jlptLevel}
                     </Badge>
                   </div>
@@ -156,7 +157,9 @@ const Grammar = () => {
                           <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-violet-500">
                             Liên quan
                           </p>
-                          <p className="text-sm leading-6 text-muted-foreground">{item.relatedPatterns}</p>
+                          <p className="text-sm leading-6 text-muted-foreground">
+                            {item.relatedPatterns}
+                          </p>
                         </div>
                       )}
                     </div>
@@ -166,7 +169,9 @@ const Grammar = () => {
                         Ví dụ
                       </p>
                       <p className="text-sm font-medium text-foreground">{item.exampleJP}</p>
-                      {item.exampleEN && <p className="mt-2 text-sm text-muted-foreground">{item.exampleEN}</p>}
+                      {item.exampleEN && (
+                        <p className="mt-2 text-sm text-muted-foreground">{item.exampleEN}</p>
+                      )}
                       <Button className="mt-4 h-10 w-full rounded-2xl bg-violet-500 text-white hover:bg-violet-400">
                         <BookOpen className="mr-2 h-4 w-4" />
                         Học mẫu này

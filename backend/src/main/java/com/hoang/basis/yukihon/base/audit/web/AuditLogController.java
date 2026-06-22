@@ -21,10 +21,7 @@ public class AuditLogController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public Page<AuditLog> list(
-            @RequestParam(required = false) String entityType,
-            Pageable pageable
-    ) {
+    public Page<AuditLog> list(@RequestParam(required = false) String entityType, Pageable pageable) {
         if (entityType != null && !entityType.isBlank()) {
             return auditLogRepository.findByEntityTypeOrderByIdDesc(entityType, pageable);
         }

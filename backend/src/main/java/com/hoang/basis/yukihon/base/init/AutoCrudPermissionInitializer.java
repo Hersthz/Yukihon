@@ -7,14 +7,13 @@ import com.hoang.basis.yukihon.system.user.entity.RoleName;
 import com.hoang.basis.yukihon.system.user.entity.RolePermission;
 import com.hoang.basis.yukihon.system.user.repository.PermissionRepository;
 import com.hoang.basis.yukihon.system.user.repository.RolePermissionRepository;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 /**
  * Seeds {@code <PREFIX>_CREATE/READ/UPDATE/DELETE} permissions for every auto-CRUD entity that
@@ -44,9 +43,8 @@ public class AutoCrudPermissionInitializer implements CommandLineRunner {
             }
             for (String action : ACTIONS) {
                 String code = prefix + "_" + action;
-                Permission permission = ensurePermission(code,
-                        descriptor.getLabel() + " - " + action,
-                        action + " access for " + descriptor.getLabel());
+                Permission permission = ensurePermission(
+                        code, descriptor.getLabel() + " - " + action, action + " access for " + descriptor.getLabel());
                 if (ensureRolePermission(RoleName.ADMIN, permission)) {
                     created++;
                 }
@@ -58,7 +56,8 @@ public class AutoCrudPermissionInitializer implements CommandLineRunner {
     }
 
     private Permission ensurePermission(String code, String name, String description) {
-        return permissionRepository.findByCode(code)
+        return permissionRepository
+                .findByCode(code)
                 .orElseGet(() -> permissionRepository.save(Permission.builder()
                         .code(code)
                         .name(name)
@@ -70,10 +69,8 @@ public class AutoCrudPermissionInitializer implements CommandLineRunner {
         if (rolePermissionRepository.existsByRoleAndPermission(role, permission)) {
             return false;
         }
-        rolePermissionRepository.save(RolePermission.builder()
-                .role(role)
-                .permission(permission)
-                .build());
+        rolePermissionRepository.save(
+                RolePermission.builder().role(role).permission(permission).build());
         return true;
     }
 }

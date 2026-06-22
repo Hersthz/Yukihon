@@ -97,14 +97,8 @@ const MetadataDrivenCrudPage = ({ entityName }: MetadataDrivenCrudPageProps) => 
   const [deleteTarget, setDeleteTarget] = useState<AutoCrudRow | null>(null);
 
   const api = useMemo(() => (meta ? createAutoCrudApi(meta.path) : null), [meta]);
-  const listFields = useMemo(
-    () => (meta ? meta.fields.filter((f) => f.listVisible) : []),
-    [meta]
-  );
-  const formFields = useMemo(
-    () => (meta ? meta.fields.filter(isFormField) : []),
-    [meta]
-  );
+  const listFields = useMemo(() => (meta ? meta.fields.filter((f) => f.listVisible) : []), [meta]);
+  const formFields = useMemo(() => (meta ? meta.fields.filter(isFormField) : []), [meta]);
 
   const can = useCallback(
     (action: string) => {
@@ -287,7 +281,11 @@ const MetadataDrivenCrudPage = ({ entityName }: MetadataDrivenCrudPageProps) => 
 
   return (
     <DashboardLayout>
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
         <Card className="border-border/70">
           <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -337,7 +335,10 @@ const MetadataDrivenCrudPage = ({ entityName }: MetadataDrivenCrudPageProps) => 
                     </TableRow>
                   ) : rows.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={listFields.length + 2} className="py-10 text-center text-muted-foreground">
+                      <TableCell
+                        colSpan={listFields.length + 2}
+                        className="py-10 text-center text-muted-foreground"
+                      >
                         Chưa có dữ liệu
                       </TableCell>
                     </TableRow>
@@ -376,7 +377,12 @@ const MetadataDrivenCrudPage = ({ entityName }: MetadataDrivenCrudPageProps) => 
 
             {totalPages > 1 && (
               <div className="mt-4 flex items-center justify-end gap-2">
-                <Button variant="outline" size="icon" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  disabled={page === 0}
+                  onClick={() => setPage((p) => p - 1)}
+                >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
                 <span className="text-sm text-muted-foreground">

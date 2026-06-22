@@ -1,9 +1,8 @@
 package com.hoang.basis.yukihon.system.srs.dto;
 
+import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Data;
-
-import java.time.LocalDateTime;
 
 /** A single study card returned to the frontend: content + current SRS state + 4-button previews. */
 @Data

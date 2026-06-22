@@ -10,6 +10,7 @@ import com.hoang.basis.yukihon.system.creatormode.dto.CreatorTemplateUpsertReque
 import com.hoang.basis.yukihon.system.creatormode.service.CreatorModeService;
 import com.hoang.basis.yukihon.system.user.repository.UserRepository;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -19,8 +20,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin/creator-mode")
@@ -35,9 +34,7 @@ public class CreatorModeController {
     @GetMapping("/templates")
     @PreAuthorize("hasAnyAuthority('CONTENT_READ','CONTENT_MANAGE')")
     public ResponseEntity<List<CreatorTemplateDto>> getTemplates(
-            @RequestParam(required = false) String status,
-            @RequestParam(required = false) String contentType
-    ) {
+            @RequestParam(required = false) String status, @RequestParam(required = false) String contentType) {
         return ResponseEntity.ok(creatorModeService.getTemplates(status, contentType));
     }
 
@@ -52,8 +49,7 @@ public class CreatorModeController {
     public ResponseEntity<List<CreatorTemplateAuditEventDto>> getTemplateAuditTimeline(
             @PathVariable Long id,
             @RequestParam(required = false) String stage,
-            @RequestParam(required = false) String actor
-    ) {
+            @RequestParam(required = false) String actor) {
         return ResponseEntity.ok(creatorModeService.getTemplateAuditTimeline(id, stage, actor));
     }
 
@@ -61,8 +57,7 @@ public class CreatorModeController {
     @PreAuthorize("hasAuthority('CONTENT_MANAGE')")
     public ResponseEntity<CreatorTemplateDto> createTemplate(
             @Valid @RequestBody CreatorTemplateUpsertRequest request,
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
+            @AuthenticationPrincipal UserDetails userDetails) {
         Long actorUserId = resolveCurrentUserId(userDetails);
         CreatorTemplateDto created = creatorModeService.createTemplate(request, actorUserId);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
@@ -73,8 +68,7 @@ public class CreatorModeController {
     public ResponseEntity<CreatorTemplateDto> updateTemplate(
             @PathVariable Long id,
             @Valid @RequestBody CreatorTemplateUpsertRequest request,
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
+            @AuthenticationPrincipal UserDetails userDetails) {
         Long actorUserId = resolveCurrentUserId(userDetails);
         CreatorTemplateDto updated = creatorModeService.updateTemplate(id, request, actorUserId);
         return ResponseEntity.ok(updated);
@@ -83,9 +77,7 @@ public class CreatorModeController {
     @PostMapping("/templates/{id}/submit")
     @PreAuthorize("hasAuthority('CONTENT_MANAGE')")
     public ResponseEntity<CreatorTemplateDto> submitForReview(
-            @PathVariable Long id,
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
+            @PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
         Long actorUserId = resolveCurrentUserId(userDetails);
         CreatorTemplateDto updated = creatorModeService.submitForReview(id, actorUserId);
         return ResponseEntity.ok(updated);
@@ -96,8 +88,7 @@ public class CreatorModeController {
     public ResponseEntity<CreatorTemplateDto> reviewDecision(
             @PathVariable Long id,
             @Valid @RequestBody CreatorTemplateReviewRequest request,
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
+            @AuthenticationPrincipal UserDetails userDetails) {
         Long adminUserId = resolveCurrentUserId(userDetails);
         CreatorTemplateDto updated = creatorModeService.reviewByAdmin(id, request, adminUserId);
         return ResponseEntity.ok(updated);
@@ -106,9 +97,7 @@ public class CreatorModeController {
     @PostMapping("/templates/{id}/metrics")
     @PreAuthorize("hasAuthority('CONTENT_MANAGE')")
     public ResponseEntity<CreatorTemplateDto> recordMetrics(
-            @PathVariable Long id,
-            @Valid @RequestBody CreatorTemplateMetricsRequest request
-    ) {
+            @PathVariable Long id, @Valid @RequestBody CreatorTemplateMetricsRequest request) {
         CreatorTemplateDto updated = creatorModeService.recordMetrics(id, request);
         return ResponseEntity.ok(updated);
     }
@@ -116,9 +105,7 @@ public class CreatorModeController {
     @DeleteMapping("/templates/{id}")
     @PreAuthorize("hasAuthority('CONTENT_MANAGE')")
     public ResponseEntity<Void> deleteTemplate(
-            @PathVariable Long id,
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
+            @PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
         Long actorUserId = resolveCurrentUserId(userDetails);
         creatorModeService.deleteTemplate(id, actorUserId);
         return ResponseEntity.noContent().build();
@@ -141,7 +128,8 @@ public class CreatorModeController {
             throw new AccessDeniedException("Authentication required");
         }
 
-        return userRepository.findByEmail(userDetails.getUsername().toLowerCase())
+        return userRepository
+                .findByEmail(userDetails.getUsername().toLowerCase())
                 .map(user -> user.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }

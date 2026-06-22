@@ -10,20 +10,22 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.Instant;
-
 @Entity
-@Table(name = "learning_analytics_events",
+@Table(
+        name = "learning_analytics_events",
         indexes = {
-                @Index(name = "idx_learning_analytics_events_event_created", columnList = "event_type, created_at"),
-                @Index(name = "idx_learning_analytics_events_content_created", columnList = "content_type, content_id, created_at"),
-                @Index(name = "idx_learning_analytics_events_user_created", columnList = "user_id, created_at")
+            @Index(name = "idx_learning_analytics_events_event_created", columnList = "event_type, created_at"),
+            @Index(
+                    name = "idx_learning_analytics_events_content_created",
+                    columnList = "content_type, content_id, created_at"),
+            @Index(name = "idx_learning_analytics_events_user_created", columnList = "user_id, created_at")
         })
 @Getter
 @Setter

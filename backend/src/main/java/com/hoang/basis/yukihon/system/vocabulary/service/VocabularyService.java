@@ -4,13 +4,12 @@ import com.hoang.basis.yukihon.system.vocabulary.dto.VocabularyDto;
 import com.hoang.basis.yukihon.system.vocabulary.dto.VocabularyRequest;
 import com.hoang.basis.yukihon.system.vocabulary.entity.Vocabulary;
 import com.hoang.basis.yukihon.system.vocabulary.repository.VocabularyRepository;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -22,46 +21,42 @@ public class VocabularyService {
 
     @Transactional(readOnly = true)
     public VocabularyDto getVocabularyById(Long id) {
-        return vocabularyRepository.findById(id)
+        return vocabularyRepository
+                .findById(id)
                 .map(this::convertToDto)
                 .orElseThrow(() -> new RuntimeException("Vocabulary not found with id: " + id));
     }
 
     @Transactional(readOnly = true)
     public VocabularyDto getVocabularyByKanji(String kanji) {
-        return vocabularyRepository.findByKanji(kanji)
+        return vocabularyRepository
+                .findByKanji(kanji)
                 .map(this::convertToDto)
                 .orElseThrow(() -> new RuntimeException("Vocabulary not found with kanji: " + kanji));
     }
 
     @Transactional(readOnly = true)
     public List<VocabularyDto> getAll() {
-        return vocabularyRepository.findAll()
-                .stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
+        return vocabularyRepository.findAll().stream().map(this::convertToDto).collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public List<VocabularyDto> getByJlptLevel(String jlptLevel) {
-        return vocabularyRepository.findByJlptLevel(jlptLevel)
-                .stream()
+        return vocabularyRepository.findByJlptLevel(jlptLevel).stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public List<VocabularyDto> getByWordType(String wordType) {
-        return vocabularyRepository.findByWordType(wordType)
-                .stream()
+        return vocabularyRepository.findByWordType(wordType).stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public List<VocabularyDto> getByMultipleLevels(List<String> levels) {
-        return vocabularyRepository.findByJlptLevelIn(levels)
-                .stream()
+        return vocabularyRepository.findByJlptLevelIn(levels).stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
@@ -94,7 +89,8 @@ public class VocabularyService {
     }
 
     public VocabularyDto updateVocabulary(Long id, VocabularyRequest request) {
-        Vocabulary vocabulary = vocabularyRepository.findById(id)
+        Vocabulary vocabulary = vocabularyRepository
+                .findById(id)
                 .orElseThrow(() -> new RuntimeException("Vocabulary not found with id: " + id));
 
         if (!vocabulary.getKanji().equals(request.getKanji())

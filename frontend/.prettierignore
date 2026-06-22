@@ -1,0 +1,5 @@
+dist
+build
+node_modules
+src/components/ui
+src/api/schema.d.ts

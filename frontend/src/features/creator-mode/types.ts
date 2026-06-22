@@ -21,4 +21,10 @@ export const CREATOR_BLOCK_LABELS: Record<CreatorBlockType, string> = {
   BRANCH: "Branch Choice",
 };
 
-export const CREATOR_BLOCK_TYPES: CreatorBlockType[] = ["SCENE", "DIALOGUE", "VOCAB_HINT", "QUIZ_CHECKPOINT", "BRANCH"];
+export const CREATOR_BLOCK_TYPES: CreatorBlockType[] = [
+  "SCENE",
+  "DIALOGUE",
+  "VOCAB_HINT",
+  "QUIZ_CHECKPOINT",
+  "BRANCH",
+];

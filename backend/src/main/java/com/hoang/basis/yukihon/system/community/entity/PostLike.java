@@ -2,16 +2,19 @@ package com.hoang.basis.yukihon.system.community.entity;
 
 import com.hoang.basis.yukihon.system.user.entity.User;
 import jakarta.persistence.*;
+import java.time.Instant;
 import lombok.*;
 
-import java.time.Instant;
-
 @Entity
-@Table(name = "post_likes",
-        uniqueConstraints = @UniqueConstraint(name = "uk_post_like", columnNames = {"post_id", "user_id"}),
+@Table(
+        name = "post_likes",
+        uniqueConstraints =
+                @UniqueConstraint(
+                        name = "uk_post_like",
+                        columnNames = {"post_id", "user_id"}),
         indexes = {
-                @Index(name = "idx_like_post", columnList = "post_id"),
-                @Index(name = "idx_like_user", columnList = "user_id")
+            @Index(name = "idx_like_post", columnList = "post_id"),
+            @Index(name = "idx_like_user", columnList = "user_id")
         })
 @Getter
 @Setter

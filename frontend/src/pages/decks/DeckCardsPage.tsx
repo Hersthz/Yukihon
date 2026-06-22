@@ -29,8 +29,16 @@ const DeckCardsPage = () => {
   const [back, setBack] = useState("");
   const [hint, setHint] = useState("");
 
-  const deck = useQuery({ queryKey: ["deck", id], queryFn: () => deckApi.get(id), enabled: Number.isFinite(id) });
-  const cards = useQuery({ queryKey: ["deck", id, "cards"], queryFn: () => deckApi.listCards(id), enabled: Number.isFinite(id) });
+  const deck = useQuery({
+    queryKey: ["deck", id],
+    queryFn: () => deckApi.get(id),
+    enabled: Number.isFinite(id),
+  });
+  const cards = useQuery({
+    queryKey: ["deck", id, "cards"],
+    queryFn: () => deckApi.listCards(id),
+    enabled: Number.isFinite(id),
+  });
 
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: ["deck", id, "cards"] });
@@ -39,7 +47,12 @@ const DeckCardsPage = () => {
   };
 
   const addMutation = useMutation({
-    mutationFn: () => deckApi.addCard(id, { front: front.trim(), back: back.trim(), hint: hint.trim() || undefined }),
+    mutationFn: () =>
+      deckApi.addCard(id, {
+        front: front.trim(),
+        back: back.trim(),
+        hint: hint.trim() || undefined,
+      }),
     onSuccess: () => {
       setFront("");
       setBack("");
@@ -47,14 +60,22 @@ const DeckCardsPage = () => {
       invalidate();
     },
     onError: (e: unknown) =>
-      toast({ title: "Thêm thẻ thất bại", description: e instanceof Error ? e.message : "Lỗi", variant: "destructive" }),
+      toast({
+        title: "Thêm thẻ thất bại",
+        description: e instanceof Error ? e.message : "Lỗi",
+        variant: "destructive",
+      }),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (flashcardId: number) => deckApi.deleteCard(id, flashcardId),
     onSuccess: invalidate,
     onError: (e: unknown) =>
-      toast({ title: "Xoá thất bại", description: e instanceof Error ? e.message : "Lỗi", variant: "destructive" }),
+      toast({
+        title: "Xoá thất bại",
+        description: e instanceof Error ? e.message : "Lỗi",
+        variant: "destructive",
+      }),
   });
 
   const list = cards.data ?? [];
@@ -66,7 +87,11 @@ const DeckCardsPage = () => {
           <Button variant="ghost" size="sm" onClick={() => navigate("/decks")}>
             <ArrowLeft className="mr-1 h-4 w-4" /> Thư viện
           </Button>
-          <Button size="sm" onClick={() => navigate(`/decks/${id}/study`)} disabled={list.length === 0}>
+          <Button
+            size="sm"
+            onClick={() => navigate(`/decks/${id}/study`)}
+            disabled={list.length === 0}
+          >
             <Play className="mr-1 h-4 w-4" /> Học
           </Button>
         </div>
@@ -87,14 +112,30 @@ const DeckCardsPage = () => {
           </CardHeader>
           <CardContent>
             <div className="grid gap-3 sm:grid-cols-[1fr_1fr_1fr_auto]">
-              <Input placeholder="Mặt trước (vd 学校)" value={front} onChange={(e) => setFront(e.target.value)} />
-              <Input placeholder="Mặt sau (vd trường học)" value={back} onChange={(e) => setBack(e.target.value)} />
-              <Input placeholder="Gợi ý (vd がっこう)" value={hint} onChange={(e) => setHint(e.target.value)} />
+              <Input
+                placeholder="Mặt trước (vd 学校)"
+                value={front}
+                onChange={(e) => setFront(e.target.value)}
+              />
+              <Input
+                placeholder="Mặt sau (vd trường học)"
+                value={back}
+                onChange={(e) => setBack(e.target.value)}
+              />
+              <Input
+                placeholder="Gợi ý (vd がっこう)"
+                value={hint}
+                onChange={(e) => setHint(e.target.value)}
+              />
               <Button
                 onClick={() => addMutation.mutate()}
                 disabled={!front.trim() || !back.trim() || addMutation.isPending}
               >
-                {addMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                {addMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Plus className="h-4 w-4" />
+                )}
               </Button>
             </div>
           </CardContent>

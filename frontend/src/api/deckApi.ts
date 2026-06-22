@@ -41,7 +41,10 @@ export const deckApi = {
     apiClient.request<Deck>("/api/decks", { method: "POST", body: JSON.stringify(payload) }),
   listCards: (deckId: number) => apiClient.request<DeckCard[]>(`/api/decks/${deckId}/cards`),
   addCard: (deckId: number, payload: AddCardPayload) =>
-    apiClient.request<DeckCard>(`/api/decks/${deckId}/cards`, { method: "POST", body: JSON.stringify(payload) }),
+    apiClient.request<DeckCard>(`/api/decks/${deckId}/cards`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
   deleteCard: (deckId: number, flashcardId: number) =>
     apiClient.request<void>(`/api/decks/${deckId}/cards/${flashcardId}`, { method: "DELETE" }),
 };

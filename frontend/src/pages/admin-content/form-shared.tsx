@@ -59,7 +59,9 @@ export const OptionPicker = ({
       />
 
       <div className="mt-3 flex flex-wrap gap-2">
-        {selectedIds.length === 0 ? <span className="text-xs text-muted-foreground">No linked items yet.</span> : null}
+        {selectedIds.length === 0 ? (
+          <span className="text-xs text-muted-foreground">No linked items yet.</span>
+        ) : null}
         {selectedIds.map((id) => {
           const item = options.find((option) => option.id === id);
           return (
@@ -87,7 +89,9 @@ export const OptionPicker = ({
                 type="button"
                 onClick={() => onToggle(id)}
                 className={`rounded-full border px-3 py-1 text-xs transition ${
-                  active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-muted-foreground hover:bg-muted"
+                  active
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-card text-muted-foreground hover:bg-muted"
                 }`}
               >
                 {getOptionLabel(item)}
@@ -119,7 +123,12 @@ export const MediaField = ({
 }) => (
   <div className="space-y-2 rounded-[22px] border border-border bg-background/40 p-4">
     <Label>{label}</Label>
-    <Input value={value} onChange={(event) => onChange(event.target.value)} className="bg-background/60" placeholder="Paste URL or upload a file" />
+    <Input
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      className="bg-background/60"
+      placeholder="Paste URL or upload a file"
+    />
 
     <div className="flex items-center gap-3">
       <Input
@@ -146,8 +155,15 @@ export const MediaField = ({
           <img src={value} alt={label} className="h-32 w-full rounded-xl object-cover" />
         ) : null}
         {previewType === "audio" ? <audio controls src={value} className="mb-3 w-full" /> : null}
-        {previewType === "video" ? <video controls src={value} className="mb-3 h-32 w-full rounded-xl object-cover" /> : null}
-        <a href={value} target="_blank" rel="noreferrer" className="text-xs text-primary underline underline-offset-4">
+        {previewType === "video" ? (
+          <video controls src={value} className="mb-3 h-32 w-full rounded-xl object-cover" />
+        ) : null}
+        <a
+          href={value}
+          target="_blank"
+          rel="noreferrer"
+          className="text-xs text-primary underline underline-offset-4"
+        >
           Open uploaded asset
         </a>
       </div>

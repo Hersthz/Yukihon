@@ -30,9 +30,15 @@ export const createAutoCrudApi = (path: string) => ({
   },
   get: (id: number | string) => apiClient.request<AutoCrudRow>(`/api/auto/${path}/${id}`),
   create: (body: Record<string, unknown>) =>
-    apiClient.request<AutoCrudRow>(`/api/auto/${path}`, { method: "POST", body: JSON.stringify(body) }),
+    apiClient.request<AutoCrudRow>(`/api/auto/${path}`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
   update: (id: number | string, body: Record<string, unknown>) =>
-    apiClient.request<AutoCrudRow>(`/api/auto/${path}/${id}`, { method: "PUT", body: JSON.stringify(body) }),
+    apiClient.request<AutoCrudRow>(`/api/auto/${path}/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(body),
+    }),
   remove: (id: number | string) =>
     apiClient.request<void>(`/api/auto/${path}/${id}`, { method: "DELETE" }),
 });

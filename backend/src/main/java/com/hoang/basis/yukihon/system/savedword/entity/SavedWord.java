@@ -3,16 +3,19 @@ package com.hoang.basis.yukihon.system.savedword.entity;
 import com.hoang.basis.yukihon.system.user.entity.User;
 import com.hoang.basis.yukihon.system.vocabulary.entity.Vocabulary;
 import jakarta.persistence.*;
+import java.time.Instant;
 import lombok.*;
 
-import java.time.Instant;
-
 @Entity
-@Table(name = "saved_words",
-        uniqueConstraints = @UniqueConstraint(name = "uk_saved_word", columnNames = {"user_id", "vocabulary_id"}),
+@Table(
+        name = "saved_words",
+        uniqueConstraints =
+                @UniqueConstraint(
+                        name = "uk_saved_word",
+                        columnNames = {"user_id", "vocabulary_id"}),
         indexes = {
-                @Index(name = "idx_saved_user", columnList = "user_id"),
-                @Index(name = "idx_saved_folder", columnList = "folder_name")
+            @Index(name = "idx_saved_user", columnList = "user_id"),
+            @Index(name = "idx_saved_folder", columnList = "folder_name")
         })
 @Getter
 @Setter

@@ -21,7 +21,8 @@ public class ReminderController {
     private final UserRepository userRepository;
 
     private Long getUserId(UserDetails userDetails) {
-        User user = userRepository.findByEmail(userDetails.getUsername())
+        User user = userRepository
+                .findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new com.hoang.basis.yukihon.exception.ResourceNotFoundException("User not found"));
         return user.getId();
     }

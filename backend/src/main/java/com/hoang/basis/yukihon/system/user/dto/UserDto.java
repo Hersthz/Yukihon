@@ -1,13 +1,12 @@
 package com.hoang.basis.yukihon.system.user.dto;
 
 import com.hoang.basis.yukihon.system.user.entity.User;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Data
 @Builder
@@ -26,10 +25,7 @@ public class UserDto {
                 .id(user.getId())
                 .email(user.getEmail())
                 .displayName(user.getDisplayName())
-                .roles(user.getRoles()
-                        .stream()
-                        .map(Enum::name)
-                        .collect(Collectors.toSet()))
+                .roles(user.getRoles().stream().map(Enum::name).collect(Collectors.toSet()))
                 .build();
     }
 }

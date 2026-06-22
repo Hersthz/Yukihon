@@ -1,7 +1,6 @@
 package com.hoang.basis.yukihon.system.library.dto;
 
 import com.hoang.basis.yukihon.system.library.entity.Deck;
-
 import java.time.Instant;
 
 /** User-facing deck summary. */
@@ -15,8 +14,7 @@ public record DeckDto(
         String targetLanguage,
         Integer totalCards,
         Integer favoriteCount,
-        Instant updatedAt
-) {
+        Instant updatedAt) {
     public static DeckDto fromEntity(Deck d) {
         return new DeckDto(
                 d.getId(),
@@ -28,7 +26,6 @@ public record DeckDto(
                 d.getTargetLanguage(),
                 d.getTotalCards(),
                 d.getFavoriteCount(),
-                d.getUpdatedAt()
-        );
+                d.getUpdatedAt());
     }
 }

@@ -29,13 +29,55 @@ import { buildStudyAura } from "@/lib/studyAura";
 import type { LearningPathLesson } from "@/api";
 
 const quickActions = [
-  { title: "Lịch học", subtitle: "Nhìn nhịp học theo từng ngày", icon: CalendarDays, to: "/calendar", accent: "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400" },
-  { title: "Tra cứu", subtitle: "Kanji, ví dụ, cách đọc", icon: Search, to: "/dictionary", accent: "bg-sky-500/15 text-sky-600 dark:text-sky-400" },
-  { title: "Story Mode", subtitle: "Học qua truyện ngắn", icon: BookOpen, to: "/story-mode", accent: "bg-rose-500/15 text-rose-600 dark:text-rose-400" },
-  { title: "AI Chat", subtitle: "Hoi dap va on tap cung tro ly AI", icon: Bot, to: "/ai-chat", accent: "bg-primary/15 text-primary" },
-  { title: "Ngữ pháp", subtitle: "Ôn cấu trúc thường gặp", icon: Brain, to: "/grammar", accent: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" },
-  { title: "Quiz", subtitle: "Kiểm tra nhanh mức độ nhớ", icon: Trophy, to: "/quiz", accent: "bg-rose-500/15 text-rose-600 dark:text-rose-400" },
-  { title: "JLPT", subtitle: "Lộ trình theo cấp độ", icon: GraduationCap, to: "/jlpt-lessons", accent: "bg-amber-500/15 text-amber-600 dark:text-amber-400" },
+  {
+    title: "Lịch học",
+    subtitle: "Nhìn nhịp học theo từng ngày",
+    icon: CalendarDays,
+    to: "/calendar",
+    accent: "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400",
+  },
+  {
+    title: "Tra cứu",
+    subtitle: "Kanji, ví dụ, cách đọc",
+    icon: Search,
+    to: "/dictionary",
+    accent: "bg-sky-500/15 text-sky-600 dark:text-sky-400",
+  },
+  {
+    title: "Story Mode",
+    subtitle: "Học qua truyện ngắn",
+    icon: BookOpen,
+    to: "/story-mode",
+    accent: "bg-rose-500/15 text-rose-600 dark:text-rose-400",
+  },
+  {
+    title: "AI Chat",
+    subtitle: "Hoi dap va on tap cung tro ly AI",
+    icon: Bot,
+    to: "/ai-chat",
+    accent: "bg-primary/15 text-primary",
+  },
+  {
+    title: "Ngữ pháp",
+    subtitle: "Ôn cấu trúc thường gặp",
+    icon: Brain,
+    to: "/grammar",
+    accent: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+  },
+  {
+    title: "Quiz",
+    subtitle: "Kiểm tra nhanh mức độ nhớ",
+    icon: Trophy,
+    to: "/quiz",
+    accent: "bg-rose-500/15 text-rose-600 dark:text-rose-400",
+  },
+  {
+    title: "JLPT",
+    subtitle: "Lộ trình theo cấp độ",
+    icon: GraduationCap,
+    to: "/jlpt-lessons",
+    accent: "bg-amber-500/15 text-amber-600 dark:text-amber-400",
+  },
 ];
 
 const formatProgressStatus = (status: LearningPathLesson["progressStatus"]) => {
@@ -54,7 +96,9 @@ const formatCategory = (category: string | null | undefined) => {
   return category.charAt(0).toUpperCase() + category.slice(1).toLowerCase();
 };
 
-const formatPlanStatus = (status: "NO_DEADLINE" | "ON_TRACK" | "AT_RISK" | "OFF_TRACK" | "COMPLETED") => {
+const formatPlanStatus = (
+  status: "NO_DEADLINE" | "ON_TRACK" | "AT_RISK" | "OFF_TRACK" | "COMPLETED"
+) => {
   switch (status) {
     case "ON_TRACK":
       return "Đúng tiến độ";
@@ -113,15 +157,30 @@ const Dashboard = () => {
   const deadlinePlan = learningPath?.deadlinePlan ?? null;
 
   const quickStats = [
-    { label: "Streak", value: String(learningPath?.currentStreak ?? 0), icon: Flame, color: "text-amber-500" },
+    {
+      label: "Streak",
+      value: String(learningPath?.currentStreak ?? 0),
+      icon: Flame,
+      color: "text-amber-500",
+    },
     {
       label: "Hoàn thành",
       value: `${learningPath?.completedLessonsInTrack ?? 0}/${learningPath?.totalLessonsInTrack ?? 0}`,
       icon: BookOpen,
       color: "text-sky-500",
     },
-    { label: "Đang học", value: String(learningPath?.inProgressLessons ?? 0), icon: Trophy, color: "text-emerald-500" },
-    { label: "XP", value: String(learningPath?.totalXP ?? 0), icon: Sparkles, color: "text-primary" },
+    {
+      label: "Đang học",
+      value: String(learningPath?.inProgressLessons ?? 0),
+      icon: Trophy,
+      color: "text-emerald-500",
+    },
+    {
+      label: "XP",
+      value: String(learningPath?.totalXP ?? 0),
+      icon: Sparkles,
+      color: "text-primary",
+    },
   ];
 
   return (
@@ -137,7 +196,8 @@ const Dashboard = () => {
               {greeting}, {greetingName}!
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              {learningPath?.recommendationSummary || "Mình đang sắp xếp lộ trình học dựa trên mục tiêu JLPT, tiến độ và nhịp học hiện tại của bạn."}
+              {learningPath?.recommendationSummary ||
+                "Mình đang sắp xếp lộ trình học dựa trên mục tiêu JLPT, tiến độ và nhịp học hiện tại của bạn."}
             </p>
           </div>
 
@@ -170,12 +230,15 @@ const Dashboard = () => {
             >
               <div className="grid gap-4 xl:grid-cols-[260px_minmax(0,1fr)]">
                 <div className="rounded-[1.25rem] bg-gradient-to-br from-primary to-secondary p-4 text-white">
-                  <p className="text-[11px] uppercase tracking-[0.22em] text-white/70">Tiếp tục học</p>
+                  <p className="text-[11px] uppercase tracking-[0.22em] text-white/70">
+                    Tiếp tục học
+                  </p>
                   <h3 className="mt-3 text-[1.6rem] font-semibold leading-tight">
                     {nextLesson?.title || "Lộ trình của bạn đang sẵn sàng"}
                   </h3>
                   <p className="mt-2 text-sm text-white/80">
-                    {nextLesson?.recommendationReason || "Chọn mục tiêu JLPT và hệ thống sẽ ưu tiên bài học phù hợp nhất cho hôm nay."}
+                    {nextLesson?.recommendationReason ||
+                      "Chọn mục tiêu JLPT và hệ thống sẽ ưu tiên bài học phù hợp nhất cho hôm nay."}
                   </p>
                   <div className="mt-4 flex flex-wrap items-center gap-2">
                     <Badge className="border-white/20 bg-white/15 text-white hover:bg-white/15">
@@ -198,7 +261,8 @@ const Dashboard = () => {
                     <div>
                       <p className="text-sm font-semibold text-foreground">Tiến độ cá nhân hóa</p>
                       <p className="text-sm text-muted-foreground">
-                        Mục tiêu {learningPath?.targetJlptLevel || "N5"} • {learningPath?.dailyGoalMinutes ?? 15} phút mỗi ngày
+                        Mục tiêu {learningPath?.targetJlptLevel || "N5"} •{" "}
+                        {learningPath?.dailyGoalMinutes ?? 15} phút mỗi ngày
                       </p>
                     </div>
                     <Target className="h-5 w-5 text-muted-foreground" />
@@ -229,7 +293,9 @@ const Dashboard = () => {
                   <div className="mt-4">
                     <div className="mb-2 flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">Tiến độ lộ trình hiện tại</span>
-                      <span className="font-medium text-primary">{learningPath?.completionRate ?? 0}%</span>
+                      <span className="font-medium text-primary">
+                        {learningPath?.completionRate ?? 0}%
+                      </span>
                     </div>
                     <div className="h-2.5 overflow-hidden rounded-full bg-muted">
                       <motion.div
@@ -252,7 +318,9 @@ const Dashboard = () => {
             >
               <div className="mb-4">
                 <h3 className="text-lg font-semibold text-foreground">Công cụ học tập</h3>
-                <p className="text-sm text-muted-foreground">Đi nhanh vào các phần bạn có thể dùng song song với lộ trình chính</p>
+                <p className="text-sm text-muted-foreground">
+                  Đi nhanh vào các phần bạn có thể dùng song song với lộ trình chính
+                </p>
               </div>
 
               <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -261,7 +329,9 @@ const Dashboard = () => {
                   return (
                     <Link key={item.title} to={item.to} className="group">
                       <div className="yukihon-card-flat px-4 py-4">
-                        <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${item.accent}`}>
+                        <div
+                          className={`flex h-11 w-11 items-center justify-center rounded-2xl ${item.accent}`}
+                        >
                           <Icon className="h-5 w-5" />
                         </div>
                         <p className="mt-3 text-base font-semibold text-foreground">{item.title}</p>
@@ -283,7 +353,9 @@ const Dashboard = () => {
                 <div className="mb-4 flex items-center justify-between">
                   <div>
                     <h3 className="text-lg font-semibold text-foreground">Lộ trình đề xuất</h3>
-                    <p className="text-sm text-muted-foreground">Những bài học nên ưu tiên dựa trên mục tiêu và tiến độ của bạn</p>
+                    <p className="text-sm text-muted-foreground">
+                      Những bài học nên ưu tiên dựa trên mục tiêu và tiến độ của bạn
+                    </p>
                   </div>
                 </div>
 
@@ -297,10 +369,17 @@ const Dashboard = () => {
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div>
-                            <p className="text-base font-semibold text-foreground">{lesson.title}</p>
-                            <p className="mt-1 text-sm text-muted-foreground">{lesson.recommendationReason}</p>
+                            <p className="text-base font-semibold text-foreground">
+                              {lesson.title}
+                            </p>
+                            <p className="mt-1 text-sm text-muted-foreground">
+                              {lesson.recommendationReason}
+                            </p>
                           </div>
-                          <Badge variant="outline" className="rounded-full border-primary/30 text-primary">
+                          <Badge
+                            variant="outline"
+                            className="rounded-full border-primary/30 text-primary"
+                          >
                             {formatProgressStatus(lesson.progressStatus)}
                           </Badge>
                         </div>
@@ -323,7 +402,8 @@ const Dashboard = () => {
                     ))
                   ) : (
                     <div className="yukihon-card-flat px-4 py-4 text-sm text-muted-foreground">
-                      Chưa có bài gợi ý. Hãy thêm lesson đã xuất bản hoặc cập nhật mục tiêu JLPT trong Settings.
+                      Chưa có bài gợi ý. Hãy thêm lesson đã xuất bản hoặc cập nhật mục tiêu JLPT
+                      trong Settings.
                     </div>
                   )}
                 </div>
@@ -338,7 +418,9 @@ const Dashboard = () => {
                 <div className="mb-4 flex items-center justify-between">
                   <div>
                     <h3 className="text-lg font-semibold text-foreground">Nhịp học hiện tại</h3>
-                    <p className="text-sm text-muted-foreground">Tóm tắt nhanh để bạn biết mình nên dồn lực vào đâu</p>
+                    <p className="text-sm text-muted-foreground">
+                      Tóm tắt nhanh để bạn biết mình nên dồn lực vào đâu
+                    </p>
                   </div>
                   <Zap className="h-5 w-5 text-muted-foreground" />
                 </div>
@@ -347,8 +429,14 @@ const Dashboard = () => {
                   {[
                     { title: "Mục tiêu JLPT", value: learningPath?.targetJlptLevel || "N5" },
                     { title: "Daily goal", value: `${learningPath?.dailyGoalMinutes ?? 15} phút` },
-                    { title: "Bài trong track", value: String(learningPath?.totalLessonsInTrack ?? 0) },
-                    { title: "Bài đang học dở", value: String(learningPath?.inProgressLessons ?? 0) },
+                    {
+                      title: "Bài trong track",
+                      value: String(learningPath?.totalLessonsInTrack ?? 0),
+                    },
+                    {
+                      title: "Bài đang học dở",
+                      value: String(learningPath?.inProgressLessons ?? 0),
+                    },
                     {
                       title: "Deadline",
                       value:
@@ -364,10 +452,7 @@ const Dashboard = () => {
                           : `${learningPath?.dailyGoalMinutes ?? 15} phút/ngày`,
                     },
                   ].map((item) => (
-                    <div
-                      key={item.title}
-                      className="yukihon-card-flat px-4 py-4 cursor-default"
-                    >
+                    <div key={item.title} className="yukihon-card-flat px-4 py-4 cursor-default">
                       <p className="text-sm text-muted-foreground">{item.title}</p>
                       <p className="mt-2 text-xl font-semibold text-foreground">{item.value}</p>
                     </div>
@@ -429,7 +514,9 @@ const Dashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-lg font-semibold text-foreground">Điểm nhấn cá nhân hóa</h3>
-                  <p className="text-sm text-muted-foreground">Các tín hiệu hệ thống đang dùng để gợi ý lộ trình</p>
+                  <p className="text-sm text-muted-foreground">
+                    Các tín hiệu hệ thống đang dùng để gợi ý lộ trình
+                  </p>
                 </div>
                 <Search className="h-5 w-5 text-muted-foreground" />
               </div>
@@ -440,7 +527,9 @@ const Dashboard = () => {
                   `${learningPath?.completionRate ?? 0}% hoàn thành`,
                   `${learningPath?.currentStreak ?? 0} ngày streak`,
                   `${learningPath?.inProgressLessons ?? 0} bài đang học`,
-                  deadlinePlan ? formatPlanStatus(deadlinePlan.planStatus) : "Chưa có trạng thái kế hoạch",
+                  deadlinePlan
+                    ? formatPlanStatus(deadlinePlan.planStatus)
+                    : "Chưa có trạng thái kế hoạch",
                 ].map((signal) => (
                   <span
                     key={signal}
@@ -461,24 +550,25 @@ const Dashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-lg font-semibold text-foreground">Bước tiếp theo</h3>
-                  <p className="text-sm text-muted-foreground">Các bài nên mở trong phiên học kế tiếp</p>
+                  <p className="text-sm text-muted-foreground">
+                    Các bài nên mở trong phiên học kế tiếp
+                  </p>
                 </div>
                 <ArrowRight className="h-5 w-5 text-muted-foreground" />
               </div>
 
               <div className="mt-4 space-y-3">
                 {recommendedLessons.slice(0, 3).map((lesson) => (
-                  <div
-                    key={lesson.id}
-                    className="yukihon-card-flat px-4 py-3 cursor-default"
-                  >
+                  <div key={lesson.id} className="yukihon-card-flat px-4 py-3 cursor-default">
                     <div className="flex items-center justify-between gap-3">
                       <p className="text-sm font-medium text-foreground">{lesson.title}</p>
                       <span className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
                         {lesson.jlptLevel}
                       </span>
                     </div>
-                    <p className="mt-2 text-sm text-muted-foreground">{lesson.recommendationReason}</p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      {lesson.recommendationReason}
+                    </p>
                   </div>
                 ))}
 

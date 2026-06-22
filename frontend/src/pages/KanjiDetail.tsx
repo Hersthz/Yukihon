@@ -84,16 +84,26 @@ const KanjiDetail = () => {
           description="Trang detail riêng cho bộ thủ, cách đọc, từ ví dụ, writing practice và SRS."
           action={
             <>
-              <Button className="rounded-2xl border-border bg-card text-foreground/80" onClick={() => navigate("/kanji-library")} variant="outline">
+              <Button
+                className="rounded-2xl border-border bg-card text-foreground/80"
+                onClick={() => navigate("/kanji-library")}
+                variant="outline"
+              >
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Về thư viện
               </Button>
               {inDeck ? (
-                <Button className="rounded-2xl bg-rose-500 text-white hover:bg-rose-400" onClick={() => removeFromSrs(kanji.character)}>
+                <Button
+                  className="rounded-2xl bg-rose-500 text-white hover:bg-rose-400"
+                  onClick={() => removeFromSrs(kanji.character)}
+                >
                   Xóa khỏi SRS
                 </Button>
               ) : (
-                <Button className="rounded-2xl bg-sky-500 text-white hover:bg-sky-400" onClick={() => addToSrs(kanji.character)}>
+                <Button
+                  className="rounded-2xl bg-sky-500 text-white hover:bg-sky-400"
+                  onClick={() => addToSrs(kanji.character)}
+                >
                   Thêm vào SRS
                 </Button>
               )}
@@ -102,21 +112,49 @@ const KanjiDetail = () => {
         />
 
         <div className="mb-4 grid gap-3 md:grid-cols-4">
-          <MetricCard hint="Cấp JLPT" icon={<BookOpen className="h-4 w-4 text-sky-500" />} label="Level" value={kanji.jlptLevel} />
-          <MetricCard hint="Tổng số nét" icon={<WandSparkles className="h-4 w-4 text-violet-500" />} label="Số nét" value={kanji.strokeCount} />
-          <MetricCard hint="Bộ thủ chính" icon={<Languages className="h-4 w-4 text-amber-500" />} label="Bộ thủ" value={`${kanji.radical} • ${kanji.radicalMeaning}`} />
-          <MetricCard hint="Lịch riêng cho kanji này" icon={<Sparkles className="h-4 w-4 text-emerald-500" />} label="Next review" value={formatReviewDate(srsRecord?.nextReviewAt)} />
+          <MetricCard
+            hint="Cấp JLPT"
+            icon={<BookOpen className="h-4 w-4 text-sky-500" />}
+            label="Level"
+            value={kanji.jlptLevel}
+          />
+          <MetricCard
+            hint="Tổng số nét"
+            icon={<WandSparkles className="h-4 w-4 text-violet-500" />}
+            label="Số nét"
+            value={kanji.strokeCount}
+          />
+          <MetricCard
+            hint="Bộ thủ chính"
+            icon={<Languages className="h-4 w-4 text-amber-500" />}
+            label="Bộ thủ"
+            value={`${kanji.radical} • ${kanji.radicalMeaning}`}
+          />
+          <MetricCard
+            hint="Lịch riêng cho kanji này"
+            icon={<Sparkles className="h-4 w-4 text-emerald-500" />}
+            label="Next review"
+            value={formatReviewDate(srsRecord?.nextReviewAt)}
+          />
         </div>
 
         <div className="grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
-          <PageSection title="Hồ sơ kanji" description="Tập trung vào thông tin cần nhớ khi học một chữ mới.">
+          <PageSection
+            title="Hồ sơ kanji"
+            description="Tập trung vào thông tin cần nhớ khi học một chữ mới."
+          >
             <div className="space-y-4">
               <div className="rounded-[22px] border border-border bg-card p-5 text-center">
                 <p className="text-8xl font-semibold text-foreground">{kanji.character}</p>
                 <div className="mt-4 flex flex-wrap justify-center gap-2">
-                  <Badge className="rounded-full border border-sky-200 bg-sky-50 text-sky-700">{kanji.jlptLevel}</Badge>
+                  <Badge className="rounded-full border border-sky-200 bg-sky-50 text-sky-700">
+                    {kanji.jlptLevel}
+                  </Badge>
                   {kanji.tags.map((tag) => (
-                    <Badge key={tag} className="rounded-full border border-border bg-muted text-muted-foreground">
+                    <Badge
+                      key={tag}
+                      className="rounded-full border border-border bg-muted text-muted-foreground"
+                    >
                       {tag}
                     </Badge>
                   ))}
@@ -125,9 +163,13 @@ const KanjiDetail = () => {
 
               <div className="rounded-[22px] border border-border bg-card p-5">
                 <p className="text-sm font-semibold text-foreground">Onyomi</p>
-                <p className="mt-2 text-lg text-foreground">{kanji.onReadings.join(" • ") || "Không có"}</p>
+                <p className="mt-2 text-lg text-foreground">
+                  {kanji.onReadings.join(" • ") || "Không có"}
+                </p>
                 <p className="mt-4 text-sm font-semibold text-foreground">Kunyomi</p>
-                <p className="mt-2 text-lg text-foreground">{kanji.kunReadings.join(" • ") || "Không có"}</p>
+                <p className="mt-2 text-lg text-foreground">
+                  {kanji.kunReadings.join(" • ") || "Không có"}
+                </p>
               </div>
 
               <div className="rounded-[22px] border border-amber-200 bg-amber-50/70 p-5">
@@ -139,11 +181,17 @@ const KanjiDetail = () => {
                 <div className="rounded-[22px] border border-emerald-200 bg-emerald-50/70 p-5">
                   <p className="text-sm font-semibold text-emerald-900">Quick review</p>
                   <p className="mt-1 text-xs text-emerald-800">
-                    {srsRecord?.reviewCount ?? 0} lần ôn • interval {srsRecord?.intervalDays ?? 0} ngày
+                    {srsRecord?.reviewCount ?? 0} lần ôn • interval {srsRecord?.intervalDays ?? 0}{" "}
+                    ngày
                   </p>
                   <div className="mt-3 grid grid-cols-2 gap-2">
                     {REVIEW_RATINGS.map((rating) => (
-                      <Button key={rating} className={`rounded-xl ${ratingTone[rating]}`} onClick={() => review(kanji.character, rating)} size="sm">
+                      <Button
+                        key={rating}
+                        className={`rounded-xl ${ratingTone[rating]}`}
+                        onClick={() => review(kanji.character, rating)}
+                        size="sm"
+                      >
                         {rating}
                       </Button>
                     ))}
@@ -156,15 +204,23 @@ const KanjiDetail = () => {
           <div className="space-y-4">
             <KanjiPracticeCanvas kanji={kanji.character} />
 
-            <PageSection title="Từ ví dụ" description="Kết hợp ví dụ trong catalog và từ vựng thật của dự án để nhìn kanji trong ngữ cảnh.">
+            <PageSection
+              title="Từ ví dụ"
+              description="Kết hợp ví dụ trong catalog và từ vựng thật của dự án để nhìn kanji trong ngữ cảnh."
+            >
               <div className="grid gap-3 md:grid-cols-2">
                 {kanji.exampleWords.map((word) => (
-                  <div key={word} className="rounded-[18px] border border-border bg-card p-4 text-sm text-foreground/85">
+                  <div
+                    key={word}
+                    className="rounded-[18px] border border-border bg-card p-4 text-sm text-foreground/85"
+                  >
                     {word}
                   </div>
                 ))}
                 {vocabularyLoading && (
-                  <div className="rounded-[18px] border border-border bg-card p-4 text-sm text-muted-foreground">Đang tải từ vựng liên quan...</div>
+                  <div className="rounded-[18px] border border-border bg-card p-4 text-sm text-muted-foreground">
+                    Đang tải từ vựng liên quan...
+                  </div>
                 )}
                 {!vocabularyLoading &&
                   relatedWords.map((word) => (

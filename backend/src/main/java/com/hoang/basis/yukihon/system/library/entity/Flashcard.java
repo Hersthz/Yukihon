@@ -21,10 +21,12 @@ import lombok.Setter;
  * without copying. front/back/hint/explanation hold the rendered text; media via url fields.
  */
 @Entity
-@Table(name = "flashcards", indexes = {
-        @Index(name = "idx_flashcards_item", columnList = "item_type,item_id"),
-        @Index(name = "idx_flashcards_card_type", columnList = "card_type")
-})
+@Table(
+        name = "flashcards",
+        indexes = {
+            @Index(name = "idx_flashcards_item", columnList = "item_type,item_id"),
+            @Index(name = "idx_flashcards_card_type", columnList = "card_type")
+        })
 @Getter
 @Setter
 @NoArgsConstructor
@@ -36,11 +38,19 @@ import lombok.Setter;
 public class Flashcard extends BaseEntity {
 
     @Column(name = "card_type", nullable = false, length = 20)
-    @FieldMeta(label = "Card Type", type = "select", order = 1, enumValues = {"BASIC", "IMAGE", "AUDIO", "CLOZE"})
+    @FieldMeta(
+            label = "Card Type",
+            type = "select",
+            order = 1,
+            enumValues = {"BASIC", "IMAGE", "AUDIO", "CLOZE"})
     private String cardType = "BASIC";
 
     @Column(name = "item_type", length = 30)
-    @FieldMeta(label = "Item Type", type = "select", order = 2, enumValues = {"WORD", "VOCAB", "KANJI", "GRAMMAR", "SENTENCE", "GENERIC"})
+    @FieldMeta(
+            label = "Item Type",
+            type = "select",
+            order = 2,
+            enumValues = {"WORD", "VOCAB", "KANJI", "GRAMMAR", "SENTENCE", "GENERIC"})
     private String itemType = "GENERIC";
 
     @Column(name = "item_id")

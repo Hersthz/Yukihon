@@ -1,10 +1,9 @@
 package com.hoang.basis.yukihon.system.privatechat.dto;
 
 import com.hoang.basis.yukihon.system.user.dto.UserDto;
+import java.time.Instant;
 import lombok.Builder;
 import lombok.Data;
-
-import java.time.Instant;
 
 @Data
 @Builder

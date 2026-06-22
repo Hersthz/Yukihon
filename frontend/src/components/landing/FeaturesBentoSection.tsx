@@ -43,7 +43,8 @@ const FeaturesBentoSection = () => (
             </div>
             <h3 className="text-3xl font-black mb-4 leading-tight">Smart review system</h3>
             <p className="text-muted-foreground text-lg leading-relaxed">
-              Our spaced repetition algorithm adapts to your specific memory patterns, ensuring you never forget a kanji again.
+              Our spaced repetition algorithm adapts to your specific memory patterns, ensuring you
+              never forget a kanji again.
             </p>
           </div>
 
@@ -122,14 +123,18 @@ const FeaturesBentoSection = () => (
           <div className="flex-1 text-center md:text-left">
             <h3 className="text-2xl font-black mb-2">Progress Dashboard</h3>
             <p className="text-muted-foreground text-base max-w-2xl">
-              Visualize your journey with beautiful data. Detailed statistics, daily streaks, and more achievements system to keep you motivated on your journey to mastery.
+              Visualize your journey with beautiful data. Detailed statistics, daily streaks, and
+              more achievements system to keep you motivated on your journey to mastery.
             </p>
           </div>
-          
+
           <div className="hidden lg:flex gap-4">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="w-12 h-20 rounded-xl bg-white/5 border border-white/10 flex items-end p-2">
-                <motion.div 
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="w-12 h-20 rounded-xl bg-white/5 border border-white/10 flex items-end p-2"
+              >
+                <motion.div
                   className="w-full bg-orange-500/40 rounded-lg"
                   initial={{ height: 0 }}
                   whileInView={{ height: `${20 + i * 20}%` }}

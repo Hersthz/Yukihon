@@ -8,12 +8,11 @@ import com.hoang.basis.yukihon.base.annotation.ResourcePermission;
 import com.hoang.basis.yukihon.base.annotation.Searchable;
 import com.hoang.basis.yukihon.base.annotation.SoftDelete;
 import com.hoang.basis.yukihon.base.annotation.Sortable;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /** Scans the application base package for {@link AutoCrud} entities and builds descriptors. */
 @Slf4j
@@ -26,8 +25,7 @@ public class AutoCrudScanner {
     }
 
     public List<CrudDescriptor> scan() {
-        ClassPathScanningCandidateComponentProvider provider =
-                new ClassPathScanningCandidateComponentProvider(false);
+        ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(false);
         provider.addIncludeFilter(new AnnotationTypeFilter(AutoCrud.class));
 
         List<CrudDescriptor> descriptors = new ArrayList<>();

@@ -1,7 +1,7 @@
 package com.hoang.basis.yukihon.system.learningpath.service;
 
-import com.hoang.basis.yukihon.system.learningpath.dto.LearningPathDto;
 import com.hoang.basis.yukihon.system.learningpath.dto.LearningDeadlinePlanDto;
+import com.hoang.basis.yukihon.system.learningpath.dto.LearningPathDto;
 import com.hoang.basis.yukihon.system.learningpath.dto.LearningPathLessonDto;
 import com.hoang.basis.yukihon.system.lesson.entity.Lesson;
 import com.hoang.basis.yukihon.system.lesson.repository.LessonRepository;
@@ -11,11 +11,6 @@ import com.hoang.basis.yukihon.system.userprogress.entity.UserProgress;
 import com.hoang.basis.yukihon.system.userprogress.repository.UserProgressRepository;
 import com.hoang.basis.yukihon.system.usersettings.dto.UserSettingsDto;
 import com.hoang.basis.yukihon.system.usersettings.service.UserSettingsService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -28,6 +23,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -52,9 +51,8 @@ public class LearningPathService {
                 .collect(Collectors.toMap(UserProgress::getLessonId, progress -> progress, (left, right) -> right));
 
         String targetLevel = resolveTargetLevel(settings, statsOptional.orElse(null));
-        int dailyGoalMinutes = settings.getDailyGoalMinutes() > 0
-                ? settings.getDailyGoalMinutes()
-                : DEFAULT_DAILY_GOAL_MINUTES;
+        int dailyGoalMinutes =
+                settings.getDailyGoalMinutes() > 0 ? settings.getDailyGoalMinutes() : DEFAULT_DAILY_GOAL_MINUTES;
 
         List<Lesson> publishedLessons = lessonRepository.findPublishedLessons();
         List<Lesson> trackLessons = selectTrackLessons(publishedLessons, targetLevel);
@@ -68,24 +66,14 @@ public class LearningPathService {
                 .count();
 
         List<LearningPathLessonDto> recommendedLessons = buildRecommendedLessons(
-                trackLessons,
-                publishedLessons,
-                progressByLessonId,
-                targetLevel,
-                dailyGoalMinutes
-        );
+                trackLessons, publishedLessons, progressByLessonId, targetLevel, dailyGoalMinutes);
 
-        LearningDeadlinePlanDto deadlinePlan = buildDeadlinePlan(
-            settings.getJlptDeadlineDate(),
-            trackLessons,
-            progressByLessonId,
-            dailyGoalMinutes
-        );
+        LearningDeadlinePlanDto deadlinePlan =
+                buildDeadlinePlan(settings.getJlptDeadlineDate(), trackLessons, progressByLessonId, dailyGoalMinutes);
 
         LearningPathLessonDto nextLesson = recommendedLessons.isEmpty() ? null : recommendedLessons.get(0);
-        int completionRate = trackLessons.isEmpty()
-                ? 0
-                : (int) Math.round((completedLessonsInTrack * 100.0) / trackLessons.size());
+        int completionRate =
+                trackLessons.isEmpty() ? 0 : (int) Math.round((completedLessonsInTrack * 100.0) / trackLessons.size());
 
         UserLearningStats stats = statsOptional.orElse(null);
 
@@ -102,7 +90,8 @@ public class LearningPathService {
                 .nextLesson(nextLesson)
                 .recommendedLessons(recommendedLessons)
                 .todayGoals(buildTodayGoals(nextLesson, dailyGoalMinutes, targetLevel, inProgressLessons, deadlinePlan))
-                .recommendationSummary(buildRecommendationSummary(nextLesson, completionRate, targetLevel, deadlinePlan))
+                .recommendationSummary(
+                        buildRecommendationSummary(nextLesson, completionRate, targetLevel, deadlinePlan))
                 .build();
     }
 
@@ -110,8 +99,7 @@ public class LearningPathService {
             LocalDate deadlineDate,
             List<Lesson> trackLessons,
             Map<Long, UserProgress> progressByLessonId,
-            int dailyGoalMinutes
-    ) {
+            int dailyGoalMinutes) {
         LocalDate today = LocalDate.now();
 
         List<Lesson> remainingLessons = trackLessons.stream()
@@ -123,9 +111,8 @@ public class LearningPathService {
                 .mapToInt(lesson -> estimateMinutes(lesson, dailyGoalMinutes))
                 .sum();
 
-        int projectedDays = remainingMinutes <= 0
-                ? 0
-                : (int) Math.ceil(remainingMinutes / (double) Math.max(1, dailyGoalMinutes));
+        int projectedDays =
+                remainingMinutes <= 0 ? 0 : (int) Math.ceil(remainingMinutes / (double) Math.max(1, dailyGoalMinutes));
         LocalDate projectedCompletionDate = projectedDays <= 0 ? today : today.plusDays(projectedDays - 1L);
 
         if (remainingLessonsCount == 0) {
@@ -134,7 +121,10 @@ public class LearningPathService {
                     .planStatus("COMPLETED")
                     .deadlineDate(deadlineDate)
                     .projectedCompletionDate(today)
-                    .daysRemaining(deadlineDate != null ? Math.max(0, (int) ChronoUnit.DAYS.between(today, deadlineDate) + 1) : 0)
+                    .daysRemaining(
+                            deadlineDate != null
+                                    ? Math.max(0, (int) ChronoUnit.DAYS.between(today, deadlineDate) + 1)
+                                    : 0)
                     .remainingLessons(0)
                     .remainingEstimatedMinutes(0)
                     .requiredMinutesPerDay(0)
@@ -159,9 +149,8 @@ public class LearningPathService {
         }
 
         int daysRemaining = Math.max(0, (int) ChronoUnit.DAYS.between(today, deadlineDate) + 1);
-        int requiredMinutesPerDay = daysRemaining > 0
-                ? (int) Math.ceil(remainingMinutes / (double) daysRemaining)
-                : remainingMinutes;
+        int requiredMinutesPerDay =
+                daysRemaining > 0 ? (int) Math.ceil(remainingMinutes / (double) daysRemaining) : remainingMinutes;
         int requiredLessonsPerWeek = daysRemaining > 0
                 ? (int) Math.ceil((remainingLessonsCount * 7.0) / daysRemaining)
                 : remainingLessonsCount;
@@ -198,7 +187,8 @@ public class LearningPathService {
         return "OFF_TRACK";
     }
 
-    private String buildDeadlineInsight(String status, int daysRemaining, int requiredMinutesPerDay, int dailyGoalMinutes) {
+    private String buildDeadlineInsight(
+            String status, int daysRemaining, int requiredMinutesPerDay, int dailyGoalMinutes) {
         if ("ON_TRACK".equals(status)) {
             return "Bạn đang đúng tiến độ. Giữ nhịp " + dailyGoalMinutes + " phút/ngày để kịp deadline.";
         }
@@ -211,7 +201,8 @@ public class LearningPathService {
             return "Deadline đã qua. Hãy dời deadline mới và ưu tiên hoàn thành các bài nền trước.";
         }
 
-        return "Tiến độ hiện tại chưa đủ. Nên tăng lên khoảng " + requiredMinutesPerDay + " phút/ngày thay vì " + dailyGoalMinutes + " phút.";
+        return "Tiến độ hiện tại chưa đủ. Nên tăng lên khoảng " + requiredMinutesPerDay + " phút/ngày thay vì "
+                + dailyGoalMinutes + " phút.";
     }
 
     private List<LearningPathLessonDto> buildRecommendedLessons(
@@ -219,8 +210,7 @@ public class LearningPathService {
             List<Lesson> publishedLessons,
             Map<Long, UserProgress> progressByLessonId,
             String targetLevel,
-            int dailyGoalMinutes
-    ) {
+            int dailyGoalMinutes) {
         LinkedHashMap<Long, LearningPathLessonDto> recommended = new LinkedHashMap<>();
 
         List<Lesson> inProgressLessons = trackLessons.stream()
@@ -243,9 +233,7 @@ public class LearningPathService {
             addRecommendations(recommended, fallbackLessons, progressByLessonId, targetLevel, dailyGoalMinutes, 3);
         }
 
-        return new ArrayList<>(recommended.values()).stream()
-                .limit(3)
-                .toList();
+        return new ArrayList<>(recommended.values()).stream().limit(3).toList();
     }
 
     private void addRecommendations(
@@ -254,18 +242,14 @@ public class LearningPathService {
             Map<Long, UserProgress> progressByLessonId,
             String targetLevel,
             int dailyGoalMinutes,
-            int limit
-    ) {
+            int limit) {
         for (Lesson lesson : lessons) {
             if (recommended.size() >= limit) {
                 return;
             }
 
             UserProgress progress = progressByLessonId.get(lesson.getId());
-            recommended.putIfAbsent(
-                    lesson.getId(),
-                    toLessonDto(lesson, progress, targetLevel, dailyGoalMinutes)
-            );
+            recommended.putIfAbsent(lesson.getId(), toLessonDto(lesson, progress, targetLevel, dailyGoalMinutes));
         }
     }
 
@@ -286,11 +270,7 @@ public class LearningPathService {
     }
 
     private LearningPathLessonDto toLessonDto(
-            Lesson lesson,
-            UserProgress progress,
-            String targetLevel,
-            int dailyGoalMinutes
-    ) {
+            Lesson lesson, UserProgress progress, String targetLevel, int dailyGoalMinutes) {
         return LearningPathLessonDto.builder()
                 .id(lesson.getId())
                 .title(lesson.getTitle())
@@ -298,7 +278,8 @@ public class LearningPathService {
                 .jlptLevel(normalizeJlptLevel(lesson.getJlptLevel()))
                 .category(lesson.getCategory())
                 .orderIndex(lesson.getOrderIndex())
-                .progressStatus(progress != null ? progress.getStatus().name() : UserProgress.ProgressStatus.NOT_STARTED.name())
+                .progressStatus(
+                        progress != null ? progress.getStatus().name() : UserProgress.ProgressStatus.NOT_STARTED.name())
                 .progressPercent(resolveProgressPercent(progress))
                 .estimatedMinutes(estimateMinutes(lesson, dailyGoalMinutes))
                 .recommendationReason(buildRecommendationReason(lesson, progress, targetLevel))
@@ -310,8 +291,7 @@ public class LearningPathService {
             int dailyGoalMinutes,
             String targetLevel,
             long inProgressLessons,
-            LearningDeadlinePlanDto deadlinePlan
-    ) {
+            LearningDeadlinePlanDto deadlinePlan) {
         List<String> goals = new ArrayList<>();
 
         if (nextLesson != null) {
@@ -321,7 +301,8 @@ public class LearningPathService {
         goals.add("Dành ít nhất " + dailyGoalMinutes + " phút cho mục tiêu " + targetLevel);
 
         if (deadlinePlan != null && deadlinePlan.isHasDeadline()) {
-            goals.add("Deadline " + deadlinePlan.getDeadlineDate() + ": cần khoảng " + deadlinePlan.getRequiredMinutesPerDay() + " phút/ngày để kịp tiến độ");
+            goals.add("Deadline " + deadlinePlan.getDeadlineDate() + ": cần khoảng "
+                    + deadlinePlan.getRequiredMinutesPerDay() + " phút/ngày để kịp tiến độ");
         }
 
         if (inProgressLessons > 1) {
@@ -337,8 +318,7 @@ public class LearningPathService {
             LearningPathLessonDto nextLesson,
             int completionRate,
             String targetLevel,
-            LearningDeadlinePlanDto deadlinePlan
-    ) {
+            LearningDeadlinePlanDto deadlinePlan) {
         if (nextLesson == null) {
             return "Chưa có bài phù hợp trong lộ trình hiện tại. Bạn có thể thêm lesson xuất bản để hệ thống gợi ý chính xác hơn.";
         }
@@ -352,10 +332,12 @@ public class LearningPathService {
         }
 
         if (completionRate >= 70) {
-            return "Bạn đã đi khá sâu trong lộ trình " + targetLevel + ". Gợi ý hiện tại thiên về các bài sát mục tiêu hơn.";
+            return "Bạn đã đi khá sâu trong lộ trình " + targetLevel
+                    + ". Gợi ý hiện tại thiên về các bài sát mục tiêu hơn.";
         }
 
-        return "Lộ trình đang ưu tiên các bài nền và bài sát mục tiêu " + targetLevel + " để bạn tiến đều, không bị hụt kiến thức.";
+        return "Lộ trình đang ưu tiên các bài nền và bài sát mục tiêu " + targetLevel
+                + " để bạn tiến đều, không bị hụt kiến thức.";
     }
 
     private String buildRecommendationReason(Lesson lesson, UserProgress progress, String targetLevel) {
@@ -380,18 +362,19 @@ public class LearningPathService {
     }
 
     private Comparator<Lesson> lessonComparator(String targetLevel) {
-        return Comparator
-                .comparingInt((Lesson lesson) -> levelDistance(normalizeJlptLevel(lesson.getJlptLevel()), targetLevel))
+        return Comparator.comparingInt(
+                        (Lesson lesson) -> levelDistance(normalizeJlptLevel(lesson.getJlptLevel()), targetLevel))
                 .thenComparingInt(lesson -> jlptRank(normalizeJlptLevel(lesson.getJlptLevel())))
                 .thenComparingInt(lesson -> lesson.getOrderIndex() != null ? lesson.getOrderIndex() : 0)
-                .thenComparing(lesson -> lesson.getCreatedAt() != null ? lesson.getCreatedAt() : java.time.Instant.EPOCH);
+                .thenComparing(
+                        lesson -> lesson.getCreatedAt() != null ? lesson.getCreatedAt() : java.time.Instant.EPOCH);
     }
 
     private Comparator<Lesson> trackComparator() {
-        return Comparator
-                .comparingInt((Lesson lesson) -> jlptRank(normalizeJlptLevel(lesson.getJlptLevel())))
+        return Comparator.comparingInt((Lesson lesson) -> jlptRank(normalizeJlptLevel(lesson.getJlptLevel())))
                 .thenComparingInt(lesson -> lesson.getOrderIndex() != null ? lesson.getOrderIndex() : 0)
-                .thenComparing(lesson -> lesson.getCreatedAt() != null ? lesson.getCreatedAt() : java.time.Instant.EPOCH);
+                .thenComparing(
+                        lesson -> lesson.getCreatedAt() != null ? lesson.getCreatedAt() : java.time.Instant.EPOCH);
     }
 
     private int levelDistance(String lessonLevel, String targetLevel) {
@@ -399,11 +382,15 @@ public class LearningPathService {
     }
 
     private String resolveTargetLevel(UserSettingsDto settings, UserLearningStats stats) {
-        if (settings != null && settings.getTargetJlptLevel() != null && !settings.getTargetJlptLevel().isBlank()) {
+        if (settings != null
+                && settings.getTargetJlptLevel() != null
+                && !settings.getTargetJlptLevel().isBlank()) {
             return normalizeJlptLevel(settings.getTargetJlptLevel());
         }
 
-        if (stats != null && stats.getTargetJLPTLevel() != null && !stats.getTargetJLPTLevel().isBlank()) {
+        if (stats != null
+                && stats.getTargetJLPTLevel() != null
+                && !stats.getTargetJLPTLevel().isBlank()) {
             return normalizeJlptLevel(stats.getTargetJLPTLevel());
         }
 

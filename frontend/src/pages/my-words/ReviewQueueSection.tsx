@@ -2,7 +2,13 @@ import { Brain } from "lucide-react";
 import { EmptyState, PageSection } from "@/components/layout/UserPage";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ReviewMode, ReviewRating, SavedWord } from "./types";
 import { formatRelativeReview, ratingButtonClass } from "./utils";
 
@@ -23,7 +29,11 @@ const ReviewQueueSection = ({
   onReviewModeChange,
   onReview,
 }: ReviewQueueSectionProps) => (
-  <PageSection className="mb-4" title="Review queue" description="Hang doi uu tien nhung muc den han truoc. Chon muc do de he thong tinh lai lich on.">
+  <PageSection
+    className="mb-4"
+    title="Review queue"
+    description="Hang doi uu tien nhung muc den han truoc. Chon muc do de he thong tinh lai lich on."
+  >
     <div className="mb-4 grid gap-3 lg:grid-cols-[220px_minmax(0,1fr)]">
       <Select value={reviewMode} onValueChange={(value) => onReviewModeChange(value as ReviewMode)}>
         <SelectTrigger className="h-11 rounded-2xl border-border bg-card text-foreground/80">
@@ -58,17 +68,26 @@ const ReviewQueueSection = ({
     ) : (
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {reviewQueue.map((word) => (
-          <div key={word.id} className="rounded-[22px] border border-white bg-card p-4 shadow-[0_10px_24px_rgba(148,163,184,0.10)]">
+          <div
+            key={word.id}
+            className="rounded-[22px] border border-white bg-card p-4 shadow-[0_10px_24px_rgba(148,163,184,0.10)]"
+          >
             <div className="mb-3 flex items-start justify-between gap-3">
               <div>
-                <p className="text-[1.5rem] font-semibold text-foreground">{word.kanji || word.hiragana}</p>
+                <p className="text-[1.5rem] font-semibold text-foreground">
+                  {word.kanji || word.hiragana}
+                </p>
                 <p className="text-sm text-sky-700">{word.hiragana}</p>
                 <p className="text-xs text-muted-foreground">{word.romaji}</p>
               </div>
 
               <div className="flex flex-wrap justify-end gap-2">
-                <Badge className="rounded-full border border-sky-200 bg-sky-50 text-sky-700">{word.jlptLevel || "N5"}</Badge>
-                <Badge className="rounded-full border border-border bg-muted text-muted-foreground">{word.studyFocus}</Badge>
+                <Badge className="rounded-full border border-sky-200 bg-sky-50 text-sky-700">
+                  {word.jlptLevel || "N5"}
+                </Badge>
+                <Badge className="rounded-full border border-border bg-muted text-muted-foreground">
+                  {word.studyFocus}
+                </Badge>
               </div>
             </div>
 
@@ -76,11 +95,17 @@ const ReviewQueueSection = ({
 
             <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
               <div className="rounded-[16px] border border-border bg-muted/40 p-3">
-                <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Next review</p>
-                <p className="mt-2 font-medium text-foreground">{formatRelativeReview(word.nextReviewAt)}</p>
+                <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                  Next review
+                </p>
+                <p className="mt-2 font-medium text-foreground">
+                  {formatRelativeReview(word.nextReviewAt)}
+                </p>
               </div>
               <div className="rounded-[16px] border border-border bg-muted/40 p-3">
-                <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Interval</p>
+                <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                  Interval
+                </p>
                 <p className="mt-2 font-medium text-foreground">{word.reviewIntervalDays} ngay</p>
               </div>
             </div>

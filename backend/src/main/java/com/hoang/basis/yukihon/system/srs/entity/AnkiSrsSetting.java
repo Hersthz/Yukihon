@@ -11,8 +11,12 @@ import lombok.Setter;
 
 /** Per (user, deck) SRS preferences. When absent, the engine uses built-in defaults. */
 @Entity
-@Table(name = "anki_srs_settings",
-        uniqueConstraints = @UniqueConstraint(name = "uk_anki_setting_user_deck", columnNames = {"user_id", "deck_id"}))
+@Table(
+        name = "anki_srs_settings",
+        uniqueConstraints =
+                @UniqueConstraint(
+                        name = "uk_anki_setting_user_deck",
+                        columnNames = {"user_id", "deck_id"}))
 @Getter
 @Setter
 @NoArgsConstructor

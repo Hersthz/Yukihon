@@ -23,7 +23,9 @@ const CreatorBlockEditor = ({ block, onUpdate }: CreatorBlockEditorProps) => {
     <div className="space-y-4">
       <div>
         <p className="text-sm font-semibold text-foreground">{CREATOR_BLOCK_LABELS[block.type]}</p>
-        <p className="text-xs text-muted-foreground">Tu block nay, ban co the tao nhanh mini-lesson, quiz checkpoint hoac story branch.</p>
+        <p className="text-xs text-muted-foreground">
+          Tu block nay, ban co the tao nhanh mini-lesson, quiz checkpoint hoac story branch.
+        </p>
       </div>
 
       <div>

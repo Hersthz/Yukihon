@@ -18,6 +18,4 @@ public record EntityChangedEvent(
         Long entityId,
         EntityChangeType type,
         String snapshotJson,
-        String actor
-) {
-}
+        String actor) {}

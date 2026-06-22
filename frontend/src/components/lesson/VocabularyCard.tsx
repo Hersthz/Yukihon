@@ -43,23 +43,17 @@ const VocabularyCard = ({
       <CardContent className="p-8 md:p-12">
         {/* Kanji Display */}
         <div className="text-center mb-8">
-          <div className="text-6xl md:text-7xl font-bold mb-4 text-foreground">
-            {item.kanji}
-          </div>
-          
+          <div className="text-6xl md:text-7xl font-bold mb-4 text-foreground">{item.kanji}</div>
+
           {/* Furigana/Kana */}
           {showFurigana && (
             <div className="text-2xl md:text-3xl text-muted-foreground mb-2 font-medium">
               {item.kana}
             </div>
           )}
-          
+
           {/* Romaji */}
-          {showRomaji && (
-            <div className="text-lg text-muted-foreground italic">
-              {item.romaji}
-            </div>
-          )}
+          {showRomaji && <div className="text-lg text-muted-foreground italic">{item.romaji}</div>}
         </div>
 
         {/* Meaning and Part of Speech */}
@@ -79,17 +73,11 @@ const VocabularyCard = ({
           </h3>
           {item.examples.map((example, index) => (
             <div key={index} className="space-y-2 p-4 rounded-lg bg-muted/30">
-              <div className="text-xl font-medium text-foreground">
-                {example.japanese}
-              </div>
+              <div className="text-xl font-medium text-foreground">{example.japanese}</div>
               {showFurigana && (
-                <div className="text-sm text-muted-foreground">
-                  {example.reading}
-                </div>
+                <div className="text-sm text-muted-foreground">{example.reading}</div>
               )}
-              <div className="text-base text-foreground/80">
-                {example.english}
-              </div>
+              <div className="text-base text-foreground/80">{example.english}</div>
             </div>
           ))}
         </div>
@@ -103,11 +91,7 @@ const VocabularyCard = ({
           >
             Furigana: {showFurigana ? "ON" : "OFF"}
           </Button>
-          <Button
-            variant={showRomaji ? "default" : "outline"}
-            onClick={onToggleRomaji}
-            size="sm"
-          >
+          <Button variant={showRomaji ? "default" : "outline"} onClick={onToggleRomaji} size="sm">
             Romaji: {showRomaji ? "ON" : "OFF"}
           </Button>
           <Button

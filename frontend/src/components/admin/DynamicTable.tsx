@@ -67,11 +67,10 @@ const DynamicTable = ({
     if (!search) return true;
     const q = search.toLowerCase();
     const rowObj = row as Record<string, unknown>;
-    return searchFields.some(
-      (field) =>
-        String(rowObj[field] ?? "")
-          .toLowerCase()
-          .includes(q)
+    return searchFields.some((field) =>
+      String(rowObj[field] ?? "")
+        .toLowerCase()
+        .includes(q)
     );
   });
 
@@ -131,9 +130,7 @@ const DynamicTable = ({
     switch (column.type) {
       case "badge":
         return (
-          <Badge
-            className={column.badgeColor ? column.badgeColor(value) : ""}
-          >
+          <Badge className={column.badgeColor ? column.badgeColor(value) : ""}>
             {String(value)}
           </Badge>
         );
@@ -197,9 +194,7 @@ const DynamicTable = ({
                     <div className="flex items-center gap-1">
                       {col.label}
                       {col.sortable && sortField === col.key && (
-                        <span className="text-xs">
-                          {sortAsc ? "↑" : "↓"}
-                        </span>
+                        <span className="text-xs">{sortAsc ? "↑" : "↓"}</span>
                       )}
                     </div>
                   </TableHead>
@@ -280,12 +275,12 @@ const DynamicTable = ({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete item?</DialogTitle>
-            <DialogDescription>
-              This action cannot be undone.
-            </DialogDescription>
+            <DialogDescription>This action cannot be undone.</DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setDeleting(null)}>Cancel</Button>
+            <Button variant="ghost" onClick={() => setDeleting(null)}>
+              Cancel
+            </Button>
             <Button onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
               Delete
             </Button>

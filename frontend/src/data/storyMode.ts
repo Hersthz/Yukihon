@@ -63,7 +63,8 @@ export const storyModeStories: StoryModeStory[] = [
     id: "winter-library",
     title: "Winter Library Walk",
     subtitle: "Một buổi sáng yên tĩnh trước giờ học",
-    description: "Đọc một câu chuyện ngắn về tuyết, thư viện và thói quen học tiếng Nhật từng chút một.",
+    description:
+      "Đọc một câu chuyện ngắn về tuyết, thư viện và thói quen học tiếng Nhật từng chút một.",
     jlptLevel: "N5",
     estimatedMinutes: 12,
     tone: "Calm",
@@ -81,7 +82,8 @@ export const storyModeStories: StoryModeStory[] = [
           {
             pattern: "〜ていました",
             title: "Hành động đang diễn ra trong quá khứ",
-            explanation: "Dùng để mô tả một trạng thái hoặc hành động đang tiếp diễn tại một thời điểm trong quá khứ.",
+            explanation:
+              "Dùng để mô tả một trạng thái hoặc hành động đang tiếp diễn tại một thời điểm trong quá khứ.",
           },
         ],
         checkpoint: {
@@ -92,7 +94,8 @@ export const storyModeStories: StoryModeStory[] = [
             { id: "c", label: "朝" },
           ],
           correctOptionId: "b",
-          explanation: "「降っていました」là dạng ていました, nhấn mạnh trạng thái tuyết đang rơi ở một thời điểm trong quá khứ.",
+          explanation:
+            "「降っていました」là dạng ていました, nhấn mạnh trạng thái tuyết đang rơi ở một thời điểm trong quá khứ.",
         },
         nextSegmentId: "winter-library-2",
       },
@@ -167,7 +170,8 @@ export const storyModeStories: StoryModeStory[] = [
         title: "Đoạn 3",
         sceneHint: "Kế hoạch học tập",
         japaneseText: "今日は新しい本を借りて、日本語で短い日記を書くつもりです。",
-        translation: "Hôm nay cô ấy định mượn một cuốn sách mới và viết một nhật ký ngắn bằng tiếng Nhật.",
+        translation:
+          "Hôm nay cô ấy định mượn một cuốn sách mới và viết một nhật ký ngắn bằng tiếng Nhật.",
         vocabQueries: ["本", "借りる", "日記"],
         grammar: [
           {
@@ -222,7 +226,8 @@ export const storyModeStories: StoryModeStory[] = [
           {
             pattern: "〜続ける",
             title: "Tiếp tục làm gì",
-            explanation: "Ghép động từ dạng masu bỏ ます + 続ける để nhấn mạnh hành động duy trì liên tục.",
+            explanation:
+              "Ghép động từ dạng masu bỏ ます + 続ける để nhấn mạnh hành động duy trì liên tục.",
           },
           {
             pattern: "〜つもりです",
@@ -238,7 +243,8 @@ export const storyModeStories: StoryModeStory[] = [
             { id: "c", label: "書き続けるつもりです" },
           ],
           correctOptionId: "c",
-          explanation: "「続ける」+「つもりです」kết hợp thành một ý định có tính bền bỉ và duy trì đều đặn.",
+          explanation:
+            "「続ける」+「つもりです」kết hợp thành một ý định có tính bền bỉ và duy trì đều đặn.",
         },
         nextSegmentId: "winter-library-4",
       },
@@ -247,7 +253,8 @@ export const storyModeStories: StoryModeStory[] = [
         title: "Đoạn 4",
         sceneHint: "Lời động viên",
         japaneseText: "図書館で先生に会って、「毎日少しずつでいいですよ」と言われました。",
-        translation: "Ở thư viện, cô ấy gặp giáo viên và được nói rằng: 'Mỗi ngày chỉ cần một ít thôi cũng tốt rồi.'",
+        translation:
+          "Ở thư viện, cô ấy gặp giáo viên và được nói rằng: 'Mỗi ngày chỉ cần một ít thôi cũng tốt rồi.'",
         vocabQueries: ["先生", "毎日", "少しずつ"],
         grammar: [
           {
@@ -264,7 +271,8 @@ export const storyModeStories: StoryModeStory[] = [
             { id: "c", label: "Chỉ nên học ở thư viện" },
           ],
           correctOptionId: "b",
-          explanation: "Cụm 「毎日少しずつでいい」nhấn mạnh việc học đều và vừa sức mới là điều quan trọng.",
+          explanation:
+            "Cụm 「毎日少しずつでいい」nhấn mạnh việc học đều và vừa sức mới là điều quan trọng.",
         },
       },
     ],
@@ -273,7 +281,8 @@ export const storyModeStories: StoryModeStory[] = [
     id: "festival-night",
     title: "Lantern Night",
     subtitle: "Một đêm lễ hội có rẽ nhánh theo lựa chọn của bạn",
-    description: "Bạn quyết định Kenta sẽ đi đâu trước ở lễ hội. Mỗi nhánh mở một cụm vocab và grammar khác nhau rồi mới hội tụ lại.",
+    description:
+      "Bạn quyết định Kenta sẽ đi đâu trước ở lễ hội. Mỗi nhánh mở một cụm vocab và grammar khác nhau rồi mới hội tụ lại.",
     jlptLevel: "N4",
     estimatedMinutes: 16,
     tone: "Warm",
@@ -302,7 +311,8 @@ export const storyModeStories: StoryModeStory[] = [
             { id: "c", label: "Sắp trời mưa lớn" },
           ],
           correctOptionId: "b",
-          explanation: "Cụm 「並び始めました」gợi cảm giác lễ hội đang bắt đầu lên đèn và đông hơn.",
+          explanation:
+            "Cụm 「並び始めました」gợi cảm giác lễ hội đang bắt đầu lên đèn và đông hơn.",
         },
         nextSegmentId: "festival-night-2",
       },
@@ -310,8 +320,10 @@ export const storyModeStories: StoryModeStory[] = [
         id: "festival-night-2",
         title: "Chọn hướng đi",
         sceneHint: "Bạn sẽ rẽ qua quầy nào trước?",
-        japaneseText: "健太は友だちを待ちながら、「先にたこ焼きを買おうか、それとも金魚すくいを見に行こうか」と考えました。",
-        translation: "Trong lúc chờ bạn, Kenta nghĩ: 'Mình nên mua takoyaki trước hay đi xem trò vớt cá vàng trước nhỉ?'",
+        japaneseText:
+          "健太は友だちを待ちながら、「先にたこ焼きを買おうか、それとも金魚すくいを見に行こうか」と考えました。",
+        translation:
+          "Trong lúc chờ bạn, Kenta nghĩ: 'Mình nên mua takoyaki trước hay đi xem trò vớt cá vàng trước nhỉ?'",
         vocabQueries: ["友だち", "たこ焼き", "金魚すくい"],
         grammar: [
           {
@@ -328,13 +340,15 @@ export const storyModeStories: StoryModeStory[] = [
               id: "food",
               label: "Rẽ vào quầy takoyaki trước",
               nextSegmentId: "festival-night-food",
-              response: "Kenta rẽ vào khu đồ ăn, vì mùi thơm của takoyaki làm buổi tối lễ hội có cảm giác ấm hơn và gần gũi hơn.",
+              response:
+                "Kenta rẽ vào khu đồ ăn, vì mùi thơm của takoyaki làm buổi tối lễ hội có cảm giác ấm hơn và gần gũi hơn.",
             },
             {
               id: "game",
               label: "Rẽ qua trò vớt cá vàng trước",
               nextSegmentId: "festival-night-game",
-              response: "Kenta rẽ sang khu trò chơi, nơi không khí lễ hội sống động hơn và nhiều tiếng trẻ con cười đùa hơn.",
+              response:
+                "Kenta rẽ sang khu trò chơi, nơi không khí lễ hội sống động hơn và nhiều tiếng trẻ con cười đùa hơn.",
             },
           ],
           explanation: "Mỗi lựa chọn sẽ mở một nhánh học khác nhau, với vocab và grammar riêng.",
@@ -344,14 +358,17 @@ export const storyModeStories: StoryModeStory[] = [
         id: "festival-night-food",
         title: "Nhánh A: Mùi takoyaki",
         sceneHint: "Khu đồ ăn nóng hổi",
-        japaneseText: "屋台の前に立つと、健太はたこ焼きの匂いを楽しみながら、友だちにも一つ買ってあげたいと思いました。",
-        translation: "Đứng trước quầy hàng, Kenta vừa tận hưởng mùi takoyaki vừa nghĩ rằng cũng muốn mua một phần cho bạn mình.",
+        japaneseText:
+          "屋台の前に立つと、健太はたこ焼きの匂いを楽しみながら、友だちにも一つ買ってあげたいと思いました。",
+        translation:
+          "Đứng trước quầy hàng, Kenta vừa tận hưởng mùi takoyaki vừa nghĩ rằng cũng muốn mua một phần cho bạn mình.",
         vocabQueries: ["屋台", "匂い", "買ってあげる"],
         grammar: [
           {
             pattern: "〜ながら",
             title: "Vừa làm A vừa làm B",
-            explanation: "Dùng để nói hai hành động xảy ra cùng lúc; hành động ở vế sau là trọng tâm hơn.",
+            explanation:
+              "Dùng để nói hai hành động xảy ra cùng lúc; hành động ở vế sau là trọng tâm hơn.",
           },
           {
             pattern: "〜たいと思いました",
@@ -367,7 +384,8 @@ export const storyModeStories: StoryModeStory[] = [
             { id: "c", label: "Cậu ấy chỉ quan tâm đến pháo hoa" },
           ],
           correctOptionId: "b",
-          explanation: "Cụm 「友だちにも一つ買ってあげたい」cho thấy Kenta muốn chia sẻ sự vui vẻ với bạn mình.",
+          explanation:
+            "Cụm 「友だちにも一つ買ってあげたい」cho thấy Kenta muốn chia sẻ sự vui vẻ với bạn mình.",
         },
         nextSegmentId: "festival-night-finale",
       },
@@ -376,13 +394,15 @@ export const storyModeStories: StoryModeStory[] = [
         title: "Nhánh B: Bể cá vàng",
         sceneHint: "Khu trò chơi rộn tiếng cười",
         japaneseText: "子どもたちの声を聞いて、健太も金魚すくいを一度やってみたいと思いました。",
-        translation: "Nghe tiếng bọn trẻ reo vui, Kenta cũng thấy muốn thử trò vớt cá vàng một lần.",
+        translation:
+          "Nghe tiếng bọn trẻ reo vui, Kenta cũng thấy muốn thử trò vớt cá vàng một lần.",
         vocabQueries: ["子どもたち", "声", "やってみたい"],
         grammar: [
           {
             pattern: "〜てみたい",
             title: "Muốn thử làm gì",
-            explanation: "Dùng để diễn tả mong muốn thử trải nghiệm một hành động lần đầu hoặc một cách mới.",
+            explanation:
+              "Dùng để diễn tả mong muốn thử trải nghiệm một hành động lần đầu hoặc một cách mới.",
           },
         ],
         checkpoint: {
@@ -419,7 +439,8 @@ export const storyModeStories: StoryModeStory[] = [
             { id: "c", label: "Tìm thêm trò chơi khác" },
           ],
           correctOptionId: "b",
-          explanation: "Dù đi qua nhánh nào, câu chuyện cuối cùng vẫn hội tụ tại quyết định cùng nhau đi xem pháo hoa.",
+          explanation:
+            "Dù đi qua nhánh nào, câu chuyện cuối cùng vẫn hội tụ tại quyết định cùng nhau đi xem pháo hoa.",
         },
       },
     ],

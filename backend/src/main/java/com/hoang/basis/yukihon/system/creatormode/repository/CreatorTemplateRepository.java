@@ -1,10 +1,9 @@
 package com.hoang.basis.yukihon.system.creatormode.repository;
 
 import com.hoang.basis.yukihon.system.creatormode.entity.CreatorTemplate;
-import org.springframework.data.jpa.repository.JpaRepository;
-
 import java.util.Collection;
 import java.util.List;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface CreatorTemplateRepository extends JpaRepository<CreatorTemplate, Long> {
 
@@ -17,9 +16,7 @@ public interface CreatorTemplateRepository extends JpaRepository<CreatorTemplate
     List<CreatorTemplate> findByContentTypeOrderByUpdatedAtDesc(CreatorTemplate.ContentType contentType);
 
     List<CreatorTemplate> findByStatusAndContentTypeOrderByUpdatedAtDesc(
-            CreatorTemplate.TemplateStatus status,
-            CreatorTemplate.ContentType contentType
-    );
+            CreatorTemplate.TemplateStatus status, CreatorTemplate.ContentType contentType);
 
     long countByStatus(CreatorTemplate.TemplateStatus status);
 

@@ -10,5 +10,4 @@ import org.springframework.data.repository.NoRepositoryBean;
  * a declared repository per entity.
  */
 @NoRepositoryBean
-public interface BaseCrudRepository<E, ID> extends JpaRepository<E, ID>, JpaSpecificationExecutor<E> {
-}
+public interface BaseCrudRepository<E, ID> extends JpaRepository<E, ID>, JpaSpecificationExecutor<E> {}

@@ -1,11 +1,9 @@
 package com.hoang.basis.yukihon.system.community.service;
 
 import com.hoang.basis.yukihon.exception.ResourceNotFoundException;
+import com.hoang.basis.yukihon.system.community.dto.CommentDto;
 import com.hoang.basis.yukihon.system.community.dto.CommunityLeaderboardEntryDto;
 import com.hoang.basis.yukihon.system.community.dto.CommunityStatsDto;
-import com.hoang.basis.yukihon.system.user.entity.User;
-import com.hoang.basis.yukihon.system.user.repository.UserRepository;
-import com.hoang.basis.yukihon.system.community.dto.CommentDto;
 import com.hoang.basis.yukihon.system.community.dto.CreateCommentRequest;
 import com.hoang.basis.yukihon.system.community.dto.CreatePostRequest;
 import com.hoang.basis.yukihon.system.community.dto.PostDto;
@@ -13,10 +11,23 @@ import com.hoang.basis.yukihon.system.community.entity.CommunityPost;
 import com.hoang.basis.yukihon.system.community.entity.PostBookmark;
 import com.hoang.basis.yukihon.system.community.entity.PostComment;
 import com.hoang.basis.yukihon.system.community.entity.PostLike;
-import com.hoang.basis.yukihon.system.community.repository.PostBookmarkRepository;
 import com.hoang.basis.yukihon.system.community.repository.CommunityPostRepository;
+import com.hoang.basis.yukihon.system.community.repository.PostBookmarkRepository;
 import com.hoang.basis.yukihon.system.community.repository.PostCommentRepository;
 import com.hoang.basis.yukihon.system.community.repository.PostLikeRepository;
+import com.hoang.basis.yukihon.system.user.entity.User;
+import com.hoang.basis.yukihon.system.user.repository.UserRepository;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -24,19 +35,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -67,10 +65,7 @@ public class CommunityService {
         Set<Long> bookmarkedPostIds = findBookmarkedPostIds(posts, currentUserId);
 
         return posts.map(post -> PostDto.fromEntity(
-                post,
-                likedPostIds.contains(post.getId()),
-                bookmarkedPostIds.contains(post.getId())
-        ));
+                post, likedPostIds.contains(post.getId()), bookmarkedPostIds.contains(post.getId())));
     }
 
     public Page<PostDto> getPostsByCategory(String category, Long currentUserId, Pageable pageable) {
@@ -79,28 +74,30 @@ public class CommunityService {
         Set<Long> bookmarkedPostIds = findBookmarkedPostIds(posts, currentUserId);
 
         return posts.map(post -> PostDto.fromEntity(
-                post,
-                likedPostIds.contains(post.getId()),
-                bookmarkedPostIds.contains(post.getId())
-        ));
+                post, likedPostIds.contains(post.getId()), bookmarkedPostIds.contains(post.getId())));
     }
 
-    public Page<PostDto> searchPosts(String category, String jlptLevel, String search, boolean bookmarkedOnly, Long currentUserId, Pageable pageable) {
+    public Page<PostDto> searchPosts(
+            String category,
+            String jlptLevel,
+            String search,
+            boolean bookmarkedOnly,
+            Long currentUserId,
+            Pageable pageable) {
         String normalizedCategory = normalizeOptional(category);
         String normalizedJlptLevel = normalizeOptional(jlptLevel);
         String normalizedSearch = normalizeOptional(search);
 
         Page<CommunityPost> posts = bookmarkedOnly
-                ? postRepository.findBookmarkedPostsByUserId(currentUserId, normalizedCategory, normalizedJlptLevel, normalizedSearch, withoutSort(pageable))
-                : postRepository.searchPosts(normalizedCategory, normalizedJlptLevel, normalizedSearch, withoutSort(pageable));
+                ? postRepository.findBookmarkedPostsByUserId(
+                        currentUserId, normalizedCategory, normalizedJlptLevel, normalizedSearch, withoutSort(pageable))
+                : postRepository.searchPosts(
+                        normalizedCategory, normalizedJlptLevel, normalizedSearch, withoutSort(pageable));
         Set<Long> likedPostIds = findLikedPostIds(posts, currentUserId);
         Set<Long> bookmarkedPostIds = findBookmarkedPostIds(posts, currentUserId);
 
         return posts.map(post -> PostDto.fromEntity(
-                post,
-                likedPostIds.contains(post.getId()),
-                bookmarkedPostIds.contains(post.getId())
-        ));
+                post, likedPostIds.contains(post.getId()), bookmarkedPostIds.contains(post.getId())));
     }
 
     public Page<PostDto> getPostsByUser(Long userId, Long currentUserId, Pageable pageable) {
@@ -109,15 +106,13 @@ public class CommunityService {
         Set<Long> bookmarkedPostIds = findBookmarkedPostIds(posts, currentUserId);
 
         return posts.map(post -> PostDto.fromEntity(
-                post,
-                likedPostIds.contains(post.getId()),
-                bookmarkedPostIds.contains(post.getId())
-        ));
+                post, likedPostIds.contains(post.getId()), bookmarkedPostIds.contains(post.getId())));
     }
 
     public PostDto getPostById(Long postId, Long currentUserId) {
         CommunityPost post = findPostByIdOrThrow(postId);
-        return PostDto.fromEntity(post,
+        return PostDto.fromEntity(
+                post,
                 likeRepository.existsByPostIdAndUserId(postId, currentUserId),
                 bookmarkRepository.existsByPostIdAndUserId(postId, currentUserId));
     }
@@ -194,10 +189,7 @@ public class CommunityService {
             postRepository.save(post);
             return PostDto.fromEntity(post, false, bookmarkRepository.existsByPostIdAndUserId(postId, userId));
         } else {
-            PostLike like = PostLike.builder()
-                    .post(post)
-                    .user(user)
-                    .build();
+            PostLike like = PostLike.builder().post(post).user(user).build();
             likeRepository.save(like);
             post.setLikeCount(post.getLikeCount() + 1);
             postRepository.save(post);
@@ -216,10 +208,7 @@ public class CommunityService {
             return PostDto.fromEntity(post, likeRepository.existsByPostIdAndUserId(postId, userId), false);
         }
 
-        PostBookmark bookmark = PostBookmark.builder()
-                .post(post)
-                .user(user)
-                .build();
+        PostBookmark bookmark = PostBookmark.builder().post(post).user(user).build();
         bookmarkRepository.save(bookmark);
         return PostDto.fromEntity(post, likeRepository.existsByPostIdAndUserId(postId, userId), true);
     }
@@ -230,12 +219,8 @@ public class CommunityService {
         Instant oneWeekAgo = Instant.now().minus(7, ChronoUnit.DAYS);
 
         Set<Long> contributorIds = new HashSet<>();
-        posts.stream()
-                .map(post -> post.getUser().getId())
-                .forEach(contributorIds::add);
-        comments.stream()
-                .map(comment -> comment.getUser().getId())
-                .forEach(contributorIds::add);
+        posts.stream().map(post -> post.getUser().getId()).forEach(contributorIds::add);
+        comments.stream().map(comment -> comment.getUser().getId()).forEach(contributorIds::add);
         long totalContributors = contributorIds.size();
 
         Map<String, Long> tagCounts = posts.stream()
@@ -257,9 +242,15 @@ public class CommunityService {
                 .totalPosts(posts.size())
                 .totalComments(comments.size())
                 .totalContributors(totalContributors)
-                .postsThisWeek(posts.stream().filter(post -> post.getCreatedAt().isAfter(oneWeekAgo)).count())
-                .questionsCount(posts.stream().filter(post -> "QUESTION".equalsIgnoreCase(post.getCategory())).count())
-                .resourcesCount(posts.stream().filter(post -> "RESOURCE".equalsIgnoreCase(post.getCategory())).count())
+                .postsThisWeek(posts.stream()
+                        .filter(post -> post.getCreatedAt().isAfter(oneWeekAgo))
+                        .count())
+                .questionsCount(posts.stream()
+                        .filter(post -> "QUESTION".equalsIgnoreCase(post.getCategory()))
+                        .count())
+                .resourcesCount(posts.stream()
+                        .filter(post -> "RESOURCE".equalsIgnoreCase(post.getCategory()))
+                        .count())
                 .trendingTags(trendingTags)
                 .build();
     }
@@ -271,14 +262,19 @@ public class CommunityService {
         Map<Long, LeaderboardAccumulator> scores = new HashMap<>();
 
         for (CommunityPost post : posts) {
-            scores.computeIfAbsent(post.getUser().getId(), ignored -> new LeaderboardAccumulator(post.getUser().getDisplayName()))
+            scores.computeIfAbsent(
+                            post.getUser().getId(),
+                            ignored -> new LeaderboardAccumulator(post.getUser().getDisplayName()))
                     .postsCount++;
             scores.get(post.getUser().getId()).likesReceived += post.getLikeCount();
             scores.get(post.getUser().getId()).commentsReceived += post.getCommentCount();
         }
 
         for (PostComment comment : comments) {
-            scores.computeIfAbsent(comment.getUser().getId(), ignored -> new LeaderboardAccumulator(comment.getUser().getDisplayName()))
+            scores.computeIfAbsent(
+                            comment.getUser().getId(),
+                            ignored ->
+                                    new LeaderboardAccumulator(comment.getUser().getDisplayName()))
                     .commentsCount++;
         }
 
@@ -291,7 +287,8 @@ public class CommunityService {
                         .likesReceived(entry.getValue().likesReceived)
                         .score(entry.getValue().score())
                         .build())
-                .sorted(Comparator.comparingLong(CommunityLeaderboardEntryDto::getScore).reversed())
+                .sorted(Comparator.comparingLong(CommunityLeaderboardEntryDto::getScore)
+                        .reversed())
                 .limit(5)
                 .toList();
     }
@@ -299,7 +296,8 @@ public class CommunityService {
     // ==================== COMMENTS ====================
 
     public Page<CommentDto> getComments(Long postId, Pageable pageable) {
-        return commentRepository.findByPostIdOrderByCreatedAtDesc(postId, pageable)
+        return commentRepository
+                .findByPostIdOrderByCreatedAtDesc(postId, pageable)
                 .map(CommentDto::fromEntity);
     }
 
@@ -339,17 +337,16 @@ public class CommunityService {
     }
 
     private CommunityPost findPostByIdOrThrow(Long postId) {
-        return postRepository.findById(postId)
-                .orElseThrow(() -> new ResourceNotFoundException("Post not found"));
+        return postRepository.findById(postId).orElseThrow(() -> new ResourceNotFoundException("Post not found"));
     }
 
     private User findUserByIdOrThrow(Long userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        return userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 
     private PostComment findCommentByIdOrThrow(Long commentId) {
-        return commentRepository.findById(commentId)
+        return commentRepository
+                .findById(commentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Comment not found"));
     }
 

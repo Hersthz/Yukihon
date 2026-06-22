@@ -7,15 +7,14 @@ import com.hoang.basis.yukihon.system.lesson.entity.Lesson;
 import com.hoang.basis.yukihon.system.lesson.entity.LessonVersion;
 import com.hoang.basis.yukihon.system.lesson.repository.LessonRepository;
 import com.hoang.basis.yukihon.system.lesson.repository.LessonVersionRepository;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Stream;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -28,55 +27,48 @@ public class LessonService {
 
     @Transactional(readOnly = true)
     public LessonDto getLessonById(Long id) {
-        return lessonRepository.findById(id)
+        return lessonRepository
+                .findById(id)
                 .map(this::convertToDto)
                 .orElseThrow(() -> new RuntimeException("Lesson not found with id: " + id));
     }
 
     @Transactional(readOnly = true)
     public List<LessonDto> getAll() {
-        return lessonRepository.findAll()
-                .stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
+        return lessonRepository.findAll().stream().map(this::convertToDto).collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public List<LessonDto> getPublishedLessons() {
-        return lessonRepository.findPublishedLessons()
-                .stream()
+        return lessonRepository.findPublishedLessons().stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public List<LessonDto> getPublishedLessonsByLevel(String jlptLevel) {
-        return lessonRepository.findPublishedLessonsByLevel(jlptLevel)
-                .stream()
+        return lessonRepository.findPublishedLessonsByLevel(jlptLevel).stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public List<LessonDto> getPublishedLessonsByCategory(String category) {
-        return lessonRepository.findPublishedLessonsByCategory(category)
-                .stream()
+        return lessonRepository.findPublishedLessonsByCategory(category).stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public List<LessonDto> getByJlptLevel(String jlptLevel) {
-        return lessonRepository.findByJlptLevel(jlptLevel)
-                .stream()
+        return lessonRepository.findByJlptLevel(jlptLevel).stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public List<LessonDto> getByCategory(String category) {
-        return lessonRepository.findByCategory(category)
-                .stream()
+        return lessonRepository.findByCategory(category).stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
@@ -116,7 +108,8 @@ public class LessonService {
     }
 
     public LessonDto updateLesson(Long id, LessonRequest request) {
-        Lesson lesson = lessonRepository.findById(id)
+        Lesson lesson = lessonRepository
+                .findById(id)
                 .orElseThrow(() -> new RuntimeException("Lesson not found with id: " + id));
 
         lesson.setTitle(request.getTitle());

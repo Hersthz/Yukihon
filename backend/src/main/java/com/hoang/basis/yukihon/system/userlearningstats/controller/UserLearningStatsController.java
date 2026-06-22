@@ -1,9 +1,9 @@
 package com.hoang.basis.yukihon.system.userlearningstats.controller;
 
+import com.hoang.basis.yukihon.exception.ResourceNotFoundException;
+import com.hoang.basis.yukihon.system.user.repository.UserRepository;
 import com.hoang.basis.yukihon.system.userlearningstats.dto.UserLearningStatsDto;
 import com.hoang.basis.yukihon.system.userlearningstats.service.UserLearningStatsService;
-import com.hoang.basis.yukihon.system.user.repository.UserRepository;
-import com.hoang.basis.yukihon.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -23,9 +23,7 @@ public class UserLearningStatsController {
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<UserLearningStatsDto> getStats(
-            @PathVariable Long userId,
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
+            @PathVariable Long userId, @AuthenticationPrincipal UserDetails userDetails) {
         assertCanAccessUser(userDetails, userId);
         UserLearningStatsDto stats = userLearningStatsService.getStatsByUserId(userId);
         return ResponseEntity.ok(stats);
@@ -33,9 +31,7 @@ public class UserLearningStatsController {
 
     @PostMapping("/user/{userId}/initialize")
     public ResponseEntity<UserLearningStatsDto> initializeStats(
-            @PathVariable Long userId,
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
+            @PathVariable Long userId, @AuthenticationPrincipal UserDetails userDetails) {
         assertCanAccessUser(userDetails, userId);
         UserLearningStatsDto stats = userLearningStatsService.initializeStatsForNewUser(userId);
         return ResponseEntity.ok(stats);
@@ -45,8 +41,7 @@ public class UserLearningStatsController {
     public ResponseEntity<UserLearningStatsDto> updateXP(
             @PathVariable Long userId,
             @PathVariable Integer xpGained,
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
+            @AuthenticationPrincipal UserDetails userDetails) {
         assertCanAccessUser(userDetails, userId);
         UserLearningStatsDto stats = userLearningStatsService.updateXP(userId, xpGained);
         return ResponseEntity.ok(stats);
@@ -54,9 +49,7 @@ public class UserLearningStatsController {
 
     @PutMapping("/user/{userId}/streak")
     public ResponseEntity<UserLearningStatsDto> updateStreak(
-            @PathVariable Long userId,
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
+            @PathVariable Long userId, @AuthenticationPrincipal UserDetails userDetails) {
         assertCanAccessUser(userDetails, userId);
         UserLearningStatsDto stats = userLearningStatsService.updateStreak(userId);
         return ResponseEntity.ok(stats);
@@ -64,10 +57,7 @@ public class UserLearningStatsController {
 
     @PutMapping("/user/{userId}/target-level/{level}")
     public ResponseEntity<UserLearningStatsDto> updateTargetLevel(
-            @PathVariable Long userId,
-            @PathVariable String level,
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
+            @PathVariable Long userId, @PathVariable String level, @AuthenticationPrincipal UserDetails userDetails) {
         assertCanAccessUser(userDetails, userId);
         UserLearningStatsDto stats = userLearningStatsService.updateTargetLevel(userId, level);
         return ResponseEntity.ok(stats);
@@ -78,15 +68,17 @@ public class UserLearningStatsController {
             throw new AccessDeniedException("Authentication required");
         }
 
-        return userRepository.findByEmail(userDetails.getUsername().toLowerCase())
+        return userRepository
+                .findByEmail(userDetails.getUsername().toLowerCase())
                 .map(user -> user.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 
     private boolean isAdmin(UserDetails userDetails) {
-        return userDetails != null && userDetails.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .anyMatch("ROLE_ADMIN"::equals);
+        return userDetails != null
+                && userDetails.getAuthorities().stream()
+                        .map(GrantedAuthority::getAuthority)
+                        .anyMatch("ROLE_ADMIN"::equals);
     }
 
     private void assertCanAccessUser(UserDetails userDetails, Long targetUserId) {

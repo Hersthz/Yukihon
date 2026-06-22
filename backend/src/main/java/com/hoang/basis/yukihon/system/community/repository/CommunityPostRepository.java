@@ -1,9 +1,9 @@
 package com.hoang.basis.yukihon.system.community.repository;
 
 import com.hoang.basis.yukihon.system.community.entity.CommunityPost;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -23,7 +23,8 @@ public interface CommunityPostRepository extends JpaRepository<CommunityPost, Lo
     Page<CommunityPost> findByJlptLevelOrderByCreatedAtDesc(String jlptLevel, Pageable pageable);
 
     @EntityGraph(attributePaths = {"user"})
-    @Query("""
+    @Query(
+            """
             SELECT p FROM CommunityPost p
             WHERE (:category IS NULL OR p.category = :category)
               AND (:jlptLevel IS NULL OR p.jlptLevel = :jlptLevel)
@@ -39,12 +40,12 @@ public interface CommunityPostRepository extends JpaRepository<CommunityPost, Lo
             @Param("category") String category,
             @Param("jlptLevel") String jlptLevel,
             @Param("search") String search,
-            Pageable pageable
-    );
+            Pageable pageable);
 
     @EntityGraph(attributePaths = {"user"})
     @Query(
-            value = """
+            value =
+                    """
                     SELECT pb.post FROM PostBookmark pb
                     WHERE pb.user.id = :userId
                       AND (:category IS NULL OR pb.post.category = :category)
@@ -57,7 +58,8 @@ public interface CommunityPostRepository extends JpaRepository<CommunityPost, Lo
                           )
                     ORDER BY pb.createdAt DESC
                     """,
-            countQuery = """
+            countQuery =
+                    """
                     SELECT COUNT(pb) FROM PostBookmark pb
                     WHERE pb.user.id = :userId
                       AND (:category IS NULL OR pb.post.category = :category)
@@ -68,15 +70,13 @@ public interface CommunityPostRepository extends JpaRepository<CommunityPost, Lo
                             OR LOWER(pb.post.content) LIKE LOWER(CONCAT('%', :search, '%'))
                             OR LOWER(COALESCE(pb.post.tags, '')) LIKE LOWER(CONCAT('%', :search, '%'))
                           )
-                    """
-    )
+                    """)
     Page<CommunityPost> findBookmarkedPostsByUserId(
             @Param("userId") Long userId,
             @Param("category") String category,
             @Param("jlptLevel") String jlptLevel,
             @Param("search") String search,
-            Pageable pageable
-    );
+            Pageable pageable);
 
     long countByUserId(Long userId);
 }

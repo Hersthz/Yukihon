@@ -22,7 +22,11 @@ const statusLabelMap = {
   error: "Error",
 } as const;
 
-const CommunityRealtimeChat = ({ currentUserId, currentUserName, room }: CommunityRealtimeChatProps) => {
+const CommunityRealtimeChat = ({
+  currentUserId,
+  currentUserName,
+  room,
+}: CommunityRealtimeChatProps) => {
   const { toast } = useToast();
   const [draft, setDraft] = useState("");
   const listRef = useRef<HTMLDivElement | null>(null);
@@ -180,7 +184,9 @@ const CommunityRealtimeChat = ({ currentUserId, currentUserName, room }: Communi
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <div>
-              <CardTitle className="text-lg font-semibold text-slate-900">{room.title} room</CardTitle>
+              <CardTitle className="text-lg font-semibold text-slate-900">
+                {room.title} room
+              </CardTitle>
               <p className="mt-1 text-xs text-slate-500">{room.description}</p>
             </div>
             {unreadCount > 0 ? (
@@ -211,7 +217,9 @@ const CommunityRealtimeChat = ({ currentUserId, currentUserName, room }: Communi
         </div>
         {connectionError ? <p className="text-xs text-rose-600">{connectionError}</p> : null}
         <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-          <span className="rounded-full bg-slate-100 px-2.5 py-1 font-semibold text-slate-600">{room.focus}</span>
+          <span className="rounded-full bg-slate-100 px-2.5 py-1 font-semibold text-slate-600">
+            {room.focus}
+          </span>
           <span>Room id: #{room.id}</span>
         </div>
         {activeDisplayNames.length > 0 ? (
@@ -222,14 +230,19 @@ const CommunityRealtimeChat = ({ currentUserId, currentUserName, room }: Communi
       </CardHeader>
 
       <CardContent className="space-y-3">
-        <div ref={listRef} className="h-[280px] space-y-2 overflow-y-auto rounded-2xl border border-slate-200 bg-slate-50 p-3">
+        <div
+          ref={listRef}
+          className="h-[280px] space-y-2 overflow-y-auto rounded-2xl border border-slate-200 bg-slate-50 p-3"
+        >
           {isLoadingHistory ? (
             <div className="flex h-full items-center justify-center text-sm text-slate-500">
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Dang tai lich su chat...
             </div>
           ) : messages.length === 0 ? (
-            <div className="flex h-full items-center justify-center text-sm text-slate-500">Chua co tin nhan nao trong phong.</div>
+            <div className="flex h-full items-center justify-center text-sm text-slate-500">
+              Chua co tin nhan nao trong phong.
+            </div>
           ) : (
             messages.map((message) => {
               const isMe = currentUserId != null && message.userId === currentUserId;
@@ -247,14 +260,35 @@ const CommunityRealtimeChat = ({ currentUserId, currentUserName, room }: Communi
                       : "bg-white text-slate-800"
                   )}
                 >
-                  <div className={cn("mb-1 flex items-center gap-2 text-[11px]", isMe ? (isFailed ? "text-rose-700" : "text-sky-100") : "text-slate-500")}>
-                    {isSending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Radio className="h-3 w-3" />}
+                  <div
+                    className={cn(
+                      "mb-1 flex items-center gap-2 text-[11px]",
+                      isMe ? (isFailed ? "text-rose-700" : "text-sky-100") : "text-slate-500"
+                    )}
+                  >
+                    {isSending ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Radio className="h-3 w-3" />
+                    )}
                     <span className="font-semibold">{message.userDisplayName}</span>
-                    <span>{new Date(message.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                    <span>
+                      {new Date(message.createdAt).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
                   </div>
-                  <p className="whitespace-pre-wrap break-words leading-relaxed">{message.content}</p>
+                  <p className="whitespace-pre-wrap break-words leading-relaxed">
+                    {message.content}
+                  </p>
                   {isMe ? (
-                    <div className={cn("mt-2 flex items-center justify-end gap-2 text-[11px]", isFailed ? "text-rose-700" : "text-sky-100")}>
+                    <div
+                      className={cn(
+                        "mt-2 flex items-center justify-end gap-2 text-[11px]",
+                        isFailed ? "text-rose-700" : "text-sky-100"
+                      )}
+                    >
                       {isSending ? <span>Dang gui...</span> : null}
                       {isFailed ? (
                         <>
@@ -286,7 +320,9 @@ const CommunityRealtimeChat = ({ currentUserId, currentUserName, room }: Communi
           )}
         </div>
 
-        {typingLabel ? <p className="px-1 text-xs font-medium text-sky-600">{typingLabel}</p> : null}
+        {typingLabel ? (
+          <p className="px-1 text-xs font-medium text-sky-600">{typingLabel}</p>
+        ) : null}
 
         <form
           className="flex items-center gap-2"

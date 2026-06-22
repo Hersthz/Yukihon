@@ -74,14 +74,24 @@ export const AppRoutes = () => {
         <Route path="/community" element={withProtectedRoute(<Community />)} />
         <Route path="/my-words" element={withProtectedRoute(<MyWords />)} />
         <Route path="/settings" element={withProtectedRoute(<Settings />)} />
-        <Route path="/admin/creator-mode" element={withProtectedRoute(<CreatorModeRoute><AdminCreatorMode /></CreatorModeRoute>)} />
+        <Route
+          path="/admin/creator-mode"
+          element={withProtectedRoute(
+            <CreatorModeRoute>
+              <AdminCreatorMode />
+            </CreatorModeRoute>
+          )}
+        />
 
         <Route element={<AdminRoute />}>
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/users" element={<AdminUsers />} />
           <Route path="/admin/content" element={<AdminContent />} />
           <Route path="/admin/story-mode" element={<AdminStoryMode />} />
-          <Route path="/admin/app-settings" element={<MetadataDrivenCrudPage entityName="AppSetting" />} />
+          <Route
+            path="/admin/app-settings"
+            element={<MetadataDrivenCrudPage entityName="AppSetting" />}
+          />
         </Route>
 
         <Route path="*" element={<NotFound />} />

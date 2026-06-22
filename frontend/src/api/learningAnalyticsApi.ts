@@ -142,7 +142,9 @@ export const learningAnalyticsApi = {
     }),
 
   getFunnel: (query: LearningFunnelQuery = {}) =>
-    apiClient.request<LearningFunnelResponse>(`/api/admin/analytics/learning-funnel${buildQuery(query)}`),
+    apiClient.request<LearningFunnelResponse>(
+      `/api/admin/analytics/learning-funnel${buildQuery(query)}`
+    ),
 
   getStudyCalendar: (query: StudyCalendarQuery = {}) =>
     apiClient.request<StudyCalendarResponse>(`/api/analytics/study-calendar${buildQuery(query)}`),

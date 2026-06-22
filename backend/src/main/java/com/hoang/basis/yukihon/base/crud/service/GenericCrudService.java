@@ -9,6 +9,9 @@ import com.hoang.basis.yukihon.exception.ResourceNotFoundException;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.criteria.Predicate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.context.ApplicationEventPublisher;
@@ -21,10 +24,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Reflection-driven CRUD backed by {@link SimpleJpaRepository}. One service handles every
@@ -53,8 +52,7 @@ public class GenericCrudService {
 
     @Transactional(readOnly = true)
     public Object get(CrudDescriptor descriptor, Long id) {
-        Object entity = repositoryFor(descriptor).findById(id)
-                .orElseThrow(() -> notFound(descriptor, id));
+        Object entity = repositoryFor(descriptor).findById(id).orElseThrow(() -> notFound(descriptor, id));
         if (isSoftDeleted(descriptor, entity)) {
             throw notFound(descriptor, id);
         }
@@ -114,7 +112,8 @@ public class GenericCrudService {
 
     // --- helpers -------------------------------------------------------------
 
-    private Specification<Object> buildSpecification(CrudDescriptor descriptor, String search, Map<String, String> filters) {
+    private Specification<Object> buildSpecification(
+            CrudDescriptor descriptor, String search, Map<String, String> filters) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -133,7 +132,8 @@ public class GenericCrudService {
 
             if (filters != null) {
                 for (Map.Entry<String, String> entry : filters.entrySet()) {
-                    Object converted = convertFilterValue(descriptor.getEntityClass(), entry.getKey(), entry.getValue());
+                    Object converted =
+                            convertFilterValue(descriptor.getEntityClass(), entry.getKey(), entry.getValue());
                     if (converted != null) {
                         predicates.add(cb.equal(root.get(entry.getKey()), converted));
                     }
@@ -201,13 +201,13 @@ public class GenericCrudService {
                 id,
                 type,
                 snapshot,
-                currentActor()
-        ));
+                currentActor()));
     }
 
     private String currentActor() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()
+        if (authentication == null
+                || !authentication.isAuthenticated()
                 || "anonymousUser".equals(authentication.getPrincipal())) {
             return "system";
         }

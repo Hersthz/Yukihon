@@ -3,12 +3,11 @@ package com.hoang.basis.yukihon.system.user.repository;
 import com.hoang.basis.yukihon.system.user.entity.Permission;
 import com.hoang.basis.yukihon.system.user.entity.RoleName;
 import com.hoang.basis.yukihon.system.user.entity.RolePermission;
+import java.util.List;
+import java.util.Set;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-
-import java.util.List;
-import java.util.Set;
 
 public interface RolePermissionRepository extends JpaRepository<RolePermission, Long> {
 

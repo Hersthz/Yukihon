@@ -14,8 +14,6 @@ public record EntityMetadata(
         List<String> searchableFields,
         List<String> sortableFields,
         MenuMetadata menu,
-        List<FieldMetadata> fields
-) {
-    public record MenuMetadata(String title, String group, String icon, String url, int order, String permission) {
-    }
+        List<FieldMetadata> fields) {
+    public record MenuMetadata(String title, String group, String icon, String url, int order, String permission) {}
 }

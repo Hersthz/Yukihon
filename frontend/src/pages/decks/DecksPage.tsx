@@ -38,12 +38,18 @@ const DeckCard = ({
           <Layers className="h-5 w-5" />
         </div>
         <Badge variant="secondary" className="gap-1">
-          {deck.visibility === "PUBLIC" ? <Globe2 className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
+          {deck.visibility === "PUBLIC" ? (
+            <Globe2 className="h-3 w-3" />
+          ) : (
+            <Lock className="h-3 w-3" />
+          )}
           {deck.visibility}
         </Badge>
       </div>
       <CardTitle className="mt-2 text-lg">{deck.title}</CardTitle>
-      {deck.description && <CardDescription className="line-clamp-2">{deck.description}</CardDescription>}
+      {deck.description && (
+        <CardDescription className="line-clamp-2">{deck.description}</CardDescription>
+      )}
     </CardHeader>
     <CardContent className="mt-auto flex items-center justify-between gap-2">
       <span className="text-sm text-muted-foreground">{deck.totalCards} thẻ</span>
@@ -72,7 +78,12 @@ const DecksPage = () => {
   const publicDecks = useQuery({ queryKey: ["decks", "public"], queryFn: deckApi.listPublic });
 
   const createMutation = useMutation({
-    mutationFn: () => deckApi.create({ title: title.trim(), description: description.trim(), visibility: "PRIVATE" }),
+    mutationFn: () =>
+      deckApi.create({
+        title: title.trim(),
+        description: description.trim(),
+        visibility: "PRIVATE",
+      }),
     onSuccess: () => {
       toast({ title: "Đã tạo deck" });
       setDialogOpen(false);
@@ -81,7 +92,11 @@ const DecksPage = () => {
       void queryClient.invalidateQueries({ queryKey: ["decks", "mine"] });
     },
     onError: (e: unknown) =>
-      toast({ title: "Tạo thất bại", description: e instanceof Error ? e.message : "Lỗi", variant: "destructive" }),
+      toast({
+        title: "Tạo thất bại",
+        description: e instanceof Error ? e.message : "Lỗi",
+        variant: "destructive",
+      }),
   });
 
   const study = (id: number) => navigate(`/decks/${id}/study`);
@@ -92,10 +107,17 @@ const DecksPage = () => {
 
   return (
     <DashboardLayout>
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="space-y-8">
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="space-y-8"
+      >
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Library</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+              Library
+            </p>
             <h1 className="flex items-center gap-2 text-2xl font-bold">
               <BookOpen className="h-6 w-6 text-primary" /> Bộ thẻ của tôi
             </h1>
@@ -144,18 +166,33 @@ const DecksPage = () => {
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
               <Label>Tiêu đề</Label>
-              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ví dụ: N5 Động từ" />
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Ví dụ: N5 Động từ"
+              />
             </div>
             <div className="space-y-1.5">
               <Label>Mô tả</Label>
-              <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+              <Textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={3}
+              />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={createMutation.isPending}>
+            <Button
+              variant="outline"
+              onClick={() => setDialogOpen(false)}
+              disabled={createMutation.isPending}
+            >
               Huỷ
             </Button>
-            <Button onClick={() => createMutation.mutate()} disabled={!title.trim() || createMutation.isPending}>
+            <Button
+              onClick={() => createMutation.mutate()}
+              disabled={!title.trim() || createMutation.isPending}
+            >
               {createMutation.isPending && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
               Tạo
             </Button>

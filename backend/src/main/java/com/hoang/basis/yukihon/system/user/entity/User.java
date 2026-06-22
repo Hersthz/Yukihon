@@ -1,15 +1,13 @@
 package com.hoang.basis.yukihon.system.user.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
+import lombok.*;
 
 @Entity
-@Table(name = "users",
-        uniqueConstraints = @UniqueConstraint(name = "uk_user_email", columnNames = "email"))
+@Table(name = "users", uniqueConstraints = @UniqueConstraint(name = "uk_user_email", columnNames = "email"))
 @Getter
 @Setter
 @Builder

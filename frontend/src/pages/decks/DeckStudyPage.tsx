@@ -11,11 +11,41 @@ import { cn } from "@/lib/utils";
 import { srsApi, type SrsRating, type StudyCard, type StudyQueue } from "@/api/srsApi";
 import { deckApi } from "@/api/deckApi";
 
-const RATINGS: { key: SrsRating; label: string; hint: string; classes: string; shortcut: string }[] = [
-  { key: "AGAIN", label: "Lại", hint: "againPreview", classes: "bg-rose-500 hover:bg-rose-600", shortcut: "1" },
-  { key: "HARD", label: "Khó", hint: "hardPreview", classes: "bg-amber-500 hover:bg-amber-600", shortcut: "2" },
-  { key: "GOOD", label: "Tốt", hint: "goodPreview", classes: "bg-emerald-500 hover:bg-emerald-600", shortcut: "3" },
-  { key: "EASY", label: "Dễ", hint: "easyPreview", classes: "bg-sky-500 hover:bg-sky-600", shortcut: "4" },
+const RATINGS: {
+  key: SrsRating;
+  label: string;
+  hint: string;
+  classes: string;
+  shortcut: string;
+}[] = [
+  {
+    key: "AGAIN",
+    label: "Lại",
+    hint: "againPreview",
+    classes: "bg-rose-500 hover:bg-rose-600",
+    shortcut: "1",
+  },
+  {
+    key: "HARD",
+    label: "Khó",
+    hint: "hardPreview",
+    classes: "bg-amber-500 hover:bg-amber-600",
+    shortcut: "2",
+  },
+  {
+    key: "GOOD",
+    label: "Tốt",
+    hint: "goodPreview",
+    classes: "bg-emerald-500 hover:bg-emerald-600",
+    shortcut: "3",
+  },
+  {
+    key: "EASY",
+    label: "Dễ",
+    hint: "easyPreview",
+    classes: "bg-sky-500 hover:bg-sky-600",
+    shortcut: "4",
+  },
 ];
 
 const DeckStudyPage = () => {
@@ -44,7 +74,11 @@ const DeckStudyPage = () => {
       setQueue(q);
       if (deck) setDeckTitle(deck.title);
     } catch (e: unknown) {
-      toast({ title: "Không tải được", description: e instanceof Error ? e.message : "Lỗi", variant: "destructive" });
+      toast({
+        title: "Không tải được",
+        description: e instanceof Error ? e.message : "Lỗi",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -71,7 +105,11 @@ const DeckStudyPage = () => {
           setShowBack(false);
         }
       } catch (e: unknown) {
-        toast({ title: "Lỗi ghi nhận", description: e instanceof Error ? e.message : "Lỗi", variant: "destructive" });
+        toast({
+          title: "Lỗi ghi nhận",
+          description: e instanceof Error ? e.message : "Lỗi",
+          variant: "destructive",
+        });
       } finally {
         setSubmitting(false);
       }
@@ -109,7 +147,9 @@ const DeckStudyPage = () => {
           <Button variant="ghost" size="sm" onClick={() => navigate("/decks")}>
             <ArrowLeft className="mr-1 h-4 w-4" /> Thư viện
           </Button>
-          <span className="text-sm font-medium text-muted-foreground">{deckTitle || "Học SRS"}</span>
+          <span className="text-sm font-medium text-muted-foreground">
+            {deckTitle || "Học SRS"}
+          </span>
         </div>
 
         {loading ? (
@@ -121,13 +161,19 @@ const DeckStudyPage = () => {
             <CardContent className="flex flex-col items-center gap-4 py-16 text-center">
               <PartyPopper className="h-12 w-12 text-emerald-500" />
               <div>
-                <p className="text-xl font-bold">{cards.length === 0 ? "Không có thẻ đến hạn" : "Hoàn thành!"}</p>
+                <p className="text-xl font-bold">
+                  {cards.length === 0 ? "Không có thẻ đến hạn" : "Hoàn thành!"}
+                </p>
                 <p className="text-muted-foreground">
-                  {cards.length === 0 ? "Quay lại sau khi thẻ đến hạn ôn." : `Bạn đã ôn ${reviewed} thẻ.`}
+                  {cards.length === 0
+                    ? "Quay lại sau khi thẻ đến hạn ôn."
+                    : `Bạn đã ôn ${reviewed} thẻ.`}
                 </p>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" onClick={() => navigate("/decks")}>Về thư viện</Button>
+                <Button variant="outline" onClick={() => navigate("/decks")}>
+                  Về thư viện
+                </Button>
                 <Button onClick={() => void load()}>
                   <RotateCcw className="mr-1 h-4 w-4" /> Tải lại
                 </Button>
@@ -138,11 +184,16 @@ const DeckStudyPage = () => {
           <>
             <div className="mb-4">
               <div className="mb-1 flex justify-between text-xs text-muted-foreground">
-                <span>{index + 1} / {cards.length}</span>
+                <span>
+                  {index + 1} / {cards.length}
+                </span>
                 <span className="uppercase tracking-wide">{current?.state}</span>
               </div>
               <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${progress}%` }} />
+                <div
+                  className="h-full rounded-full bg-primary transition-all"
+                  style={{ width: `${progress}%` }}
+                />
               </div>
             </div>
 
@@ -160,10 +211,18 @@ const DeckStudyPage = () => {
                 </AnimatePresence>
 
                 {showBack && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full space-y-3 border-t pt-6">
-                    {current?.hint && <p className="text-lg text-muted-foreground">{current.hint}</p>}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="w-full space-y-3 border-t pt-6"
+                  >
+                    {current?.hint && (
+                      <p className="text-lg text-muted-foreground">{current.hint}</p>
+                    )}
                     <p className="text-2xl font-semibold text-primary">{current?.back}</p>
-                    {current?.explanation && <p className="text-sm text-muted-foreground">{current.explanation}</p>}
+                    {current?.explanation && (
+                      <p className="text-sm text-muted-foreground">{current.explanation}</p>
+                    )}
                   </motion.div>
                 )}
               </CardContent>
@@ -172,7 +231,8 @@ const DeckStudyPage = () => {
             <div className="mt-4">
               {!showBack ? (
                 <Button className="w-full" size="lg" onClick={() => setShowBack(true)}>
-                  <Eye className="mr-1 h-4 w-4" /> Hiện đáp án <span className="ml-2 opacity-60">(Space)</span>
+                  <Eye className="mr-1 h-4 w-4" /> Hiện đáp án{" "}
+                  <span className="ml-2 opacity-60">(Space)</span>
                 </Button>
               ) : (
                 <div className="grid grid-cols-4 gap-2">
@@ -187,7 +247,9 @@ const DeckStudyPage = () => {
                       )}
                     >
                       <span className="text-sm font-semibold">{r.label}</span>
-                      <span className="text-[11px] opacity-90">{current?.[r.hint as keyof StudyCard] as string}</span>
+                      <span className="text-[11px] opacity-90">
+                        {current?.[r.hint as keyof StudyCard] as string}
+                      </span>
                     </button>
                   ))}
                 </div>

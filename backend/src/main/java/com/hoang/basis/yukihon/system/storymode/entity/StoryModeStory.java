@@ -1,16 +1,16 @@
 package com.hoang.basis.yukihon.system.storymode.entity;
 
 import jakarta.persistence.*;
+import java.time.Instant;
 import lombok.*;
 
-import java.time.Instant;
-
 @Entity
-@Table(name = "story_mode_stories",
+@Table(
+        name = "story_mode_stories",
         uniqueConstraints = @UniqueConstraint(name = "uk_story_mode_story_key", columnNames = "story_key"),
         indexes = {
-                @Index(name = "idx_story_mode_published", columnList = "published"),
-                @Index(name = "idx_story_mode_jlpt", columnList = "jlpt_level")
+            @Index(name = "idx_story_mode_published", columnList = "published"),
+            @Index(name = "idx_story_mode_jlpt", columnList = "jlpt_level")
         })
 @Getter
 @Setter

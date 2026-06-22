@@ -16,8 +16,12 @@ import lombok.Setter;
 
 /** A user's favorite deck. */
 @Entity
-@Table(name = "favorite_decks",
-        uniqueConstraints = @UniqueConstraint(name = "uk_favorite_deck", columnNames = {"user_id", "deck_id"}),
+@Table(
+        name = "favorite_decks",
+        uniqueConstraints =
+                @UniqueConstraint(
+                        name = "uk_favorite_deck",
+                        columnNames = {"user_id", "deck_id"}),
         indexes = @Index(name = "idx_favorite_decks_user", columnList = "user_id"))
 @Getter
 @Setter

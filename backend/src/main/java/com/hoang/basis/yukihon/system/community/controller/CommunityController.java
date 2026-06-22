@@ -1,9 +1,9 @@
 package com.hoang.basis.yukihon.system.community.controller;
 
 import com.hoang.basis.yukihon.system.community.dto.*;
+import com.hoang.basis.yukihon.system.community.service.CommunityService;
 import com.hoang.basis.yukihon.system.user.entity.User;
 import com.hoang.basis.yukihon.system.user.repository.UserRepository;
-import com.hoang.basis.yukihon.system.community.service.CommunityService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -24,7 +24,8 @@ public class CommunityController {
     private final UserRepository userRepository;
 
     private Long getUserId(UserDetails userDetails) {
-        User user = userRepository.findByEmail(userDetails.getUsername())
+        User user = userRepository
+                .findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new com.hoang.basis.yukihon.exception.ResourceNotFoundException("User not found"));
         return user.getId();
     }
@@ -36,23 +37,21 @@ public class CommunityController {
             @RequestParam(required = false) String jlptLevel,
             @RequestParam(required = false) String search,
             @RequestParam(defaultValue = "false") boolean bookmarkedOnly,
-            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
-    ) {
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         Long userId = getUserId(userDetails);
         if ((category != null && !category.isEmpty())
                 || (jlptLevel != null && !jlptLevel.isEmpty())
                 || (search != null && !search.isEmpty())
                 || bookmarkedOnly) {
-            return ResponseEntity.ok(communityService.searchPosts(category, jlptLevel, search, bookmarkedOnly, userId, pageable));
+            return ResponseEntity.ok(
+                    communityService.searchPosts(category, jlptLevel, search, bookmarkedOnly, userId, pageable));
         }
         return ResponseEntity.ok(communityService.getAllPosts(userId, pageable));
     }
 
     @GetMapping("/posts/{postId}")
     public ResponseEntity<PostDto> getPost(
-            @PathVariable Long postId,
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
+            @PathVariable Long postId, @AuthenticationPrincipal UserDetails userDetails) {
         Long userId = getUserId(userDetails);
         return ResponseEntity.ok(communityService.getPostById(postId, userId));
     }
@@ -61,26 +60,21 @@ public class CommunityController {
     public ResponseEntity<Page<PostDto>> getUserPosts(
             @PathVariable Long userId,
             @AuthenticationPrincipal UserDetails userDetails,
-            @PageableDefault(size = 20) Pageable pageable
-    ) {
+            @PageableDefault(size = 20) Pageable pageable) {
         Long currentUserId = getUserId(userDetails);
         return ResponseEntity.ok(communityService.getPostsByUser(userId, currentUserId, pageable));
     }
 
     @PostMapping("/posts")
     public ResponseEntity<PostDto> createPost(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @Valid @RequestBody CreatePostRequest request
-    ) {
+            @AuthenticationPrincipal UserDetails userDetails, @Valid @RequestBody CreatePostRequest request) {
         Long userId = getUserId(userDetails);
         return ResponseEntity.ok(communityService.createPost(userId, request));
     }
 
     @DeleteMapping("/posts/{postId}")
     public ResponseEntity<Void> deletePost(
-            @PathVariable Long postId,
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
+            @PathVariable Long postId, @AuthenticationPrincipal UserDetails userDetails) {
         Long userId = getUserId(userDetails);
         communityService.deletePost(postId, userId);
         return ResponseEntity.noContent().build();
@@ -88,27 +82,21 @@ public class CommunityController {
 
     @PostMapping("/posts/{postId}/like")
     public ResponseEntity<PostDto> toggleLike(
-            @PathVariable Long postId,
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
+            @PathVariable Long postId, @AuthenticationPrincipal UserDetails userDetails) {
         Long userId = getUserId(userDetails);
         return ResponseEntity.ok(communityService.toggleLike(postId, userId));
     }
 
     @PostMapping("/posts/{postId}/bookmark")
     public ResponseEntity<PostDto> toggleBookmark(
-            @PathVariable Long postId,
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
+            @PathVariable Long postId, @AuthenticationPrincipal UserDetails userDetails) {
         Long userId = getUserId(userDetails);
         return ResponseEntity.ok(communityService.toggleBookmark(postId, userId));
     }
 
     @GetMapping("/posts/{postId}/comments")
     public ResponseEntity<Page<CommentDto>> getComments(
-            @PathVariable Long postId,
-            @PageableDefault(size = 20) Pageable pageable
-    ) {
+            @PathVariable Long postId, @PageableDefault(size = 20) Pageable pageable) {
         return ResponseEntity.ok(communityService.getComments(postId, pageable));
     }
 
@@ -116,17 +104,14 @@ public class CommunityController {
     public ResponseEntity<CommentDto> addComment(
             @PathVariable Long postId,
             @AuthenticationPrincipal UserDetails userDetails,
-            @Valid @RequestBody CreateCommentRequest request
-    ) {
+            @Valid @RequestBody CreateCommentRequest request) {
         Long userId = getUserId(userDetails);
         return ResponseEntity.ok(communityService.addComment(postId, userId, request));
     }
 
     @DeleteMapping("/comments/{commentId}")
     public ResponseEntity<Void> deleteComment(
-            @PathVariable Long commentId,
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
+            @PathVariable Long commentId, @AuthenticationPrincipal UserDetails userDetails) {
         Long userId = getUserId(userDetails);
         communityService.deleteComment(commentId, userId);
         return ResponseEntity.noContent().build();

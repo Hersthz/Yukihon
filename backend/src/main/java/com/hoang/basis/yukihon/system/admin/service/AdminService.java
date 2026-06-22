@@ -1,5 +1,6 @@
 package com.hoang.basis.yukihon.system.admin.service;
 
+import com.hoang.basis.yukihon.exception.ResourceNotFoundException;
 import com.hoang.basis.yukihon.system.admin.dto.ContentLevelBreakdownDto;
 import com.hoang.basis.yukihon.system.admin.dto.ContentOverviewDto;
 import com.hoang.basis.yukihon.system.admin.dto.QuizAnalyticsDto;
@@ -10,8 +11,6 @@ import com.hoang.basis.yukihon.system.admin.dto.SystemStatsDto;
 import com.hoang.basis.yukihon.system.admin.dto.UpdateUserRolesRequest;
 import com.hoang.basis.yukihon.system.admin.dto.UpdateUserStatusRequest;
 import com.hoang.basis.yukihon.system.admin.dto.UserManagementDto;
-import com.hoang.basis.yukihon.exception.ResourceNotFoundException;
-import com.hoang.basis.yukihon.system.grammar.entity.Grammar;
 import com.hoang.basis.yukihon.system.grammar.repository.GrammarRepository;
 import com.hoang.basis.yukihon.system.lesson.entity.Lesson;
 import com.hoang.basis.yukihon.system.lesson.repository.LessonRepository;
@@ -22,15 +21,7 @@ import com.hoang.basis.yukihon.system.quizattempt.repository.QuizAttemptReposito
 import com.hoang.basis.yukihon.system.user.entity.RoleName;
 import com.hoang.basis.yukihon.system.user.entity.User;
 import com.hoang.basis.yukihon.system.user.repository.UserRepository;
-import com.hoang.basis.yukihon.system.vocabulary.entity.Vocabulary;
 import com.hoang.basis.yukihon.system.vocabulary.repository.VocabularyRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -40,6 +31,12 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -58,8 +55,7 @@ public class AdminService {
      */
     public Page<UserManagementDto> getAllUsers(Pageable pageable) {
         log.info("Fetching all users with pagination: {}", pageable);
-        return userRepository.findAll(pageable)
-                .map(UserManagementDto::fromEntity);
+        return userRepository.findAll(pageable).map(UserManagementDto::fromEntity);
     }
 
     /**
@@ -75,7 +71,7 @@ public class AdminService {
     @Transactional
     public UserManagementDto updateUserRoles(Long userId, UpdateUserRolesRequest request) {
         log.info("Updating roles for user {}: {}", userId, request.getRoles());
-        
+
         User user = findUserByIdOrThrow(userId);
 
         Set<RoleName> roles = request.getRoles().stream()
@@ -108,7 +104,7 @@ public class AdminService {
     @Transactional
     public UserManagementDto updateUserStatus(Long userId, UpdateUserStatusRequest request) {
         log.info("Updating status for user {}: enabled={}", userId, request.getEnabled());
-        
+
         User user = findUserByIdOrThrow(userId);
 
         if (Boolean.FALSE.equals(request.getEnabled())) {
@@ -116,7 +112,7 @@ public class AdminService {
         }
         user.setEnabled(request.getEnabled());
         User updated = userRepository.save(user);
-        
+
         log.info("Successfully updated status for user {}", userId);
         return UserManagementDto.fromEntity(updated);
     }
@@ -127,7 +123,7 @@ public class AdminService {
     @Transactional
     public void deleteUser(Long userId) {
         log.info("Deleting user {}", userId);
-        
+
         User user = findUserByIdOrThrow(userId);
 
         ensureNotRemovingLastAdmin(user);
@@ -142,7 +138,7 @@ public class AdminService {
      */
     public SystemStatsDto getSystemStats() {
         log.info("Fetching system statistics");
-        
+
         long totalUsers = userRepository.count();
         long activeUsers = userRepository.countByEnabled(true);
         long adminUsers = userRepository.countUsersByRole(RoleName.ADMIN);
@@ -177,17 +173,17 @@ public class AdminService {
         Map<String, ContentLevelAccumulator> levelMap = new LinkedHashMap<>();
         initializeLevelMap(levelMap);
 
-        lessonRepository.findAll().forEach(lesson -> levelMap
-                .computeIfAbsent(normalizeLevel(lesson.getJlptLevel()), ignored -> new ContentLevelAccumulator())
+        lessonRepository.findAll().forEach(lesson -> levelMap.computeIfAbsent(
+                        normalizeLevel(lesson.getJlptLevel()), ignored -> new ContentLevelAccumulator())
                 .lessons++);
-        vocabularyRepository.findAll().forEach(vocabulary -> levelMap
-                .computeIfAbsent(normalizeLevel(vocabulary.getJlptLevel()), ignored -> new ContentLevelAccumulator())
+        vocabularyRepository.findAll().forEach(vocabulary -> levelMap.computeIfAbsent(
+                        normalizeLevel(vocabulary.getJlptLevel()), ignored -> new ContentLevelAccumulator())
                 .vocabulary++);
-        grammarRepository.findAll().forEach(grammar -> levelMap
-                .computeIfAbsent(normalizeLevel(grammar.getJlptLevel()), ignored -> new ContentLevelAccumulator())
+        grammarRepository.findAll().forEach(grammar -> levelMap.computeIfAbsent(
+                        normalizeLevel(grammar.getJlptLevel()), ignored -> new ContentLevelAccumulator())
                 .grammar++);
-        quizRepository.findAll().forEach(quiz -> levelMap
-                .computeIfAbsent(normalizeLevel(quiz.getJlptLevel()), ignored -> new ContentLevelAccumulator())
+        quizRepository.findAll().forEach(quiz -> levelMap.computeIfAbsent(
+                        normalizeLevel(quiz.getJlptLevel()), ignored -> new ContentLevelAccumulator())
                 .quizzes++);
 
         List<ContentLevelBreakdownDto> levelBreakdown = levelMap.entrySet().stream()
@@ -232,7 +228,8 @@ public class AdminService {
                     .build();
         }
 
-        Map<Long, Quiz> quizById = quizRepository.findAllById(attempts.stream()
+        Map<Long, Quiz> quizById = quizRepository
+                .findAllById(attempts.stream()
                         .map(QuizAttempt::getQuizId)
                         .filter(Objects::nonNull)
                         .collect(Collectors.toSet()))
@@ -250,16 +247,24 @@ public class AdminService {
                 correctAttempts++;
             }
 
-            questionMap.computeIfAbsent(attempt.getQuizId(), quizId -> new QuizQuestionAccumulator(quizId, quiz))
+            questionMap
+                    .computeIfAbsent(attempt.getQuizId(), quizId -> new QuizQuestionAccumulator(quizId, quiz))
                     .record(attempt);
 
-            if (!attempt.isCorrect() && attempt.getMistakePattern() != null && !attempt.getMistakePattern().isBlank()) {
+            if (!attempt.isCorrect()
+                    && attempt.getMistakePattern() != null
+                    && !attempt.getMistakePattern().isBlank()) {
                 String pattern = attempt.getMistakePattern().trim().toLowerCase(Locale.ROOT);
                 patternMap.merge(pattern, 1L, Long::sum);
             }
 
-            recordCohort(cohortMap, "JLPT", normalizeLevel(quiz != null ? quiz.getJlptLevel() : null), attempt.isCorrect());
-            recordCohort(cohortMap, "DIFFICULTY", normalizeCohortValue(quiz != null ? quiz.getDifficultyLevel() : null), attempt.isCorrect());
+            recordCohort(
+                    cohortMap, "JLPT", normalizeLevel(quiz != null ? quiz.getJlptLevel() : null), attempt.isCorrect());
+            recordCohort(
+                    cohortMap,
+                    "DIFFICULTY",
+                    normalizeCohortValue(quiz != null ? quiz.getDifficultyLevel() : null),
+                    attempt.isCorrect());
         }
 
         long totalAttempts = attempts.size();
@@ -283,16 +288,18 @@ public class AdminService {
                 .map(QuizQuestionAccumulator::toDto)
                 .collect(Collectors.toList());
 
-        List<QuizCohortAccuracyDto> cohortAccuracy = cohortMap.values().stream()
-                .map(CohortAccumulator::toDto)
-                .collect(Collectors.toList());
+        List<QuizCohortAccuracyDto> cohortAccuracy =
+                cohortMap.values().stream().map(CohortAccumulator::toDto).collect(Collectors.toList());
 
         return QuizAnalyticsDto.builder()
                 .totalAttempts(totalAttempts)
                 .correctAttempts(correctAttempts)
                 .wrongAttempts(wrongAttempts)
                 .overallAccuracy(percentage(correctAttempts, totalAttempts))
-                .mostCommonPattern(patternBreakdown.isEmpty() ? null : patternBreakdown.get(0).getPattern())
+                .mostCommonPattern(
+                        patternBreakdown.isEmpty()
+                                ? null
+                                : patternBreakdown.get(0).getPattern())
                 .mostMissedQuestions(mostMissedQuestions)
                 .patternBreakdown(patternBreakdown)
                 .cohortAccuracy(cohortAccuracy)
@@ -302,10 +309,10 @@ public class AdminService {
     public String exportQuizAnalyticsCsv() {
         QuizAnalyticsDto analytics = getQuizAnalytics();
         StringBuilder csv = new StringBuilder();
-        csv.append("quizId,title,jlptLevel,difficultyLevel,quizType,totalAttempts,wrongAttempts,accuracyRate,topPattern\n");
+        csv.append(
+                "quizId,title,jlptLevel,difficultyLevel,quizType,totalAttempts,wrongAttempts,accuracyRate,topPattern\n");
 
-        analytics.getMostMissedQuestions().forEach(item -> csv
-                .append(item.getQuizId() != null ? item.getQuizId() : "")
+        analytics.getMostMissedQuestions().forEach(item -> csv.append(item.getQuizId() != null ? item.getQuizId() : "")
                 .append(',')
                 .append(csvEscape(item.getTitle()))
                 .append(',')
@@ -339,15 +346,12 @@ public class AdminService {
             return List.of();
         }
 
-        List<User> users = userRepository
-            .findTop100ByEmailContainingIgnoreCaseOrDisplayNameContainingIgnoreCaseOrderByCreatedAtDesc(
-                normalizedQuery,
-                normalizedQuery
-            );
+        List<User> users =
+                userRepository
+                        .findTop100ByEmailContainingIgnoreCaseOrDisplayNameContainingIgnoreCaseOrderByCreatedAtDesc(
+                                normalizedQuery, normalizedQuery);
 
-        return users.stream()
-                .map(UserManagementDto::fromEntity)
-                .collect(Collectors.toList());
+        return users.stream().map(UserManagementDto::fromEntity).collect(Collectors.toList());
     }
 
     /**
@@ -356,15 +360,15 @@ public class AdminService {
     @Transactional
     public UserManagementDto promoteToAdmin(Long userId) {
         log.info("Promoting user {} to admin", userId);
-        
+
         User user = findUserByIdOrThrow(userId);
 
         Set<RoleName> roles = new HashSet<>(user.getRoles());
         roles.add(RoleName.ADMIN);
         user.setRoles(roles);
-        
+
         User updated = userRepository.save(user);
-        
+
         log.info("Successfully promoted user {} to admin", userId);
         return UserManagementDto.fromEntity(updated);
     }
@@ -375,7 +379,7 @@ public class AdminService {
     @Transactional
     public UserManagementDto demoteFromAdmin(Long userId) {
         log.info("Demoting user {} from admin", userId);
-        
+
         User user = findUserByIdOrThrow(userId);
 
         ensureNotRemovingLastAdmin(user);
@@ -385,16 +389,18 @@ public class AdminService {
             roles.add(RoleName.USER);
         }
         user.setRoles(roles);
-        
+
         User updated = userRepository.save(user);
-        
+
         log.info("Successfully demoted user {} from admin", userId);
         return UserManagementDto.fromEntity(updated);
     }
 
-    private void recordCohort(Map<String, CohortAccumulator> cohortMap, String dimension, String value, boolean correct) {
+    private void recordCohort(
+            Map<String, CohortAccumulator> cohortMap, String dimension, String value, boolean correct) {
         String key = dimension + ":" + value;
-        cohortMap.computeIfAbsent(key, ignored -> new CohortAccumulator(dimension, value))
+        cohortMap
+                .computeIfAbsent(key, ignored -> new CohortAccumulator(dimension, value))
                 .record(correct);
     }
 
@@ -422,7 +428,8 @@ public class AdminService {
     }
 
     private User findUserByIdOrThrow(Long userId) {
-        return userRepository.findById(userId)
+        return userRepository
+                .findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
     }
 
@@ -476,7 +483,8 @@ public class AdminService {
             }
 
             wrongAttempts++;
-            if (attempt.getMistakePattern() != null && !attempt.getMistakePattern().isBlank()) {
+            if (attempt.getMistakePattern() != null
+                    && !attempt.getMistakePattern().isBlank()) {
                 patternCounts.merge(attempt.getMistakePattern().trim().toLowerCase(Locale.ROOT), 1L, Long::sum);
             }
         }
@@ -492,7 +500,10 @@ public class AdminService {
                     .title(quiz != null ? quiz.getTitle() : "Quiz #" + quizId)
                     .jlptLevel(quiz != null ? normalizeLevel(quiz.getJlptLevel()) : "OTHER")
                     .difficultyLevel(quiz != null ? normalizeCohortValue(quiz.getDifficultyLevel()) : "OTHER")
-                    .quizType(quiz != null && quiz.getQuizType() != null ? quiz.getQuizType().name() : "UNKNOWN")
+                    .quizType(
+                            quiz != null && quiz.getQuizType() != null
+                                    ? quiz.getQuizType().name()
+                                    : "UNKNOWN")
                     .totalAttempts(totalAttempts)
                     .wrongAttempts(wrongAttempts)
                     .accuracyRate(percentage(correctAttempts, totalAttempts))

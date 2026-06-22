@@ -1,12 +1,11 @@
 package com.hoang.basis.yukihon.system.grammar.repository;
 
 import com.hoang.basis.yukihon.system.grammar.entity.Grammar;
+import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-
-import java.util.List;
-import java.util.Optional;
 
 public interface GrammarRepository extends JpaRepository<Grammar, Long> {
 

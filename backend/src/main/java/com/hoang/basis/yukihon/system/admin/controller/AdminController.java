@@ -8,6 +8,7 @@ import com.hoang.basis.yukihon.system.admin.dto.UpdateUserStatusRequest;
 import com.hoang.basis.yukihon.system.admin.dto.UserManagementDto;
 import com.hoang.basis.yukihon.system.admin.service.AdminService;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -19,8 +20,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -37,9 +36,7 @@ public class AdminController {
     @GetMapping("/users")
     @PreAuthorize("hasAuthority('ADMIN_USERS_MANAGE')")
     public ResponseEntity<Page<UserManagementDto>> getAllUsers(
-            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
-            Pageable pageable
-    ) {
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         log.info("Admin request: Get all users");
         return ResponseEntity.ok(adminService.getAllUsers(pageable));
     }
@@ -70,9 +67,7 @@ public class AdminController {
     @PutMapping("/users/{userId}/roles")
     @PreAuthorize("hasAuthority('ADMIN_ROLES_MANAGE')")
     public ResponseEntity<UserManagementDto> updateUserRoles(
-            @PathVariable Long userId,
-            @Valid @RequestBody UpdateUserRolesRequest request
-    ) {
+            @PathVariable Long userId, @Valid @RequestBody UpdateUserRolesRequest request) {
         log.info("Admin request: Update roles for user {}", userId);
         return ResponseEntity.ok(adminService.updateUserRoles(userId, request));
     }
@@ -83,9 +78,7 @@ public class AdminController {
     @PutMapping("/users/{userId}/status")
     @PreAuthorize("hasAuthority('ADMIN_USERS_MANAGE')")
     public ResponseEntity<UserManagementDto> updateUserStatus(
-            @PathVariable Long userId,
-            @Valid @RequestBody UpdateUserStatusRequest request
-    ) {
+            @PathVariable Long userId, @Valid @RequestBody UpdateUserStatusRequest request) {
         log.info("Admin request: Update status for user {}", userId);
         return ResponseEntity.ok(adminService.updateUserStatus(userId, request));
     }

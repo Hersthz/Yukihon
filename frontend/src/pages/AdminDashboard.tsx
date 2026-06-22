@@ -16,9 +16,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import LearningFunnelTrendChart from "@/components/admin/LearningFunnelTrendChart";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { adminApi, learningAnalyticsApi, type LearningFunnelResponse, type QuizAnalytics } from "@/api";
+import {
+  adminApi,
+  learningAnalyticsApi,
+  type LearningFunnelResponse,
+  type QuizAnalytics,
+} from "@/api";
 import { useAuth } from "@/hooks/use-auth";
 import { Navigate } from "react-router-dom";
 
@@ -69,7 +81,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const statsResult = await adminApi.getSystemStats() as SystemStats;
+        const statsResult = (await adminApi.getSystemStats()) as SystemStats;
         setStats(statsResult);
       } catch (error) {
         console.error("Failed to fetch system stats:", error);
@@ -251,7 +263,10 @@ const AdminDashboard = () => {
                   <CardContent>
                     <div className="text-3xl font-bold">{stat.value}</div>
                     {stat.link && (
-                      <Link to={stat.link} className="text-xs text-primary hover:underline mt-1 inline-block">
+                      <Link
+                        to={stat.link}
+                        className="text-xs text-primary hover:underline mt-1 inline-block"
+                      >
                         View all →
                       </Link>
                     )}
@@ -280,7 +295,9 @@ const AdminDashboard = () => {
               <Button
                 variant="outline"
                 onClick={handleExportQuizAnalytics}
-                disabled={exportingQuizAnalytics || quizAnalyticsLoading || !quizAnalytics?.totalAttempts}
+                disabled={
+                  exportingQuizAnalytics || quizAnalyticsLoading || !quizAnalytics?.totalAttempts
+                }
               >
                 <Download className="mr-2 h-4 w-4" />
                 {exportingQuizAnalytics ? "Exporting..." : "Export CSV"}
@@ -299,20 +316,34 @@ const AdminDashboard = () => {
                 <div className="space-y-6">
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
                     <div className="rounded-lg border border-border/60 bg-background/40 p-4">
-                      <p className="text-xs uppercase tracking-wide text-muted-foreground">Attempts</p>
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                        Attempts
+                      </p>
                       <p className="mt-1 text-2xl font-semibold">{quizAnalytics.totalAttempts}</p>
                     </div>
                     <div className="rounded-lg border border-border/60 bg-background/40 p-4">
-                      <p className="text-xs uppercase tracking-wide text-muted-foreground">Overall Accuracy</p>
-                      <p className="mt-1 text-2xl font-semibold text-emerald-400">{formatPercent(quizAnalytics.overallAccuracy)}</p>
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                        Overall Accuracy
+                      </p>
+                      <p className="mt-1 text-2xl font-semibold text-emerald-400">
+                        {formatPercent(quizAnalytics.overallAccuracy)}
+                      </p>
                     </div>
                     <div className="rounded-lg border border-border/60 bg-background/40 p-4">
-                      <p className="text-xs uppercase tracking-wide text-muted-foreground">Wrong Attempts</p>
-                      <p className="mt-1 text-2xl font-semibold text-amber-400">{quizAnalytics.wrongAttempts}</p>
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                        Wrong Attempts
+                      </p>
+                      <p className="mt-1 text-2xl font-semibold text-amber-400">
+                        {quizAnalytics.wrongAttempts}
+                      </p>
                     </div>
                     <div className="rounded-lg border border-border/60 bg-background/40 p-4">
-                      <p className="text-xs uppercase tracking-wide text-muted-foreground">Top Pattern</p>
-                      <p className="mt-1 text-2xl font-semibold">{formatPattern(quizAnalytics.mostCommonPattern)}</p>
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                        Top Pattern
+                      </p>
+                      <p className="mt-1 text-2xl font-semibold">
+                        {formatPattern(quizAnalytics.mostCommonPattern)}
+                      </p>
                     </div>
                   </div>
 
@@ -337,8 +368,12 @@ const AdminDashboard = () => {
                               </TableCell>
                               <TableCell>{item.jlptLevel}</TableCell>
                               <TableCell>{item.difficultyLevel}</TableCell>
-                              <TableCell className="text-right text-amber-400">{item.wrongAttempts}</TableCell>
-                              <TableCell className="text-right">{formatPercent(item.accuracyRate)}</TableCell>
+                              <TableCell className="text-right text-amber-400">
+                                {item.wrongAttempts}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {formatPercent(item.accuracyRate)}
+                              </TableCell>
                               <TableCell>{formatPattern(item.topPattern)}</TableCell>
                             </TableRow>
                           ))}
@@ -351,9 +386,14 @@ const AdminDashboard = () => {
                         <p className="text-sm font-semibold">Pattern Breakdown</p>
                         <div className="mt-3 space-y-2">
                           {quizAnalytics.patternBreakdown.slice(0, 6).map((item) => (
-                            <div key={item.pattern} className="flex items-center justify-between rounded-md border border-border/50 bg-card/50 px-3 py-2 text-sm">
+                            <div
+                              key={item.pattern}
+                              className="flex items-center justify-between rounded-md border border-border/50 bg-card/50 px-3 py-2 text-sm"
+                            >
                               <span>{formatPattern(item.pattern)}</span>
-                              <span className="font-semibold text-amber-400">{item.wrongAttempts}</span>
+                              <span className="font-semibold text-amber-400">
+                                {item.wrongAttempts}
+                              </span>
                             </div>
                           ))}
                         </div>
@@ -371,9 +411,13 @@ const AdminDashboard = () => {
                           <TableBody>
                             {quizAnalytics.cohortAccuracy.map((item) => (
                               <TableRow key={`${item.dimension}-${item.value}`}>
-                                <TableCell className="font-medium">{item.dimension}: {item.value}</TableCell>
+                                <TableCell className="font-medium">
+                                  {item.dimension}: {item.value}
+                                </TableCell>
                                 <TableCell className="text-right">{item.totalAttempts}</TableCell>
-                                <TableCell className="text-right text-emerald-400">{formatPercent(item.accuracyRate)}</TableCell>
+                                <TableCell className="text-right text-emerald-400">
+                                  {formatPercent(item.accuracyRate)}
+                                </TableCell>
                               </TableRow>
                             ))}
                           </TableBody>
@@ -398,13 +442,16 @@ const AdminDashboard = () => {
             <CardHeader>
               <CardTitle>Learning Funnel</CardTitle>
               <CardDescription>
-                Track start, completion, abandonment, and quiz recovery to identify high-retention lessons.
+                Track start, completion, abandonment, and quiz recovery to identify high-retention
+                lessons.
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="mb-5 grid grid-cols-1 gap-3 border border-border/60 bg-background/30 p-4 md:grid-cols-4">
                 <div className="space-y-1">
-                  <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Window</label>
+                  <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    Window
+                  </label>
                   <select
                     className="h-9 w-full rounded-md border border-border bg-background px-2 text-sm"
                     value={funnelDays}
@@ -418,7 +465,9 @@ const AdminDashboard = () => {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">JLPT Cohort</label>
+                  <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    JLPT Cohort
+                  </label>
                   <select
                     className="h-9 w-full rounded-md border border-border bg-background px-2 text-sm"
                     value={funnelJlpt}
@@ -434,13 +483,25 @@ const AdminDashboard = () => {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">From date</label>
-                  <Input type="date" value={funnelStartDate} onChange={(e) => setFunnelStartDate(e.target.value)} />
+                  <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    From date
+                  </label>
+                  <Input
+                    type="date"
+                    value={funnelStartDate}
+                    onChange={(e) => setFunnelStartDate(e.target.value)}
+                  />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">To date</label>
-                  <Input type="date" value={funnelEndDate} onChange={(e) => setFunnelEndDate(e.target.value)} />
+                  <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    To date
+                  </label>
+                  <Input
+                    type="date"
+                    value={funnelEndDate}
+                    onChange={(e) => setFunnelEndDate(e.target.value)}
+                  />
                   {hasCustomDateRange && (
                     <button
                       type="button"
@@ -464,30 +525,52 @@ const AdminDashboard = () => {
               ) : (
                 <div className="space-y-6">
                   <div className="rounded-lg border border-border/60 bg-background/30 p-3 text-xs text-muted-foreground">
-                    Cohort: <span className="font-medium text-foreground">{funnel.jlptLevel ?? "All JLPT"}</span>
+                    Cohort:{" "}
+                    <span className="font-medium text-foreground">
+                      {funnel.jlptLevel ?? "All JLPT"}
+                    </span>
                     {" • "}
-                    Range: <span className="font-medium text-foreground">{funnel.startDate && funnel.endDate ? `${funnel.startDate} to ${funnel.endDate}` : `Last ${funnel.windowDays} days`}</span>
+                    Range:{" "}
+                    <span className="font-medium text-foreground">
+                      {funnel.startDate && funnel.endDate
+                        ? `${funnel.startDate} to ${funnel.endDate}`
+                        : `Last ${funnel.windowDays} days`}
+                    </span>
                   </div>
 
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
                     <div className="rounded-lg border border-border/60 bg-background/40 p-4">
-                      <p className="text-xs uppercase tracking-wide text-muted-foreground">Started</p>
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                        Started
+                      </p>
                       <p className="mt-1 text-2xl font-semibold">{funnel.totalStarted}</p>
                     </div>
                     <div className="rounded-lg border border-border/60 bg-background/40 p-4">
-                      <p className="text-xs uppercase tracking-wide text-muted-foreground">Completed</p>
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                        Completed
+                      </p>
                       <p className="mt-1 text-2xl font-semibold">{funnel.totalCompleted}</p>
-                      <p className="text-xs text-emerald-400">{formatPercent(funnel.overallCompletionRate)} completion rate</p>
+                      <p className="text-xs text-emerald-400">
+                        {formatPercent(funnel.overallCompletionRate)} completion rate
+                      </p>
                     </div>
                     <div className="rounded-lg border border-border/60 bg-background/40 p-4">
-                      <p className="text-xs uppercase tracking-wide text-muted-foreground">Abandoned</p>
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                        Abandoned
+                      </p>
                       <p className="mt-1 text-2xl font-semibold">{funnel.totalAbandoned}</p>
-                      <p className="text-xs text-amber-400">{formatPercent(funnel.overallAbandonmentRate)} abandonment rate</p>
+                      <p className="text-xs text-amber-400">
+                        {formatPercent(funnel.overallAbandonmentRate)} abandonment rate
+                      </p>
                     </div>
                     <div className="rounded-lg border border-border/60 bg-background/40 p-4">
-                      <p className="text-xs uppercase tracking-wide text-muted-foreground">Quiz Recovery</p>
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                        Quiz Recovery
+                      </p>
                       <p className="mt-1 text-2xl font-semibold">{funnel.totalQuizCorrected}</p>
-                      <p className="text-xs text-cyan-400">{formatPercent(funnel.overallQuizRecoveryRate)} corrected after wrong</p>
+                      <p className="text-xs text-cyan-400">
+                        {formatPercent(funnel.overallQuizRecoveryRate)} corrected after wrong
+                      </p>
                     </div>
                   </div>
 
@@ -510,10 +593,18 @@ const AdminDashboard = () => {
                           <TableRow key={`${item.contentType}-${item.contentId}`}>
                             <TableCell className="font-medium">{item.contentTitle}</TableCell>
                             <TableCell className="text-right">{item.startedCount}</TableCell>
-                            <TableCell className="text-right text-emerald-400">{formatPercent(item.completionRate)}</TableCell>
-                            <TableCell className="text-right text-amber-400">{formatPercent(item.abandonmentRate)}</TableCell>
-                            <TableCell className="text-right text-cyan-400">{formatPercent(item.quizRecoveryRate)}</TableCell>
-                            <TableCell className="text-right font-semibold">{formatPercent(item.retentionScore)}</TableCell>
+                            <TableCell className="text-right text-emerald-400">
+                              {formatPercent(item.completionRate)}
+                            </TableCell>
+                            <TableCell className="text-right text-amber-400">
+                              {formatPercent(item.abandonmentRate)}
+                            </TableCell>
+                            <TableCell className="text-right text-cyan-400">
+                              {formatPercent(item.quizRecoveryRate)}
+                            </TableCell>
+                            <TableCell className="text-right font-semibold">
+                              {formatPercent(item.retentionScore)}
+                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
@@ -572,7 +663,9 @@ const AdminDashboard = () => {
                 </div>
                 <div>
                   <div className="font-semibold">Creator Mode</div>
-                  <div className="text-xs text-muted-foreground">Build and review drag-drop content</div>
+                  <div className="text-xs text-muted-foreground">
+                    Build and review drag-drop content
+                  </div>
                 </div>
               </Link>
             </CardContent>

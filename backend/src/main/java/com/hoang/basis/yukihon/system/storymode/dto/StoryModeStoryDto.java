@@ -1,14 +1,13 @@
 package com.hoang.basis.yukihon.system.storymode.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @Builder
@@ -42,10 +41,13 @@ public class StoryModeStoryDto {
         private String japaneseText;
         private String translation;
         private Map<String, String> translationByDifficulty;
+
         @Builder.Default
         private List<String> vocabQueries = new ArrayList<>();
+
         @Builder.Default
         private List<GrammarDto> grammar = new ArrayList<>();
+
         private CheckpointDto checkpoint;
         private AdaptiveRoutesDto adaptiveRoutes;
         private String nextSegmentId;
@@ -69,8 +71,10 @@ public class StoryModeStoryDto {
         private String mode;
         private String question;
         private Map<String, String> questionByDifficulty;
+
         @Builder.Default
         private List<OptionDto> options = new ArrayList<>();
+
         private Map<String, List<OptionDto>> optionsByDifficulty;
         private String correctOptionId;
         private String explanation;

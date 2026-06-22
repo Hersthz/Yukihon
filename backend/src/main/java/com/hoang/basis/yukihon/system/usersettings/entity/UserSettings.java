@@ -2,13 +2,13 @@ package com.hoang.basis.yukihon.system.usersettings.entity;
 
 import com.hoang.basis.yukihon.system.user.entity.User;
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.time.Instant;
 import java.time.LocalDate;
+import lombok.*;
 
 @Entity
-@Table(name = "user_settings",
+@Table(
+        name = "user_settings",
         uniqueConstraints = @UniqueConstraint(name = "uk_settings_user", columnNames = "user_id"))
 @Getter
 @Setter

@@ -1,18 +1,18 @@
 package com.hoang.basis.yukihon.system.quiz.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.time.Instant;
+import lombok.*;
 
 /**
  * Quiz entity for assessments and practice
  */
 @Entity
-@Table(name = "quizzes",
+@Table(
+        name = "quizzes",
         indexes = {
-                @Index(name = "idx_quiz_level", columnList = "difficulty_level"),
-                @Index(name = "idx_quiz_type", columnList = "quiz_type")
+            @Index(name = "idx_quiz_level", columnList = "difficulty_level"),
+            @Index(name = "idx_quiz_type", columnList = "quiz_type")
         })
 @Getter
 @Setter

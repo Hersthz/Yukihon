@@ -15,11 +15,20 @@ import CommunityRealtimeChat from "@/pages/community/CommunityRealtimeChat";
 import CommunityChatRooms from "@/pages/community/CommunityChatRooms";
 import { FriendAndPmMessenger } from "@/pages/community/FriendAndPmMessenger";
 import { DEFAULT_CHAT_ROOMS, JLPT_OPTIONS } from "@/pages/community/constants";
-import { ChatRoom, Comment, CommunityStats, LeaderboardEntry, PagedComments, PagedPosts, Post } from "@/pages/community/types";
+import {
+  ChatRoom,
+  Comment,
+  CommunityStats,
+  LeaderboardEntry,
+  PagedComments,
+  PagedPosts,
+  Post,
+} from "@/pages/community/types";
 
 const CHAT_ROOM_STORAGE_KEY = "yukihon.community.chat-room";
 
-const normalizeRoomId = (roomId?: string | null) => (roomId?.trim().toLowerCase() || DEFAULT_CHAT_ROOMS[0]?.id || "general");
+const normalizeRoomId = (roomId?: string | null) =>
+  roomId?.trim().toLowerCase() || DEFAULT_CHAT_ROOMS[0]?.id || "general";
 
 const Community = () => {
   const { user } = useAuth();
@@ -38,7 +47,9 @@ const Community = () => {
   const [showBookmarkedOnly, setShowBookmarkedOnly] = useState(false);
   const [chatRooms, setChatRooms] = useState<ChatRoom[]>(DEFAULT_CHAT_ROOMS);
   const [chatRoomsLoading, setChatRoomsLoading] = useState(true);
-  const [selectedRoomId, setSelectedRoomId] = useState(() => normalizeRoomId(localStorage.getItem(CHAT_ROOM_STORAGE_KEY)));
+  const [selectedRoomId, setSelectedRoomId] = useState(() =>
+    normalizeRoomId(localStorage.getItem(CHAT_ROOM_STORAGE_KEY))
+  );
 
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [newTitle, setNewTitle] = useState("");
@@ -81,7 +92,11 @@ const Community = () => {
         setTotalPages(data.totalPages);
         setPage(data.number);
       } catch {
-        toast({ title: "Khong tai duoc cong dong", description: "Vui long thu lai.", variant: "destructive" });
+        toast({
+          title: "Khong tai duoc cong dong",
+          description: "Vui long thu lai.",
+          variant: "destructive",
+        });
       } finally {
         setLoading(false);
       }
@@ -137,7 +152,8 @@ const Community = () => {
   }, [selectedRoomId]);
 
   const selectedChatRoom = useMemo(
-    () => chatRooms.find((room) => room.id === selectedRoomId) ?? chatRooms[0] ?? DEFAULT_CHAT_ROOMS[0],
+    () =>
+      chatRooms.find((room) => room.id === selectedRoomId) ?? chatRooms[0] ?? DEFAULT_CHAT_ROOMS[0],
     [chatRooms, selectedRoomId]
   );
 
@@ -164,7 +180,11 @@ const Community = () => {
       await Promise.all([fetchPosts(0), fetchStats()]);
       toast({ title: "Da dang bai", description: "Bai viet moi da xuat hien trong feed." });
     } catch {
-      toast({ title: "Dang bai chua thanh cong", description: "Vui long thu lai.", variant: "destructive" });
+      toast({
+        title: "Dang bai chua thanh cong",
+        description: "Vui long thu lai.",
+        variant: "destructive",
+      });
     } finally {
       setPosting(false);
     }
@@ -176,7 +196,11 @@ const Community = () => {
       setPosts((prev) => prev.map((post) => (post.id === postId ? updated : post)));
       await fetchStats();
     } catch {
-      toast({ title: "Khong the tha tim", description: "Vui long thu lai.", variant: "destructive" });
+      toast({
+        title: "Khong the tha tim",
+        description: "Vui long thu lai.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -193,7 +217,11 @@ const Community = () => {
         setPosts((prev) => prev.map((post) => (post.id === postId ? updated : post)));
       }
     } catch {
-      toast({ title: "Khong the bookmark", description: "Vui long thu lai.", variant: "destructive" });
+      toast({
+        title: "Khong the bookmark",
+        description: "Vui long thu lai.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -203,7 +231,11 @@ const Community = () => {
       setPosts((prev) => prev.filter((post) => post.id !== postId));
       await fetchStats();
     } catch {
-      toast({ title: "Khong the xoa bai viet", description: "Vui long thu lai.", variant: "destructive" });
+      toast({
+        title: "Khong the xoa bai viet",
+        description: "Vui long thu lai.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -219,7 +251,11 @@ const Community = () => {
       const data = (await communityApi.getComments(postId)) as PagedComments;
       setCommentsByPost((prev) => ({ ...prev, [postId]: data.content }));
     } catch {
-      toast({ title: "Khong tai duoc binh luan", description: "Vui long thu lai.", variant: "destructive" });
+      toast({
+        title: "Khong tai duoc binh luan",
+        description: "Vui long thu lai.",
+        variant: "destructive",
+      });
     } finally {
       setLoadingComments(false);
     }
@@ -234,11 +270,17 @@ const Community = () => {
       setCommentsByPost((prev) => ({ ...prev, [postId]: [newComment, ...(prev[postId] || [])] }));
       setCommentInputs((prev) => ({ ...prev, [postId]: "" }));
       setPosts((prev) =>
-        prev.map((post) => (post.id === postId ? { ...post, commentCount: post.commentCount + 1 } : post))
+        prev.map((post) =>
+          post.id === postId ? { ...post, commentCount: post.commentCount + 1 } : post
+        )
       );
       await fetchStats();
     } catch {
-      toast({ title: "Khong gui duoc binh luan", description: "Vui long thu lai.", variant: "destructive" });
+      toast({
+        title: "Khong gui duoc binh luan",
+        description: "Vui long thu lai.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -251,7 +293,10 @@ const Community = () => {
           description="Feed da co title, tags, bookmark, search, leaderboard va bo loc JLPT de cac cuoc tro chuyen huu ich hon."
           eyebrow="Community"
           action={
-            <Button className="rounded-2xl bg-pink-500 text-white hover:bg-pink-400" onClick={() => setShowCreatePost((prev) => !prev)}>
+            <Button
+              className="rounded-2xl bg-pink-500 text-white hover:bg-pink-400"
+              onClick={() => setShowCreatePost((prev) => !prev)}
+            >
               <Plus className="mr-2 h-4 w-4" />
               Dang bai
             </Button>
@@ -259,10 +304,30 @@ const Community = () => {
         />
 
         <div className="mb-4 grid gap-3 md:grid-cols-4">
-          <MetricCard hint="Tong bai viet" icon={<MessageSquare className="h-4 w-4 text-sky-500" />} label="Posts" value={stats?.totalPosts ?? posts.length} />
-          <MetricCard hint="Binh luan toan cong dong" icon={<MessageCircle className="h-4 w-4 text-violet-500" />} label="Comments" value={stats?.totalComments ?? 0} />
-          <MetricCard hint="Nguoi tham gia" icon={<Users className="h-4 w-4 text-emerald-500" />} label="Contributors" value={stats?.totalContributors ?? 0} />
-          <MetricCard hint="Bai moi 7 ngay" icon={<Trophy className="h-4 w-4 text-amber-500" />} label="This week" value={stats?.postsThisWeek ?? 0} />
+          <MetricCard
+            hint="Tong bai viet"
+            icon={<MessageSquare className="h-4 w-4 text-sky-500" />}
+            label="Posts"
+            value={stats?.totalPosts ?? posts.length}
+          />
+          <MetricCard
+            hint="Binh luan toan cong dong"
+            icon={<MessageCircle className="h-4 w-4 text-violet-500" />}
+            label="Comments"
+            value={stats?.totalComments ?? 0}
+          />
+          <MetricCard
+            hint="Nguoi tham gia"
+            icon={<Users className="h-4 w-4 text-emerald-500" />}
+            label="Contributors"
+            value={stats?.totalContributors ?? 0}
+          />
+          <MetricCard
+            hint="Bai moi 7 ngay"
+            icon={<Trophy className="h-4 w-4 text-amber-500" />}
+            label="This week"
+            value={stats?.postsThisWeek ?? 0}
+          />
         </div>
 
         <div className="mb-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
@@ -291,13 +356,22 @@ const Community = () => {
               rooms={chatRooms}
               selectedRoomId={selectedChatRoom.id}
             />
-            <CommunityRealtimeChat currentUserId={user?.id} currentUserName={user?.displayName} room={selectedChatRoom} />
+            <CommunityRealtimeChat
+              currentUserId={user?.id}
+              currentUserName={user?.displayName}
+              room={selectedChatRoom}
+            />
           </div>
         </div>
 
         <AnimatePresence>
           {showCreatePost ? (
-            <motion.div animate={{ opacity: 1, y: 0 }} className="mb-4" exit={{ opacity: 0, y: -10 }} initial={{ opacity: 0, y: -10 }}>
+            <motion.div
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-4"
+              exit={{ opacity: 0, y: -10 }}
+              initial={{ opacity: 0, y: -10 }}
+            >
               <CommunityComposer
                 newTitle={newTitle}
                 newContent={newContent}
@@ -332,7 +406,9 @@ const Community = () => {
           onBookmark={(postId) => void handleBookmark(postId)}
           onDeletePost={(postId) => void handleDeletePost(postId)}
           onToggleComments={(postId) => void loadComments(postId)}
-          onCommentInputChange={(postId, value) => setCommentInputs((prev) => ({ ...prev, [postId]: value }))}
+          onCommentInputChange={(postId, value) =>
+            setCommentInputs((prev) => ({ ...prev, [postId]: value }))
+          }
           onSubmitComment={(postId) => void handleComment(postId)}
           onPageChange={(nextPage) => void fetchPosts(nextPage)}
         />

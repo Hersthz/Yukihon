@@ -1,9 +1,8 @@
 package com.hoang.basis.yukihon.system.srs.repository;
 
 import com.hoang.basis.yukihon.system.srs.entity.AnkiSrsSetting;
-import org.springframework.data.jpa.repository.JpaRepository;
-
 import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface AnkiSrsSettingRepository extends JpaRepository<AnkiSrsSetting, Long> {
 

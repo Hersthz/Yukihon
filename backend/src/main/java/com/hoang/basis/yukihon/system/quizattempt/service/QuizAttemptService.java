@@ -11,12 +11,6 @@ import com.hoang.basis.yukihon.system.user.entity.User;
 import com.hoang.basis.yukihon.system.user.repository.UserRepository;
 import com.hoang.basis.yukihon.system.userprogress.entity.UserProgress;
 import com.hoang.basis.yukihon.system.userprogress.repository.UserProgressRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
@@ -25,6 +19,11 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
@@ -34,9 +33,7 @@ public class QuizAttemptService {
 
     private static final int MAX_SCORE = 100;
     private static final Pattern HAN_PATTERN = Pattern.compile("\\p{IsHan}");
-    private static final Set<String> PARTICLES = Set.of(
-            "は", "が", "を", "に", "で", "と", "へ", "から", "まで", "より", "も", "の"
-    );
+    private static final Set<String> PARTICLES = Set.of("は", "が", "を", "に", "で", "と", "へ", "から", "まで", "より", "も", "の");
 
     private final QuizAttemptRepository quizAttemptRepository;
     private final UserRepository userRepository;
@@ -44,9 +41,9 @@ public class QuizAttemptService {
     private final UserProgressRepository userProgressRepository;
 
     public QuizAttemptDto recordAttempt(Long userId, QuizAttemptRequest request) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        Quiz quiz = quizRepository.findById(request.getQuizId())
+        User user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        Quiz quiz = quizRepository
+                .findById(request.getQuizId())
                 .orElseThrow(() -> new ResourceNotFoundException("Quiz not found with id: " + request.getQuizId()));
 
         String answer = request.getAnswer().trim();
@@ -77,7 +74,9 @@ public class QuizAttemptService {
     @Transactional(readOnly = true)
     public List<QuizAttemptDto> getRecentAttempts(Long userId, Integer limit, Boolean correct) {
         int safeLimit = Math.max(1, Math.min(limit != null ? limit : 20, 100));
-        return quizAttemptRepository.findRecentByUserIdAndCorrect(userId, correct, PageRequest.of(0, safeLimit)).stream()
+        return quizAttemptRepository
+                .findRecentByUserIdAndCorrect(userId, correct, PageRequest.of(0, safeLimit))
+                .stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
@@ -102,30 +101,37 @@ public class QuizAttemptService {
     }
 
     private String normalizeAnswer(String value) {
-        return value == null
-                ? ""
-                : value.trim().replaceAll("\\s+", " ").toLowerCase(Locale.ROOT);
+        return value == null ? "" : value.trim().replaceAll("\\s+", " ").toLowerCase(Locale.ROOT);
     }
 
     private String inferMistakePattern(Quiz quiz) {
         Quiz.QuizType quizType = quiz.getQuizType();
         String searchableText = joinText(
-                quiz.getTitle(),
-                quiz.getDescription(),
-                quiz.getQuestion(),
-                quiz.getCorrectAnswer()
-        ).toLowerCase(Locale.ROOT);
+                        quiz.getTitle(), quiz.getDescription(), quiz.getQuestion(), quiz.getCorrectAnswer())
+                .toLowerCase(Locale.ROOT);
 
         if (quizType == Quiz.QuizType.LISTENING || containsAny(searchableText, "listening", "audio", "hear", "nghe")) {
             return "listening";
         }
 
-        String correctAnswer = quiz.getCorrectAnswer() == null ? "" : quiz.getCorrectAnswer().trim();
-        if (PARTICLES.contains(correctAnswer) || containsAny(searchableText, "particle", "particles", "trợ từ", "tro tu")) {
+        String correctAnswer =
+                quiz.getCorrectAnswer() == null ? "" : quiz.getCorrectAnswer().trim();
+        if (PARTICLES.contains(correctAnswer)
+                || containsAny(searchableText, "particle", "particles", "trợ từ", "tro tu")) {
             return "particle";
         }
 
-        if (containsAny(searchableText, "reading", "hiragana", "romaji", "pronunciation", "yomi", "onyomi", "kunyomi", "đọc", "doc")) {
+        if (containsAny(
+                searchableText,
+                "reading",
+                "hiragana",
+                "romaji",
+                "pronunciation",
+                "yomi",
+                "onyomi",
+                "kunyomi",
+                "đọc",
+                "doc")) {
             return "reading";
         }
 
@@ -167,7 +173,8 @@ public class QuizAttemptService {
     }
 
     private void syncQuizProgress(User user, Quiz quiz, QuizAttempt attempt) {
-        UserProgress progress = userProgressRepository.findByUserIdAndQuizId(user.getId(), quiz.getId())
+        UserProgress progress = userProgressRepository
+                .findByUserIdAndQuizId(user.getId(), quiz.getId())
                 .orElseGet(() -> UserProgress.builder()
                         .user(user)
                         .quizId(quiz.getId())
@@ -180,9 +187,10 @@ public class QuizAttemptService {
         progress.setScore(attempt.getScore());
         progress.setTotalScore(MAX_SCORE);
         progress.setAttemptCount((progress.getAttemptCount() != null ? progress.getAttemptCount() : 0) + 1);
-        progress.setNotes(attempt.isCorrect()
-                ? "Last quiz attempt was correct."
-                : "Last missed pattern: " + attempt.getMistakePattern());
+        progress.setNotes(
+                attempt.isCorrect()
+                        ? "Last quiz attempt was correct."
+                        : "Last missed pattern: " + attempt.getMistakePattern());
 
         if (attempt.isCorrect()) {
             progress.setStatus(UserProgress.ProgressStatus.COMPLETED);
@@ -197,8 +205,12 @@ public class QuizAttemptService {
     }
 
     private QuizAttemptDto convertToDto(QuizAttempt attempt) {
-        Long userId = attempt.getUserId() != null ? attempt.getUserId() : attempt.getUser().getId();
-        Long quizId = attempt.getQuizId() != null ? attempt.getQuizId() : attempt.getQuiz().getId();
+        Long userId = attempt.getUserId() != null
+                ? attempt.getUserId()
+                : attempt.getUser().getId();
+        Long quizId = attempt.getQuizId() != null
+                ? attempt.getQuizId()
+                : attempt.getQuiz().getId();
 
         return QuizAttemptDto.builder()
                 .id(attempt.getId())
@@ -208,7 +220,10 @@ public class QuizAttemptService {
                 .correct(attempt.isCorrect())
                 .score(attempt.getScore())
                 .mistakePattern(attempt.getMistakePattern())
-                .attemptedAt(attempt.getAttemptedAt() != null ? attempt.getAttemptedAt().toString() : null)
+                .attemptedAt(
+                        attempt.getAttemptedAt() != null
+                                ? attempt.getAttemptedAt().toString()
+                                : null)
                 .build();
     }
 }

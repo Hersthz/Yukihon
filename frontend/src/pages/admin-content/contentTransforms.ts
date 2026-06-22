@@ -1,11 +1,10 @@
 import { EditableItem, GrammarItem, Lesson, LessonVersion, QuizItem, VocabItem } from "./types";
 
-const safeString = (value: unknown): string => (typeof value === "string" ? value : value == null ? "" : String(value));
+const safeString = (value: unknown): string =>
+  typeof value === "string" ? value : value == null ? "" : String(value);
 const parseIdList = (value: unknown): number[] => {
   if (Array.isArray(value)) {
-    return value
-      .map((item) => Number(item))
-      .filter((item) => Number.isFinite(item));
+    return value.map((item) => Number(item)).filter((item) => Number.isFinite(item));
   }
 
   if (typeof value !== "string" || !value.trim()) {
@@ -35,7 +34,10 @@ const parseOptions = (value: unknown): string[] => {
   }
 };
 
-const resolveCorrectAnswerKey = (options: string[], correctAnswer: string): QuizItem["correctAnswer"] => {
+const resolveCorrectAnswerKey = (
+  options: string[],
+  correctAnswer: string
+): QuizItem["correctAnswer"] => {
   const optionKeys: QuizItem["correctAnswer"][] = ["A", "B", "C", "D"];
   const normalizedAnswer = correctAnswer.trim();
 

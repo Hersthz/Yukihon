@@ -2,16 +2,16 @@ package com.hoang.basis.yukihon.system.userlearningstats.entity;
 
 import com.hoang.basis.yukihon.system.user.entity.User;
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.time.Instant;
 import java.time.LocalDate;
+import lombok.*;
 
 /**
  * UserLearningStats entity to track user's learning statistics and streaks
  */
 @Entity
-@Table(name = "user_learning_stats",
+@Table(
+        name = "user_learning_stats",
         uniqueConstraints = @UniqueConstraint(name = "uk_user_stats", columnNames = "user_id"),
         indexes = @Index(name = "idx_user_learning_stats_user_id", columnList = "user_id"))
 @Getter

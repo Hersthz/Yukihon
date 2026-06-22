@@ -2,7 +2,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, BookOpen, CheckCircle2, Clock3, PlayCircle, Target } from "lucide-react";
-import { learningAnalyticsApi, progressApi, quizApi, type LearningAnalyticsEventPayload } from "@/api";
+import {
+  learningAnalyticsApi,
+  progressApi,
+  quizApi,
+  type LearningAnalyticsEventPayload,
+} from "@/api";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { EmptyState, MetricCard, PageHeader } from "@/components/layout/UserPage";
 import { Button } from "@/components/ui/button";
@@ -53,7 +58,9 @@ const LessonDetail = () => {
   const startedInSessionRef = useRef(false);
   const completedInSessionRef = useRef(false);
 
-  const { data: lesson, isLoading } = useLesson(Number.isFinite(parsedLessonId) ? parsedLessonId : undefined);
+  const { data: lesson, isLoading } = useLesson(
+    Number.isFinite(parsedLessonId) ? parsedLessonId : undefined
+  );
   const { data: progress = [], isLoading: isProgressLoading } = useMyProgress();
   const { data: learningPath } = useLearningPath();
   const lessonEntityId = lesson?.id;
@@ -67,9 +74,7 @@ const LessonDetail = () => {
   const quizProgressByQuizId = useMemo(
     () =>
       new Map(
-        progress
-          .filter((item) => item.quizId != null)
-          .map((item) => [item.quizId as number, item])
+        progress.filter((item) => item.quizId != null).map((item) => [item.quizId as number, item])
       ),
     [progress]
   );
@@ -88,7 +93,13 @@ const LessonDetail = () => {
     if (!lessonProgress) return 0;
     if (lessonProgress.status === "COMPLETED") return 100;
     if ((lessonProgress.score ?? 0) > 0 && (lessonProgress.totalScore ?? 0) > 0) {
-      return Math.max(0, Math.min(100, Math.round(((lessonProgress.score ?? 0) * 100) / (lessonProgress.totalScore ?? 1))));
+      return Math.max(
+        0,
+        Math.min(
+          100,
+          Math.round(((lessonProgress.score ?? 0) * 100) / (lessonProgress.totalScore ?? 1))
+        )
+      );
     }
     return lessonProgress.status === "IN_PROGRESS" ? 55 : 0;
   }, [lessonProgress]);
@@ -113,7 +124,12 @@ const LessonDetail = () => {
     completedInSessionRef.current = lessonProgress?.status === "COMPLETED";
   }, [lessonProgress?.status]);
 
-  const trackLessonEvent = (payload: Omit<LearningAnalyticsEventPayload, "contentType" | "contentId" | "sessionId" | "jlptLevel">) => {
+  const trackLessonEvent = (
+    payload: Omit<
+      LearningAnalyticsEventPayload,
+      "contentType" | "contentId" | "sessionId" | "jlptLevel"
+    >
+  ) => {
     if (!lesson) return;
 
     void learningAnalyticsApi
@@ -135,7 +151,7 @@ const LessonDetail = () => {
 
     const payload = {
       lessonId: lesson.id,
-      score: options?.score ?? (status === "COMPLETED" ? 100 : lessonProgress?.score ?? 0),
+      score: options?.score ?? (status === "COMPLETED" ? 100 : (lessonProgress?.score ?? 0)),
       totalScore: 100,
       status,
       notes: noteText.trim(),
@@ -190,11 +206,18 @@ const LessonDetail = () => {
       if (!options?.silent) {
         toast({
           title: status === "COMPLETED" ? "Da hoan thanh bai hoc" : "Da bat dau bai hoc",
-          description: status === "COMPLETED" ? "Tien do va goi y hoc da duoc cap nhat." : "Ban co the quay lai hoc tiep bat cu luc nao.",
+          description:
+            status === "COMPLETED"
+              ? "Tien do va goi y hoc da duoc cap nhat."
+              : "Ban co the quay lai hoc tiep bat cu luc nao.",
         });
       }
     } catch {
-      toast({ title: "Khong luu duoc tien do", description: "Vui long thu lai.", variant: "destructive" });
+      toast({
+        title: "Khong luu duoc tien do",
+        description: "Vui long thu lai.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -212,7 +235,11 @@ const LessonDetail = () => {
       await queryClient.invalidateQueries({ queryKey: ["progress", "me"] });
       toast({ title: "Da luu ghi chu", description: "Ghi chu hoc bai da duoc cap nhat." });
     } catch {
-      toast({ title: "Khong luu duoc ghi chu", description: "Vui long thu lai.", variant: "destructive" });
+      toast({
+        title: "Khong luu duoc ghi chu",
+        description: "Vui long thu lai.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -221,7 +248,10 @@ const LessonDetail = () => {
 
     const unanswered = relatedQuizzes.some((quiz) => !quizAnswers[quiz.id]);
     if (unanswered) {
-      toast({ title: "Chua hoan thanh checkpoint", description: "Hay chon dap an cho tat ca cau hoi truoc khi cham." });
+      toast({
+        title: "Chua hoan thanh checkpoint",
+        description: "Hay chon dap an cho tat ca cau hoi truoc khi cham.",
+      });
       return;
     }
 
@@ -232,46 +262,54 @@ const LessonDetail = () => {
         trackLessonEvent({ eventType: "START_LEARNING", durationSeconds: 0 });
       }
 
-      const correctCount = relatedQuizzes.filter((quiz) => quizAnswers[quiz.id] === quiz.correctAnswer).length;
+      const correctCount = relatedQuizzes.filter(
+        (quiz) => quizAnswers[quiz.id] === quiz.correctAnswer
+      ).length;
       const score = Math.round((correctCount / relatedQuizzes.length) * 100);
       const passed = score >= 70;
 
-      const analyticsEvents: LearningAnalyticsEventPayload[] = relatedQuizzes.flatMap((quiz): LearningAnalyticsEventPayload[] => {
-        const selectedAnswer = quizAnswers[quiz.id];
-        const isCorrect = selectedAnswer === quiz.correctAnswer;
-        const existing = quizProgressByQuizId.get(quiz.id);
+      const analyticsEvents: LearningAnalyticsEventPayload[] = relatedQuizzes.flatMap(
+        (quiz): LearningAnalyticsEventPayload[] => {
+          const selectedAnswer = quizAnswers[quiz.id];
+          const isCorrect = selectedAnswer === quiz.correctAnswer;
+          const existing = quizProgressByQuizId.get(quiz.id);
 
-        if (!isCorrect) {
-          return [{
-            eventType: "QUIZ_WRONG",
-            contentType: "LESSON",
-            contentId: lesson.id,
-            sessionId: lessonSessionIdRef.current,
-            jlptLevel: lesson.jlptLevel,
-            score: 0,
-            metadata: {
-              quizId: quiz.id,
-              selectedAnswer,
-            },
-          }];
+          if (!isCorrect) {
+            return [
+              {
+                eventType: "QUIZ_WRONG",
+                contentType: "LESSON",
+                contentId: lesson.id,
+                sessionId: lessonSessionIdRef.current,
+                jlptLevel: lesson.jlptLevel,
+                score: 0,
+                metadata: {
+                  quizId: quiz.id,
+                  selectedAnswer,
+                },
+              },
+            ];
+          }
+
+          if ((existing?.score ?? null) === 0) {
+            return [
+              {
+                eventType: "QUIZ_CORRECT_AFTER_REVIEW",
+                contentType: "LESSON",
+                contentId: lesson.id,
+                sessionId: lessonSessionIdRef.current,
+                jlptLevel: lesson.jlptLevel,
+                score: 100,
+                metadata: {
+                  quizId: quiz.id,
+                },
+              },
+            ];
+          }
+
+          return [];
         }
-
-        if ((existing?.score ?? null) === 0) {
-          return [{
-            eventType: "QUIZ_CORRECT_AFTER_REVIEW",
-            contentType: "LESSON",
-            contentId: lesson.id,
-            sessionId: lessonSessionIdRef.current,
-            jlptLevel: lesson.jlptLevel,
-            score: 100,
-            metadata: {
-              quizId: quiz.id,
-            },
-          }];
-        }
-
-        return [];
-      });
+      );
 
       await Promise.all(
         relatedQuizzes.map(async (quiz) => {
@@ -302,16 +340,24 @@ const LessonDetail = () => {
       }
 
       if (analyticsEvents.length > 0) {
-        void Promise.allSettled(analyticsEvents.map((event) => learningAnalyticsApi.trackEvent(event)));
+        void Promise.allSettled(
+          analyticsEvents.map((event) => learningAnalyticsApi.trackEvent(event))
+        );
       }
 
       await queryClient.invalidateQueries({ queryKey: ["progress", "me"] });
       toast({
         title: passed ? "Checkpoint dat yeu cau" : "Checkpoint chua dat",
-        description: passed ? `Ban dat ${score}%. Lesson da duoc hoan thanh.` : `Ban dat ${score}%. Hay doc lai bai va thu lai quiz.`,
+        description: passed
+          ? `Ban dat ${score}%. Lesson da duoc hoan thanh.`
+          : `Ban dat ${score}%. Hay doc lai bai va thu lai quiz.`,
       });
     } catch {
-      toast({ title: "Khong cham duoc checkpoint", description: "Vui long thu lai.", variant: "destructive" });
+      toast({
+        title: "Khong cham duoc checkpoint",
+        description: "Vui long thu lai.",
+        variant: "destructive",
+      });
     } finally {
       setGradingQuiz(false);
     }
@@ -323,14 +369,16 @@ const LessonDetail = () => {
         return;
       }
 
-      void learningAnalyticsApi.trackEvent({
-        eventType: "ABANDON_LESSON",
-        contentType: "LESSON",
-        contentId: lessonEntityId,
-        sessionId: lessonSessionIdRef.current,
-        jlptLevel: lessonJlptLevel,
-        durationSeconds: Math.max(0, Math.round((Date.now() - lessonOpenedAtRef.current) / 1000)),
-      }).catch(() => undefined);
+      void learningAnalyticsApi
+        .trackEvent({
+          eventType: "ABANDON_LESSON",
+          contentType: "LESSON",
+          contentId: lessonEntityId,
+          sessionId: lessonSessionIdRef.current,
+          jlptLevel: lessonJlptLevel,
+          durationSeconds: Math.max(0, Math.round((Date.now() - lessonOpenedAtRef.current) / 1000)),
+        })
+        .catch(() => undefined);
     };
   }, [lessonEntityId, lessonJlptLevel]);
 
@@ -338,7 +386,11 @@ const LessonDetail = () => {
     return (
       <DashboardLayout>
         <div className="mx-auto max-w-[1200px]">
-          <EmptyState title="Lesson khong hop le" description="Khong tim thay bai hoc ban muon mo." icon={<BookOpen className="h-6 w-6" />} />
+          <EmptyState
+            title="Lesson khong hop le"
+            description="Khong tim thay bai hoc ban muon mo."
+            icon={<BookOpen className="h-6 w-6" />}
+          />
         </div>
       </DashboardLayout>
     );
@@ -351,18 +403,32 @@ const LessonDetail = () => {
           eyebrow="Lesson"
           icon={<BookOpen className="h-6 w-6 text-sky-600" />}
           title={lesson?.title || "Dang tai bai hoc"}
-          description={lesson?.description || "Noi dung bai hoc va tien do hoc se hien thi tai day."}
+          description={
+            lesson?.description || "Noi dung bai hoc va tien do hoc se hien thi tai day."
+          }
           action={
             <>
-              <Button className="rounded-2xl border-border bg-card text-foreground/80" onClick={() => navigate("/jlpt-lessons")} variant="outline">
+              <Button
+                className="rounded-2xl border-border bg-card text-foreground/80"
+                onClick={() => navigate("/jlpt-lessons")}
+                variant="outline"
+              >
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Ve danh sach
               </Button>
-              <Button className="rounded-2xl bg-sky-500 text-white hover:bg-sky-400" disabled={!lesson || !user || isProgressLoading} onClick={() => void saveProgress("IN_PROGRESS")}>
+              <Button
+                className="rounded-2xl bg-sky-500 text-white hover:bg-sky-400"
+                disabled={!lesson || !user || isProgressLoading}
+                onClick={() => void saveProgress("IN_PROGRESS")}
+              >
                 <PlayCircle className="mr-2 h-4 w-4" />
                 {lessonProgress?.status === "IN_PROGRESS" ? "Dang hoc" : "Bat dau"}
               </Button>
-              <Button className="rounded-2xl bg-emerald-500 text-white hover:bg-emerald-400" disabled={!lesson || !user || isProgressLoading} onClick={() => void saveProgress("COMPLETED")}>
+              <Button
+                className="rounded-2xl bg-emerald-500 text-white hover:bg-emerald-400"
+                disabled={!lesson || !user || isProgressLoading}
+                onClick={() => void saveProgress("COMPLETED")}
+              >
                 <CheckCircle2 className="mr-2 h-4 w-4" />
                 Danh dau xong
               </Button>
@@ -371,10 +437,30 @@ const LessonDetail = () => {
         />
 
         <div className="mb-4 grid gap-3 md:grid-cols-4">
-          <MetricCard label="Trang thai" value={isProgressLoading ? "..." : formatStatus(lessonProgress?.status)} icon={<Target className="h-4 w-4 text-sky-500" />} hint="Theo tien do cua ban" />
-          <MetricCard label="Tien do" value={isProgressLoading ? "..." : `${progressPercent}%`} icon={<CheckCircle2 className="h-4 w-4 text-emerald-500" />} hint="Cap nhat sau moi lan hoc" />
-          <MetricCard label="Thoi luong" value={lesson ? `${estimateMinutes(lesson.content)} phut` : "..."} icon={<Clock3 className="h-4 w-4 text-amber-500" />} hint="Uoc tinh theo do dai noi dung" />
-          <MetricCard label="JLPT" value={lesson?.jlptLevel || "N5"} icon={<BookOpen className="h-4 w-4 text-violet-500" />} hint={lesson?.category || "Lesson"} />
+          <MetricCard
+            label="Trang thai"
+            value={isProgressLoading ? "..." : formatStatus(lessonProgress?.status)}
+            icon={<Target className="h-4 w-4 text-sky-500" />}
+            hint="Theo tien do cua ban"
+          />
+          <MetricCard
+            label="Tien do"
+            value={isProgressLoading ? "..." : `${progressPercent}%`}
+            icon={<CheckCircle2 className="h-4 w-4 text-emerald-500" />}
+            hint="Cap nhat sau moi lan hoc"
+          />
+          <MetricCard
+            label="Thoi luong"
+            value={lesson ? `${estimateMinutes(lesson.content)} phut` : "..."}
+            icon={<Clock3 className="h-4 w-4 text-amber-500" />}
+            hint="Uoc tinh theo do dai noi dung"
+          />
+          <MetricCard
+            label="JLPT"
+            value={lesson?.jlptLevel || "N5"}
+            icon={<BookOpen className="h-4 w-4 text-violet-500" />}
+            hint={lesson?.category || "Lesson"}
+          />
         </div>
 
         {isLoading ? (
@@ -384,7 +470,11 @@ const LessonDetail = () => {
             </div>
           </div>
         ) : !lesson ? (
-          <EmptyState title="Khong tim thay bai hoc" description="Bai hoc nay co the da bi xoa hoac chua duoc xuat ban." icon={<BookOpen className="h-6 w-6" />} />
+          <EmptyState
+            title="Khong tim thay bai hoc"
+            description="Bai hoc nay co the da bi xoa hoac chua duoc xuat ban."
+            icon={<BookOpen className="h-6 w-6" />}
+          />
         ) : (
           <div className="grid gap-4 xl:grid-cols-[300px_minmax(0,1fr)]">
             <LessonOverviewPanel
@@ -404,7 +494,9 @@ const LessonDetail = () => {
               quizScore={quizScore}
               quizPassed={quizPassed}
               gradingQuiz={gradingQuiz}
-              onAnswerChange={(quizId, value) => setQuizAnswers((prev) => ({ ...prev, [quizId]: value }))}
+              onAnswerChange={(quizId, value) =>
+                setQuizAnswers((prev) => ({ ...prev, [quizId]: value }))
+              }
               onSubmitCheckpoint={() => void submitCheckpointQuiz()}
               onResetQuiz={() => {
                 setQuizAnswers({});

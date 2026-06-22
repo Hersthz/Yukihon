@@ -4,13 +4,12 @@ import com.hoang.basis.yukihon.system.vocabulary.dto.VocabularyDto;
 import com.hoang.basis.yukihon.system.vocabulary.dto.VocabularyRequest;
 import com.hoang.basis.yukihon.system.vocabulary.service.VocabularyService;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/vocabulary")
@@ -70,9 +69,7 @@ public class VocabularyController {
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('CONTENT_MANAGE')")
     public ResponseEntity<VocabularyDto> updateVocabulary(
-            @PathVariable Long id,
-            @Valid @RequestBody VocabularyRequest request
-    ) {
+            @PathVariable Long id, @Valid @RequestBody VocabularyRequest request) {
         VocabularyDto updated = vocabularyService.updateVocabulary(id, request);
         return ResponseEntity.ok(updated);
     }

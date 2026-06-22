@@ -82,8 +82,7 @@ const INITIAL_MESSAGES: ChatMessage[] = [
     id: "welcome",
     role: "assistant",
     timestamp: new Date().toISOString(),
-    text:
-      "Xin chao, minh la Yukihon AI. Ban co the hoi ngu phap, xin ke hoach hoc ngan, hoac nho minh viet cau tra loi tieng Nhat tu nhien hon.",
+    text: "Xin chao, minh la Yukihon AI. Ban co the hoi ngu phap, xin ke hoach hoc ngan, hoac nho minh viet cau tra loi tieng Nhat tu nhien hon.",
   },
 ];
 
@@ -126,7 +125,9 @@ const toUiMessage = (message: AiChatHistoryItem): ChatMessage => ({
 });
 
 const sortConversations = (items: AiChatConversation[]) =>
-  [...items].sort((left, right) => new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime());
+  [...items].sort(
+    (left, right) => new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime()
+  );
 
 const renderInlineMarkdown = (text: string) => {
   const codeSegments = text.split(/(`[^`]+`)/g);
@@ -148,7 +149,10 @@ const renderInlineMarkdown = (text: string) => {
       <Fragment key={`text-${segmentIndex}`}>
         {boldSegments.map((part, partIndex) =>
           part.startsWith("**") && part.endsWith("**") ? (
-            <strong key={`bold-${segmentIndex}-${partIndex}`} className="font-semibold text-foreground">
+            <strong
+              key={`bold-${segmentIndex}-${partIndex}`}
+              className="font-semibold text-foreground"
+            >
               {part.slice(2, -2)}
             </strong>
           ) : (
@@ -309,8 +313,16 @@ const MarkdownMessage = ({ text, isAssistant }: { text: string; isAssistant: boo
         }
 
         return (
-          <div key={`code-${blockIndex}`} className={cn("overflow-hidden rounded-2xl border", codeWrapperClass)}>
-            <div className={cn("border-b px-3 py-2 text-[11px] uppercase tracking-[0.18em]", codeLabelClass)}>
+          <div
+            key={`code-${blockIndex}`}
+            className={cn("overflow-hidden rounded-2xl border", codeWrapperClass)}
+          >
+            <div
+              className={cn(
+                "border-b px-3 py-2 text-[11px] uppercase tracking-[0.18em]",
+                codeLabelClass
+              )}
+            >
               {block.language || "code"}
             </div>
             <pre className="overflow-x-auto px-4 py-3 text-[13px] leading-6">
@@ -342,7 +354,8 @@ const AiChat = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
-  const activeConversation = conversations.find((conversation) => conversation.id === activeConversationId) ?? null;
+  const activeConversation =
+    conversations.find((conversation) => conversation.id === activeConversationId) ?? null;
   const filteredConversations = conversations.filter((conversation) =>
     conversation.title.toLowerCase().includes(searchQuery.trim().toLowerCase())
   );
@@ -404,7 +417,9 @@ const AiChat = () => {
 
         if (history.length > 0) {
           setMessages(history.map(toUiMessage));
-          const latestAssistant = [...history].reverse().find((message) => message.role === "assistant" && message.model);
+          const latestAssistant = [...history]
+            .reverse()
+            .find((message) => message.role === "assistant" && message.model);
           if (latestAssistant?.model) {
             setActiveModel(latestAssistant.model);
           }
@@ -445,7 +460,10 @@ const AiChat = () => {
     const items = sortConversations(await aiChatApi.getConversations());
     setConversations(items);
     setActiveConversationId((current) => {
-      if (preferredConversationId != null && items.some((item) => item.id === preferredConversationId)) {
+      if (
+        preferredConversationId != null &&
+        items.some((item) => item.id === preferredConversationId)
+      ) {
         return preferredConversationId;
       }
       if (current != null && items.some((item) => item.id === current)) {
@@ -597,7 +615,11 @@ const AiChat = () => {
       }
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") {
-        setMessages((current) => current.filter((item) => item.id !== assistantMessageId || item.text !== EMPTY_ASSISTANT_MESSAGE));
+        setMessages((current) =>
+          current.filter(
+            (item) => item.id !== assistantMessageId || item.text !== EMPTY_ASSISTANT_MESSAGE
+          )
+        );
         return;
       }
       setMessages((current) => current.filter((item) => item.id !== assistantMessageId));
@@ -639,7 +661,9 @@ const AiChat = () => {
     setCreatingConversation(true);
     try {
       const conversation = await aiChatApi.createConversation();
-      setConversations((current) => sortConversations([conversation, ...current.filter((item) => item.id !== conversation.id)]));
+      setConversations((current) =>
+        sortConversations([conversation, ...current.filter((item) => item.id !== conversation.id)])
+      );
       setActiveConversationId(conversation.id);
       setRenamingConversationId(null);
       setRenameValue("");
@@ -676,7 +700,9 @@ const AiChat = () => {
       const updatedConversation = await aiChatApi.renameConversation(conversationId, title);
       setConversations((current) =>
         sortConversations(
-          current.map((conversation) => (conversation.id === conversationId ? updatedConversation : conversation))
+          current.map((conversation) =>
+            conversation.id === conversationId ? updatedConversation : conversation
+          )
         )
       );
       setRenamingConversationId(null);
@@ -696,7 +722,9 @@ const AiChat = () => {
     const conversation = conversations.find((item) => item.id === conversationId);
     if (!conversation) return;
 
-    const confirmed = window.confirm(`Delete "${conversation.title}"? This will remove all messages in that chat.`);
+    const confirmed = window.confirm(
+      `Delete "${conversation.title}"? This will remove all messages in that chat.`
+    );
     if (!confirmed) return;
 
     if (activeConversationId === conversationId && isTyping) {
@@ -766,7 +794,9 @@ const AiChat = () => {
   };
 
   const userMessages = messages.filter((message) => message.role === "user").length;
-  const assistantMessages = messages.filter((message) => message.role === "assistant" && message.id !== "welcome").length;
+  const assistantMessages = messages.filter(
+    (message) => message.role === "assistant" && message.id !== "welcome"
+  ).length;
   const userName = user?.displayName || "Learner";
 
   return (
@@ -795,7 +825,11 @@ const AiChat = () => {
             label="Session"
             value={`${userMessages} turns`}
             icon={<Sparkles className="h-4 w-4 text-primary" />}
-            hint={activeConversation ? `Current thread: ${activeConversation.title}` : "Start a new chat to save a thread."}
+            hint={
+              activeConversation
+                ? `Current thread: ${activeConversation.title}`
+                : "Start a new chat to save a thread."
+            }
           />
           <MetricCard
             label="Assistant"
@@ -850,7 +884,10 @@ const AiChat = () => {
                         <motion.div
                           key={message.id}
                           animate={{ opacity: 1, y: 0 }}
-                          className={cn("flex gap-3", isAssistant ? "justify-start" : "justify-end")}
+                          className={cn(
+                            "flex gap-3",
+                            isAssistant ? "justify-start" : "justify-end"
+                          )}
                           initial={{ opacity: 0, y: 12 }}
                           transition={{ delay: index * 0.02 }}
                         >
@@ -871,10 +908,22 @@ const AiChat = () => {
                             )}
                           >
                             <div className="mb-2 flex items-center gap-2 text-[11px] uppercase tracking-[0.18em]">
-                              <span className={isAssistant ? "text-muted-foreground" : "text-primary-foreground/75"}>
+                              <span
+                                className={
+                                  isAssistant
+                                    ? "text-muted-foreground"
+                                    : "text-primary-foreground/75"
+                                }
+                              >
                                 {isAssistant ? "Yukihon AI" : userName}
                               </span>
-                              <span className={isAssistant ? "text-muted-foreground/60" : "text-primary-foreground/60"}>
+                              <span
+                                className={
+                                  isAssistant
+                                    ? "text-muted-foreground/60"
+                                    : "text-primary-foreground/60"
+                                }
+                              >
                                 {formatTime(message.timestamp)}
                               </span>
                             </div>
@@ -933,11 +982,7 @@ const AiChat = () => {
                     </p>
                     <div className="flex items-center gap-2">
                       {isTyping && (
-                        <Button
-                          className="rounded-2xl"
-                          onClick={stopGenerating}
-                          variant="outline"
-                        >
+                        <Button className="rounded-2xl" onClick={stopGenerating} variant="outline">
                           <Square className="mr-2 h-4 w-4" />
                           Stop generating
                         </Button>
@@ -993,7 +1038,9 @@ const AiChat = () => {
                   </div>
                 ) : null}
 
-                {!conversationLoading && conversations.length > 0 && filteredConversations.length === 0 ? (
+                {!conversationLoading &&
+                conversations.length > 0 &&
+                filteredConversations.length === 0 ? (
                   <div className="rounded-[22px] border border-dashed border-border bg-muted/20 p-4 text-sm text-muted-foreground">
                     No conversations match "{searchQuery.trim()}".
                   </div>
@@ -1010,7 +1057,9 @@ const AiChat = () => {
                           key={conversation.id}
                           className={cn(
                             "rounded-[22px] border p-3 transition",
-                            isActive ? "border-primary/30 bg-primary/10" : "border-border bg-card hover:bg-muted/40"
+                            isActive
+                              ? "border-primary/30 bg-primary/10"
+                              : "border-border bg-card hover:bg-muted/40"
                           )}
                         >
                           {isRenaming ? (
@@ -1054,15 +1103,21 @@ const AiChat = () => {
                                   <div
                                     className={cn(
                                       "flex h-10 w-10 items-center justify-center rounded-2xl",
-                                      isActive ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                                      isActive
+                                        ? "bg-primary text-primary-foreground"
+                                        : "bg-muted text-muted-foreground"
                                     )}
                                   >
                                     <Bot className="h-4 w-4" />
                                   </div>
                                   <div className="min-w-0 flex-1">
-                                    <p className="truncate text-sm font-semibold text-foreground">{conversation.title}</p>
+                                    <p className="truncate text-sm font-semibold text-foreground">
+                                      {conversation.title}
+                                    </p>
                                     <p className="mt-1 text-xs text-muted-foreground">
-                                      {isActive ? "Current thread" : formatConversationTime(conversation.updatedAt)}
+                                      {isActive
+                                        ? "Current thread"
+                                        : formatConversationTime(conversation.updatedAt)}
                                     </p>
                                   </div>
                                 </div>
@@ -1101,7 +1156,10 @@ const AiChat = () => {
               </div>
             </PageSection>
 
-            <PageSection title="Assistant profile" description="A friendly study persona inside the existing Yukihon dashboard style.">
+            <PageSection
+              title="Assistant profile"
+              description="A friendly study persona inside the existing Yukihon dashboard style."
+            >
               <div className="rounded-[28px] border border-border bg-gradient-to-br from-primary/10 via-card to-secondary/10 p-4">
                 <div className="flex items-center gap-4">
                   <KaorukoMascot mood={isTyping ? "thinking" : "guide"} size="md" />
@@ -1127,7 +1185,10 @@ const AiChat = () => {
               </div>
             </PageSection>
 
-            <PageSection title="Modes" description="Switch the vibe of the assistant before sending your next prompt.">
+            <PageSection
+              title="Modes"
+              description="Switch the vibe of the assistant before sending your next prompt."
+            >
               <div className="space-y-3">
                 {(
                   [
@@ -1156,7 +1217,9 @@ const AiChat = () => {
                         <div
                           className={cn(
                             "flex h-11 w-11 items-center justify-center rounded-2xl",
-                            active ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                            active
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted text-muted-foreground"
                           )}
                         >
                           <Icon className="h-4 w-4" />
@@ -1172,7 +1235,10 @@ const AiChat = () => {
               </div>
             </PageSection>
 
-            <PageSection title="What to ask" description="Starter directions for the live AI study assistant.">
+            <PageSection
+              title="What to ask"
+              description="Starter directions for the live AI study assistant."
+            >
               <div className="space-y-3">
                 <div className="rounded-[20px] border border-border bg-card p-4">
                   <div className="flex items-center gap-2 text-sm font-semibold text-foreground">

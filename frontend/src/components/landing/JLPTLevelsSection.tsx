@@ -13,10 +13,15 @@ const JLPTLevelsSection = () => (
         viewport={{ once: true, margin: "-80px" }}
         transition={{ duration: 0.8 }}
       >
-        <span className="text-sm font-semibold text-secondary uppercase tracking-[0.3em]">Curriculum</span>
-        <h2 className="text-4xl md:text-5xl lg:text-6xl font-medium mt-6 display-font">The JLPT Scale</h2>
+        <span className="text-sm font-semibold text-secondary uppercase tracking-[0.3em]">
+          Curriculum
+        </span>
+        <h2 className="text-4xl md:text-5xl lg:text-6xl font-medium mt-6 display-font">
+          The JLPT Scale
+        </h2>
         <p className="text-muted-foreground mt-6 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
-          Master every level from beginner N5 to the mastery of N1 with our precision-curated lessons.
+          Master every level from beginner N5 to the mastery of N1 with our precision-curated
+          lessons.
         </p>
       </motion.div>
 

@@ -12,15 +12,15 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class GrammarRequest {
-    
+
     @NotBlank(message = "Title is required")
     @Size(min = 1, max = 200)
     private String title;
-    
+
     @NotBlank(message = "Pattern is required")
     @Size(min = 1, max = 100)
     private String pattern;
-    
+
     private String explanation;
     private String usage;
     private String exampleJP;

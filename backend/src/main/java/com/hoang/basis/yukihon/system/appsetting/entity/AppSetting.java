@@ -25,7 +25,8 @@ import lombok.Setter;
  * that {@code @AutoCrud} works against SQL Server + Flyway.
  */
 @Entity
-@Table(name = "app_settings",
+@Table(
+        name = "app_settings",
         uniqueConstraints = @UniqueConstraint(name = "uk_app_setting_key", columnNames = "setting_key"))
 @Getter
 @Setter
@@ -35,7 +36,13 @@ import lombok.Setter;
 @AuditEnabled
 @ResourcePermission("APP_SETTING")
 @EntityLabel(name = "App Setting", plural = "App Settings", description = "Key/value application configuration")
-@ResourceMenu(title = "App Settings", group = "System", icon = "settings", url = "/admin/app-settings", order = 90, permission = "APP_SETTING_READ")
+@ResourceMenu(
+        title = "App Settings",
+        group = "System",
+        icon = "settings",
+        url = "/admin/app-settings",
+        order = 90,
+        permission = "APP_SETTING_READ")
 @Searchable(fields = {"settingKey", "category", "description"})
 @Filterable(fields = {"category"})
 @Sortable(fields = {"settingKey", "category", "createdAt", "updatedAt"})

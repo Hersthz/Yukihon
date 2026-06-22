@@ -24,7 +24,8 @@ export const myWordsApi = {
     const params = folder ? `?folder=${encodeURIComponent(folder)}` : "";
     return apiClient.request(`/api/my-words${params}`);
   },
-  getMastered: (mastered = true) => apiClient.request(`/api/my-words/mastered?mastered=${mastered}`),
+  getMastered: (mastered = true) =>
+    apiClient.request(`/api/my-words/mastered?mastered=${mastered}`),
   getReviewQueue: (mode = "ALL", dueOnly = true) =>
     apiClient.request(`/api/my-words/review?mode=${encodeURIComponent(mode)}&dueOnly=${dueOnly}`),
   saveWord: (data: SaveWordPayload) =>
@@ -32,7 +33,8 @@ export const myWordsApi = {
       method: "POST",
       body: JSON.stringify(data),
     }),
-  toggleMastered: (id: number) => apiClient.request(`/api/my-words/${id}/toggle-mastered`, { method: "POST" }),
+  toggleMastered: (id: number) =>
+    apiClient.request(`/api/my-words/${id}/toggle-mastered`, { method: "POST" }),
   reviewWord: (id: number, rating: ReviewRating) =>
     apiClient.request(`/api/my-words/${id}/review`, {
       method: "POST",
@@ -49,7 +51,9 @@ export const myWordsApi = {
     if (vocabularyIds.length === 0) {
       return Promise.resolve({});
     }
-    const params = vocabularyIds.map((id) => `vocabularyIds=${encodeURIComponent(String(id))}`).join("&");
+    const params = vocabularyIds
+      .map((id) => `vocabularyIds=${encodeURIComponent(String(id))}`)
+      .join("&");
     return apiClient.request<SavedStatusResponse>(`/api/my-words/check?${params}`);
   },
   getStats: () => apiClient.request<MyWordsStats>("/api/my-words/stats"),

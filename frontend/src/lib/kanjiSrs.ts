@@ -12,7 +12,8 @@ export interface KanjiSrsRecord {
 
 const STORAGE_KEY = "yukihon_kanji_srs_v1";
 
-const canUseStorage = () => typeof window !== "undefined" && typeof window.localStorage !== "undefined";
+const canUseStorage = () =>
+  typeof window !== "undefined" && typeof window.localStorage !== "undefined";
 
 const readRecords = (): KanjiSrsRecord[] => {
   if (!canUseStorage()) return [];
@@ -87,11 +88,21 @@ export const reviewKanji = (character: string, rating: KanjiReviewRating) => {
         break;
       case "GOOD":
         repetitionCount += 1;
-        intervalDays = repetitionCount <= 1 ? 1 : repetitionCount === 2 ? 3 : Math.max(4, Math.round(intervalDays * easeFactor));
+        intervalDays =
+          repetitionCount <= 1
+            ? 1
+            : repetitionCount === 2
+              ? 3
+              : Math.max(4, Math.round(intervalDays * easeFactor));
         break;
       case "EASY":
         repetitionCount += 1;
-        intervalDays = repetitionCount <= 1 ? 2 : repetitionCount === 2 ? 5 : Math.max(6, Math.round(intervalDays * (easeFactor + 0.25)));
+        intervalDays =
+          repetitionCount <= 1
+            ? 2
+            : repetitionCount === 2
+              ? 5
+              : Math.max(6, Math.round(intervalDays * (easeFactor + 0.25)));
         easeFactor += 0.15;
         break;
     }
@@ -113,6 +124,8 @@ export const reviewKanji = (character: string, rating: KanjiReviewRating) => {
   return next;
 };
 
-export const isKanjiDue = (record: KanjiSrsRecord) => new Date(record.nextReviewAt).getTime() <= Date.now();
+export const isKanjiDue = (record: KanjiSrsRecord) =>
+  new Date(record.nextReviewAt).getTime() <= Date.now();
 
-export const isKanjiMastered = (record: KanjiSrsRecord) => record.intervalDays >= 21 || record.repetitionCount >= 5;
+export const isKanjiMastered = (record: KanjiSrsRecord) =>
+  record.intervalDays >= 21 || record.repetitionCount >= 5;

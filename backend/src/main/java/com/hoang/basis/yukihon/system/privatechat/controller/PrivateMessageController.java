@@ -21,7 +21,8 @@ public class PrivateMessageController {
     private final UserRepository userRepository;
 
     private Long getUserId(UserDetails userDetails) {
-        User user = userRepository.findByEmail(userDetails.getUsername())
+        User user = userRepository
+                .findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new com.hoang.basis.yukihon.exception.ResourceNotFoundException("User not found"));
         return user.getId();
     }
@@ -35,6 +36,7 @@ public class PrivateMessageController {
         Long currentUserId = getUserId(userDetails);
         // The repository query already orders by createdAt DESC; passing a Sort here would emit a
         // duplicate ORDER BY column and SQL Server rejects it (error 169).
-        return ResponseEntity.ok(privateMessageService.getConversation(currentUserId, otherUserId, PageRequest.of(page, size)));
+        return ResponseEntity.ok(
+                privateMessageService.getConversation(currentUserId, otherUserId, PageRequest.of(page, size)));
     }
 }

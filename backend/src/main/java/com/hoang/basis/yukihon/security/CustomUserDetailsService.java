@@ -1,9 +1,12 @@
 package com.hoang.basis.yukihon.security;
 
-import com.hoang.basis.yukihon.system.user.entity.User;
 import com.hoang.basis.yukihon.system.user.entity.RoleName;
+import com.hoang.basis.yukihon.system.user.entity.User;
 import com.hoang.basis.yukihon.system.user.repository.RolePermissionRepository;
 import com.hoang.basis.yukihon.system.user.repository.UserRepository;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -11,20 +14,17 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
 @Service
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepository;
-        private final RolePermissionRepository rolePermissionRepository;
+    private final RolePermissionRepository rolePermissionRepository;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(username.toLowerCase())
+        User user = userRepository
+                .findByEmail(username.toLowerCase())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         Set<String> authorityCodes = new LinkedHashSet<>();
@@ -54,18 +54,10 @@ public class CustomUserDetailsService implements UserDetailsService {
             authorityCodes.add("ADMIN_USERS_MANAGE");
             authorityCodes.add("ADMIN_ROLES_MANAGE");
         }
-        List<SimpleGrantedAuthority> authorities = authorityCodes.stream()
-                .map(SimpleGrantedAuthority::new)
-                .toList();
+        List<SimpleGrantedAuthority> authorities =
+                authorityCodes.stream().map(SimpleGrantedAuthority::new).toList();
 
         return new org.springframework.security.core.userdetails.User(
-                user.getEmail(),
-                user.getPassword(),
-                user.isEnabled(),
-                true,
-                true,
-                true,
-                authorities
-        );
+                user.getEmail(), user.getPassword(), user.isEnabled(), true, true, true, authorities);
     }
 }

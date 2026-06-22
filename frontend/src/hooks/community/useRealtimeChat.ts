@@ -4,7 +4,12 @@ import SockJS from "sockjs-client";
 
 import { communityApi } from "@/api";
 import apiClient from "@/lib/apiClient";
-import type { ChatMessage, ChatPresence, ChatSocketError, ChatTypingEvent } from "@/pages/community/types";
+import type {
+  ChatMessage,
+  ChatPresence,
+  ChatSocketError,
+  ChatTypingEvent,
+} from "@/pages/community/types";
 
 type ConnectionState = "connecting" | "connected" | "disconnected" | "error";
 
@@ -40,7 +45,8 @@ const parseMessage = (raw: unknown): ChatMessage | null => {
 
   return {
     ...candidate,
-    clientMessageId: typeof candidate.clientMessageId === "string" ? candidate.clientMessageId : null,
+    clientMessageId:
+      typeof candidate.clientMessageId === "string" ? candidate.clientMessageId : null,
     deliveryState: "sent",
   } as ChatMessage;
 };
@@ -84,7 +90,8 @@ const parseSocketError = (raw: unknown): ChatSocketError | null => {
 
   return {
     ...candidate,
-    clientMessageId: typeof candidate.clientMessageId === "string" ? candidate.clientMessageId : null,
+    clientMessageId:
+      typeof candidate.clientMessageId === "string" ? candidate.clientMessageId : null,
   } as ChatSocketError;
 };
 
@@ -103,7 +110,9 @@ const parsePresence = (raw: unknown): ChatPresence | null => {
     return null;
   }
 
-  const safeNames = candidate.activeDisplayNames.filter((item): item is string => typeof item === "string");
+  const safeNames = candidate.activeDisplayNames.filter(
+    (item): item is string => typeof item === "string"
+  );
   return { ...candidate, activeDisplayNames: safeNames } as ChatPresence;
 };
 
@@ -125,7 +134,11 @@ const upsertMessage = (messages: ChatMessage[], incoming: ChatMessage): ChatMess
       return true;
     }
 
-    if (incoming.clientMessageId && item.clientMessageId && incoming.clientMessageId === item.clientMessageId) {
+    if (
+      incoming.clientMessageId &&
+      item.clientMessageId &&
+      incoming.clientMessageId === item.clientMessageId
+    ) {
       return true;
     }
 
@@ -143,7 +156,9 @@ const upsertMessage = (messages: ChatMessage[], incoming: ChatMessage): ChatMess
   }
 
   const limited = sortMessages(next);
-  return limited.length > MAX_MESSAGE_CACHE ? limited.slice(limited.length - MAX_MESSAGE_CACHE) : limited;
+  return limited.length > MAX_MESSAGE_CACHE
+    ? limited.slice(limited.length - MAX_MESSAGE_CACHE)
+    : limited;
 };
 
 const mergeHistory = (current: ChatMessage[], history: ChatMessage[]) =>
@@ -246,31 +261,38 @@ export const useRealtimeChat = ({
     );
   }, []);
 
-  const handleIncomingMessage = useCallback((frame: IMessage) => {
-    try {
-      const parsed = parseMessage(JSON.parse(frame.body));
-      if (!parsed || parsed.roomId !== activeRoomIdRef.current) {
-        return;
-      }
-
-      setMessages((prev) => upsertMessage(prev, parsed));
-
-      if (trackUnread && parsed.userId !== currentUserId) {
-        const shouldIncrementUnread = document.hidden || !document.hasFocus();
-        if (shouldIncrementUnread) {
-          setUnreadCount((prev) => prev + 1);
+  const handleIncomingMessage = useCallback(
+    (frame: IMessage) => {
+      try {
+        const parsed = parseMessage(JSON.parse(frame.body));
+        if (!parsed || parsed.roomId !== activeRoomIdRef.current) {
+          return;
         }
+
+        setMessages((prev) => upsertMessage(prev, parsed));
+
+        if (trackUnread && parsed.userId !== currentUserId) {
+          const shouldIncrementUnread = document.hidden || !document.hasFocus();
+          if (shouldIncrementUnread) {
+            setUnreadCount((prev) => prev + 1);
+          }
+        }
+      } catch {
+        // Ignore malformed payloads to keep chat resilient.
       }
-    } catch {
-      // Ignore malformed payloads to keep chat resilient.
-    }
-  }, [currentUserId, trackUnread]);
+    },
+    [currentUserId, trackUnread]
+  );
 
   const handleIncomingTyping = useCallback(
     (frame: IMessage) => {
       try {
         const parsed = parseTypingEvent(JSON.parse(frame.body));
-        if (!parsed || parsed.roomId !== activeRoomIdRef.current || parsed.userId === currentUserId) {
+        if (
+          !parsed ||
+          parsed.roomId !== activeRoomIdRef.current ||
+          parsed.userId === currentUserId
+        ) {
           return;
         }
 
@@ -296,19 +318,22 @@ export const useRealtimeChat = ({
     [clearTypingUser, currentUserId, updateTypingUsers]
   );
 
-  const handleSocketError = useCallback((frame: IMessage) => {
-    try {
-      const parsed = parseSocketError(JSON.parse(frame.body));
-      if (!parsed) {
-        return;
-      }
+  const handleSocketError = useCallback(
+    (frame: IMessage) => {
+      try {
+        const parsed = parseSocketError(JSON.parse(frame.body));
+        if (!parsed) {
+          return;
+        }
 
-      setLastSocketError(parsed);
-      markMessageFailed(parsed.clientMessageId);
-    } catch {
-      // Ignore malformed error payloads.
-    }
-  }, [markMessageFailed]);
+        setLastSocketError(parsed);
+        markMessageFailed(parsed.clientMessageId);
+      } catch {
+        // Ignore malformed error payloads.
+      }
+    },
+    [markMessageFailed]
+  );
 
   const handlePresence = useCallback((frame: IMessage) => {
     try {
@@ -365,13 +390,23 @@ export const useRealtimeChat = ({
 
       setIsLoadingHistory(true);
       try {
-        const history = (await communityApi.getChatMessages(normalizedRoomId, HISTORY_LIMIT)) as ChatMessage[];
+        const history = (await communityApi.getChatMessages(
+          normalizedRoomId,
+          HISTORY_LIMIT
+        )) as ChatMessage[];
         if (!isActive || activeRoomIdRef.current !== normalizedRoomId) {
           return;
         }
 
-        const safeHistory = history.map((item) => parseMessage(item)).filter((item): item is ChatMessage => item !== null);
-        setMessages((prev) => mergeHistory(prev, safeHistory.filter((item) => item.roomId === activeRoomIdRef.current)));
+        const safeHistory = history
+          .map((item) => parseMessage(item))
+          .filter((item): item is ChatMessage => item !== null);
+        setMessages((prev) =>
+          mergeHistory(
+            prev,
+            safeHistory.filter((item) => item.roomId === activeRoomIdRef.current)
+          )
+        );
       } catch {
         if (isActive) {
           setConnectionError("Khong tai duoc lich su chat");
@@ -461,50 +496,74 @@ export const useRealtimeChat = ({
         clientRef.current = null;
       }
     };
-  }, [enabled, handleIncomingMessage, handleIncomingTyping, handlePresence, handleSocketError, loadHistory, normalizedRoomId, sessionNonce]);
+  }, [
+    enabled,
+    handleIncomingMessage,
+    handleIncomingTyping,
+    handlePresence,
+    handleSocketError,
+    loadHistory,
+    normalizedRoomId,
+    sessionNonce,
+  ]);
 
-  const publishRawMessage = useCallback((content: string, existingClientMessageId?: string) => {
-    const trimmedContent = content.trim();
-    const client = clientRef.current;
+  const publishRawMessage = useCallback(
+    (content: string, existingClientMessageId?: string) => {
+      const trimmedContent = content.trim();
+      const client = clientRef.current;
 
-    if (!trimmedContent || !client || !client.connected) {
-      return false;
-    }
+      if (!trimmedContent || !client || !client.connected) {
+        return false;
+      }
 
-    const clientMessageId = existingClientMessageId || createClientMessageId();
+      const clientMessageId = existingClientMessageId || createClientMessageId();
 
-    setLastSocketError(null);
-    setMessages((prev) =>
-      upsertMessage(
-        prev.filter((item) => !(item.clientMessageId === clientMessageId && item.deliveryState === "failed")),
-        createOptimisticMessage({
+      setLastSocketError(null);
+      setMessages((prev) =>
+        upsertMessage(
+          prev.filter(
+            (item) => !(item.clientMessageId === clientMessageId && item.deliveryState === "failed")
+          ),
+          createOptimisticMessage({
+            roomId: normalizedRoomId,
+            userId: currentUserId,
+            userDisplayName: currentUserName,
+            content: trimmedContent,
+            clientMessageId,
+          })
+        )
+      );
+
+      client.publish({
+        destination: "/app/community-chat.send",
+        body: JSON.stringify({
           roomId: normalizedRoomId,
-          userId: currentUserId,
-          userDisplayName: currentUserName,
           content: trimmedContent,
           clientMessageId,
-        })
-      )
-    );
+        }),
+      });
 
-    client.publish({
-      destination: "/app/community-chat.send",
-      body: JSON.stringify({ roomId: normalizedRoomId, content: trimmedContent, clientMessageId }),
-    });
+      return true;
+    },
+    [currentUserId, currentUserName, normalizedRoomId]
+  );
 
-    return true;
-  }, [currentUserId, currentUserName, normalizedRoomId]);
+  const sendMessage = useCallback(
+    (content: string) => publishRawMessage(content),
+    [publishRawMessage]
+  );
 
-  const sendMessage = useCallback((content: string) => publishRawMessage(content), [publishRawMessage]);
+  const retryMessage = useCallback(
+    (messageId: ChatMessage["id"]) => {
+      const targetMessage = messages.find((item) => item.id === messageId);
+      if (!targetMessage) {
+        return false;
+      }
 
-  const retryMessage = useCallback((messageId: ChatMessage["id"]) => {
-    const targetMessage = messages.find((item) => item.id === messageId);
-    if (!targetMessage) {
-      return false;
-    }
-
-    return publishRawMessage(targetMessage.content);
-  }, [messages, publishRawMessage]);
+      return publishRawMessage(targetMessage.content);
+    },
+    [messages, publishRawMessage]
+  );
 
   const sendTyping = useCallback(
     (typing: boolean) => {

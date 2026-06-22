@@ -7,20 +7,21 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
+import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.Instant;
-
 /** Append-only audit trail row written for {@code @AuditEnabled} entities on each CRUD change. */
 @Entity
-@Table(name = "audit_logs", indexes = {
-        @Index(name = "idx_audit_entity", columnList = "entity_type,entity_id"),
-        @Index(name = "idx_audit_created", columnList = "created_at")
-})
+@Table(
+        name = "audit_logs",
+        indexes = {
+            @Index(name = "idx_audit_entity", columnList = "entity_type,entity_id"),
+            @Index(name = "idx_audit_created", columnList = "created_at")
+        })
 @Getter
 @Setter
 @Builder

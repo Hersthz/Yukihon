@@ -1,18 +1,18 @@
 package com.hoang.basis.yukihon.system.lesson.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.time.Instant;
+import lombok.*;
 
 /**
  * Lesson entity for comprehensive Japanese lessons
  */
 @Entity
-@Table(name = "lessons",
+@Table(
+        name = "lessons",
         indexes = {
-                @Index(name = "idx_lesson_jlpt_level", columnList = "jlpt_level"),
-                @Index(name = "idx_lesson_status", columnList = "status")
+            @Index(name = "idx_lesson_jlpt_level", columnList = "jlpt_level"),
+            @Index(name = "idx_lesson_status", columnList = "status")
         })
 @Getter
 @Setter

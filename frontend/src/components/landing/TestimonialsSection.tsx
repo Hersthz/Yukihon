@@ -23,7 +23,9 @@ const TestimonialsSection = () => (
           Community
         </span>
         <h2 className="text-4xl md:text-5xl lg:text-5xl font-bold mt-6">Loved by learners</h2>
-        <p className="text-muted-foreground mt-4 text-lg max-w-xl mx-auto">Join thousands of students who have discovered the joy of learning Japanese.</p>
+        <p className="text-muted-foreground mt-4 text-lg max-w-xl mx-auto">
+          Join thousands of students who have discovered the joy of learning Japanese.
+        </p>
       </motion.div>
 
       <motion.div
@@ -41,19 +43,25 @@ const TestimonialsSection = () => (
               i === 1 ? "md:-translate-y-8" : "md:translate-y-0"
             } ${CARD_THEMES[i % CARD_THEMES.length]}`}
           >
-            <div className="absolute -top-4 -right-2 text-8xl font-serif text-primary/10 leading-none select-none drop-shadow-sm">"</div>
-            
+            <div className="absolute -top-4 -right-2 text-8xl font-serif text-primary/10 leading-none select-none drop-shadow-sm">
+              "
+            </div>
+
             <div className="flex items-center gap-4 mb-6 relative z-10">
               <div className="w-14 h-14 rounded-full bg-card/60 backdrop-blur-md flex items-center justify-center text-2xl shadow-inner border border-border border-border/30">
                 {t.avatar}
               </div>
               <div>
                 <div className="text-lg font-bold">{t.name}</div>
-                <div className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full w-fit mt-1">{t.level}</div>
+                <div className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full w-fit mt-1">
+                  {t.level}
+                </div>
               </div>
             </div>
 
-            <p className="text-foreground/80 leading-relaxed font-medium relative z-10">{t.quote}</p>
+            <p className="text-foreground/80 leading-relaxed font-medium relative z-10">
+              {t.quote}
+            </p>
           </motion.div>
         ))}
       </motion.div>

@@ -1,10 +1,9 @@
 package com.hoang.basis.yukihon.system.storymode.repository;
 
 import com.hoang.basis.yukihon.system.storymode.entity.StoryModeStory;
-import org.springframework.data.jpa.repository.JpaRepository;
-
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface StoryModeStoryRepository extends JpaRepository<StoryModeStory, Long> {
 

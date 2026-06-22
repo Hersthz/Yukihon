@@ -1,10 +1,9 @@
 package com.hoang.basis.yukihon.system.analytics.dto;
 
-import lombok.Builder;
-import lombok.Getter;
-
 import java.math.BigDecimal;
 import java.util.List;
+import lombok.Builder;
+import lombok.Getter;
 
 @Getter
 @Builder

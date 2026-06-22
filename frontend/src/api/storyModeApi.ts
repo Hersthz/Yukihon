@@ -29,7 +29,8 @@ export const storyModeApi = {
   },
   admin: {
     getStories: () => apiClient.request<StoryModeAdminStory[]>("/api/admin/story-mode/stories"),
-    getStory: (id: number) => apiClient.request<StoryModeAdminStory>(`/api/admin/story-mode/stories/${id}`),
+    getStory: (id: number) =>
+      apiClient.request<StoryModeAdminStory>(`/api/admin/story-mode/stories/${id}`),
     createStory: (story: StoryModeAdminStory) =>
       apiClient.request<StoryModeAdminStory>("/api/admin/story-mode/stories", {
         method: "POST",

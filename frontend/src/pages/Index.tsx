@@ -25,7 +25,8 @@ const highlightCards = [
   {
     icon: Clock3,
     title: "Learn at your pace",
-    description: "Short lessons, quick reviews, and a calm UI that keeps sessions light instead of overwhelming.",
+    description:
+      "Short lessons, quick reviews, and a calm UI that keeps sessions light instead of overwhelming.",
     color: "bg-[#ffd5cd]",
   },
   {
@@ -37,23 +38,50 @@ const highlightCards = [
   {
     icon: GraduationCap,
     title: "JLPT aligned",
-    description: "Every area of the app now supports a clearer path from N5 foundations to higher levels.",
+    description:
+      "Every area of the app now supports a clearer path from N5 foundations to higher levels.",
     color: "bg-[#e6dcff]",
   },
   {
     icon: Users,
     title: "Community support",
-    description: "Study together, ask questions quickly, and keep the social layer visible without visual clutter.",
+    description:
+      "Study together, ask questions quickly, and keep the social layer visible without visual clutter.",
     color: "bg-[#d7ffd9]",
   },
 ];
 
 const levelCards = [
-  { level: "N5", title: "Foundations", detail: "Kana, core vocab, essential patterns", color: "bg-[#d8ffe0]" },
-  { level: "N4", title: "Daily Japanese", detail: "Everyday conversation and sentence building", color: "bg-[#dff3ff]" },
-  { level: "N3", title: "Mid-level flow", detail: "More natural reading, listening, and nuance", color: "bg-[#fff2c8]" },
-  { level: "N2", title: "Professional depth", detail: "Complex structures and work-ready Japanese", color: "bg-[#ffe0d2]" },
-  { level: "N1", title: "Mastery", detail: "Advanced reading, precision, and subtle expression", color: "bg-[#eadfff]" },
+  {
+    level: "N5",
+    title: "Foundations",
+    detail: "Kana, core vocab, essential patterns",
+    color: "bg-[#d8ffe0]",
+  },
+  {
+    level: "N4",
+    title: "Daily Japanese",
+    detail: "Everyday conversation and sentence building",
+    color: "bg-[#dff3ff]",
+  },
+  {
+    level: "N3",
+    title: "Mid-level flow",
+    detail: "More natural reading, listening, and nuance",
+    color: "bg-[#fff2c8]",
+  },
+  {
+    level: "N2",
+    title: "Professional depth",
+    detail: "Complex structures and work-ready Japanese",
+    color: "bg-[#ffe0d2]",
+  },
+  {
+    level: "N1",
+    title: "Mastery",
+    detail: "Advanced reading, precision, and subtle expression",
+    color: "bg-[#eadfff]",
+  },
 ];
 
 const featurePanels = [
@@ -82,17 +110,20 @@ const featurePanels = [
 
 const testimonials = [
   {
-    quote: "The new layout feels lighter, faster, and much easier to scan when I only have 15 minutes to study.",
+    quote:
+      "The new layout feels lighter, faster, and much easier to scan when I only have 15 minutes to study.",
     author: "Mai Anh",
     role: "JLPT N4 learner",
   },
   {
-    quote: "I can jump from dictionary to saved words to quiz review without feeling like I entered another product.",
+    quote:
+      "I can jump from dictionary to saved words to quiz review without feeling like I entered another product.",
     author: "Khanh Linh",
     role: "Self-study user",
   },
   {
-    quote: "The dashboard finally feels like a real study cockpit instead of a collection of disconnected widgets.",
+    quote:
+      "The dashboard finally feels like a real study cockpit instead of a collection of disconnected widgets.",
     author: "Tuan Hoang",
     role: "Daily streak user",
   },
@@ -126,8 +157,9 @@ const Index = () => {
               </h1>
 
               <p className="mt-5 max-w-2xl text-lg leading-8 text-muted-foreground">
-                Yukihon is now redesigned around a warmer, clearer light theme inspired by bold educational layouts and
-                modern productivity dashboards. Every key page follows one visual language now.
+                Yukihon is now redesigned around a warmer, clearer light theme inspired by bold
+                educational layouts and modern productivity dashboards. Every key page follows one
+                visual language now.
               </p>
 
               <div className="mt-8 flex flex-col gap-4 sm:flex-row">
@@ -138,7 +170,10 @@ const Index = () => {
                   </Button>
                 </Link>
                 <Link to="/courses">
-                  <Button className="min-w-[210px] bg-secondary text-secondary-foreground hover:bg-secondary" variant="secondary">
+                  <Button
+                    className="min-w-[210px] bg-secondary text-secondary-foreground hover:bg-secondary"
+                    variant="secondary"
+                  >
                     Browse course paths
                   </Button>
                 </Link>
@@ -151,7 +186,9 @@ const Index = () => {
                   { value: "500+", label: "Guided activities" },
                 ].map((item) => (
                   <div key={item.label}>
-                    <p className="text-4xl font-black tracking-tight text-foreground">{item.value}</p>
+                    <p className="text-4xl font-black tracking-tight text-foreground">
+                      {item.value}
+                    </p>
                     <p className="mt-1 text-sm text-muted-foreground">{item.label}</p>
                   </div>
                 ))}
@@ -166,25 +203,34 @@ const Index = () => {
 
                 <div className="grid gap-5 md:grid-cols-[0.95fr_1.05fr]">
                   <div className="rounded-[1.7rem] bg-[#eef9ff] p-5">
-                    <img src={kaorukoHappy} alt="Kaoruko" className="mx-auto h-56 object-contain sm:h-64" />
+                    <img
+                      src={kaorukoHappy}
+                      alt="Kaoruko"
+                      className="mx-auto h-56 object-contain sm:h-64"
+                    />
                     <div className="mt-3 rounded-[1.2rem] bg-white/90 p-4">
                       <p className="text-sm font-semibold text-foreground">Kaoruko is ready</p>
                       <p className="mt-1 text-sm text-muted-foreground">
-                        Your dictionary, practice flow, and AI hints all share the same light interface now.
+                        Your dictionary, practice flow, and AI hints all share the same light
+                        interface now.
                       </p>
                     </div>
                   </div>
 
                   <div className="space-y-4">
                     <div className="rounded-[1.5rem] border border-border bg-[#f8fbf7] p-5">
-                      <p className="text-sm font-bold uppercase tracking-[0.18em] text-muted-foreground">Current focus</p>
+                      <p className="text-sm font-bold uppercase tracking-[0.18em] text-muted-foreground">
+                        Current focus
+                      </p>
                       <div className="mt-4 flex items-center gap-4">
                         <div className="flex h-14 w-14 items-center justify-center rounded-[1.2rem] bg-[#d9eff9]">
                           <BookOpen className="h-6 w-6 text-foreground" />
                         </div>
                         <div>
                           <p className="text-2xl font-bold text-foreground">Web-style dashboard</p>
-                          <p className="text-sm text-muted-foreground">12 blocks, 4h 30m of interactive study flow</p>
+                          <p className="text-sm text-muted-foreground">
+                            12 blocks, 4h 30m of interactive study flow
+                          </p>
                         </div>
                       </div>
 
@@ -203,12 +249,20 @@ const Index = () => {
 
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div className="rounded-[1.4rem] border border-border bg-[#fff5ec] p-4">
-                        <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">Design system</p>
-                        <p className="mt-3 text-lg font-semibold text-foreground">Cream, mint, peach, sky</p>
+                        <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
+                          Design system
+                        </p>
+                        <p className="mt-3 text-lg font-semibold text-foreground">
+                          Cream, mint, peach, sky
+                        </p>
                       </div>
                       <div className="rounded-[1.4rem] border border-border bg-[#f4f0ff] p-4">
-                        <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">Dashboard UI</p>
-                        <p className="mt-3 text-lg font-semibold text-foreground">Cleaner admin and creator space</p>
+                        <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
+                          Dashboard UI
+                        </p>
+                        <p className="mt-3 text-lg font-semibold text-foreground">
+                          Cleaner admin and creator space
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -218,7 +272,9 @@ const Index = () => {
               <div className="absolute -bottom-5 -left-4 rounded-[1.3rem] bg-[#dff8de] px-4 py-3 shadow-[0_18px_36px_-22px_rgba(32,48,74,0.24)]">
                 <div className="flex items-center gap-2">
                   <Star className="h-4 w-4 text-[#ffb11a]" />
-                  <span className="text-sm font-semibold text-foreground">Better hierarchy, less visual noise</span>
+                  <span className="text-sm font-semibold text-foreground">
+                    Better hierarchy, less visual noise
+                  </span>
                 </div>
               </div>
             </div>
@@ -231,15 +287,18 @@ const Index = () => {
               <span className="section-kicker">How it works</span>
               <h2 className="section-title mt-6">One style system across every page</h2>
               <p className="mx-auto mt-4 max-w-3xl text-base leading-8 text-muted-foreground">
-                The redesign does not stop at the home page. Dashboard, dictionary, vocabulary, profile, admin, and
-                creator mode now share the same spacing rhythm, border logic, and pastel accent language.
+                The redesign does not stop at the home page. Dashboard, dictionary, vocabulary,
+                profile, admin, and creator mode now share the same spacing rhythm, border logic,
+                and pastel accent language.
               </p>
             </div>
 
             <div className="mt-10 grid gap-4 lg:grid-cols-4">
               {highlightCards.map((card) => (
                 <div key={card.title} className="surface-panel-soft h-full p-5">
-                  <div className={`flex h-16 w-16 items-center justify-center rounded-[1.3rem] ${card.color}`}>
+                  <div
+                    className={`flex h-16 w-16 items-center justify-center rounded-[1.3rem] ${card.color}`}
+                  >
                     <card.icon className="h-7 w-7 text-foreground" />
                   </div>
                   <h3 className="mt-5 text-2xl font-bold text-foreground">{card.title}</h3>
@@ -256,8 +315,8 @@ const Index = () => {
               <span className="section-kicker">JLPT path</span>
               <h2 className="section-title mt-6">Clear visual steps from N5 to N1</h2>
               <p className="mt-4 text-base leading-8 text-muted-foreground">
-                The new UI groups lessons, progress, and recommendations so users always know what to do next at their
-                current level.
+                The new UI groups lessons, progress, and recommendations so users always know what
+                to do next at their current level.
               </p>
               <div className="mt-6 space-y-3">
                 {[
@@ -265,7 +324,10 @@ const Index = () => {
                   "Course pages use lighter cards with faster scanning.",
                   "Vocabulary, grammar, quiz, and kanji follow one hierarchy.",
                 ].map((item) => (
-                  <div key={item} className="flex items-start gap-3 rounded-[1.2rem] bg-white/88 p-4">
+                  <div
+                    key={item}
+                    className="flex items-start gap-3 rounded-[1.2rem] bg-white/88 p-4"
+                  >
                     <CheckCircle2 className="mt-0.5 h-5 w-5 text-primary" />
                     <p className="text-sm leading-7 text-foreground/82">{item}</p>
                   </div>
@@ -277,7 +339,9 @@ const Index = () => {
               {levelCards.map((card) => (
                 <div key={card.level} className="surface-panel-soft p-5">
                   <div className={`inline-flex rounded-[1rem] px-4 py-3 ${card.color}`}>
-                    <span className="display-font text-3xl font-bold text-foreground">{card.level}</span>
+                    <span className="display-font text-3xl font-bold text-foreground">
+                      {card.level}
+                    </span>
                   </div>
                   <p className="mt-5 text-xl font-bold text-foreground">{card.title}</p>
                   <p className="mt-3 text-sm leading-7 text-muted-foreground">{card.detail}</p>
@@ -293,7 +357,9 @@ const Index = () => {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <span className="section-kicker">Product system</span>
-                  <h2 className="section-title mt-6">Dashboard inspiration from modern command centers</h2>
+                  <h2 className="section-title mt-6">
+                    Dashboard inspiration from modern command centers
+                  </h2>
                 </div>
                 <Badge className="rounded-full border border-primary/20 bg-[#eef9ee] px-4 py-2 text-primary hover:bg-[#eef9ee]">
                   Light theme only
@@ -309,10 +375,17 @@ const Index = () => {
                 ].map((metric, index) => (
                   <div
                     key={metric.label}
-                    className={["bg-[#e8f0ff]", "bg-[#eef8dd]", "bg-[#fff3b8]", "bg-[#ece4ff]"][index] + " rounded-[1.5rem] p-5"}
+                    className={
+                      ["bg-[#e8f0ff]", "bg-[#eef8dd]", "bg-[#fff3b8]", "bg-[#ece4ff]"][index] +
+                      " rounded-[1.5rem] p-5"
+                    }
                   >
-                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">{metric.label}</p>
-                    <p className="mt-4 text-4xl font-black tracking-tight text-foreground">{metric.value}</p>
+                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
+                      {metric.label}
+                    </p>
+                    <p className="mt-4 text-4xl font-black tracking-tight text-foreground">
+                      {metric.value}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -321,7 +394,9 @@ const Index = () => {
                 <div className="rounded-[1.7rem] border border-border bg-[#fbfcff] p-5">
                   <p className="text-lg font-semibold text-foreground">Quick launch agents</p>
                   <div className="mt-4 rounded-[1.4rem] border border-border bg-white p-4">
-                    <p className="text-sm font-semibold text-foreground">Smart Email Reply Assistant</p>
+                    <p className="text-sm font-semibold text-foreground">
+                      Smart Email Reply Assistant
+                    </p>
                     <p className="mt-2 text-sm leading-7 text-muted-foreground">
                       A calmer card system makes dense admin and creator workflows easier to scan.
                     </p>
@@ -332,11 +407,15 @@ const Index = () => {
                   <div className="mt-4 space-y-3">
                     <div className="rounded-[1.3rem] bg-[#e7efff] p-4">
                       <p className="font-semibold text-foreground">Marketing Trends 2025</p>
-                      <p className="mt-2 text-sm text-muted-foreground">Readable cards, clearer tabs, and lighter spacing.</p>
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        Readable cards, clearer tabs, and lighter spacing.
+                      </p>
                     </div>
                     <div className="rounded-[1.3rem] bg-[#e8f7df] p-4">
                       <p className="font-semibold text-foreground">Vocabulary review queue</p>
-                      <p className="mt-2 text-sm text-muted-foreground">States and actions are now visually consistent.</p>
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        States and actions are now visually consistent.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -350,7 +429,9 @@ const Index = () => {
                     <panel.icon className="h-6 w-6 text-foreground" />
                   </div>
                   <h3 className="mt-5 text-2xl font-bold text-foreground">{panel.title}</h3>
-                  <p className="mt-3 text-sm leading-7 text-muted-foreground">{panel.description}</p>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                    {panel.description}
+                  </p>
                 </div>
               ))}
 
@@ -360,8 +441,12 @@ const Index = () => {
                     <MessageSquareText className="h-6 w-6 text-foreground" />
                   </div>
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">Community signal</p>
-                    <p className="text-2xl font-bold text-foreground">Chat, feed, and leaderboard feel connected now</p>
+                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
+                      Community signal
+                    </p>
+                    <p className="text-2xl font-bold text-foreground">
+                      Chat, feed, and leaderboard feel connected now
+                    </p>
                   </div>
                 </div>
               </div>
@@ -405,17 +490,22 @@ const Index = () => {
                   A calmer, brighter Yukihon.
                 </h2>
                 <p className="mt-4 max-w-3xl text-base leading-8 text-white/72">
-                  The visual system is now oriented around light mode, strong information hierarchy, and playful cards
-                  inspired by the references you liked.
+                  The visual system is now oriented around light mode, strong information hierarchy,
+                  and playful cards inspired by the references you liked.
                 </p>
               </div>
 
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Link to={ctaLink}>
-                  <Button className="bg-white text-foreground hover:bg-white/92">{isAuthenticated ? "Go to dashboard" : "Create account"}</Button>
+                  <Button className="bg-white text-foreground hover:bg-white/92">
+                    {isAuthenticated ? "Go to dashboard" : "Create account"}
+                  </Button>
                 </Link>
                 <Link to="/courses">
-                  <Button className="border-white/25 bg-white/10 text-white hover:bg-white/16" variant="outline">
+                  <Button
+                    className="border-white/25 bg-white/10 text-white hover:bg-white/16"
+                    variant="outline"
+                  >
                     Explore course structure
                   </Button>
                 </Link>

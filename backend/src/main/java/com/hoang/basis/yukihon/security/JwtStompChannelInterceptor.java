@@ -40,11 +40,7 @@ public class JwtStompChannelInterceptor implements ChannelInterceptor {
             throw new IllegalArgumentException("Invalid Authorization token");
         }
 
-        var authentication = new UsernamePasswordAuthenticationToken(
-                userDetails,
-                null,
-                userDetails.getAuthorities()
-        );
+        var authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
         accessor.setUser(authentication);
         return message;
     }

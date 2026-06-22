@@ -2,13 +2,11 @@ package com.hoang.basis.yukihon.system.user.repository;
 
 import com.hoang.basis.yukihon.system.user.entity.RoleName;
 import com.hoang.basis.yukihon.system.user.entity.User;
+import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-
-import java.util.List;
-
-import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
 
@@ -24,7 +22,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
     long countUsersByRole(@Param("role") RoleName role);
 
     List<User> findTop100ByEmailContainingIgnoreCaseOrDisplayNameContainingIgnoreCaseOrderByCreatedAtDesc(
-            String email,
-            String displayName
-    );
+            String email, String displayName);
 }

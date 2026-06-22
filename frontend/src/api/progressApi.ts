@@ -50,7 +50,11 @@ export const progressApi = {
     const progress = await apiClient.request<UserProgress[]>("/api/progress");
     return progress.find((item) => item.vocabularyId === STORY_MODE_PROGRESS_VOCABULARY_ID) ?? null;
   },
-  upsertStoryModeProgress: async (params: { userId: number; notes: string; progressId?: number | null }) => {
+  upsertStoryModeProgress: async (params: {
+    userId: number;
+    notes: string;
+    progressId?: number | null;
+  }) => {
     const payload = buildStoryModePayload(params.notes);
 
     if (params.progressId) {

@@ -29,24 +29,21 @@ public class AnkiStudyController {
     private final UserRepository userRepository;
 
     private Long getUserId(UserDetails userDetails) {
-        User user = userRepository.findByEmail(userDetails.getUsername())
+        User user = userRepository
+                .findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         return user.getId();
     }
 
     @GetMapping("/{deckId}")
     public ResponseEntity<AnkiStudyQueueDto> getQueue(
-            @PathVariable Long deckId,
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
+            @PathVariable Long deckId, @AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(ankiStudyService.getStudyQueue(getUserId(userDetails), deckId));
     }
 
     @PostMapping("/review")
     public ResponseEntity<AnkiStudyCardDto> review(
-            @Valid @RequestBody AnkiReviewRequest request,
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
+            @Valid @RequestBody AnkiReviewRequest request, @AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(ankiStudyService.review(getUserId(userDetails), request));
     }
 }

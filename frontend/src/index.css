@@ -63,8 +63,7 @@ html {
     --card-border-color: 221 26% 24%;
     --card-shadow-offset: 0 8px 0 0 hsl(var(--card-border-color));
     --card-shadow-full:
-      0 8px 0 0 hsl(var(--card-border-color)),
-      0 20px 44px -22px rgba(32, 48, 74, 0.26);
+      0 8px 0 0 hsl(var(--card-border-color)), 0 20px 44px -22px rgba(32, 48, 74, 0.26);
 
     --glass-bg: 0 0% 100% / 0.7;
     --glass-border: 221 26% 24% / 0.14;
@@ -90,7 +89,10 @@ html {
   body {
     @apply bg-background text-foreground antialiased;
     font-family: "Plus Jakarta Sans", system-ui, sans-serif;
-    font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+    font-feature-settings:
+      "kern" 1,
+      "liga" 1,
+      "calt" 1;
     background-image:
       radial-gradient(circle at top left, rgba(255, 207, 196, 0.45), transparent 32%),
       radial-gradient(circle at top right, rgba(178, 238, 255, 0.42), transparent 28%),
@@ -312,7 +314,9 @@ html {
     background-image:
       radial-gradient(rgba(40, 57, 86, 0.04) 0.9px, transparent 0.9px),
       radial-gradient(rgba(255, 255, 255, 0.7) 0.8px, transparent 0.8px);
-    background-position: 0 0, 18px 18px;
+    background-position:
+      0 0,
+      18px 18px;
     background-size: 36px 36px;
   }
 }

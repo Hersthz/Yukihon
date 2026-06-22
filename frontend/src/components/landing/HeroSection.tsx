@@ -20,15 +20,25 @@ const HeroSection = () => {
   const mouseY = useMotionValue(0);
   const parallaxX = useTransform(mouseX, [0, 1], [-15, 15]);
   const parallaxY = useTransform(mouseY, [0, 1], [-15, 15]);
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    mouseX.set(e.clientX / window.innerWidth);
-    mouseY.set(e.clientY / window.innerHeight);
-  }, [mouseX, mouseY]);
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      mouseX.set(e.clientX / window.innerWidth);
+      mouseY.set(e.clientY / window.innerHeight);
+    },
+    [mouseX, mouseY]
+  );
 
   return (
-    <section id="hero" className="relative pt-28 pb-20 md:pt-36 md:pb-28 overflow-hidden" onMouseMove={handleMouseMove}>
+    <section
+      id="hero"
+      className="relative pt-28 pb-20 md:pt-36 md:pb-28 overflow-hidden"
+      onMouseMove={handleMouseMove}
+    >
       {/* Floating kanji background with parallax */}
-      <motion.div className="absolute inset-0 pointer-events-none select-none overflow-hidden" style={{ x: parallaxX, y: parallaxY }}>
+      <motion.div
+        className="absolute inset-0 pointer-events-none select-none overflow-hidden"
+        style={{ x: parallaxX, y: parallaxY }}
+      >
         {FLOATING_KANJI.map((k) => (
           <motion.span
             key={k.char}
@@ -68,15 +78,27 @@ const HeroSection = () => {
             <motion.div
               initial={{ opacity: 0, scale: 0.9, rotate: -5 }}
               animate={{ opacity: 1, scale: 1, rotate: 0 }}
-              transition={{ duration: 0.8, delay: 0.2, type: "spring", stiffness: 200, damping: 15 }}
+              transition={{
+                duration: 0.8,
+                delay: 0.2,
+                type: "spring",
+                stiffness: 200,
+                damping: 15,
+              }}
               className="flex items-center gap-4 bg-card/60 backdrop-blur-2xl p-4 rounded-[2rem] border border-white/10 shadow-xl w-fit clay-card relative z-20"
             >
-              <img src={kaorukoHappy} alt="Kaoruko" className="w-16 h-16 rounded-full border-2 border-primary/20" />
+              <img
+                src={kaorukoHappy}
+                alt="Kaoruko"
+                className="w-16 h-16 rounded-full border-2 border-primary/20"
+              />
               <div>
                 <p className="text-base font-medium">
                   Hello! I'm <span className="text-primary font-bold">Kaoruko</span>
                 </p>
-                <p className="text-sm text-muted-foreground font-medium">Let's learn Japanese magically!</p>
+                <p className="text-sm text-muted-foreground font-medium">
+                  Let's learn Japanese magically!
+                </p>
               </div>
             </motion.div>
 
@@ -98,7 +120,11 @@ const HeroSection = () => {
                 <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                   15-minute
                 </span>
-                <svg className="absolute -bottom-3 left-0 w-full h-4" viewBox="0 0 200 12" fill="none">
+                <svg
+                  className="absolute -bottom-3 left-0 w-full h-4"
+                  viewBox="0 0 200 12"
+                  fill="none"
+                >
                   <motion.path
                     d="M2 10C40 4 80 8 100 9C120 10 160 6 198 10"
                     stroke="url(#session-gradient)"
@@ -120,7 +146,10 @@ const HeroSection = () => {
             </motion.h1>
 
             {/* Description */}
-            <motion.p variants={fadeUp} className="text-lg text-muted-foreground max-w-xl leading-relaxed">
+            <motion.p
+              variants={fadeUp}
+              className="text-lg text-muted-foreground max-w-xl leading-relaxed"
+            >
               Build fluency through bite-sized daily lessons, intelligent spaced repetition, and
               comprehensive JLPT preparation with your personal guide, Kaoruko.
             </motion.p>
@@ -138,14 +167,18 @@ const HeroSection = () => {
                   className="h-14 px-8 text-lg clay-btn bg-primary hover:bg-primary text-white w-full sm:w-auto overflow-hidden group relative"
                 >
                   <span className="relative z-10 flex items-center gap-2">
-                     Start free trial
-                     <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                    Start free trial
+                    <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                   </span>
                   <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:animate-shimmer" />
                 </Button>
               </Link>
               <Link to="/courses">
-                <Button size="lg" variant="outline" className="h-14 px-8 text-lg clay-btn bg-card text-foreground border-transparent hover:bg-card/80 w-full sm:w-auto">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="h-14 px-8 text-lg clay-btn bg-card text-foreground border-transparent hover:bg-card/80 w-full sm:w-auto"
+                >
                   Take level test
                 </Button>
               </Link>
@@ -179,14 +212,18 @@ const HeroSection = () => {
             </motion.div>
 
             {/* Live activity indicator */}
-            <motion.div variants={fadeUp} className="flex items-center gap-2 text-xs text-muted-foreground">
+            <motion.div
+              variants={fadeUp}
+              className="flex items-center gap-2 text-xs text-muted-foreground"
+            >
               <motion.div
                 className="w-2 h-2 rounded-full bg-emerald-400"
                 animate={{ scale: [1, 1.4, 1], opacity: [1, 0.6, 1] }}
                 transition={{ duration: 2, repeat: Infinity }}
               />
               <span>
-                <span className="font-semibold text-foreground">{liveCount}</span> learners online now
+                <span className="font-semibold text-foreground">{liveCount}</span> learners online
+                now
               </span>
             </motion.div>
           </motion.div>
@@ -271,7 +308,7 @@ const HeroSection = () => {
           </motion.div>
         </div>
       </div>
-      
+
       {/* Section divider */}
       <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-border/50 to-transparent" />
     </section>

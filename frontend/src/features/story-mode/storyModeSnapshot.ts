@@ -40,7 +40,10 @@ export const createDefaultStoryPerformance = (): StoryPerformanceState => ({
 });
 
 export const buildInitialPerformanceByStory = (stories: StoryModeStory[] = storyModeStories) =>
-  Object.fromEntries(stories.map((story) => [story.id, createDefaultStoryPerformance()])) as Record<string, StoryPerformanceState>;
+  Object.fromEntries(stories.map((story) => [story.id, createDefaultStoryPerformance()])) as Record<
+    string,
+    StoryPerformanceState
+  >;
 
 export const buildInitialUnlockedSegmentIds = (stories: StoryModeStory[] = storyModeStories) =>
   Object.fromEntries(stories.map((story) => [story.id, [story.entrySegmentId]]));
@@ -65,14 +68,20 @@ export const getSegmentById = (story: StoryModeStory, segmentId?: string | null)
   story.segments.find((segment) => segment.id === story.entrySegmentId) ??
   story.segments[0];
 
-const migrateUnlockedSegments = (snapshot: Partial<StoryModeSnapshot>, stories: StoryModeStory[]) => {
+const migrateUnlockedSegments = (
+  snapshot: Partial<StoryModeSnapshot>,
+  stories: StoryModeStory[]
+) => {
   const initial = buildInitialUnlockedSegmentIds(stories);
   const nextMap: Record<string, string[]> = { ...initial };
 
   if (snapshot.unlockedSegmentIdsByStory) {
     stories.forEach((story) => {
       const allowedIds = new Set(story.segments.map((segment) => segment.id));
-      const restored = snapshot.unlockedSegmentIdsByStory?.[story.id]?.filter((segmentId) => allowedIds.has(segmentId)) ?? [];
+      const restored =
+        snapshot.unlockedSegmentIdsByStory?.[story.id]?.filter((segmentId) =>
+          allowedIds.has(segmentId)
+        ) ?? [];
       nextMap[story.id] = dedupe([story.entrySegmentId, ...restored]);
     });
     return nextMap;
@@ -80,7 +89,10 @@ const migrateUnlockedSegments = (snapshot: Partial<StoryModeSnapshot>, stories: 
 
   if (snapshot.unlockedCounts) {
     stories.forEach((story) => {
-      const count = Math.max(1, Math.min(story.segments.length, snapshot.unlockedCounts?.[story.id] ?? 1));
+      const count = Math.max(
+        1,
+        Math.min(story.segments.length, snapshot.unlockedCounts?.[story.id] ?? 1)
+      );
       nextMap[story.id] = story.segments.slice(0, count).map((segment) => segment.id);
     });
   }
@@ -108,7 +120,9 @@ const normalizePerformanceByStory = (
     const safeCorrect = Math.max(0, Math.min(raw.correctCount ?? 0, safeAnswered));
     const safeStreak = Math.max(0, raw.streak ?? 0);
     const safeIncorrectStreak = Math.max(0, raw.incorrectStreak ?? 0);
-    const safeDifficulty = storyDifficultyOrder.includes(raw.currentDifficulty) ? raw.currentDifficulty : "STANDARD";
+    const safeDifficulty = storyDifficultyOrder.includes(raw.currentDifficulty)
+      ? raw.currentDifficulty
+      : "STANDARD";
 
     next[story.id] = {
       answeredCount: safeAnswered,
@@ -156,10 +170,14 @@ export const buildHydratedStoryModeState = (
   const nextStory = stories.find((story) => story.id === snapshot.activeStoryId) ?? firstStory;
   const nextUnlockedSegmentIdsByStory = migrateUnlockedSegments(snapshot, stories);
   const nextPerformanceByStory = normalizePerformanceByStory(snapshot.performanceByStory, stories);
-  const storyUnlockedIds = nextUnlockedSegmentIdsByStory[nextStory.id] ?? [nextStory.entrySegmentId];
+  const storyUnlockedIds = nextUnlockedSegmentIdsByStory[nextStory.id] ?? [
+    nextStory.entrySegmentId,
+  ];
   const fallbackActiveSegmentId =
     snapshot.activeSegmentId ??
-    nextStory.segments[Math.max(0, Math.min(storyUnlockedIds.length - 1, snapshot.activeSegmentIndex ?? 0))]?.id ??
+    nextStory.segments[
+      Math.max(0, Math.min(storyUnlockedIds.length - 1, snapshot.activeSegmentIndex ?? 0))
+    ]?.id ??
     nextStory.entrySegmentId;
 
   return {

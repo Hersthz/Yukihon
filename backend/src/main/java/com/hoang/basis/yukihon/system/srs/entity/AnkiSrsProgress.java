@@ -6,11 +6,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.time.LocalDateTime;
 
 /**
  * SM-2 / FSRS learning state for one (user, deck, flashcard). {@code nextReviewAt} drives the queue.
@@ -18,11 +17,15 @@ import java.time.LocalDateTime;
  * future FSRS scheduler.
  */
 @Entity
-@Table(name = "anki_srs_progress",
-        uniqueConstraints = @UniqueConstraint(name = "uk_anki_progress", columnNames = {"user_id", "deck_id", "flashcard_id"}),
+@Table(
+        name = "anki_srs_progress",
+        uniqueConstraints =
+                @UniqueConstraint(
+                        name = "uk_anki_progress",
+                        columnNames = {"user_id", "deck_id", "flashcard_id"}),
         indexes = {
-                @Index(name = "idx_anki_progress_due", columnList = "user_id, next_review_at"),
-                @Index(name = "idx_anki_progress_flashcard", columnList = "flashcard_id")
+            @Index(name = "idx_anki_progress_due", columnList = "user_id, next_review_at"),
+            @Index(name = "idx_anki_progress_flashcard", columnList = "flashcard_id")
         })
 @Getter
 @Setter

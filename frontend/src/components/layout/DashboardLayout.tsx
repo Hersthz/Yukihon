@@ -43,9 +43,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           collapsed ? "lg:pl-[112px]" : "lg:pl-[296px]"
         )}
       >
-        <div
-          className="mx-auto w-full max-w-[1680px] px-4 pb-8 sm:px-5 lg:px-6 xl:px-8"
-        >
+        <div className="mx-auto w-full max-w-[1680px] px-4 pb-8 sm:px-5 lg:px-6 xl:px-8">
           <div
             className={cn(
               "min-h-[calc(100vh-136px)] rounded-[2rem] px-0",

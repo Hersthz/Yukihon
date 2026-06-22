@@ -14,6 +14,7 @@ export interface DictionaryEntry {
 }
 
 export const dictionaryApi = {
-  search: (query: string) => apiClient.request<DictionaryEntry[]>(`/api/dictionary/search?q=${encodeURIComponent(query)}`),
+  search: (query: string) =>
+    apiClient.request<DictionaryEntry[]>(`/api/dictionary/search?q=${encodeURIComponent(query)}`),
   getDetail: (id: number) => apiClient.request<DictionaryEntry>(`/api/dictionary/${id}`),
 };

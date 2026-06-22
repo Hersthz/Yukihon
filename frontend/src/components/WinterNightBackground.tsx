@@ -32,7 +32,10 @@ const WinterNightBackground = ({
 
   const orbs = useMemo<DecorativeOrb[]>(() => {
     const multiplier = intensity === "light" ? 0.8 : intensity === "intense" ? 1.35 : 1;
-    const count = Math.max(4, Math.min(Math.round((sparkleCount + snowCount * 0.2) * multiplier), 12));
+    const count = Math.max(
+      4,
+      Math.min(Math.round((sparkleCount + snowCount * 0.2) * multiplier), 12)
+    );
 
     return Array.from({ length: count }, (_, index) => ({
       id: index,
@@ -48,7 +51,10 @@ const WinterNightBackground = ({
   }
 
   return (
-    <div className={`pointer-events-none fixed inset-0 overflow-hidden ${className}`} style={{ zIndex: 0 }}>
+    <div
+      className={`pointer-events-none fixed inset-0 overflow-hidden ${className}`}
+      style={{ zIndex: 0 }}
+    >
       <div className="absolute inset-0 bg-[linear-gradient(180deg,#fffaf4_0%,#fff5ed_40%,#f8f0e8_100%)]" />
       <div className="absolute inset-0 opacity-70 bg-noise" />
 

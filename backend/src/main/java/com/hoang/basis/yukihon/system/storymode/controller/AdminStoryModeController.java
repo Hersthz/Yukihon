@@ -4,12 +4,11 @@ import com.hoang.basis.yukihon.system.storymode.dto.StoryModeStoryDto;
 import com.hoang.basis.yukihon.system.storymode.dto.StoryModeStoryRequest;
 import com.hoang.basis.yukihon.system.storymode.service.StoryModeService;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin/story-mode")
@@ -38,7 +37,8 @@ public class AdminStoryModeController {
 
     @PutMapping("/stories/{id}")
     @PreAuthorize("hasAuthority('CONTENT_MANAGE')")
-    public ResponseEntity<StoryModeStoryDto> updateStory(@PathVariable Long id, @Valid @RequestBody StoryModeStoryRequest request) {
+    public ResponseEntity<StoryModeStoryDto> updateStory(
+            @PathVariable Long id, @Valid @RequestBody StoryModeStoryRequest request) {
         return ResponseEntity.ok(storyModeService.updateStory(id, request));
     }
 

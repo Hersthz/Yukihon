@@ -4,13 +4,12 @@ import com.hoang.basis.yukihon.system.grammar.dto.GrammarDto;
 import com.hoang.basis.yukihon.system.grammar.dto.GrammarRequest;
 import com.hoang.basis.yukihon.system.grammar.entity.Grammar;
 import com.hoang.basis.yukihon.system.grammar.repository.GrammarRepository;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -22,38 +21,35 @@ public class GrammarService {
 
     @Transactional(readOnly = true)
     public GrammarDto getGrammarById(Long id) {
-        return grammarRepository.findById(id)
+        return grammarRepository
+                .findById(id)
                 .map(this::convertToDto)
                 .orElseThrow(() -> new RuntimeException("Grammar not found with id: " + id));
     }
 
     @Transactional(readOnly = true)
     public GrammarDto getGrammarByPattern(String pattern) {
-        return grammarRepository.findByPattern(pattern)
+        return grammarRepository
+                .findByPattern(pattern)
                 .map(this::convertToDto)
                 .orElseThrow(() -> new RuntimeException("Grammar not found with pattern: " + pattern));
     }
 
     @Transactional(readOnly = true)
     public List<GrammarDto> getAll() {
-        return grammarRepository.findAll()
-                .stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
+        return grammarRepository.findAll().stream().map(this::convertToDto).collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public List<GrammarDto> getByJlptLevel(String jlptLevel) {
-        return grammarRepository.findByJlptLevel(jlptLevel)
-                .stream()
+        return grammarRepository.findByJlptLevel(jlptLevel).stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public List<GrammarDto> getByMultipleLevels(List<String> levels) {
-        return grammarRepository.findByJlptLevelIn(levels)
-                .stream()
+        return grammarRepository.findByJlptLevelIn(levels).stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
@@ -86,7 +82,8 @@ public class GrammarService {
     }
 
     public GrammarDto updateGrammar(Long id, GrammarRequest request) {
-        Grammar grammar = grammarRepository.findById(id)
+        Grammar grammar = grammarRepository
+                .findById(id)
                 .orElseThrow(() -> new RuntimeException("Grammar not found with id: " + id));
 
         if (!grammar.getPattern().equals(request.getPattern())

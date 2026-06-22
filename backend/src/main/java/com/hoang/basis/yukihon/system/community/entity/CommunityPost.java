@@ -2,15 +2,15 @@ package com.hoang.basis.yukihon.system.community.entity;
 
 import com.hoang.basis.yukihon.system.user.entity.User;
 import jakarta.persistence.*;
+import java.time.Instant;
 import lombok.*;
 
-import java.time.Instant;
-
 @Entity
-@Table(name = "community_posts",
+@Table(
+        name = "community_posts",
         indexes = {
-                @Index(name = "idx_post_user", columnList = "user_id"),
-                @Index(name = "idx_post_created", columnList = "created_at")
+            @Index(name = "idx_post_user", columnList = "user_id"),
+            @Index(name = "idx_post_created", columnList = "created_at")
         })
 @Getter
 @Setter

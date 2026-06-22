@@ -16,10 +16,12 @@ import lombok.Setter;
 
 /** A tag for organizing decks. userId null means a global/system tag. */
 @Entity
-@Table(name = "tags", indexes = {
-        @Index(name = "idx_tags_user", columnList = "user_id"),
-        @Index(name = "idx_tags_name", columnList = "name")
-})
+@Table(
+        name = "tags",
+        indexes = {
+            @Index(name = "idx_tags_user", columnList = "user_id"),
+            @Index(name = "idx_tags_name", columnList = "name")
+        })
 @Getter
 @Setter
 @NoArgsConstructor

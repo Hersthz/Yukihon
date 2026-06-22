@@ -55,10 +55,13 @@ export const kanjiSrsApi = {
       body: JSON.stringify({ records }),
     }),
   review: (character: string, rating: KanjiReviewRating) =>
-    apiClient.request<KanjiSrsServerRecord>(`/api/kanji-srs/${encodeURIComponent(character)}/review`, {
-      method: "POST",
-      body: JSON.stringify({ rating }),
-    }),
+    apiClient.request<KanjiSrsServerRecord>(
+      `/api/kanji-srs/${encodeURIComponent(character)}/review`,
+      {
+        method: "POST",
+        body: JSON.stringify({ rating }),
+      }
+    ),
   remove: (character: string) =>
     apiClient.request(`/api/kanji-srs/${encodeURIComponent(character)}`, {
       method: "DELETE",

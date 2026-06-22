@@ -1,13 +1,12 @@
 package com.hoang.basis.yukihon.base.crud.registry;
 
 import jakarta.annotation.PostConstruct;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 /**
  * Holds the auto-CRUD resource descriptors discovered at startup, keyed by URL path and by entity
@@ -33,7 +32,9 @@ public class AutoCrudRegistry {
                         + " and " + existing.getEntityClass().getName());
             }
             byEntityName.put(descriptor.getEntityClass().getSimpleName(), descriptor);
-            log.info("AutoCrud: registered /api/auto/{} -> {}", descriptor.getPath(),
+            log.info(
+                    "AutoCrud: registered /api/auto/{} -> {}",
+                    descriptor.getPath(),
                     descriptor.getEntityClass().getSimpleName());
         }
     }

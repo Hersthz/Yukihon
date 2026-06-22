@@ -16,20 +16,6 @@ import com.hoang.basis.yukihon.system.aichat.repository.AiChatConversationReposi
 import com.hoang.basis.yukihon.system.aichat.repository.AiChatMessageRepository;
 import com.hoang.basis.yukihon.system.user.entity.User;
 import com.hoang.basis.yukihon.system.user.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
-import org.springframework.web.client.HttpStatusCodeException;
-import org.springframework.web.client.RestTemplate;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -41,6 +27,19 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 @Service
 @RequiredArgsConstructor
@@ -74,13 +73,16 @@ public class AiChatService {
         validateRequest(request);
 
         if (openAiApiKey == null || openAiApiKey.isBlank()) {
-            throw new ServiceUnavailableException("AI chat is not configured yet. Add OPENAI_API_KEY on the backend server.");
+            throw new ServiceUnavailableException(
+                    "AI chat is not configured yet. Add OPENAI_API_KEY on the backend server.");
         }
 
         User user = findUserByIdOrThrow(userId);
         String normalizedMode = request.getMode().trim().toLowerCase(Locale.ROOT);
-        AiChatMessageRequest latestUserMessage = request.getMessages().get(request.getMessages().size() - 1);
-        AiChatConversation conversation = resolveConversation(user, request.getConversationId(), latestUserMessage.getText());
+        AiChatMessageRequest latestUserMessage =
+                request.getMessages().get(request.getMessages().size() - 1);
+        AiChatConversation conversation =
+                resolveConversation(user, request.getConversationId(), latestUserMessage.getText());
         Map<String, Object> body = buildOpenAiBody(request, normalizedMode, false);
 
         HttpHeaders headers = new HttpHeaders();
@@ -92,11 +94,15 @@ public class AiChatService {
                     normalizeBaseUrl(openAiBaseUrl) + "/responses",
                     HttpMethod.POST,
                     new HttpEntity<>(body, headers),
-                    String.class
-            );
+                    String.class);
 
             String reply = extractReply(response.getBody());
-            persistExchange(user, conversation, normalizedMode, latestUserMessage.getText().trim(), reply);
+            persistExchange(
+                    user,
+                    conversation,
+                    normalizedMode,
+                    latestUserMessage.getText().trim(),
+                    reply);
             log.info("AI chat response created for userId={} mode={} model={}", userId, normalizedMode, openAiModel);
 
             return AiChatResponse.builder()
@@ -108,7 +114,8 @@ public class AiChatService {
                     .build();
         } catch (HttpStatusCodeException exception) {
             String providerMessage = extractProviderError(exception.getResponseBodyAsString());
-            log.warn("OpenAI request failed for userId={} status={} message={}",
+            log.warn(
+                    "OpenAI request failed for userId={} status={} message={}",
                     userId,
                     exception.getStatusCode(),
                     providerMessage);
@@ -117,7 +124,8 @@ public class AiChatService {
             throw exception;
         } catch (Exception exception) {
             log.error("Unexpected AI chat error for userId={}", userId, exception);
-            throw new ServiceUnavailableException("AI chat is temporarily unavailable. Please try again in a moment.", exception);
+            throw new ServiceUnavailableException(
+                    "AI chat is temporarily unavailable. Please try again in a moment.", exception);
         }
     }
 
@@ -125,23 +133,32 @@ public class AiChatService {
         validateRequest(request);
 
         if (openAiApiKey == null || openAiApiKey.isBlank()) {
-            throw new ServiceUnavailableException("AI chat is not configured yet. Add OPENAI_API_KEY on the backend server.");
+            throw new ServiceUnavailableException(
+                    "AI chat is not configured yet. Add OPENAI_API_KEY on the backend server.");
         }
 
         User user = findUserByIdOrThrow(userId);
         String normalizedMode = request.getMode().trim().toLowerCase(Locale.ROOT);
-        AiChatMessageRequest latestUserMessage = request.getMessages().get(request.getMessages().size() - 1);
-        AiChatConversation conversation = resolveConversation(user, request.getConversationId(), latestUserMessage.getText());
+        AiChatMessageRequest latestUserMessage =
+                request.getMessages().get(request.getMessages().size() - 1);
+        AiChatConversation conversation =
+                resolveConversation(user, request.getConversationId(), latestUserMessage.getText());
         Map<String, Object> body = buildOpenAiBody(request, normalizedMode, true);
 
         return outputStream -> {
             Writer writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);
-            writeSseEvent(writer, "meta", objectMapper.writeValueAsString(Map.of(
-                    "model", openAiModel,
-                    "mode", normalizedMode,
-                    "conversationId", conversation.getId(),
-                    "conversationTitle", conversation.getTitle()
-            )));
+            writeSseEvent(
+                    writer,
+                    "meta",
+                    objectMapper.writeValueAsString(Map.of(
+                            "model",
+                            openAiModel,
+                            "mode",
+                            normalizedMode,
+                            "conversationId",
+                            conversation.getId(),
+                            "conversationTitle",
+                            conversation.getTitle())));
 
             StringBuilder assistantReply = new StringBuilder();
 
@@ -176,7 +193,10 @@ public class AiChatService {
                                         String delta = event.path("delta").asText("");
                                         if (!delta.isBlank()) {
                                             assistantReply.append(delta);
-                                            writeSseEvent(writer, "delta", objectMapper.writeValueAsString(Map.of("delta", delta)));
+                                            writeSseEvent(
+                                                    writer,
+                                                    "delta",
+                                                    objectMapper.writeValueAsString(Map.of("delta", delta)));
                                         }
                                         continue;
                                     }
@@ -184,38 +204,54 @@ public class AiChatService {
                                     if ("response.completed".equals(type)) {
                                         // Persistence happens in finally so a partial reply is still saved
                                         // if the client aborts the stream mid-response.
-                                        writeSseEvent(writer, "done", objectMapper.writeValueAsString(Map.of(
-                                                "model", openAiModel,
-                                                "mode", normalizedMode,
-                                                "conversationId", conversation.getId(),
-                                                "conversationTitle", conversation.getTitle()
-                                        )));
+                                        writeSseEvent(
+                                                writer,
+                                                "done",
+                                                objectMapper.writeValueAsString(Map.of(
+                                                        "model",
+                                                        openAiModel,
+                                                        "mode",
+                                                        normalizedMode,
+                                                        "conversationId",
+                                                        conversation.getId(),
+                                                        "conversationTitle",
+                                                        conversation.getTitle())));
                                         break;
                                     }
 
                                     if ("error".equals(type)) {
-                                        String message = event.path("message").asText("AI provider is unavailable right now. Please try again later.");
-                                        writeSseEvent(writer, "error", objectMapper.writeValueAsString(Map.of("message", message)));
+                                        String message = event.path("message")
+                                                .asText(
+                                                        "AI provider is unavailable right now. Please try again later.");
+                                        writeSseEvent(
+                                                writer,
+                                                "error",
+                                                objectMapper.writeValueAsString(Map.of("message", message)));
                                         break;
                                     }
                                 }
                             }
                             return null;
-                        }
-                );
+                        });
             } catch (HttpStatusCodeException exception) {
                 String providerMessage = extractProviderError(exception.getResponseBodyAsString());
                 writeSseEvent(writer, "error", objectMapper.writeValueAsString(Map.of("message", providerMessage)));
             } catch (Exception exception) {
                 log.error("Unexpected AI chat streaming error for userId={}", userId, exception);
-                writeSseEvent(writer, "error", objectMapper.writeValueAsString(Map.of(
-                        "message", "AI chat is temporarily unavailable. Please try again in a moment."
-                )));
+                writeSseEvent(
+                        writer,
+                        "error",
+                        objectMapper.writeValueAsString(Map.of(
+                                "message", "AI chat is temporarily unavailable. Please try again in a moment.")));
             } finally {
                 if (assistantReply.length() > 0) {
                     try {
-                        persistExchange(user, conversation, normalizedMode,
-                                latestUserMessage.getText().trim(), assistantReply.toString());
+                        persistExchange(
+                                user,
+                                conversation,
+                                normalizedMode,
+                                latestUserMessage.getText().trim(),
+                                assistantReply.toString());
                     } catch (Exception persistError) {
                         log.warn("Failed to persist AI chat exchange for userId={}", userId, persistError);
                     }
@@ -237,18 +273,21 @@ public class AiChatService {
         if (request.getMessages().size() > MAX_MESSAGES) {
             throw new IllegalArgumentException("Too many chat messages. Maximum is " + MAX_MESSAGES);
         }
-        String lastRole = request.getMessages().get(request.getMessages().size() - 1).getRole();
+        String lastRole =
+                request.getMessages().get(request.getMessages().size() - 1).getRole();
         if (!"user".equalsIgnoreCase(lastRole)) {
             throw new IllegalArgumentException("The latest chat message must come from the user");
         }
 
         for (AiChatMessageRequest message : request.getMessages()) {
-            String role = message.getRole() == null ? "" : message.getRole().trim().toLowerCase(Locale.ROOT);
+            String role =
+                    message.getRole() == null ? "" : message.getRole().trim().toLowerCase(Locale.ROOT);
             if (!SUPPORTED_ROLES.contains(role)) {
                 throw new IllegalArgumentException("Unsupported message role: " + message.getRole());
             }
             if (message.getText().trim().length() > MAX_MESSAGE_LENGTH) {
-                throw new IllegalArgumentException("A chat message exceeds the maximum length of " + MAX_MESSAGE_LENGTH + " characters");
+                throw new IllegalArgumentException(
+                        "A chat message exceeds the maximum length of " + MAX_MESSAGE_LENGTH + " characters");
             }
         }
     }
@@ -256,8 +295,7 @@ public class AiChatService {
     private Map<String, Object> toOpenAiMessage(AiChatMessageRequest message) {
         return Map.of(
                 "role", message.getRole().trim().toLowerCase(Locale.ROOT),
-                "content", message.getText().trim()
-        );
+                "content", message.getText().trim());
     }
 
     private Map<String, Object> buildOpenAiBody(AiChatRequest request, String normalizedMode, boolean stream) {
@@ -277,8 +315,7 @@ public class AiChatService {
     }
 
     public List<AiChatConversationDto> getConversations(Long userId) {
-        return aiChatConversationRepository.findByUserIdOrderByUpdatedAtDesc(userId)
-                .stream()
+        return aiChatConversationRepository.findByUserIdOrderByUpdatedAtDesc(userId).stream()
                 .map(AiChatConversationDto::fromEntity)
                 .toList();
     }
@@ -295,14 +332,14 @@ public class AiChatService {
 
     public List<AiChatHistoryItemDto> getConversationMessages(Long userId, Long conversationId) {
         ensureConversationOwnedByUser(userId, conversationId);
-        return aiChatMessageRepository.findByConversationIdAndUserIdOrderByCreatedAtAsc(conversationId, userId)
-                .stream()
+        return aiChatMessageRepository.findByConversationIdAndUserIdOrderByCreatedAtAsc(conversationId, userId).stream()
                 .map(AiChatHistoryItemDto::fromEntity)
                 .toList();
     }
 
     @Transactional
-    public AiChatConversationDto renameConversation(Long userId, Long conversationId, AiChatConversationUpdateRequest request) {
+    public AiChatConversationDto renameConversation(
+            Long userId, Long conversationId, AiChatConversationUpdateRequest request) {
         AiChatConversation conversation = ensureConversationOwnedByUser(userId, conversationId);
         conversation.setTitle(sanitizeConversationTitle(request.getTitle()));
         conversation.setUpdatedAt(Instant.now());
@@ -317,8 +354,7 @@ public class AiChatService {
     }
 
     public List<AiChatHistoryItemDto> getHistory(Long userId) {
-        return aiChatMessageRepository.findByUserIdOrderByCreatedAtAsc(userId)
-                .stream()
+        return aiChatMessageRepository.findByUserIdOrderByCreatedAtAsc(userId).stream()
                 .map(AiChatHistoryItemDto::fromEntity)
                 .toList();
     }
@@ -330,7 +366,8 @@ public class AiChatService {
     }
 
     private String buildInstructions(String mode) {
-        String baseInstruction = """
+        String baseInstruction =
+                """
                 You are Yukihon AI, a supportive Japanese learning assistant inside the Yukihon app.
                 Reply in Vietnamese if the user writes in Vietnamese. Reply in English if the user writes in English.
                 Keep answers practical, concise, and easy to study from.
@@ -339,16 +376,19 @@ public class AiChatService {
                 """;
 
         return switch (mode) {
-            case "grammar" -> baseInstruction + """
+            case "grammar" -> baseInstruction
+                    + """
                     Focus on grammar explanation.
                     Break answers into structure, meaning, nuance, and one or two examples.
                     """;
-            case "conversation" -> baseInstruction + """
+            case "conversation" -> baseInstruction
+                    + """
                     Focus on natural conversation help.
                     Draft replies that sound friendly and simple.
                     Offer a slightly more natural alternative when useful.
                     """;
-            default -> baseInstruction + """
+            default -> baseInstruction
+                    + """
                     Focus on short study coaching.
                     Prefer actionable plans, revision steps, and next actions over long theory.
                     """;
@@ -421,7 +461,8 @@ public class AiChatService {
         return baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
     }
 
-    private void persistExchange(User user, AiChatConversation conversation, String mode, String userText, String assistantText) {
+    private void persistExchange(
+            User user, AiChatConversation conversation, String mode, String userText, String assistantText) {
         Instant now = Instant.now();
         conversation.setUpdatedAt(now);
         aiChatConversationRepository.save(conversation);
@@ -447,8 +488,7 @@ public class AiChatService {
     }
 
     private User findUserByIdOrThrow(Long userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        return userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 
     private AiChatConversation resolveConversation(User user, Long conversationId, String firstUserText) {
@@ -459,7 +499,8 @@ public class AiChatService {
                     .build());
         }
 
-        AiChatConversation conversation = aiChatConversationRepository.findByIdAndUserId(conversationId, user.getId())
+        AiChatConversation conversation = aiChatConversationRepository
+                .findByIdAndUserId(conversationId, user.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("AI chat conversation not found"));
 
         if (DEFAULT_CONVERSATION_TITLE.equals(conversation.getTitle())
@@ -473,7 +514,8 @@ public class AiChatService {
     }
 
     private AiChatConversation ensureConversationOwnedByUser(Long userId, Long conversationId) {
-        return aiChatConversationRepository.findByIdAndUserId(conversationId, userId)
+        return aiChatConversationRepository
+                .findByIdAndUserId(conversationId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("AI chat conversation not found"));
     }
 

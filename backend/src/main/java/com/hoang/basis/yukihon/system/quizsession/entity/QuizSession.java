@@ -12,21 +12,21 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
+import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.math.BigDecimal;
-import java.time.Instant;
-
 @Entity
-@Table(name = "quiz_sessions",
+@Table(
+        name = "quiz_sessions",
         indexes = {
-                @Index(name = "idx_quiz_sessions_user_completed", columnList = "user_id, completed_at"),
-                @Index(name = "idx_quiz_sessions_mode", columnList = "mode"),
-                @Index(name = "idx_quiz_sessions_weakest_pattern", columnList = "weakest_pattern")
+            @Index(name = "idx_quiz_sessions_user_completed", columnList = "user_id, completed_at"),
+            @Index(name = "idx_quiz_sessions_mode", columnList = "mode"),
+            @Index(name = "idx_quiz_sessions_weakest_pattern", columnList = "weakest_pattern")
         })
 @Getter
 @Setter

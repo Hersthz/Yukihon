@@ -2,6 +2,9 @@ package com.hoang.basis.yukihon.config;
 
 import com.hoang.basis.yukihon.security.JwtAuthenticationFilter;
 import com.hoang.basis.yukihon.security.RestAuthenticationEntryPoint;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -16,14 +19,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.client.RestTemplate;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Configuration
 @EnableMethodSecurity
@@ -41,28 +40,30 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .exceptionHandling(ex ->
-                        ex.authenticationEntryPoint(authenticationEntryPoint))
-                .authorizeHttpRequests(auth -> auth
-                    .requestMatchers(
-                            "/api/auth/login",
-                            "/api/auth/register",
-                            "/api/auth/google",
-                            "/api/auth/refresh",
-                            "/api/auth/forgot-password",
-                            "/api/auth/reset-password",
-                            "/api/health"
-                    ).permitAll()
-                    .requestMatchers("/api/auth/me").authenticated()
-                    .requestMatchers("/ws-community-chat/**").permitAll()
-                    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                    .requestMatchers("/api/admin/creator-mode/**").hasRole("ADMIN")
-                    .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                    .anyRequest().authenticated())
+        http.csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(authenticationEntryPoint))
+                .authorizeHttpRequests(auth -> auth.requestMatchers(
+                                "/api/auth/login",
+                                "/api/auth/register",
+                                "/api/auth/google",
+                                "/api/auth/refresh",
+                                "/api/auth/forgot-password",
+                                "/api/auth/reset-password",
+                                "/api/health")
+                        .permitAll()
+                        .requestMatchers("/api/auth/me")
+                        .authenticated()
+                        .requestMatchers("/ws-community-chat/**")
+                        .permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**")
+                        .permitAll()
+                        .requestMatchers("/api/admin/creator-mode/**")
+                        .hasRole("ADMIN")
+                        .requestMatchers("/api/admin/**")
+                        .hasRole("ADMIN")
+                        .anyRequest()
+                        .authenticated())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .httpBasic(basic -> basic.disable())
                 .formLogin(form -> form.disable());
@@ -73,9 +74,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(
-            AuthenticationConfiguration configuration
-    ) throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
         return configuration.getAuthenticationManager();
     }
 
@@ -92,8 +91,7 @@ public class SecurityConfig {
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
 
-        UrlBasedCorsConfigurationSource source =
-                new UrlBasedCorsConfigurationSource();
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
     }
@@ -111,9 +109,7 @@ public class SecurityConfig {
     }
 
     private List<String> resolveAllowedOrigins() {
-        String configuredOrigins = allowedOrigins == null || allowedOrigins.isBlank()
-                ? frontendUrl
-                : allowedOrigins;
+        String configuredOrigins = allowedOrigins == null || allowedOrigins.isBlank() ? frontendUrl : allowedOrigins;
 
         return Arrays.stream(configuredOrigins.split(","))
                 .map(String::trim)

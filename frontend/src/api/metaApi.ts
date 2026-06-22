@@ -50,7 +50,8 @@ export interface AutoMenuGroup {
 
 export const metaApi = {
   getEntities: () => apiClient.request<EntityMetadata[]>("/api/meta/entities"),
-  getEntity: (name: string) => apiClient.request<EntityMetadata>(`/api/meta/entities/${encodeURIComponent(name)}`),
+  getEntity: (name: string) =>
+    apiClient.request<EntityMetadata>(`/api/meta/entities/${encodeURIComponent(name)}`),
   getMenu: () => apiClient.request<AutoMenuGroup[]>("/api/meta/menu"),
 };
 

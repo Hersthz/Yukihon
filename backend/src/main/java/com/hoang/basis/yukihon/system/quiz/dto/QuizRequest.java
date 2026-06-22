@@ -12,25 +12,25 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class QuizRequest {
-    
+
     @NotBlank(message = "Title is required")
     @Size(min = 1, max = 200)
     private String title;
-    
+
     private String description;
     private String quizType;
     private String difficultyLevel;
     private String jlptLevel;
     private Long lessonId;
-    
+
     @NotBlank(message = "Question is required")
     private String question;
-    
+
     private String options;
-    
+
     @NotBlank(message = "Correct answer is required")
     private String correctAnswer;
-    
+
     private String explanation;
     private String audioUrl;
     private String imageUrl;

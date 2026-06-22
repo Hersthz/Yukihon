@@ -3,7 +3,16 @@ import GrammarEditorForm from "./GrammarEditorForm";
 import LessonEditorForm from "./LessonEditorForm";
 import QuizEditorForm from "./QuizEditorForm";
 import VocabularyEditorForm from "./VocabularyEditorForm";
-import { AdminTab, EditableItem, GrammarItem, Lesson, LessonVersion, MediaUploadResult, QuizItem, VocabItem } from "./types";
+import {
+  AdminTab,
+  EditableItem,
+  GrammarItem,
+  Lesson,
+  LessonVersion,
+  MediaUploadResult,
+  QuizItem,
+  VocabItem,
+} from "./types";
 
 interface AdminContentFormProps {
   activeTab: AdminTab;
@@ -64,9 +73,13 @@ const AdminContentForm = ({
         />
       );
     case "vocabulary":
-      return <VocabularyEditorForm item={editItem as VocabItem} onChange={(item) => setEditItem(item)} />;
+      return (
+        <VocabularyEditorForm item={editItem as VocabItem} onChange={(item) => setEditItem(item)} />
+      );
     case "grammar":
-      return <GrammarEditorForm item={editItem as GrammarItem} onChange={(item) => setEditItem(item)} />;
+      return (
+        <GrammarEditorForm item={editItem as GrammarItem} onChange={(item) => setEditItem(item)} />
+      );
     case "quizzes":
       return (
         <QuizEditorForm

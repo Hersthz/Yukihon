@@ -3,20 +3,19 @@ package com.hoang.basis.yukihon.system.community.service;
 import com.hoang.basis.yukihon.system.community.dto.CommunityChatPresenceDto;
 import com.hoang.basis.yukihon.system.user.entity.User;
 import com.hoang.basis.yukihon.system.user.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.context.event.EventListener;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
-import org.springframework.messaging.simp.stomp.StompCommand;
-import org.springframework.messaging.support.MessageHeaderAccessor;
-import org.springframework.stereotype.Service;
-import org.springframework.web.socket.messaging.SessionDisconnectEvent;
-import org.springframework.web.socket.messaging.SessionSubscribeEvent;
-
 import java.security.Principal;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.event.EventListener;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.messaging.simp.stomp.StompCommand;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
+import org.springframework.messaging.support.MessageHeaderAccessor;
+import org.springframework.stereotype.Service;
+import org.springframework.web.socket.messaging.SessionDisconnectEvent;
+import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 
 @Service
 @RequiredArgsConstructor
@@ -44,7 +43,10 @@ public class CommunityChatPresenceService {
         String sessionId = accessor.getSessionId();
         Principal principal = accessor.getUser();
 
-        if (destination == null || sessionId == null || principal == null || !destination.startsWith(CHAT_TOPIC_PREFIX)) {
+        if (destination == null
+                || sessionId == null
+                || principal == null
+                || !destination.startsWith(CHAT_TOPIC_PREFIX)) {
             return;
         }
 
@@ -64,11 +66,18 @@ public class CommunityChatPresenceService {
             return;
         }
 
-        String displayName = sessionDisplayNames.computeIfAbsent(sessionId, key -> resolveDisplayName(principal.getName()));
+        String displayName =
+                sessionDisplayNames.computeIfAbsent(sessionId, key -> resolveDisplayName(principal.getName()));
 
-        roomSessions.computeIfAbsent(roomId, key -> ConcurrentHashMap.newKeySet()).add(sessionId);
-        roomDisplayNames.computeIfAbsent(roomId, key -> new ConcurrentHashMap<>()).put(sessionId, displayName);
-        sessionRooms.computeIfAbsent(sessionId, key -> ConcurrentHashMap.newKeySet()).add(roomId);
+        roomSessions
+                .computeIfAbsent(roomId, key -> ConcurrentHashMap.newKeySet())
+                .add(sessionId);
+        roomDisplayNames
+                .computeIfAbsent(roomId, key -> new ConcurrentHashMap<>())
+                .put(sessionId, displayName);
+        sessionRooms
+                .computeIfAbsent(sessionId, key -> ConcurrentHashMap.newKeySet())
+                .add(roomId);
 
         broadcastPresence(roomId);
     }
@@ -110,16 +119,12 @@ public class CommunityChatPresenceService {
 
     private void broadcastPresence(String roomId) {
         Map<String, String> displayNames = roomDisplayNames.get(roomId);
-        CommunityChatPresenceDto snapshot = communityChatService.createPresenceSnapshot(
-                roomId,
-                displayNames == null ? Map.of() : displayNames
-        );
+        CommunityChatPresenceDto snapshot =
+                communityChatService.createPresenceSnapshot(roomId, displayNames == null ? Map.of() : displayNames);
         messagingTemplate.convertAndSend("/topic/community-chat.presence." + roomId, snapshot);
     }
 
     private String resolveDisplayName(String username) {
-        return userRepository.findByEmail(username)
-                .map(User::getDisplayName)
-                .orElse(username);
+        return userRepository.findByEmail(username).map(User::getDisplayName).orElse(username);
     }
 }

@@ -1,13 +1,12 @@
 package com.hoang.basis.yukihon.base.crud.config;
 
+import java.util.Optional;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-
-import java.util.Optional;
 
 /**
  * Enables Spring Data JPA auditing so {@link com.hoang.basis.yukihon.base.crud.domain.BaseEntity}
@@ -22,7 +21,8 @@ public class JpaAuditingConfig {
     public AuditorAware<String> auditorProvider() {
         return () -> {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication == null || !authentication.isAuthenticated()
+            if (authentication == null
+                    || !authentication.isAuthenticated()
                     || "anonymousUser".equals(authentication.getPrincipal())) {
                 return Optional.of("system");
             }

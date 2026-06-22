@@ -1,15 +1,33 @@
 import { useMemo, useState } from "react";
 import { motion, Variants } from "framer-motion";
-import { ArrowUpDown, BookOpen, BookmarkCheck, Clock3, Filter, GraduationCap, Search } from "lucide-react";
+import {
+  ArrowUpDown,
+  BookOpen,
+  BookmarkCheck,
+  Clock3,
+  Filter,
+  GraduationCap,
+  Search,
+} from "lucide-react";
 
 import { myWordsApi } from "@/api";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import VocabularyCard from "@/components/learning/VocabularyCard";
 import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { useSavedWords, useVocabularyLevels, useVocabularyList } from "@/hooks/learning/useVocabulary";
+import {
+  useSavedWords,
+  useVocabularyLevels,
+  useVocabularyList,
+} from "@/hooks/learning/useVocabulary";
 import type { SavedWord } from "@/pages/my-words/types";
 
 interface VocabularyItem {
@@ -68,7 +86,8 @@ const resolveSourceKey = (folderName?: string): VocabularySourceFilter => {
   return "all";
 };
 
-const getVocabularyLabel = (item: VocabularyItem) => item.kanji || item.hiragana || item.romaji || item.meaning;
+const getVocabularyLabel = (item: VocabularyItem) =>
+  item.kanji || item.hiragana || item.romaji || item.meaning;
 
 const Vocabulary = () => {
   const { toast } = useToast();
@@ -118,7 +137,8 @@ const Vocabulary = () => {
 
         const levelMatch = selectedLevel === "all" || item.jlptLevel === selectedLevel;
         const wordTypeMatch =
-          selectedWordType === "all" || normalizeText(item.wordType) === selectedWordType.toLowerCase();
+          selectedWordType === "all" ||
+          normalizeText(item.wordType) === selectedWordType.toLowerCase();
         const savedMatch =
           savedFilter === "all" ||
           (savedFilter === "saved" && Boolean(savedWord)) ||
@@ -131,10 +151,13 @@ const Vocabulary = () => {
           sourceFilter === "all" || (Boolean(savedWord) && sourceKey === sourceFilter);
         const searchMatch =
           !normalizedQuery ||
-          [item.kanji, item.hiragana, item.romaji, item.meaning, item.wordType]
-            .some((value) => normalizeText(value).includes(normalizedQuery));
+          [item.kanji, item.hiragana, item.romaji, item.meaning, item.wordType].some((value) =>
+            normalizeText(value).includes(normalizedQuery)
+          );
 
-        return levelMatch && wordTypeMatch && savedMatch && reviewMatch && sourceMatch && searchMatch;
+        return (
+          levelMatch && wordTypeMatch && savedMatch && reviewMatch && sourceMatch && searchMatch
+        );
       })
       .sort((left, right) => {
         const leftSavedWord = savedWordByVocabularyId.get(left.id) ?? null;
@@ -148,17 +171,27 @@ const Vocabulary = () => {
               return leftSavedWord ? -1 : 1;
             }
 
-            const leftCreatedAt = leftSavedWord?.createdAt ? new Date(leftSavedWord.createdAt).getTime() : 0;
-            const rightCreatedAt = rightSavedWord?.createdAt ? new Date(rightSavedWord.createdAt).getTime() : 0;
+            const leftCreatedAt = leftSavedWord?.createdAt
+              ? new Date(leftSavedWord.createdAt).getTime()
+              : 0;
+            const rightCreatedAt = rightSavedWord?.createdAt
+              ? new Date(rightSavedWord.createdAt).getTime()
+              : 0;
             if (leftCreatedAt !== rightCreatedAt) {
               return rightCreatedAt - leftCreatedAt;
             }
             return leftLabel.localeCompare(rightLabel);
           }
           case "jlpt-asc":
-            return jlptRank(left.jlptLevel) - jlptRank(right.jlptLevel) || leftLabel.localeCompare(rightLabel);
+            return (
+              jlptRank(left.jlptLevel) - jlptRank(right.jlptLevel) ||
+              leftLabel.localeCompare(rightLabel)
+            );
           case "jlpt-desc":
-            return jlptRank(right.jlptLevel) - jlptRank(left.jlptLevel) || leftLabel.localeCompare(rightLabel);
+            return (
+              jlptRank(right.jlptLevel) - jlptRank(left.jlptLevel) ||
+              leftLabel.localeCompare(rightLabel)
+            );
           case "alpha":
             return leftLabel.localeCompare(rightLabel);
           case "due-first":
@@ -172,11 +205,24 @@ const Vocabulary = () => {
             if (Boolean(leftSavedWord?.mastered) !== Boolean(rightSavedWord?.mastered)) {
               return leftSavedWord?.mastered ? 1 : -1;
             }
-            return jlptRank(left.jlptLevel) - jlptRank(right.jlptLevel) || leftLabel.localeCompare(rightLabel);
+            return (
+              jlptRank(left.jlptLevel) - jlptRank(right.jlptLevel) ||
+              leftLabel.localeCompare(rightLabel)
+            );
           }
         }
       });
-  }, [reviewFilter, savedFilter, savedWordByVocabularyId, searchQuery, selectedLevel, selectedWordType, sortBy, sourceFilter, vocabulary]);
+  }, [
+    reviewFilter,
+    savedFilter,
+    savedWordByVocabularyId,
+    searchQuery,
+    selectedLevel,
+    selectedWordType,
+    sortBy,
+    sourceFilter,
+    vocabulary,
+  ]);
 
   const stats = useMemo(() => {
     const masteredCount = savedWords.filter((word) => word.mastered).length;
@@ -282,13 +328,37 @@ const Vocabulary = () => {
         />
 
         <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <MetricCard label="Catalog" value={stats.total} icon={<BookOpen className="h-4 w-4 text-sky-500" />} hint="All words in the current vocabulary list" />
-          <MetricCard label="Saved" value={stats.saved} icon={<BookmarkCheck className="h-4 w-4 text-violet-500" />} hint="Words already moved into My Words" />
-          <MetricCard label="Mastered" value={stats.mastered} icon={<GraduationCap className="h-4 w-4 text-emerald-500" />} hint="Saved words currently marked as mastered" />
-          <MetricCard label="Due review" value={stats.due} icon={<Clock3 className="h-4 w-4 text-rose-500" />} hint="Saved words that need review now" />
+          <MetricCard
+            label="Catalog"
+            value={stats.total}
+            icon={<BookOpen className="h-4 w-4 text-sky-500" />}
+            hint="All words in the current vocabulary list"
+          />
+          <MetricCard
+            label="Saved"
+            value={stats.saved}
+            icon={<BookmarkCheck className="h-4 w-4 text-violet-500" />}
+            hint="Words already moved into My Words"
+          />
+          <MetricCard
+            label="Mastered"
+            value={stats.mastered}
+            icon={<GraduationCap className="h-4 w-4 text-emerald-500" />}
+            hint="Saved words currently marked as mastered"
+          />
+          <MetricCard
+            label="Due review"
+            value={stats.due}
+            icon={<Clock3 className="h-4 w-4 text-rose-500" />}
+            hint="Saved words that need review now"
+          />
         </div>
 
-        <PageSection className="mb-4" title="Filters" description="Use deeper filters to move from a simple list into a study workflow.">
+        <PageSection
+          className="mb-4"
+          title="Filters"
+          description="Use deeper filters to move from a simple list into a study workflow."
+        >
           <div className="space-y-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -332,7 +402,10 @@ const Vocabulary = () => {
                 </SelectContent>
               </Select>
 
-              <Select value={savedFilter} onValueChange={(value) => setSavedFilter(value as SavedStateFilter)}>
+              <Select
+                value={savedFilter}
+                onValueChange={(value) => setSavedFilter(value as SavedStateFilter)}
+              >
                 <SelectTrigger className="rounded-2xl border-border bg-white/85 text-foreground">
                   <SelectValue placeholder="Saved state" />
                 </SelectTrigger>
@@ -343,7 +416,10 @@ const Vocabulary = () => {
                 </SelectContent>
               </Select>
 
-              <Select value={reviewFilter} onValueChange={(value) => setReviewFilter(value as ReviewStateFilter)}>
+              <Select
+                value={reviewFilter}
+                onValueChange={(value) => setReviewFilter(value as ReviewStateFilter)}
+              >
                 <SelectTrigger className="rounded-2xl border-border bg-white/85 text-foreground">
                   <SelectValue placeholder="Review state" />
                 </SelectTrigger>
@@ -354,7 +430,10 @@ const Vocabulary = () => {
                 </SelectContent>
               </Select>
 
-              <Select value={sourceFilter} onValueChange={(value) => setSourceFilter(value as VocabularySourceFilter)}>
+              <Select
+                value={sourceFilter}
+                onValueChange={(value) => setSourceFilter(value as VocabularySourceFilter)}
+              >
                 <SelectTrigger className="rounded-2xl border-border bg-white/85 text-foreground">
                   <SelectValue placeholder="Source" />
                 </SelectTrigger>

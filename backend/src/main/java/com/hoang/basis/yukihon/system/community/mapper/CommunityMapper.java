@@ -2,8 +2,8 @@ package com.hoang.basis.yukihon.system.community.mapper;
 
 import com.hoang.basis.yukihon.system.community.dto.CommentDto;
 import com.hoang.basis.yukihon.system.community.dto.PostDto;
-import com.hoang.basis.yukihon.system.community.entity.PostComment;
 import com.hoang.basis.yukihon.system.community.entity.CommunityPost;
+import com.hoang.basis.yukihon.system.community.entity.PostComment;
 import org.springframework.stereotype.Component;
 
 @Component

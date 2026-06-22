@@ -1,14 +1,13 @@
 package com.hoang.basis.yukihon.system.user.entity;
 
 import jakarta.persistence.*;
+import java.time.Instant;
 import lombok.*;
 
-import java.time.Instant;
-
 @Entity
-@Table(name = "permissions", uniqueConstraints = {
-        @UniqueConstraint(name = "uk_permission_code", columnNames = "code")
-})
+@Table(
+        name = "permissions",
+        uniqueConstraints = {@UniqueConstraint(name = "uk_permission_code", columnNames = "code")})
 @Getter
 @Setter
 @Builder

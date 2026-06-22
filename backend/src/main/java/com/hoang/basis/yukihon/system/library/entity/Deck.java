@@ -23,10 +23,12 @@ import lombok.Setter;
  * may be cloned from a public deck (originalDeckId).
  */
 @Entity
-@Table(name = "decks", indexes = {
-        @Index(name = "idx_decks_user", columnList = "user_id"),
-        @Index(name = "idx_decks_visibility", columnList = "visibility")
-})
+@Table(
+        name = "decks",
+        indexes = {
+            @Index(name = "idx_decks_user", columnList = "user_id"),
+            @Index(name = "idx_decks_visibility", columnList = "visibility")
+        })
 @Getter
 @Setter
 @NoArgsConstructor
@@ -34,7 +36,13 @@ import lombok.Setter;
 @SoftDelete
 @AuditEnabled
 @ResourcePermission("DECK")
-@ResourceMenu(title = "Decks", group = "Library", icon = "book", url = "/admin/decks", order = 10, permission = "DECK_READ")
+@ResourceMenu(
+        title = "Decks",
+        group = "Library",
+        icon = "book",
+        url = "/admin/decks",
+        order = 10,
+        permission = "DECK_READ")
 @EntityLabel(name = "Deck", plural = "Decks", description = "Study decks containing flashcards")
 @Searchable(fields = {"title", "description"})
 @Filterable(fields = {"visibility", "userId"})
@@ -61,7 +69,11 @@ public class Deck extends BaseEntity {
     private String description;
 
     @Column(name = "visibility", nullable = false, length = 20)
-    @FieldMeta(label = "Visibility", type = "select", order = 6, enumValues = {"PRIVATE", "PUBLIC", "UNLISTED"})
+    @FieldMeta(
+            label = "Visibility",
+            type = "select",
+            order = 6,
+            enumValues = {"PRIVATE", "PUBLIC", "UNLISTED"})
     private String visibility = "PRIVATE";
 
     @Column(name = "cover_image_url", columnDefinition = "NVARCHAR(MAX)")

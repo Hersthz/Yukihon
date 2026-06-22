@@ -82,8 +82,8 @@ const AuthHero = ({ mode, typingKanji }: AuthHeroProps) => {
           </span>
         </h1>
         <p className="text-muted-foreground text-lg max-w-md leading-relaxed">
-          Your personal guide to Japanese fluency - comprehensive dictionary,
-          JLPT practice, vocabulary quizzes, and immersive exercises.
+          Your personal guide to Japanese fluency - comprehensive dictionary, JLPT practice,
+          vocabulary quizzes, and immersive exercises.
         </p>
       </div>
 

@@ -113,7 +113,11 @@ export const apiClient = {
     return refreshPromise;
   },
 
-  async fetchWithAuth(endpoint: string, options: RequestInit = {}, retryOnUnauthorized = true): Promise<Response> {
+  async fetchWithAuth(
+    endpoint: string,
+    options: RequestInit = {},
+    retryOnUnauthorized = true
+  ): Promise<Response> {
     const url = `${this.baseURL}${endpoint}`;
     const headers: Record<string, string> = {
       ...this.getAuthHeader(),

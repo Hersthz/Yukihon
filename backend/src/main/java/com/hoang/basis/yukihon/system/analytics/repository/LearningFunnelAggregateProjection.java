@@ -1,7 +1,6 @@
 package com.hoang.basis.yukihon.system.analytics.repository;
 
 import com.hoang.basis.yukihon.system.analytics.entity.LearningAnalyticsEvent;
-
 import java.time.Instant;
 
 public interface LearningFunnelAggregateProjection {

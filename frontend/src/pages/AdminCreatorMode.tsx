@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { BarChart3, CheckCircle2, ClipboardCheck, PlusCircle, Sparkles, XCircle } from "lucide-react";
+import {
+  BarChart3,
+  CheckCircle2,
+  ClipboardCheck,
+  PlusCircle,
+  Sparkles,
+  XCircle,
+} from "lucide-react";
 import {
   creatorModeApi,
   type CreatorAuditStage,
@@ -16,8 +23,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import CreatorBlockEditor from "@/features/creator-mode/components/CreatorBlockEditor";
@@ -86,8 +106,12 @@ const AdminCreatorMode = () => {
   const [blocks, setBlocks] = useState<CreatorBlock[]>(createDefaultDocument().blocks);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(blocks[0]?.id ?? null);
   const [reviewNotes, setReviewNotes] = useState<Record<number, string>>({});
-  const [auditTimelineByTemplate, setAuditTimelineByTemplate] = useState<Record<number, CreatorTemplateAuditEvent[]>>({});
-  const [auditFiltersByTemplate, setAuditFiltersByTemplate] = useState<Record<number, AuditTimelineFilters>>({});
+  const [auditTimelineByTemplate, setAuditTimelineByTemplate] = useState<
+    Record<number, CreatorTemplateAuditEvent[]>
+  >({});
+  const [auditFiltersByTemplate, setAuditFiltersByTemplate] = useState<
+    Record<number, AuditTimelineFilters>
+  >({});
   const [loadingAuditTemplateId, setLoadingAuditTemplateId] = useState<number | null>(null);
   const [auditDialogTemplate, setAuditDialogTemplate] = useState<CreatorTemplate | null>(null);
 
@@ -128,46 +152,53 @@ const AdminCreatorMode = () => {
     setSelectedBlockId(parsed.blocks[0]?.id ?? null);
   }, []);
 
-  const loadTemplateTimeline = useCallback(async (
-    templateId: number,
-    options?: {
-      filters?: AuditTimelineFilters;
-    }
-  ) => {
-    const effectiveFilters = options?.filters ?? auditFiltersByTemplate[templateId] ?? DEFAULT_AUDIT_FILTERS;
+  const loadTemplateTimeline = useCallback(
+    async (
+      templateId: number,
+      options?: {
+        filters?: AuditTimelineFilters;
+      }
+    ) => {
+      const effectiveFilters =
+        options?.filters ?? auditFiltersByTemplate[templateId] ?? DEFAULT_AUDIT_FILTERS;
 
-    try {
-      setLoadingAuditTemplateId(templateId);
-      const events = await creatorModeApi.getTemplateAuditTimeline(templateId, {
-        stage: effectiveFilters.stageFilter === "ALL" ? undefined : effectiveFilters.stageFilter,
-        actor: effectiveFilters.actorFilter === "ALL" ? undefined : effectiveFilters.actorFilter,
-      });
-      setAuditTimelineByTemplate((previous) => ({
-        ...previous,
-        [templateId]: events,
-      }));
+      try {
+        setLoadingAuditTemplateId(templateId);
+        const events = await creatorModeApi.getTemplateAuditTimeline(templateId, {
+          stage: effectiveFilters.stageFilter === "ALL" ? undefined : effectiveFilters.stageFilter,
+          actor: effectiveFilters.actorFilter === "ALL" ? undefined : effectiveFilters.actorFilter,
+        });
+        setAuditTimelineByTemplate((previous) => ({
+          ...previous,
+          [templateId]: events,
+        }));
+        setAuditFiltersByTemplate((previous) => ({
+          ...previous,
+          [templateId]: effectiveFilters,
+        }));
+      } catch {
+        toast({
+          title: "Audit timeline unavailable",
+          description: "Could not load the review history for this template.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoadingAuditTemplateId((current) => (current === templateId ? null : current));
+      }
+    },
+    [auditFiltersByTemplate, toast]
+  );
+
+  const handleAuditFiltersChange = useCallback(
+    (templateId: number, filters: AuditTimelineFilters) => {
       setAuditFiltersByTemplate((previous) => ({
         ...previous,
-        [templateId]: effectiveFilters,
+        [templateId]: filters,
       }));
-    } catch {
-      toast({
-        title: "Audit timeline unavailable",
-        description: "Could not load the review history for this template.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoadingAuditTemplateId((current) => (current === templateId ? null : current));
-    }
-  }, [auditFiltersByTemplate, toast]);
-
-  const handleAuditFiltersChange = useCallback((templateId: number, filters: AuditTimelineFilters) => {
-    setAuditFiltersByTemplate((previous) => ({
-      ...previous,
-      [templateId]: filters,
-    }));
-    void loadTemplateTimeline(templateId, { filters });
-  }, [loadTemplateTimeline]);
+      void loadTemplateTimeline(templateId, { filters });
+    },
+    [loadTemplateTimeline]
+  );
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -207,38 +238,50 @@ const AdminCreatorMode = () => {
     setBlocks((previous) => moveBlock(previous, fromIndex, toIndex));
   }, []);
 
-  const handleDeleteBlock = useCallback((blockId: string) => {
-    setBlocks((previous) => {
-      const next = previous.filter((block) => block.id !== blockId);
-      if (next.length === 0) {
-        const fallback = createDefaultBlock("SCENE");
-        setSelectedBlockId(fallback.id);
-        return [fallback];
-      }
-      if (selectedBlockId === blockId) {
-        setSelectedBlockId(next[0].id);
-      }
-      return next;
-    });
-  }, [selectedBlockId]);
+  const handleDeleteBlock = useCallback(
+    (blockId: string) => {
+      setBlocks((previous) => {
+        const next = previous.filter((block) => block.id !== blockId);
+        if (next.length === 0) {
+          const fallback = createDefaultBlock("SCENE");
+          setSelectedBlockId(fallback.id);
+          return [fallback];
+        }
+        if (selectedBlockId === blockId) {
+          setSelectedBlockId(next[0].id);
+        }
+        return next;
+      });
+    },
+    [selectedBlockId]
+  );
 
   const handleUpdateBlock = useCallback((blockId: string, updates: Partial<CreatorBlock>) => {
-    setBlocks((previous) => previous.map((block) => (block.id === blockId ? { ...block, ...updates } : block)));
+    setBlocks((previous) =>
+      previous.map((block) => (block.id === blockId ? { ...block, ...updates } : block))
+    );
   }, []);
 
-  const buildPayload = useCallback(() => ({
-    title: editorMeta.title.trim(),
-    summary: editorMeta.summary.trim(),
-    contentType: editorMeta.contentType,
-    jlptLevel: editorMeta.jlptLevel,
-    tags: editorMeta.tags.trim(),
-    estimatedMinutes: editorMeta.estimatedMinutes,
-    builderJson: serializeCreatorDocument({ version: 1, blocks }),
-  }), [blocks, editorMeta]);
+  const buildPayload = useCallback(
+    () => ({
+      title: editorMeta.title.trim(),
+      summary: editorMeta.summary.trim(),
+      contentType: editorMeta.contentType,
+      jlptLevel: editorMeta.jlptLevel,
+      tags: editorMeta.tags.trim(),
+      estimatedMinutes: editorMeta.estimatedMinutes,
+      builderJson: serializeCreatorDocument({ version: 1, blocks }),
+    }),
+    [blocks, editorMeta]
+  );
 
   const saveDraft = useCallback(async () => {
     if (!editorMeta.title.trim()) {
-      toast({ title: "Missing title", description: "Please enter a title before saving.", variant: "destructive" });
+      toast({
+        title: "Missing title",
+        description: "Please enter a title before saving.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -254,7 +297,11 @@ const AdminCreatorMode = () => {
       await loadData();
       await loadTemplateTimeline(saved.id);
     } catch {
-      toast({ title: "Save failed", description: "Could not save this creator draft.", variant: "destructive" });
+      toast({
+        title: "Save failed",
+        description: "Could not save this creator draft.",
+        variant: "destructive",
+      });
     } finally {
       setSaving(false);
     }
@@ -276,27 +323,45 @@ const AdminCreatorMode = () => {
       await loadData();
       await loadTemplateTimeline(templateId);
     } catch {
-      toast({ title: "Submit failed", description: "Could not submit template for review.", variant: "destructive" });
+      toast({
+        title: "Submit failed",
+        description: "Could not submit template for review.",
+        variant: "destructive",
+      });
     }
   }, [activeTemplateId, buildPayload, loadData, loadTemplateTimeline, toast]);
 
-  const reviewAsAdmin = useCallback(async (templateId: number, decision: "PUBLISHED" | "REJECTED") => {
-    try {
-      await creatorModeApi.reviewDecision(templateId, {
-        decision,
-        reviewNote: reviewNotes[templateId] ?? "",
-      });
-      toast({ title: "Admin decision saved", description: `Template status changed to ${decision}.` });
-      await loadData();
-      await loadTemplateTimeline(templateId);
-    } catch {
-      toast({ title: "Admin action failed", description: "Could not update admin decision.", variant: "destructive" });
-    }
-  }, [loadData, loadTemplateTimeline, reviewNotes, toast]);
+  const reviewAsAdmin = useCallback(
+    async (templateId: number, decision: "PUBLISHED" | "REJECTED") => {
+      try {
+        await creatorModeApi.reviewDecision(templateId, {
+          decision,
+          reviewNote: reviewNotes[templateId] ?? "",
+        });
+        toast({
+          title: "Admin decision saved",
+          description: `Template status changed to ${decision}.`,
+        });
+        await loadData();
+        await loadTemplateTimeline(templateId);
+      } catch {
+        toast({
+          title: "Admin action failed",
+          description: "Could not update admin decision.",
+          variant: "destructive",
+        });
+      }
+    },
+    [loadData, loadTemplateTimeline, reviewNotes, toast]
+  );
 
   const logPlaytest = useCallback(async () => {
     if (!activeTemplateId) {
-      toast({ title: "No template selected", description: "Save a draft first to log metrics.", variant: "destructive" });
+      toast({
+        title: "No template selected",
+        description: "Save a draft first to log metrics.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -309,384 +374,460 @@ const AdminCreatorMode = () => {
       toast({ title: "Metrics updated", description: "Sample playtest metrics were recorded." });
       await loadData();
     } catch {
-      toast({ title: "Metrics failed", description: "Could not record playtest metrics.", variant: "destructive" });
+      toast({
+        title: "Metrics failed",
+        description: "Could not record playtest metrics.",
+        variant: "destructive",
+      });
     }
   }, [activeTemplateId, loadData, toast]);
 
   return (
     <DashboardLayout>
       <div className="mx-auto max-w-[1520px] py-2">
-          <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-center gap-3">
-              <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 p-3">
-                <Sparkles className="h-8 w-8 text-emerald-300" />
-              </div>
-              <div>
-                <h1 className="text-4xl font-bold text-foreground">Creator Mode Studio</h1>
-                <p className="text-muted-foreground">Keo tha mini-lesson, quiz, story branch. Duyet noi dung va theo doi hieu qua tai mot noi.</p>
-              </div>
+        <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 p-3">
+              <Sparkles className="h-8 w-8 text-emerald-300" />
             </div>
-
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" onClick={resetEditor}>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                New Draft
-              </Button>
-              <Button variant="outline" onClick={() => void loadData()} disabled={loading}>
-                <BarChart3 className="mr-2 h-4 w-4" />
-                Refresh
-              </Button>
+            <div>
+              <h1 className="text-4xl font-bold text-foreground">Creator Mode Studio</h1>
+              <p className="text-muted-foreground">
+                Keo tha mini-lesson, quiz, story branch. Duyet noi dung va theo doi hieu qua tai mot
+                noi.
+              </p>
             </div>
           </div>
 
-          <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3 bg-card/70">
-              <TabsTrigger value="studio">Studio</TabsTrigger>
-              <TabsTrigger value="review">Review Queue</TabsTrigger>
-              <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            </TabsList>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={resetEditor}>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              New Draft
+            </Button>
+            <Button variant="outline" onClick={() => void loadData()} disabled={loading}>
+              <BarChart3 className="mr-2 h-4 w-4" />
+              Refresh
+            </Button>
+          </div>
+        </div>
 
-            <TabsContent value="studio" className="space-y-6">
-              <div className="grid gap-6 xl:grid-cols-[1.2fr_1fr]">
-                <Card className="border-border/70 bg-card/70">
-                  <CardHeader>
-                    <CardTitle className="text-base">Template Setup</CardTitle>
-                  </CardHeader>
-                  <CardContent className="grid gap-4 md:grid-cols-2">
-                    <div>
-                      <Label>Title</Label>
-                      <Input
-                        value={editorMeta.title}
-                        onChange={(event) => setEditorMeta((previous) => ({ ...previous, title: event.target.value }))}
-                        className="bg-background/60"
-                        placeholder="N4 ordering food roleplay"
-                      />
-                    </div>
+        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3 bg-card/70">
+            <TabsTrigger value="studio">Studio</TabsTrigger>
+            <TabsTrigger value="review">Review Queue</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          </TabsList>
 
-                    <div>
-                      <Label>Content Type</Label>
-                      <Select
-                        value={editorMeta.contentType}
-                        onValueChange={(value) => setEditorMeta((previous) => ({ ...previous, contentType: value as CreatorContentType }))}
-                      >
-                        <SelectTrigger className="bg-background/60">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="MINI_LESSON">Mini Lesson</SelectItem>
-                          <SelectItem value="QUIZ">Quiz</SelectItem>
-                          <SelectItem value="STORY_BRANCH">Story Branch</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+          <TabsContent value="studio" className="space-y-6">
+            <div className="grid gap-6 xl:grid-cols-[1.2fr_1fr]">
+              <Card className="border-border/70 bg-card/70">
+                <CardHeader>
+                  <CardTitle className="text-base">Template Setup</CardTitle>
+                </CardHeader>
+                <CardContent className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <Label>Title</Label>
+                    <Input
+                      value={editorMeta.title}
+                      onChange={(event) =>
+                        setEditorMeta((previous) => ({ ...previous, title: event.target.value }))
+                      }
+                      className="bg-background/60"
+                      placeholder="N4 ordering food roleplay"
+                    />
+                  </div>
 
-                    <div>
-                      <Label>JLPT Level</Label>
-                      <Select
-                        value={editorMeta.jlptLevel}
-                        onValueChange={(value) => setEditorMeta((previous) => ({ ...previous, jlptLevel: value }))}
-                      >
-                        <SelectTrigger className="bg-background/60">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {["N5", "N4", "N3", "N2", "N1"].map((level) => (
-                            <SelectItem key={level} value={level}>
-                              {level}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                  <div>
+                    <Label>Content Type</Label>
+                    <Select
+                      value={editorMeta.contentType}
+                      onValueChange={(value) =>
+                        setEditorMeta((previous) => ({
+                          ...previous,
+                          contentType: value as CreatorContentType,
+                        }))
+                      }
+                    >
+                      <SelectTrigger className="bg-background/60">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="MINI_LESSON">Mini Lesson</SelectItem>
+                        <SelectItem value="QUIZ">Quiz</SelectItem>
+                        <SelectItem value="STORY_BRANCH">Story Branch</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                    <div>
-                      <Label>Estimated Minutes</Label>
-                      <Input
-                        type="number"
-                        min={3}
-                        max={120}
-                        value={editorMeta.estimatedMinutes}
-                        onChange={(event) => {
-                          const next = Number.parseInt(event.target.value, 10);
-                          setEditorMeta((previous) => ({
-                            ...previous,
-                            estimatedMinutes: Number.isNaN(next) ? previous.estimatedMinutes : Math.max(3, Math.min(120, next)),
-                          }));
-                        }}
-                        className="bg-background/60"
-                      />
-                    </div>
+                  <div>
+                    <Label>JLPT Level</Label>
+                    <Select
+                      value={editorMeta.jlptLevel}
+                      onValueChange={(value) =>
+                        setEditorMeta((previous) => ({ ...previous, jlptLevel: value }))
+                      }
+                    >
+                      <SelectTrigger className="bg-background/60">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {["N5", "N4", "N3", "N2", "N1"].map((level) => (
+                          <SelectItem key={level} value={level}>
+                            {level}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                    <div className="md:col-span-2">
-                      <Label>Summary</Label>
-                      <Textarea
-                        value={editorMeta.summary}
-                        onChange={(event) => setEditorMeta((previous) => ({ ...previous, summary: event.target.value }))}
-                        className="bg-background/60"
-                        placeholder="Muc tieu bai hoc va outcomes cho nguoi hoc"
-                      />
-                    </div>
+                  <div>
+                    <Label>Estimated Minutes</Label>
+                    <Input
+                      type="number"
+                      min={3}
+                      max={120}
+                      value={editorMeta.estimatedMinutes}
+                      onChange={(event) => {
+                        const next = Number.parseInt(event.target.value, 10);
+                        setEditorMeta((previous) => ({
+                          ...previous,
+                          estimatedMinutes: Number.isNaN(next)
+                            ? previous.estimatedMinutes
+                            : Math.max(3, Math.min(120, next)),
+                        }));
+                      }}
+                      className="bg-background/60"
+                    />
+                  </div>
 
-                    <div className="md:col-span-2">
-                      <Label>Tags</Label>
-                      <Input
-                        value={editorMeta.tags}
-                        onChange={(event) => setEditorMeta((previous) => ({ ...previous, tags: event.target.value }))}
-                        className="bg-background/60"
-                        placeholder="restaurant, keigo, speaking"
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
+                  <div className="md:col-span-2">
+                    <Label>Summary</Label>
+                    <Textarea
+                      value={editorMeta.summary}
+                      onChange={(event) =>
+                        setEditorMeta((previous) => ({ ...previous, summary: event.target.value }))
+                      }
+                      className="bg-background/60"
+                      placeholder="Muc tieu bai hoc va outcomes cho nguoi hoc"
+                    />
+                  </div>
 
-                <Card className="border-border/70 bg-card/70">
-                  <CardHeader>
-                    <CardTitle className="text-base">Actions</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <Button className="w-full" onClick={() => void saveDraft()} disabled={saving}>
-                      <ClipboardCheck className="mr-2 h-4 w-4" />
-                      Save Draft
-                    </Button>
-                    <Button variant="secondary" className="w-full" onClick={() => void submitCurrentTemplate()}>
-                      <CheckCircle2 className="mr-2 h-4 w-4" />
-                      Submit For Review
-                    </Button>
-                    <Button variant="outline" className="w-full" onClick={() => void logPlaytest()}>
-                      <BarChart3 className="mr-2 h-4 w-4" />
-                      Log Sample Playtest
-                    </Button>
-                    {activeTemplateId && (
-                      <p className="text-xs text-muted-foreground">
-                        Active template ID: {activeTemplateId}. You can switch between drafts below.
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-
-              <div className="grid gap-6 xl:grid-cols-[1.2fr_1fr]">
-                <CreatorCanvas
-                  blocks={blocks}
-                  selectedBlockId={selectedBlockId}
-                  onSelectBlock={setSelectedBlockId}
-                  onAddBlock={handleAddBlock}
-                  onMoveBlock={handleMoveBlock}
-                  onDeleteBlock={handleDeleteBlock}
-                />
-
-                <Card className="border-border/70 bg-card/70">
-                  <CardHeader>
-                    <CardTitle className="text-base">Block Editor</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <CreatorBlockEditor block={selectedBlock} onUpdate={handleUpdateBlock} />
-                  </CardContent>
-                </Card>
-              </div>
+                  <div className="md:col-span-2">
+                    <Label>Tags</Label>
+                    <Input
+                      value={editorMeta.tags}
+                      onChange={(event) =>
+                        setEditorMeta((previous) => ({ ...previous, tags: event.target.value }))
+                      }
+                      className="bg-background/60"
+                      placeholder="restaurant, keigo, speaking"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
 
               <Card className="border-border/70 bg-card/70">
-                <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                  <CardTitle className="text-base">Draft Library</CardTitle>
-                  <Select value={templateFilter} onValueChange={(value) => setTemplateFilter(value as CreatorTemplateStatus | "ALL")}>
-                    <SelectTrigger className="w-[220px] bg-background/60">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ALL">All statuses</SelectItem>
-                      {(["DRAFT", "PENDING_REVIEW", "APPROVED", "REJECTED", "PUBLISHED"] as const).map((status) => (
-                        <SelectItem key={status} value={status}>
-                          {status}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <CardHeader>
+                  <CardTitle className="text-base">Actions</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2">
-                  {filteredTemplates.map((template) => (
-                    <button
-                      key={template.id}
-                      type="button"
-                      onClick={() => {
-                        hydrateFromTemplate(template);
-                        void loadTemplateTimeline(template.id);
-                      }}
-                      className="flex w-full items-center justify-between rounded-lg border border-border bg-background/50 px-3 py-3 text-left hover:bg-background/70"
-                    >
+                <CardContent className="space-y-3">
+                  <Button className="w-full" onClick={() => void saveDraft()} disabled={saving}>
+                    <ClipboardCheck className="mr-2 h-4 w-4" />
+                    Save Draft
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    className="w-full"
+                    onClick={() => void submitCurrentTemplate()}
+                  >
+                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                    Submit For Review
+                  </Button>
+                  <Button variant="outline" className="w-full" onClick={() => void logPlaytest()}>
+                    <BarChart3 className="mr-2 h-4 w-4" />
+                    Log Sample Playtest
+                  </Button>
+                  {activeTemplateId && (
+                    <p className="text-xs text-muted-foreground">
+                      Active template ID: {activeTemplateId}. You can switch between drafts below.
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="grid gap-6 xl:grid-cols-[1.2fr_1fr]">
+              <CreatorCanvas
+                blocks={blocks}
+                selectedBlockId={selectedBlockId}
+                onSelectBlock={setSelectedBlockId}
+                onAddBlock={handleAddBlock}
+                onMoveBlock={handleMoveBlock}
+                onDeleteBlock={handleDeleteBlock}
+              />
+
+              <Card className="border-border/70 bg-card/70">
+                <CardHeader>
+                  <CardTitle className="text-base">Block Editor</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <CreatorBlockEditor block={selectedBlock} onUpdate={handleUpdateBlock} />
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card className="border-border/70 bg-card/70">
+              <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <CardTitle className="text-base">Draft Library</CardTitle>
+                <Select
+                  value={templateFilter}
+                  onValueChange={(value) =>
+                    setTemplateFilter(value as CreatorTemplateStatus | "ALL")
+                  }
+                >
+                  <SelectTrigger className="w-[220px] bg-background/60">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">All statuses</SelectItem>
+                    {(
+                      ["DRAFT", "PENDING_REVIEW", "APPROVED", "REJECTED", "PUBLISHED"] as const
+                    ).map((status) => (
+                      <SelectItem key={status} value={status}>
+                        {status}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {filteredTemplates.map((template) => (
+                  <button
+                    key={template.id}
+                    type="button"
+                    onClick={() => {
+                      hydrateFromTemplate(template);
+                      void loadTemplateTimeline(template.id);
+                    }}
+                    className="flex w-full items-center justify-between rounded-lg border border-border bg-background/50 px-3 py-3 text-left hover:bg-background/70"
+                  >
+                    <div>
+                      <p className="font-medium text-foreground">{template.title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {template.contentType} • {template.jlptLevel} • Updated{" "}
+                        {new Date(template.updatedAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <Badge variant="outline" className={STATUS_STYLES[template.status]}>
+                      {template.status}
+                    </Badge>
+                  </button>
+                ))}
+              </CardContent>
+            </Card>
+
+            {activeTemplateId && (
+              <Card className="border-border/70 bg-card/70">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle className="text-base">Audit Timeline</CardTitle>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => void loadTemplateTimeline(activeTemplateId)}
+                    disabled={loadingAuditTemplateId === activeTemplateId}
+                  >
+                    Refresh
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  <CreatorAuditTimeline
+                    events={auditTimelineByTemplate[activeTemplateId] ?? []}
+                    loading={loadingAuditTemplateId === activeTemplateId}
+                    emptyMessage="No audit events for this template yet."
+                    stageFilter={
+                      (auditFiltersByTemplate[activeTemplateId] ?? DEFAULT_AUDIT_FILTERS)
+                        .stageFilter
+                    }
+                    actorFilter={
+                      (auditFiltersByTemplate[activeTemplateId] ?? DEFAULT_AUDIT_FILTERS)
+                        .actorFilter
+                    }
+                    onFiltersChange={(filters) =>
+                      handleAuditFiltersChange(activeTemplateId, filters)
+                    }
+                  />
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="review" className="space-y-4">
+            <Card className="border-border/70 bg-card/70">
+              <CardHeader>
+                <CardTitle className="text-base">Review Queue</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {reviewQueue.length === 0 && (
+                  <p className="text-sm text-muted-foreground">No templates waiting for review.</p>
+                )}
+
+                {reviewQueue.map((template) => (
+                  <div
+                    key={template.id}
+                    className="rounded-xl border border-border bg-background/50 p-4"
+                  >
+                    <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                       <div>
-                        <p className="font-medium text-foreground">{template.title}</p>
+                        <p className="font-semibold text-foreground">{template.title}</p>
                         <p className="text-xs text-muted-foreground">
-                          {template.contentType} • {template.jlptLevel} • Updated {new Date(template.updatedAt).toLocaleDateString()}
+                          {template.contentType} • {template.jlptLevel} • by{" "}
+                          {template.createdByDisplayName ?? "Unknown"}
                         </p>
                       </div>
                       <Badge variant="outline" className={STATUS_STYLES[template.status]}>
                         {template.status}
                       </Badge>
-                    </button>
-                  ))}
-                </CardContent>
-              </Card>
-
-              {activeTemplateId && (
-                <Card className="border-border/70 bg-card/70">
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle className="text-base">Audit Timeline</CardTitle>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => void loadTemplateTimeline(activeTemplateId)}
-                      disabled={loadingAuditTemplateId === activeTemplateId}
-                    >
-                      Refresh
-                    </Button>
-                  </CardHeader>
-                  <CardContent>
-                    <CreatorAuditTimeline
-                      events={auditTimelineByTemplate[activeTemplateId] ?? []}
-                      loading={loadingAuditTemplateId === activeTemplateId}
-                      emptyMessage="No audit events for this template yet."
-                      stageFilter={(auditFiltersByTemplate[activeTemplateId] ?? DEFAULT_AUDIT_FILTERS).stageFilter}
-                      actorFilter={(auditFiltersByTemplate[activeTemplateId] ?? DEFAULT_AUDIT_FILTERS).actorFilter}
-                      onFiltersChange={(filters) => handleAuditFiltersChange(activeTemplateId, filters)}
-                    />
-                  </CardContent>
-                </Card>
-              )}
-            </TabsContent>
-
-            <TabsContent value="review" className="space-y-4">
-              <Card className="border-border/70 bg-card/70">
-                <CardHeader>
-                  <CardTitle className="text-base">Review Queue</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {reviewQueue.length === 0 && (
-                    <p className="text-sm text-muted-foreground">No templates waiting for review.</p>
-                  )}
-
-                  {reviewQueue.map((template) => (
-                    <div key={template.id} className="rounded-xl border border-border bg-background/50 p-4">
-                      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                        <div>
-                          <p className="font-semibold text-foreground">{template.title}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {template.contentType} • {template.jlptLevel} • by {template.createdByDisplayName ?? "Unknown"}
-                          </p>
-                        </div>
-                        <Badge variant="outline" className={STATUS_STYLES[template.status]}>
-                          {template.status}
-                        </Badge>
-                      </div>
-
-                      <Textarea
-                        value={reviewNotes[template.id] ?? ""}
-                        onChange={(event) => setReviewNotes((previous) => ({ ...previous, [template.id]: event.target.value }))}
-                        className="mb-3 bg-background/60"
-                        placeholder="Review note for creator"
-                      />
-
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setAuditDialogTemplate(template);
-                            void loadTemplateTimeline(template.id);
-                          }}
-                        >
-                          Audit Timeline
-                        </Button>
-                        <Button size="sm" variant="secondary" onClick={() => void reviewAsAdmin(template.id, "PUBLISHED")}>
-                          Publish
-                        </Button>
-                        <Button size="sm" variant="destructive" onClick={() => void reviewAsAdmin(template.id, "REJECTED")}>
-                          <XCircle className="mr-2 h-4 w-4" />
-                          Reject
-                        </Button>
-                      </div>
                     </div>
-                  ))}
-                </CardContent>
-              </Card>
-            </TabsContent>
 
-            <Dialog open={!!auditDialogTemplate} onOpenChange={(open) => !open && setAuditDialogTemplate(null)}>
-              <DialogContent className="max-w-2xl border-border/70 bg-card/95">
-                <DialogHeader>
-                  <DialogTitle>
-                    Audit Timeline{auditDialogTemplate ? ` - ${auditDialogTemplate.title}` : ""}
-                  </DialogTitle>
-                </DialogHeader>
-                <CreatorAuditTimeline
-                  events={auditDialogTemplate ? (auditTimelineByTemplate[auditDialogTemplate.id] ?? []) : []}
-                  loading={auditDialogTemplate ? loadingAuditTemplateId === auditDialogTemplate.id : false}
-                  emptyMessage="No audit history found for this template."
-                  stageFilter={auditDialogTemplate ? (auditFiltersByTemplate[auditDialogTemplate.id] ?? DEFAULT_AUDIT_FILTERS).stageFilter : "ALL"}
-                  actorFilter={auditDialogTemplate ? (auditFiltersByTemplate[auditDialogTemplate.id] ?? DEFAULT_AUDIT_FILTERS).actorFilter : "ALL"}
-                  onFiltersChange={
-                    auditDialogTemplate
-                      ? (filters) => handleAuditFiltersChange(auditDialogTemplate.id, filters)
-                      : undefined
-                  }
-                />
-              </DialogContent>
-            </Dialog>
+                    <Textarea
+                      value={reviewNotes[template.id] ?? ""}
+                      onChange={(event) =>
+                        setReviewNotes((previous) => ({
+                          ...previous,
+                          [template.id]: event.target.value,
+                        }))
+                      }
+                      className="mb-3 bg-background/60"
+                      placeholder="Review note for creator"
+                    />
 
-            <TabsContent value="analytics" className="space-y-6">
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <CreatorMetricCard
-                  title="Templates"
-                  value={analytics?.totalTemplates ?? 0}
-                  hint={`${analytics?.drafts ?? 0} draft • ${analytics?.pendingReview ?? 0} pending`}
-                />
-                <CreatorMetricCard
-                  title="Completion Rate"
-                  value={`${analytics?.completionRate ?? 0}%`}
-                  hint={`${analytics?.totalCompletions ?? 0} completions / ${analytics?.totalUsage ?? 0} attempts`}
-                />
-                <CreatorMetricCard
-                  title="Average Score"
-                  value={analytics?.averageScore ?? 0}
-                  hint="Average creator-template score"
-                />
-                <CreatorMetricCard
-                  title="Published"
-                  value={analytics?.published ?? 0}
-                  hint={`${analytics?.approved ?? 0} approved • ${analytics?.rejected ?? 0} rejected`}
-                />
-              </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setAuditDialogTemplate(template);
+                          void loadTemplateTimeline(template.id);
+                        }}
+                      >
+                        Audit Timeline
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => void reviewAsAdmin(template.id, "PUBLISHED")}
+                      >
+                        Publish
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => void reviewAsAdmin(template.id, "REJECTED")}
+                      >
+                        <XCircle className="mr-2 h-4 w-4" />
+                        Reject
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-              <Card className="border-border/70 bg-card/70">
-                <CardHeader>
-                  <CardTitle className="text-base">Top Performing Templates</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Title</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead className="text-right">Usage</TableHead>
-                        <TableHead className="text-right">Completion</TableHead>
-                        <TableHead className="text-right">Avg Score</TableHead>
+          <Dialog
+            open={!!auditDialogTemplate}
+            onOpenChange={(open) => !open && setAuditDialogTemplate(null)}
+          >
+            <DialogContent className="max-w-2xl border-border/70 bg-card/95">
+              <DialogHeader>
+                <DialogTitle>
+                  Audit Timeline{auditDialogTemplate ? ` - ${auditDialogTemplate.title}` : ""}
+                </DialogTitle>
+              </DialogHeader>
+              <CreatorAuditTimeline
+                events={
+                  auditDialogTemplate ? (auditTimelineByTemplate[auditDialogTemplate.id] ?? []) : []
+                }
+                loading={
+                  auditDialogTemplate ? loadingAuditTemplateId === auditDialogTemplate.id : false
+                }
+                emptyMessage="No audit history found for this template."
+                stageFilter={
+                  auditDialogTemplate
+                    ? (auditFiltersByTemplate[auditDialogTemplate.id] ?? DEFAULT_AUDIT_FILTERS)
+                        .stageFilter
+                    : "ALL"
+                }
+                actorFilter={
+                  auditDialogTemplate
+                    ? (auditFiltersByTemplate[auditDialogTemplate.id] ?? DEFAULT_AUDIT_FILTERS)
+                        .actorFilter
+                    : "ALL"
+                }
+                onFiltersChange={
+                  auditDialogTemplate
+                    ? (filters) => handleAuditFiltersChange(auditDialogTemplate.id, filters)
+                    : undefined
+                }
+              />
+            </DialogContent>
+          </Dialog>
+
+          <TabsContent value="analytics" className="space-y-6">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              <CreatorMetricCard
+                title="Templates"
+                value={analytics?.totalTemplates ?? 0}
+                hint={`${analytics?.drafts ?? 0} draft • ${analytics?.pendingReview ?? 0} pending`}
+              />
+              <CreatorMetricCard
+                title="Completion Rate"
+                value={`${analytics?.completionRate ?? 0}%`}
+                hint={`${analytics?.totalCompletions ?? 0} completions / ${analytics?.totalUsage ?? 0} attempts`}
+              />
+              <CreatorMetricCard
+                title="Average Score"
+                value={analytics?.averageScore ?? 0}
+                hint="Average creator-template score"
+              />
+              <CreatorMetricCard
+                title="Published"
+                value={analytics?.published ?? 0}
+                hint={`${analytics?.approved ?? 0} approved • ${analytics?.rejected ?? 0} rejected`}
+              />
+            </div>
+
+            <Card className="border-border/70 bg-card/70">
+              <CardHeader>
+                <CardTitle className="text-base">Top Performing Templates</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead className="text-right">Usage</TableHead>
+                      <TableHead className="text-right">Completion</TableHead>
+                      <TableHead className="text-right">Avg Score</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {(analytics?.topTemplates ?? []).map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="font-medium">{item.title}</TableCell>
+                        <TableCell>{item.contentType}</TableCell>
+                        <TableCell className="text-right">{item.usageCount}</TableCell>
+                        <TableCell className="text-right">{item.completionRate}%</TableCell>
+                        <TableCell className="text-right">{item.averageScore}</TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {(analytics?.topTemplates ?? []).map((item) => (
-                        <TableRow key={item.id}>
-                          <TableCell className="font-medium">{item.title}</TableCell>
-                          <TableCell>{item.contentType}</TableCell>
-                          <TableCell className="text-right">{item.usageCount}</TableCell>
-                          <TableCell className="text-right">{item.completionRate}%</TableCell>
-                          <TableCell className="text-right">{item.averageScore}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );

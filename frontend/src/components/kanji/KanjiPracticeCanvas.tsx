@@ -12,41 +12,44 @@ const KanjiPracticeCanvas = ({ kanji }: KanjiPracticeCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [drawing, setDrawing] = useState(false);
 
-  const paintGuide = useCallback((canvas: HTMLCanvasElement) => {
-    const context = canvas.getContext("2d");
-    if (!context) return;
+  const paintGuide = useCallback(
+    (canvas: HTMLCanvasElement) => {
+      const context = canvas.getContext("2d");
+      if (!context) return;
 
-    const ratio = window.devicePixelRatio || 1;
-    canvas.width = CANVAS_SIZE * ratio;
-    canvas.height = CANVAS_SIZE * ratio;
-    canvas.style.width = "100%";
-    canvas.style.aspectRatio = "1 / 1";
+      const ratio = window.devicePixelRatio || 1;
+      canvas.width = CANVAS_SIZE * ratio;
+      canvas.height = CANVAS_SIZE * ratio;
+      canvas.style.width = "100%";
+      canvas.style.aspectRatio = "1 / 1";
 
-    context.setTransform(ratio, 0, 0, ratio, 0, 0);
-    context.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+      context.setTransform(ratio, 0, 0, ratio, 0, 0);
+      context.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
 
-    context.fillStyle = "#ffffff";
-    context.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+      context.fillStyle = "#ffffff";
+      context.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
 
-    context.strokeStyle = "#dbeafe";
-    context.lineWidth = 1.25;
-    context.beginPath();
-    context.moveTo(CANVAS_SIZE / 2, 0);
-    context.lineTo(CANVAS_SIZE / 2, CANVAS_SIZE);
-    context.moveTo(0, CANVAS_SIZE / 2);
-    context.lineTo(CANVAS_SIZE, CANVAS_SIZE / 2);
-    context.moveTo(0, 0);
-    context.lineTo(CANVAS_SIZE, CANVAS_SIZE);
-    context.moveTo(CANVAS_SIZE, 0);
-    context.lineTo(0, CANVAS_SIZE);
-    context.stroke();
+      context.strokeStyle = "#dbeafe";
+      context.lineWidth = 1.25;
+      context.beginPath();
+      context.moveTo(CANVAS_SIZE / 2, 0);
+      context.lineTo(CANVAS_SIZE / 2, CANVAS_SIZE);
+      context.moveTo(0, CANVAS_SIZE / 2);
+      context.lineTo(CANVAS_SIZE, CANVAS_SIZE / 2);
+      context.moveTo(0, 0);
+      context.lineTo(CANVAS_SIZE, CANVAS_SIZE);
+      context.moveTo(CANVAS_SIZE, 0);
+      context.lineTo(0, CANVAS_SIZE);
+      context.stroke();
 
-    context.font = "172px serif";
-    context.fillStyle = "rgba(100, 116, 139, 0.14)";
-    context.textAlign = "center";
-    context.textBaseline = "middle";
-    context.fillText(kanji, CANVAS_SIZE / 2, CANVAS_SIZE / 2 + 6);
-  }, [kanji]);
+      context.font = "172px serif";
+      context.fillStyle = "rgba(100, 116, 139, 0.14)";
+      context.textAlign = "center";
+      context.textBaseline = "middle";
+      context.fillText(kanji, CANVAS_SIZE / 2, CANVAS_SIZE / 2 + 6);
+    },
+    [kanji]
+  );
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -100,7 +103,9 @@ const KanjiPracticeCanvas = ({ kanji }: KanjiPracticeCanvasProps) => {
       <div className="mb-3 flex items-center justify-between gap-3">
         <div>
           <p className="text-sm font-semibold text-foreground">Writing practice</p>
-          <p className="text-sm text-muted-foreground">Viết thử kanji lên khung này để luyện tay và ghi nhớ bố cục.</p>
+          <p className="text-sm text-muted-foreground">
+            Viết thử kanji lên khung này để luyện tay và ghi nhớ bố cục.
+          </p>
         </div>
         <Button className="shrink-0" onClick={clearCanvas} variant="outline">
           <Eraser className="mr-2 h-4 w-4" />

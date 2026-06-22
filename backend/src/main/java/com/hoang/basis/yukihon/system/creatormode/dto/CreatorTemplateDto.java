@@ -1,12 +1,11 @@
 package com.hoang.basis.yukihon.system.creatormode.dto;
 
 import com.hoang.basis.yukihon.system.creatormode.entity.CreatorTemplate;
+import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.math.BigDecimal;
 
 @Data
 @Builder
@@ -55,21 +54,33 @@ public class CreatorTemplateDto {
                 .estimatedMinutes(entity.getEstimatedMinutes())
                 .builderJson(entity.getBuilderJson())
                 .createdByUserId(entity.getCreatedByUserId())
-                .createdByDisplayName(entity.getCreatedBy() != null ? entity.getCreatedBy().getDisplayName() : null)
+                .createdByDisplayName(
+                        entity.getCreatedBy() != null ? entity.getCreatedBy().getDisplayName() : null)
                 .reviewedByUserId(entity.getReviewedByUserId())
-                .reviewedByDisplayName(entity.getReviewedBy() != null ? entity.getReviewedBy().getDisplayName() : null)
+                .reviewedByDisplayName(
+                        entity.getReviewedBy() != null ? entity.getReviewedBy().getDisplayName() : null)
                 .reviewNote(entity.getReviewNote())
                 .adminReviewedByUserId(entity.getAdminReviewedByUserId())
-                .adminReviewedByDisplayName(entity.getAdminReviewedBy() != null ? entity.getAdminReviewedBy().getDisplayName() : null)
+                .adminReviewedByDisplayName(
+                        entity.getAdminReviewedBy() != null
+                                ? entity.getAdminReviewedBy().getDisplayName()
+                                : null)
                 .adminReviewNote(entity.getAdminReviewNote())
                 .usageCount(entity.getUsageCount())
                 .completionCount(entity.getCompletionCount())
                 .averageScore(entity.getAverageScore())
                 .createdAt(entity.getCreatedAt() != null ? entity.getCreatedAt().toString() : null)
                 .updatedAt(entity.getUpdatedAt() != null ? entity.getUpdatedAt().toString() : null)
-                .reviewedAt(entity.getReviewedAt() != null ? entity.getReviewedAt().toString() : null)
-                .adminReviewedAt(entity.getAdminReviewedAt() != null ? entity.getAdminReviewedAt().toString() : null)
-                .lastPublishedAt(entity.getLastPublishedAt() != null ? entity.getLastPublishedAt().toString() : null)
+                .reviewedAt(
+                        entity.getReviewedAt() != null ? entity.getReviewedAt().toString() : null)
+                .adminReviewedAt(
+                        entity.getAdminReviewedAt() != null
+                                ? entity.getAdminReviewedAt().toString()
+                                : null)
+                .lastPublishedAt(
+                        entity.getLastPublishedAt() != null
+                                ? entity.getLastPublishedAt().toString()
+                                : null)
                 .build();
     }
 }

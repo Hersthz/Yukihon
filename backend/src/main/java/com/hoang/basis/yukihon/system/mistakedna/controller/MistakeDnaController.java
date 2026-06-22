@@ -22,9 +22,7 @@ public class MistakeDnaController {
     private final UserRepository userRepository;
 
     @GetMapping
-    public ResponseEntity<MistakeDnaDto> getCurrentUserMistakeDna(
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
+    public ResponseEntity<MistakeDnaDto> getCurrentUserMistakeDna(@AuthenticationPrincipal UserDetails userDetails) {
         Long userId = resolveCurrentUserId(userDetails);
         return ResponseEntity.ok(mistakeDnaService.getMistakeDna(userId));
     }
@@ -34,7 +32,8 @@ public class MistakeDnaController {
             throw new AccessDeniedException("Authentication required");
         }
 
-        return userRepository.findByEmail(userDetails.getUsername().toLowerCase())
+        return userRepository
+                .findByEmail(userDetails.getUsername().toLowerCase())
                 .map(user -> user.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }

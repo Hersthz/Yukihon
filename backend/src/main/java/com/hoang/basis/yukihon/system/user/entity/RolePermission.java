@@ -1,19 +1,21 @@
 package com.hoang.basis.yukihon.system.user.entity;
 
 import jakarta.persistence.*;
+import java.time.Instant;
 import lombok.*;
 
-import java.time.Instant;
-
 @Entity
-@Table(name = "role_permissions",
-    uniqueConstraints = {
-        @UniqueConstraint(name = "uk_role_permission", columnNames = {"role", "permission_id"})
-    },
-    indexes = {
-        @Index(name = "idx_role_permission_role", columnList = "role"),
-        @Index(name = "idx_role_permission_permission", columnList = "permission_id")
-    })
+@Table(
+        name = "role_permissions",
+        uniqueConstraints = {
+            @UniqueConstraint(
+                    name = "uk_role_permission",
+                    columnNames = {"role", "permission_id"})
+        },
+        indexes = {
+            @Index(name = "idx_role_permission_role", columnList = "role"),
+            @Index(name = "idx_role_permission_permission", columnList = "permission_id")
+        })
 @Getter
 @Setter
 @Builder

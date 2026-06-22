@@ -1,9 +1,8 @@
 package com.hoang.basis.yukihon.system.srs.dto;
 
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
-
-import java.util.List;
 
 /** The study queue for a deck plus summary counters. */
 @Data

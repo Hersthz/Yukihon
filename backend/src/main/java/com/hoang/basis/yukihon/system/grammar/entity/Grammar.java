@@ -1,18 +1,18 @@
 package com.hoang.basis.yukihon.system.grammar.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.time.Instant;
+import lombok.*;
 
 /**
  * Grammar entity for Japanese grammar rules and explanations
  */
 @Entity
-@Table(name = "grammar",
+@Table(
+        name = "grammar",
         indexes = {
-                @Index(name = "idx_grammar_jlpt_level", columnList = "jlpt_level"),
-                @Index(name = "idx_grammar_pattern", columnList = "pattern")
+            @Index(name = "idx_grammar_jlpt_level", columnList = "jlpt_level"),
+            @Index(name = "idx_grammar_pattern", columnList = "pattern")
         })
 @Getter
 @Setter

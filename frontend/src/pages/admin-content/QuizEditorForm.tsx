@@ -1,7 +1,13 @@
 import { Link2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { JLPT_LEVELS, QUIZ_DIFFICULTIES, QUIZ_TYPES } from "./constants";
 import { MediaField } from "./form-shared";
@@ -15,16 +21,29 @@ interface QuizEditorFormProps {
   onUploadMedia: (field: string, file: File) => Promise<void>;
 }
 
-const QuizEditorForm = ({ item, lessons, uploadingField, onChange, onUploadMedia }: QuizEditorFormProps) => (
+const QuizEditorForm = ({
+  item,
+  lessons,
+  uploadingField,
+  onChange,
+  onUploadMedia,
+}: QuizEditorFormProps) => (
   <div className="space-y-4">
     <div className="grid gap-4 md:grid-cols-2">
       <div>
         <Label>Title</Label>
-        <Input value={item.title} onChange={(event) => onChange({ ...item, title: event.target.value })} className="bg-background/50" />
+        <Input
+          value={item.title}
+          onChange={(event) => onChange({ ...item, title: event.target.value })}
+          className="bg-background/50"
+        />
       </div>
       <div>
         <Label>JLPT Level</Label>
-        <Select value={item.jlptLevel} onValueChange={(value) => onChange({ ...item, jlptLevel: value })}>
+        <Select
+          value={item.jlptLevel}
+          onValueChange={(value) => onChange({ ...item, jlptLevel: value })}
+        >
           <SelectTrigger className="bg-background/50">
             <SelectValue />
           </SelectTrigger>
@@ -41,7 +60,11 @@ const QuizEditorForm = ({ item, lessons, uploadingField, onChange, onUploadMedia
 
     <div>
       <Label>Description</Label>
-      <Textarea value={item.description} onChange={(event) => onChange({ ...item, description: event.target.value })} className="bg-background/50" />
+      <Textarea
+        value={item.description}
+        onChange={(event) => onChange({ ...item, description: event.target.value })}
+        className="bg-background/50"
+      />
     </div>
 
     <div className="rounded-[22px] border border-border bg-card/60 p-4">
@@ -49,13 +72,17 @@ const QuizEditorForm = ({ item, lessons, uploadingField, onChange, onUploadMedia
         <Link2 className="h-4 w-4 text-primary" />
         <div>
           <p className="text-sm font-semibold text-foreground">Linked lesson</p>
-          <p className="text-sm text-muted-foreground">Attach the quiz to a lesson checkpoint or leave it as a general quiz bank item.</p>
+          <p className="text-sm text-muted-foreground">
+            Attach the quiz to a lesson checkpoint or leave it as a general quiz bank item.
+          </p>
         </div>
       </div>
 
       <Select
         value={item.lessonId != null ? String(item.lessonId) : "GENERAL"}
-        onValueChange={(value) => onChange({ ...item, lessonId: value === "GENERAL" ? undefined : Number(value) })}
+        onValueChange={(value) =>
+          onChange({ ...item, lessonId: value === "GENERAL" ? undefined : Number(value) })
+        }
       >
         <SelectTrigger className="bg-background/50">
           <SelectValue />
@@ -82,7 +109,10 @@ const QuizEditorForm = ({ item, lessons, uploadingField, onChange, onUploadMedia
     <div className="grid gap-4 md:grid-cols-2">
       <div>
         <Label>Quiz Type</Label>
-        <Select value={item.quizType} onValueChange={(value) => onChange({ ...item, quizType: value })}>
+        <Select
+          value={item.quizType}
+          onValueChange={(value) => onChange({ ...item, quizType: value })}
+        >
           <SelectTrigger className="bg-background/50">
             <SelectValue />
           </SelectTrigger>
@@ -97,7 +127,10 @@ const QuizEditorForm = ({ item, lessons, uploadingField, onChange, onUploadMedia
       </div>
       <div>
         <Label>Difficulty</Label>
-        <Select value={item.difficultyLevel} onValueChange={(value) => onChange({ ...item, difficultyLevel: value })}>
+        <Select
+          value={item.difficultyLevel}
+          onValueChange={(value) => onChange({ ...item, difficultyLevel: value })}
+        >
           <SelectTrigger className="bg-background/50">
             <SelectValue />
           </SelectTrigger>
@@ -114,31 +147,56 @@ const QuizEditorForm = ({ item, lessons, uploadingField, onChange, onUploadMedia
 
     <div>
       <Label>Question</Label>
-      <Textarea value={item.question} onChange={(event) => onChange({ ...item, question: event.target.value })} className="min-h-[100px] bg-background/50" />
+      <Textarea
+        value={item.question}
+        onChange={(event) => onChange({ ...item, question: event.target.value })}
+        className="min-h-[100px] bg-background/50"
+      />
     </div>
 
     <div className="grid gap-4 md:grid-cols-2">
       <div>
         <Label>Option A</Label>
-        <Input value={item.optionA} onChange={(event) => onChange({ ...item, optionA: event.target.value })} className="bg-background/50" />
+        <Input
+          value={item.optionA}
+          onChange={(event) => onChange({ ...item, optionA: event.target.value })}
+          className="bg-background/50"
+        />
       </div>
       <div>
         <Label>Option B</Label>
-        <Input value={item.optionB} onChange={(event) => onChange({ ...item, optionB: event.target.value })} className="bg-background/50" />
+        <Input
+          value={item.optionB}
+          onChange={(event) => onChange({ ...item, optionB: event.target.value })}
+          className="bg-background/50"
+        />
       </div>
       <div>
         <Label>Option C</Label>
-        <Input value={item.optionC} onChange={(event) => onChange({ ...item, optionC: event.target.value })} className="bg-background/50" />
+        <Input
+          value={item.optionC}
+          onChange={(event) => onChange({ ...item, optionC: event.target.value })}
+          className="bg-background/50"
+        />
       </div>
       <div>
         <Label>Option D</Label>
-        <Input value={item.optionD} onChange={(event) => onChange({ ...item, optionD: event.target.value })} className="bg-background/50" />
+        <Input
+          value={item.optionD}
+          onChange={(event) => onChange({ ...item, optionD: event.target.value })}
+          className="bg-background/50"
+        />
       </div>
     </div>
 
     <div>
       <Label>Correct Answer</Label>
-      <Select value={item.correctAnswer} onValueChange={(value) => onChange({ ...item, correctAnswer: value as QuizItem["correctAnswer"] })}>
+      <Select
+        value={item.correctAnswer}
+        onValueChange={(value) =>
+          onChange({ ...item, correctAnswer: value as QuizItem["correctAnswer"] })
+        }
+      >
         <SelectTrigger className="bg-background/50">
           <SelectValue />
         </SelectTrigger>
@@ -154,7 +212,11 @@ const QuizEditorForm = ({ item, lessons, uploadingField, onChange, onUploadMedia
 
     <div>
       <Label>Explanation</Label>
-      <Textarea value={item.explanation} onChange={(event) => onChange({ ...item, explanation: event.target.value })} className="bg-background/50" />
+      <Textarea
+        value={item.explanation}
+        onChange={(event) => onChange({ ...item, explanation: event.target.value })}
+        className="bg-background/50"
+      />
     </div>
 
     <div className="grid gap-4 md:grid-cols-2">

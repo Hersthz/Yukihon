@@ -41,9 +41,13 @@ const LessonCard2 = ({
               {isLocked && <Lock className="h-5 w-5 text-slate-400" />}
             </div>
 
-            <h3 className="mb-2 line-clamp-2 text-lg font-semibold text-slate-900">{lesson.title}</h3>
+            <h3 className="mb-2 line-clamp-2 text-lg font-semibold text-slate-900">
+              {lesson.title}
+            </h3>
 
-            {lesson.description && <p className="line-clamp-2 text-sm text-slate-600">{lesson.description}</p>}
+            {lesson.description && (
+              <p className="line-clamp-2 text-sm text-slate-600">{lesson.description}</p>
+            )}
           </div>
 
           <div className="mt-5 flex items-center justify-between border-t border-slate-200/80 pt-4">
@@ -58,7 +62,9 @@ const LessonCard2 = ({
                 onClick={() => onStart(lesson.id)}
                 className={cn(
                   "rounded-xl text-white shadow-[0_10px_20px_rgba(14,165,233,0.20)]",
-                  isCompleted ? "bg-emerald-500 hover:bg-emerald-400" : "bg-sky-500 hover:bg-sky-400"
+                  isCompleted
+                    ? "bg-emerald-500 hover:bg-emerald-400"
+                    : "bg-sky-500 hover:bg-sky-400"
                 )}
               >
                 <PlayCircle className="mr-2 h-4 w-4" />

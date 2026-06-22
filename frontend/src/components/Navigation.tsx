@@ -74,7 +74,12 @@ const Navigation = () => {
   }, [isHome]);
 
   return (
-    <header className={cn("fixed inset-x-0 top-0 z-50 transition-all duration-300", scrolled ? "pt-4" : "pt-6")}>
+    <header
+      className={cn(
+        "fixed inset-x-0 top-0 z-50 transition-all duration-300",
+        scrolled ? "pt-4" : "pt-6"
+      )}
+    >
       <nav className="mx-auto flex max-w-[1440px] items-center justify-between px-4 sm:px-6">
         <div className="surface-panel flex w-full items-center justify-between gap-4 bg-white/92 px-5 py-4 backdrop-blur-xl sm:px-6">
           <Link to="/" className="flex items-center gap-3">
@@ -115,7 +120,9 @@ const Navigation = () => {
               {isAuthenticated ? "Dashboard" : "Log in"}
             </Link>
             <Link to={primaryCta}>
-              <Button className="min-w-[160px]">{isAuthenticated ? "Open Dashboard" : "Start Free"}</Button>
+              <Button className="min-w-[160px]">
+                {isAuthenticated ? "Open Dashboard" : "Start Free"}
+              </Button>
             </Link>
           </div>
 
@@ -123,7 +130,11 @@ const Navigation = () => {
             <Link to={primaryCta}>
               <Button size="sm">{isAuthenticated ? "Dashboard" : "Start"}</Button>
             </Link>
-            <Button size="icon" variant="outline" onClick={() => setMobileOpen((previous) => !previous)}>
+            <Button
+              size="icon"
+              variant="outline"
+              onClick={() => setMobileOpen((previous) => !previous)}
+            >
               {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
           </div>
@@ -143,7 +154,9 @@ const Navigation = () => {
                 key={section.id}
                 className={cn(
                   "flex w-full items-center justify-between rounded-[1rem] px-4 py-3 text-left text-sm font-semibold transition-all",
-                  activeSection === section.id ? "bg-[#f0faf0] text-foreground" : "bg-[#faf7f3] text-foreground/75"
+                  activeSection === section.id
+                    ? "bg-[#f0faf0] text-foreground"
+                    : "bg-[#faf7f3] text-foreground/75"
                 )}
                 onClick={() => {
                   scrollToSection(section.id);
@@ -152,7 +165,9 @@ const Navigation = () => {
                 type="button"
               >
                 <span>{section.label}</span>
-                <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Go</span>
+                <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                  Go
+                </span>
               </button>
             ))}
           </div>
@@ -164,7 +179,9 @@ const Navigation = () => {
               </Button>
             </Link>
             <Link to={primaryCta} onClick={() => setMobileOpen(false)}>
-              <Button className="w-full">{isAuthenticated ? "Open Dashboard" : "Start Free"}</Button>
+              <Button className="w-full">
+                {isAuthenticated ? "Open Dashboard" : "Start Free"}
+              </Button>
             </Link>
           </div>
         </div>
