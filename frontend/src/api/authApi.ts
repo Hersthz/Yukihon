@@ -1,33 +1,15 @@
 import apiClient from "@/lib/apiClient";
+import type { Schema } from "@/api/types";
 
-export interface AuthUser {
-  id: number;
-  email: string;
-  displayName: string;
-  roles: string[];
-  permissions?: string[];
-}
+export type AuthUser = Schema<"UserDto">;
 
-export interface AuthResponse {
-  accessToken: string;
-  refreshToken?: string;
-  tokenType?: string;
-  user: AuthUser;
-}
+export type AuthResponse = Schema<"AuthResponse">;
 
-export interface UpdateProfilePayload {
-  displayName: string;
-}
+export type UpdateProfilePayload = Schema<"UpdateProfileRequest">;
 
-export interface ChangePasswordPayload {
-  currentPassword: string;
-  newPassword: string;
-}
+export type ChangePasswordPayload = Schema<"ChangePasswordRequest">;
 
-export interface ForgotPasswordResponse {
-  message: string;
-  resetToken?: string | null;
-}
+export type ForgotPasswordResponse = Schema<"ForgotPasswordResponse">;
 
 const GOOGLE_REDIRECT_URI = `${window.location.origin}/auth`;
 

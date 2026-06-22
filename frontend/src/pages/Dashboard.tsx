@@ -96,9 +96,7 @@ const formatCategory = (category: string | null | undefined) => {
   return category.charAt(0).toUpperCase() + category.slice(1).toLowerCase();
 };
 
-const formatPlanStatus = (
-  status: "NO_DEADLINE" | "ON_TRACK" | "AT_RISK" | "OFF_TRACK" | "COMPLETED"
-) => {
+const formatPlanStatus = (status: string | undefined) => {
   switch (status) {
     case "ON_TRACK":
       return "Đúng tiến độ";

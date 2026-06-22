@@ -1,6 +1,8 @@
 import apiClient from "@/lib/apiClient";
 import type { StoryModeStory } from "@/data/storyMode";
 
+// Story Mode has a rich client-side editing model (@/data/storyMode) that the wire
+// DTO (StoryModeStoryDto) doesn't fully capture, so this type stays hand-written.
 export interface StoryModeAdminStory extends Omit<StoryModeStory, "id"> {
   id?: number;
   storyKey: string;

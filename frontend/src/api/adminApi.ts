@@ -1,40 +1,13 @@
 import apiClient from "@/lib/apiClient";
+import type { Schema } from "@/api/types";
 
-export interface QuizQuestionAnalytics {
-  quizId: number;
-  title: string;
-  jlptLevel: string;
-  difficultyLevel: string;
-  quizType: string;
-  totalAttempts: number;
-  wrongAttempts: number;
-  accuracyRate: number;
-  topPattern?: string;
-}
+export type QuizQuestionAnalytics = Schema<"QuizQuestionAnalyticsDto">;
 
-export interface QuizPatternAnalytics {
-  pattern: string;
-  wrongAttempts: number;
-}
+export type QuizPatternAnalytics = Schema<"QuizPatternAnalyticsDto">;
 
-export interface QuizCohortAccuracy {
-  dimension: string;
-  value: string;
-  totalAttempts: number;
-  correctAttempts: number;
-  accuracyRate: number;
-}
+export type QuizCohortAccuracy = Schema<"QuizCohortAccuracyDto">;
 
-export interface QuizAnalytics {
-  totalAttempts: number;
-  correctAttempts: number;
-  wrongAttempts: number;
-  overallAccuracy: number;
-  mostCommonPattern?: string;
-  mostMissedQuestions: QuizQuestionAnalytics[];
-  patternBreakdown: QuizPatternAnalytics[];
-  cohortAccuracy: QuizCohortAccuracy[];
-}
+export type QuizAnalytics = Schema<"QuizAnalyticsDto">;
 
 export const adminApi = {
   getUsers: (page = 0, size = 20) => apiClient.get(`/api/admin/users`, { page, size }),

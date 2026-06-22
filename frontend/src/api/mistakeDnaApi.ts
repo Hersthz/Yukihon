@@ -1,30 +1,9 @@
 import apiClient from "@/lib/apiClient";
+import type { Schema } from "@/api/types";
 
-export interface MistakePattern {
-  key: string;
-  title: string;
-  description: string;
-  severity: "HIGH" | "MEDIUM" | "LOW";
-  metricLabel: string;
-  metricValue: number;
-  insight: string;
-  recommendedAction: string;
-  evidence: string[];
-}
+export type MistakePattern = Schema<"MistakePatternDto">;
 
-export interface MistakeDnaResponse {
-  summary: string;
-  confidence: "HIGH" | "MEDIUM" | "LOW";
-  overallRiskScore: number;
-  averageQuizAccuracy: number;
-  dueReviews: number;
-  inProgressLessons: number;
-  dominantPatternTitle: string;
-  dominantPatternDescription: string;
-  nextMoves: string[];
-  studySignals: string[];
-  patterns: MistakePattern[];
-}
+export type MistakeDnaResponse = Schema<"MistakeDnaDto">;
 
 export const mistakeDnaApi = {
   getCurrent: () => apiClient.get<MistakeDnaResponse>("/api/mistake-dna"),

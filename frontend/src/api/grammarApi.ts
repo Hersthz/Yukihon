@@ -1,16 +1,7 @@
 import apiClient from "@/lib/apiClient";
+import type { Schema } from "@/api/types";
 
-export interface GrammarDto {
-  id: number;
-  title: string;
-  pattern: string;
-  explanation?: string;
-  usage?: string;
-  exampleJP?: string;
-  exampleEN?: string;
-  jlptLevel?: string;
-  relatedPatterns?: string;
-}
+export type GrammarDto = Schema<"GrammarDto">;
 
 export const grammarApi = {
   getAll: () => apiClient.get<GrammarDto[]>("/api/grammar"),

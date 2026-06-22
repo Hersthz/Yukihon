@@ -1,14 +1,12 @@
+import type { Schema } from "@/api/types";
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 const ACCESS_TOKEN_KEY = "yukihon_token";
 const REFRESH_TOKEN_KEY = "yukihon_refresh_token";
 const USER_KEY = "yukihon_user";
 
-interface StoredAuthUser {
-  id: number;
-  email: string;
-  displayName: string;
-  roles: string[];
-}
+// Stored user mirrors the backend UserDto (single source of truth from the OpenAPI schema).
+type StoredAuthUser = Schema<"UserDto">;
 
 interface StoredAuthResponse {
   accessToken: string;
@@ -103,7 +101,32 @@ const isLoginLikeRequest = (endpoint: string) =>
   endpoint.startsWith("/api/auth/forgot-password") ||
   endpoint.startsWith("/api/auth/reset-password");
 
-export const apiClient = {
+interface ApiClient {
+  baseURL: string;
+  getAuthHeader(): Record<string, string>;
+  getRefreshToken(): string | null;
+  getToken(): string | null;
+  refreshAccessToken(): Promise<StoredAuthResponse | null>;
+  fetchWithAuth(
+    endpoint: string,
+    options?: RequestInit,
+    retryOnUnauthorized?: boolean
+  ): Promise<Response>;
+  request<T>(endpoint: string, options?: RequestInit): Promise<T>;
+  buildQuery(params?: QueryParams): string;
+  get<T>(endpoint: string, params?: QueryParams, options?: RequestInit): Promise<T>;
+  post<T>(endpoint: string, body?: unknown, options?: RequestInit): Promise<T>;
+  put<T>(endpoint: string, body?: unknown, options?: RequestInit): Promise<T>;
+  patch<T>(endpoint: string, body?: unknown, options?: RequestInit): Promise<T>;
+  del<T = void>(endpoint: string, options?: RequestInit): Promise<T>;
+  setAuthData(token: string, user: StoredAuthUser, refreshToken?: string): void;
+  setStoredUser(user: StoredAuthUser): void;
+  clearAuthData(): void;
+  getStoredUser(): StoredAuthUser | null;
+  isAuthenticated(): boolean;
+}
+
+export const apiClient: ApiClient = {
   baseURL: API_BASE_URL,
 
   getAuthHeader(): Record<string, string> {
@@ -208,23 +231,38 @@ export const apiClient = {
   },
 
   get<T>(endpoint: string, params?: QueryParams, options: RequestInit = {}): Promise<T> {
-    return this.request<T>(`${endpoint}${buildQueryString(params)}`, { ...options, method: "GET" });
+    return this.request(`${endpoint}${buildQueryString(params)}`, {
+      ...options,
+      method: "GET",
+    }) as Promise<T>;
   },
 
   post<T>(endpoint: string, body?: unknown, options: RequestInit = {}): Promise<T> {
-    return this.request<T>(endpoint, { ...options, method: "POST", body: serializeBody(body) });
+    return this.request(endpoint, {
+      ...options,
+      method: "POST",
+      body: serializeBody(body),
+    }) as Promise<T>;
   },
 
   put<T>(endpoint: string, body?: unknown, options: RequestInit = {}): Promise<T> {
-    return this.request<T>(endpoint, { ...options, method: "PUT", body: serializeBody(body) });
+    return this.request(endpoint, {
+      ...options,
+      method: "PUT",
+      body: serializeBody(body),
+    }) as Promise<T>;
   },
 
   patch<T>(endpoint: string, body?: unknown, options: RequestInit = {}): Promise<T> {
-    return this.request<T>(endpoint, { ...options, method: "PATCH", body: serializeBody(body) });
+    return this.request(endpoint, {
+      ...options,
+      method: "PATCH",
+      body: serializeBody(body),
+    }) as Promise<T>;
   },
 
   del<T = void>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    return this.request<T>(endpoint, { ...options, method: "DELETE" });
+    return this.request(endpoint, { ...options, method: "DELETE" }) as Promise<T>;
   },
 
   setAuthData(token: string, user: StoredAuthUser, refreshToken?: string) {

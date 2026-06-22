@@ -1,37 +1,10 @@
 import apiClient from "@/lib/apiClient";
+import type { Schema } from "@/api/types";
 
-export interface Deck {
-  id: number;
-  userId: number;
-  title: string;
-  description?: string | null;
-  visibility: string;
-  sourceLanguage?: string | null;
-  targetLanguage?: string | null;
-  totalCards: number;
-  favoriteCount: number;
-  updatedAt?: string | null;
-}
-
-export interface CreateDeckPayload {
-  title: string;
-  description?: string;
-  visibility?: string;
-}
-
-export interface DeckCard {
-  flashcardId: number;
-  front: string;
-  back: string;
-  hint?: string | null;
-  orderIndex: number;
-}
-
-export interface AddCardPayload {
-  front: string;
-  back: string;
-  hint?: string;
-}
+export type Deck = Schema<"DeckDto">;
+export type CreateDeckPayload = Schema<"CreateDeckRequest">;
+export type DeckCard = Schema<"DeckCardDto">;
+export type AddCardPayload = Schema<"AddCardRequest">;
 
 export const deckApi = {
   listMine: () => apiClient.get<Deck[]>("/api/decks/mine"),

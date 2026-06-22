@@ -1,13 +1,7 @@
 import apiClient from "@/lib/apiClient";
+import type { Schema } from "@/api/types";
 
-interface CreatePostPayload {
-  title?: string;
-  content: string;
-  category?: string;
-  jlptLevel?: string;
-  imageUrl?: string;
-  tags?: string;
-}
+type CreatePostPayload = Schema<"CreatePostRequest">;
 
 export const communityApi = {
   getPosts: (

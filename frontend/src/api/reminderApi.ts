@@ -1,21 +1,9 @@
 import apiClient from "@/lib/apiClient";
+import type { Schema } from "@/api/types";
 
-export interface ReminderItem {
-  id: string;
-  type: "MY_WORDS" | "KANJI_SRS" | "STORY_MODE";
-  priority: "LOW" | "MEDIUM" | "HIGH";
-  title: string;
-  description: string;
-  actionLabel: string;
-  actionPath: string;
-  count: number;
-}
+export type ReminderItem = Schema<"ReminderDto">;
 
-export interface ReminderSummary {
-  totalCount: number;
-  urgentCount: number;
-  items: ReminderItem[];
-}
+export type ReminderSummary = Schema<"ReminderSummaryDto">;
 
 export const reminderApi = {
   getSummary: () => apiClient.get<ReminderSummary>("/api/reminders"),

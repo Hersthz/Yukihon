@@ -143,7 +143,7 @@ const AdminCreatorMode = () => {
     setEditorMeta({
       title: template.title,
       summary: template.summary ?? "",
-      contentType: template.contentType,
+      contentType: template.contentType as CreatorContentType,
       jlptLevel: template.jlptLevel,
       tags: template.tags ?? "",
       estimatedMinutes: template.estimatedMinutes,

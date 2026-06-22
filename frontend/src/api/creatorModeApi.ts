@@ -1,4 +1,5 @@
 import apiClient from "@/lib/apiClient";
+import type { Schema } from "@/api/types";
 
 export type CreatorContentType = "MINI_LESSON" | "QUIZ" | "STORY_BRANCH";
 export type CreatorTemplateStatus =
@@ -8,33 +9,7 @@ export type CreatorTemplateStatus =
   | "REJECTED"
   | "PUBLISHED";
 
-export interface CreatorTemplate {
-  id: number;
-  title: string;
-  summary: string | null;
-  contentType: CreatorContentType;
-  status: CreatorTemplateStatus;
-  jlptLevel: string;
-  tags: string | null;
-  estimatedMinutes: number;
-  builderJson: string;
-  createdByUserId: number;
-  createdByDisplayName: string | null;
-  reviewedByUserId: number | null;
-  reviewedByDisplayName: string | null;
-  reviewNote: string | null;
-  adminReviewedByUserId: number | null;
-  adminReviewedByDisplayName: string | null;
-  adminReviewNote: string | null;
-  usageCount: number;
-  completionCount: number;
-  averageScore: number;
-  createdAt: string;
-  updatedAt: string;
-  reviewedAt: string | null;
-  adminReviewedAt: string | null;
-  lastPublishedAt: string | null;
-}
+export type CreatorTemplate = Schema<"CreatorTemplateDto">;
 
 export type CreatorAuditStage =
   | "AUTHORING"
@@ -53,65 +28,17 @@ export interface CreatorTemplateAuditTimelineFilters {
   actor?: string;
 }
 
-export interface CreatorTemplateAuditEvent {
-  id: number;
-  templateId: number;
-  actorUserId: number | null;
-  actorDisplayName: string | null;
-  stage: CreatorAuditStage;
-  action: CreatorAuditAction;
-  decision: string | null;
-  note: string | null;
-  createdAt: string;
-}
+export type CreatorTemplateAuditEvent = Schema<"CreatorTemplateAuditEventDto">;
 
-export interface CreatorTemplateUpsertPayload {
-  title: string;
-  summary?: string;
-  contentType: CreatorContentType;
-  jlptLevel: string;
-  tags?: string;
-  estimatedMinutes: number;
-  builderJson: string;
-}
+export type CreatorTemplateUpsertPayload = Schema<"CreatorTemplateUpsertRequest">;
 
-export interface CreatorTemplateReviewPayload {
-  decision: "PUBLISHED" | "REJECTED";
-  reviewNote?: string;
-}
+export type CreatorTemplateReviewPayload = Schema<"CreatorTemplateReviewRequest">;
 
-export interface CreatorTemplateMetricPayload {
-  attempts: number;
-  completions: number;
-  averageScore?: number;
-}
+export type CreatorTemplateMetricPayload = Schema<"CreatorTemplateMetricsRequest">;
 
-export interface CreatorAnalyticsItem {
-  id: number;
-  title: string;
-  contentType: CreatorContentType;
-  usageCount: number;
-  completionCount: number;
-  completionRate: number;
-  averageScore: number;
-}
+export type CreatorAnalyticsItem = Schema<"CreatorTemplateAnalyticsItemDto">;
 
-export interface CreatorAnalytics {
-  totalTemplates: number;
-  drafts: number;
-  pendingReview: number;
-  approved: number;
-  rejected: number;
-  published: number;
-  miniLessons: number;
-  quizzes: number;
-  storyBranches: number;
-  totalUsage: number;
-  totalCompletions: number;
-  completionRate: number;
-  averageScore: number;
-  topTemplates: CreatorAnalyticsItem[];
-}
+export type CreatorAnalytics = Schema<"CreatorTemplateAnalyticsDto">;
 
 const buildQuery = (params: {
   status?: CreatorTemplateStatus;

@@ -1,4 +1,5 @@
 import apiClient from "@/lib/apiClient";
+import type { Schema } from "@/api/types";
 
 export type LearningEventType =
   | "START_LEARNING"
@@ -9,102 +10,17 @@ export type LearningEventType =
 
 export type LearningContentType = "LESSON" | "QUIZ" | "STORY" | "COURSE";
 
-export interface LearningAnalyticsEventPayload {
-  eventType: LearningEventType;
-  contentType: LearningContentType;
-  contentId: number;
-  sessionId?: string;
-  jlptLevel?: string;
-  durationSeconds?: number;
-  score?: number;
-  metadata?: Record<string, unknown>;
-}
+export type LearningAnalyticsEventPayload = Schema<"LearningAnalyticsEventRequest">;
 
-export interface LearningFunnelItem {
-  contentType: LearningContentType;
-  contentId: number;
-  contentTitle: string;
-  startedCount: number;
-  completedCount: number;
-  abandonedCount: number;
-  quizWrongCount: number;
-  quizCorrectedCount: number;
-  completionRate: number;
-  abandonmentRate: number;
-  quizRecoveryRate: number;
-  retentionScore: number;
-  lastEventAt?: string | null;
-}
+export type LearningFunnelItem = Schema<"LearningFunnelItemDto">;
 
-export interface LearningFunnelDailyPoint {
-  date: string;
-  startedCount: number;
-  completedCount: number;
-  abandonedCount: number;
-  quizWrongCount: number;
-  quizCorrectedCount: number;
-  completionRate: number;
-  abandonmentRate: number;
-  quizRecoveryRate: number;
-  retentionScore: number;
-}
+export type LearningFunnelDailyPoint = Schema<"LearningFunnelDailyPointDto">;
 
-export interface LearningFunnelResponse {
-  windowDays: number;
-  contentType: LearningContentType;
-  jlptLevel?: string | null;
-  startDate?: string | null;
-  endDate?: string | null;
-  totalStarted: number;
-  totalCompleted: number;
-  totalAbandoned: number;
-  totalQuizWrong: number;
-  totalQuizCorrected: number;
-  overallCompletionRate: number;
-  overallAbandonmentRate: number;
-  overallQuizRecoveryRate: number;
-  dailyTrend: LearningFunnelDailyPoint[];
-  topRetainedContent: LearningFunnelItem[];
-  contentBreakdown: LearningFunnelItem[];
-}
+export type LearningFunnelResponse = Schema<"LearningFunnelDto">;
 
-export interface StudyCalendarDay {
-  date: string;
-  hasActivity: boolean;
-  isToday: boolean;
-  isDeadlineDay: boolean;
-  isRecommendedStudyDay: boolean;
-  totalEvents: number;
-  startedCount: number;
-  completedCount: number;
-  totalMinutes: number;
-  intensity: "none" | "light" | "medium" | "strong";
-}
+export type StudyCalendarDay = Schema<"StudyCalendarDayDto">;
 
-export interface StudyCalendarResponse {
-  startDate: string;
-  endDate: string;
-  todayDate: string;
-  currentStreak: number;
-  longestStreak: number;
-  lastLearningDate: string | null;
-  dailyGoalMinutes: number;
-  targetJlptLevel: string;
-  deadlineDate: string | null;
-  deadlineStatus: "NO_DEADLINE" | "ON_TRACK" | "AT_RISK" | "OFF_TRACK" | "COMPLETED" | null;
-  deadlineInsight: string | null;
-  projectedCompletionDate: string | null;
-  daysRemainingToDeadline: number;
-  recommendedMinutesPerDay: number;
-  requiredLessonsPerWeek: number;
-  activeDays: number;
-  totalStudyEvents: number;
-  totalStudyMinutes: number;
-  bestDayDate: string | null;
-  bestDayMinutes: number;
-  recommendedStudyDates: string[];
-  days: StudyCalendarDay[];
-}
+export type StudyCalendarResponse = Schema<"StudyCalendarDto">;
 
 interface LearningFunnelQuery {
   days?: number;

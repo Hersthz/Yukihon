@@ -1,52 +1,15 @@
 import apiClient from "@/lib/apiClient";
+import type { Schema } from "@/api/types";
 
-export interface FieldMetadata {
-  name: string;
-  label: string;
-  type: string; // text | textarea | number | boolean | date | select | password | image | icon
-  required: boolean;
-  order: number;
-  placeholder: string;
-  enumValues: string[];
-  listVisible: boolean;
-  readOnly: boolean;
-}
+export type FieldMetadata = Schema<"FieldMetadata">;
 
-export interface EntityMenuMetadata {
-  title: string;
-  group: string;
-  icon: string;
-  url: string;
-  order: number;
-  permission: string;
-}
+export type EntityMenuMetadata = Schema<"MenuMetadata">;
 
-export interface EntityMetadata {
-  name: string;
-  plural: string;
-  path: string;
-  description: string;
-  permissionPrefix: string | null;
-  softDelete: boolean;
-  enableBulkDelete: boolean;
-  searchableFields: string[];
-  sortableFields: string[];
-  menu: EntityMenuMetadata | null;
-  fields: FieldMetadata[];
-}
+export type EntityMetadata = Schema<"EntityMetadata">;
 
-export interface AutoMenuItem {
-  title: string;
-  url: string;
-  icon: string;
-  order: number;
-  permission: string | null;
-}
+export type AutoMenuItem = Schema<"MenuItem">;
 
-export interface AutoMenuGroup {
-  group: string;
-  items: AutoMenuItem[];
-}
+export type AutoMenuGroup = Schema<"MenuGroup">;
 
 export const metaApi = {
   getEntities: () => apiClient.get<EntityMetadata[]>("/api/meta/entities"),

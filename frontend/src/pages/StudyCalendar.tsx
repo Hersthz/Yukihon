@@ -57,7 +57,7 @@ const StudyCalendar = () => {
       return;
     }
 
-    const todayInMonth = data.days.find((day) => day.isToday);
+    const todayInMonth = data.days.find((day) => day.today);
     const firstActiveDay = data.days.find((day) => day.hasActivity);
     const fallbackDay = data.days[0];
     const nextKey = todayInMonth?.date || firstActiveDay?.date || fallbackDay?.date;
@@ -92,9 +92,9 @@ const StudyCalendar = () => {
         .filter((day) => day.intensity === "strong")
         .map((day) => parseDateKey(day.date)),
       recommended: data.days
-        .filter((day) => day.isRecommendedStudyDay)
+        .filter((day) => day.recommendedStudyDay)
         .map((day) => parseDateKey(day.date)),
-      deadline: data.days.filter((day) => day.isDeadlineDay).map((day) => parseDateKey(day.date)),
+      deadline: data.days.filter((day) => day.deadlineDay).map((day) => parseDateKey(day.date)),
     };
   }, [data]);
 
@@ -316,13 +316,13 @@ const StudyCalendar = () => {
                     </div>
                   </div>
 
-                  {selectedDay.isRecommendedStudyDay && (
+                  {selectedDay.recommendedStudyDay && (
                     <div className="rounded-[20px] border border-sky-200 bg-sky-50/80 p-4 text-sm leading-6 text-sky-900">
                       Day la mot ngay nen uu tien hoc de giu nhip va bam sat ke hoach hien tai.
                     </div>
                   )}
 
-                  {selectedDay.isDeadlineDay && (
+                  {selectedDay.deadlineDay && (
                     <div className="rounded-[20px] border border-rose-200 bg-rose-50/80 p-4 text-sm leading-6 text-rose-900">
                       Day la moc deadline JLPT cua ban. Nen danh mot phien hoc tap trung hon binh
                       thuong.
@@ -330,8 +330,8 @@ const StudyCalendar = () => {
                   )}
 
                   {!selectedDay.hasActivity &&
-                    !selectedDay.isRecommendedStudyDay &&
-                    !selectedDay.isDeadlineDay && (
+                    !selectedDay.recommendedStudyDay &&
+                    !selectedDay.deadlineDay && (
                       <div className="rounded-[20px] border border-border bg-muted/30 p-4 text-sm leading-6 text-muted-foreground">
                         Khong co su kien nao trong ngay nay. Neu muon giu streak on dinh, hay chen
                         mot phien hoc ngan 10-15 phut.

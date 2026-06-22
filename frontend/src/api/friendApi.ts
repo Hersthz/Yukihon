@@ -1,5 +1,5 @@
 import apiClient from "@/lib/apiClient";
-import { AuthUser } from "@/api/authApi";
+import type { Schema } from "@/api/types";
 
 export enum ConnectionType {
   FRIEND = "FRIEND",
@@ -11,15 +11,7 @@ export enum ConnectionStatus {
   ACCEPTED = "ACCEPTED",
 }
 
-export interface UserConnection {
-  id: number;
-  requester: AuthUser;
-  receiver: AuthUser;
-  type: ConnectionType;
-  status: ConnectionStatus;
-  createdAt: string;
-  updatedAt: string;
-}
+export type UserConnection = Schema<"UserConnectionDto">;
 
 export const friendApi = {
   getFriends: () => apiClient.get<UserConnection[]>("/api/v1/connections/friends"),

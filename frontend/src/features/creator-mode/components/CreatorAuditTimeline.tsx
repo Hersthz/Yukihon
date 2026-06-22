@@ -102,7 +102,7 @@ const CreatorAuditTimeline = ({
 
   const handleStageFilterChange = (value: CreatorTemplateAuditEvent["stage"] | "ALL") => {
     onFiltersChange?.({
-      stageFilter: value,
+      stageFilter: value as CreatorAuditStage | "ALL",
       actorFilter,
     });
   };

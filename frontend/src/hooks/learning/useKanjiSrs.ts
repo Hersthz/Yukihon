@@ -110,7 +110,7 @@ export const useKanjiSrs = (catalog: KanjiEntry[]) => {
           ? await kanjiSrsApi.importRecords(localRecords)
           : remoteRecords;
 
-      const syncedRecords = syncKanjiSrsRecords(nextRecords);
+      const syncedRecords = syncKanjiSrsRecords(nextRecords as KanjiSrsRecord[]);
       setRecords(syncedRecords);
       setDashboard(await kanjiSrsApi.getDashboard());
       setSyncError(null);
@@ -164,7 +164,7 @@ export const useKanjiSrs = (catalog: KanjiEntry[]) => {
         const saved = await kanjiSrsApi.add(character);
         setRecords((current) =>
           syncKanjiSrsRecords([
-            saved,
+            saved as KanjiSrsRecord,
             ...current.filter((record) => record.character !== character),
           ])
         );
@@ -210,7 +210,9 @@ export const useKanjiSrs = (catalog: KanjiEntry[]) => {
         const reviewed = await kanjiSrsApi.review(character, rating);
         setRecords((current) =>
           syncKanjiSrsRecords(
-            current.map((record) => (record.character === character ? reviewed : record))
+            current.map((record) =>
+              record.character === character ? (reviewed as KanjiSrsRecord) : record
+            )
           )
         );
         setDashboard(await kanjiSrsApi.getDashboard());

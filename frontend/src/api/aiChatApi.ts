@@ -1,43 +1,18 @@
 import apiClient from "@/lib/apiClient";
+import type { Schema } from "@/api/types";
 
 export type AiChatMode = "coach" | "grammar" | "conversation";
 export type AiChatRole = "assistant" | "user";
 
-export interface AiChatMessagePayload {
-  role: AiChatRole;
-  text: string;
-}
+export type AiChatMessagePayload = Schema<"AiChatMessageRequest">;
 
-export interface AiChatRequestPayload {
-  conversationId?: number;
-  mode: AiChatMode;
-  messages: AiChatMessagePayload[];
-}
+export type AiChatRequestPayload = Schema<"AiChatRequest">;
 
-export interface AiChatResponse {
-  reply: string;
-  model: string;
-  mode: AiChatMode;
-  conversationId: number;
-  conversationTitle: string;
-}
+export type AiChatResponse = Schema<"AiChatResponse">;
 
-export interface AiChatConversation {
-  id: number;
-  title: string;
-  createdAt: string;
-  updatedAt: string;
-}
+export type AiChatConversation = Schema<"AiChatConversationDto">;
 
-export interface AiChatHistoryItem {
-  id: number;
-  conversationId: number;
-  role: AiChatRole;
-  text: string;
-  mode: AiChatMode;
-  model?: string | null;
-  createdAt: string;
-}
+export type AiChatHistoryItem = Schema<"AiChatHistoryItemDto">;
 
 interface StreamHandlers {
   onMeta?: (payload: {

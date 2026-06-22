@@ -1,41 +1,18 @@
 import apiClient from "@/lib/apiClient";
+import type { Schema } from "@/api/types";
 
-export interface TranslatePayload {
-  sourceLang: string;
-  targetLang: string;
-  text: string;
-}
+export type TranslatePayload = Schema<"TranslateRequest">;
 
-export interface TranslateResponse {
-  sourceLang: string;
-  targetLang: string;
-  sourceText: string;
-  translatedText: string;
-  detectedLang?: string;
-  historyId: number;
-}
+export type TranslateResponse = Schema<"TranslateResponse">;
 
-export interface TranslationHistoryResponse {
-  content: TranslationHistoryItem[];
-  totalElements: number;
-  totalPages: number;
-  number: number;
-}
+export type TranslationHistoryResponse = Schema<"PageTranslationHistoryDto">;
 
 export interface TranslationStats {
   totalTranslations: number;
   totalBookmarks: number;
 }
 
-export interface TranslationHistoryItem {
-  id: number;
-  sourceLang: string;
-  targetLang: string;
-  sourceText: string;
-  translatedText: string;
-  bookmarked: boolean;
-  createdAt: string;
-}
+export type TranslationHistoryItem = Schema<"TranslationHistoryDto">;
 
 export const translationApi = {
   translate: (data: TranslatePayload) =>

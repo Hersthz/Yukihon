@@ -1,22 +1,9 @@
 import apiClient from "@/lib/apiClient";
+import type { Schema } from "@/api/types";
 
-export interface UserSettingsResponse {
-  theme: string;
-  language: string;
-  dailyGoalMinutes: number;
-  emailNotifications: boolean;
-  pushNotifications: boolean;
-  showFurigana: boolean;
-  showRomaji: boolean;
-  autoPlayAudio: boolean;
-  quizDifficulty: string;
-  targetJlptLevel: string;
-  jlptDeadlineDate: string | null;
-}
+export type UserSettingsResponse = Schema<"UserSettingsDto">;
 
-export interface UpdateUserSettingsPayload extends Partial<UserSettingsResponse> {
-  jlptDeadlineDate?: string;
-}
+export type UpdateUserSettingsPayload = Schema<"UpdateSettingsRequest">;
 
 export const settingsApi = {
   get: () => apiClient.get<UserSettingsResponse>("/api/settings"),

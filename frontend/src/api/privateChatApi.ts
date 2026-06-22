@@ -1,22 +1,9 @@
 import apiClient from "@/lib/apiClient";
-import { AuthUser } from "@/api/authApi";
+import type { Schema } from "@/api/types";
 
-export interface PrivateMessage {
-  id: number;
-  sender: AuthUser;
-  receiver: AuthUser;
-  content: string;
-  read: boolean;
-  createdAt: string;
-}
+export type PrivateMessage = Schema<"PrivateMessageDto">;
 
-export interface MessagePage<T> {
-  content: T[];
-  totalElements: number;
-  totalPages: number;
-  size: number;
-  number: number;
-}
+export type MessagePage<T> = Schema<"PagePrivateMessageDto">;
 
 export const privateChatApi = {
   getHistory: (otherUserId: number, page = 0, size = 50) =>

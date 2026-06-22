@@ -1,23 +1,13 @@
 import apiClient from "@/lib/apiClient";
+import type { Schema } from "@/api/types";
 
-interface SaveWordPayload {
-  vocabularyId: number;
-  folderName?: string;
-  personalNote?: string;
-}
+type SaveWordPayload = Schema<"SaveWordRequest">;
 
 type SavedStatusResponse = Record<string, boolean>;
 
 type ReviewRating = "AGAIN" | "HARD" | "GOOD" | "EASY";
 
-export interface MyWordsStats {
-  totalSaved: number;
-  masteredCount: number;
-  dueTodayCount: number;
-  kanjiDueTodayCount: number;
-  vocabularyDueTodayCount: number;
-  folders: string[];
-}
+export type MyWordsStats = Schema<"SavedWordStatsDto">;
 
 export const myWordsApi = {
   getAll: (folder?: string) => apiClient.get(`/api/my-words`, { folder }),

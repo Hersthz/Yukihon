@@ -1,32 +1,9 @@
 import apiClient from "@/lib/apiClient";
+import type { Schema } from "@/api/types";
 
-export interface LessonDto {
-  id: number;
-  title: string;
-  description?: string;
-  content?: string;
-  jlptLevel?: string;
-  category?: string;
-  status?: string;
-  orderIndex?: number;
-  audioUrl?: string;
-  videoUrl?: string;
-  imageUrl?: string;
-  relatedVocabularyIds?: string;
-  relatedGrammarIds?: string;
-  relatedQuizIds?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
+export type LessonDto = Schema<"LessonDto">;
 
-export interface LessonVersionDto {
-  id: number;
-  lessonId: number;
-  versionNumber: number;
-  changeAction: string;
-  title: string;
-  createdAt?: string;
-}
+export type LessonVersionDto = Schema<"LessonVersionDto">;
 
 export const lessonApi = {
   getAll: () => apiClient.get<LessonDto[]>("/api/lessons"),

@@ -1,39 +1,13 @@
 import apiClient from "@/lib/apiClient";
+import type { Schema } from "@/api/types";
 
-export interface QuizAttemptRequest {
-  quizId: number;
-  answer: string;
-}
+export type QuizAttemptRequest = Schema<"QuizAttemptRequest">;
 
-export interface QuizAttemptResponse {
-  id: number;
-  userId: number;
-  quizId: number;
-  answer: string;
-  correct: boolean;
-  score: number;
-  mistakePattern?: string;
-  attemptedAt: string;
-}
+export type QuizAttemptResponse = Schema<"QuizAttemptDto">;
 
-export interface QuizSessionRequest {
-  mode: string;
-  totalQuestions: number;
-  correctCount: number;
-  weakestPattern?: string;
-}
+export type QuizSessionRequest = Schema<"QuizSessionRequest">;
 
-export interface QuizSessionResponse {
-  id: number;
-  userId: number;
-  mode: string;
-  totalQuestions: number;
-  correctCount: number;
-  accuracyRate: number;
-  weakestPattern?: string;
-  startedAt: string;
-  completedAt: string;
-}
+export type QuizSessionResponse = Schema<"QuizSessionDto">;
 
 interface QuizAttemptQuery {
   limit?: number;

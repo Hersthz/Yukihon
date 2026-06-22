@@ -119,7 +119,7 @@ const extractApiErrorMessage = (error: unknown) => {
 
 const toUiMessage = (message: AiChatHistoryItem): ChatMessage => ({
   id: `history-${message.id}`,
-  role: message.role,
+  role: message.role as ChatRole,
   text: message.text,
   timestamp: message.createdAt,
 });
@@ -425,7 +425,7 @@ const AiChat = () => {
           }
           const latestMode = [...history].reverse().find((message) => !!message.mode)?.mode;
           if (latestMode) {
-            setMode(latestMode);
+            setMode(latestMode as ChatMode);
           }
         } else {
           setMessages(INITIAL_MESSAGES);

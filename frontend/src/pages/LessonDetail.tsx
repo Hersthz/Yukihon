@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { type ComponentProps, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, BookOpen, CheckCircle2, Clock3, PlayCircle, Target } from "lucide-react";
@@ -478,15 +478,17 @@ const LessonDetail = () => {
         ) : (
           <div className="grid gap-4 xl:grid-cols-[300px_minmax(0,1fr)]">
             <LessonOverviewPanel
-              lesson={lesson}
+              lesson={lesson as ComponentProps<typeof LessonOverviewPanel>["lesson"]}
               lessonProgress={lessonProgress}
               noteText={noteText}
-              upcomingLesson={upcomingLesson}
+              upcomingLesson={
+                upcomingLesson as ComponentProps<typeof LessonOverviewPanel>["upcomingLesson"]
+              }
               onNoteChange={setNoteText}
               onSaveNote={() => void saveNote()}
             />
             <LessonContentPanel
-              lesson={lesson}
+              lesson={lesson as ComponentProps<typeof LessonContentPanel>["lesson"]}
               progressPercent={progressPercent}
               relatedQuizzes={relatedQuizzes}
               isQuizLoading={isQuizLoading}

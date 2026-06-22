@@ -1,30 +1,9 @@
 import apiClient from "@/lib/apiClient";
+import type { Schema } from "@/api/types";
 
-export interface UserProgress {
-  id: number;
-  userId: number;
-  lessonId?: number | null;
-  quizId?: number | null;
-  vocabularyId?: number | null;
-  status: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED";
-  progressType?: string | null;
-  score?: number | null;
-  totalScore?: number | null;
-  attemptCount?: number | null;
-  notes?: string | null;
-  createdAt: string;
-  completedAt?: string | null;
-}
+export type UserProgress = Schema<"UserProgressDto">;
 
-export interface UserProgressPayload {
-  lessonId?: number;
-  quizId?: number;
-  vocabularyId?: number;
-  score?: number;
-  totalScore?: number;
-  status?: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED";
-  notes?: string;
-}
+export type UserProgressPayload = Schema<"UserProgressRequest">;
 
 export const STORY_MODE_PROGRESS_VOCABULARY_ID = -1001;
 
