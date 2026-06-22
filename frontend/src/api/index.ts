@@ -20,6 +20,7 @@ export * from "./storyModeApi";
 export * from "./reminderApi";
 export * from "./metaApi";
 export * from "./autoCrudApi";
+export * from "./createResource";
 export * from "./srsApi";
 export * from "./deckApi";
 export * from "./friendApi";

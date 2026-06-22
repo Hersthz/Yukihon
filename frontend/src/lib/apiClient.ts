@@ -18,6 +18,42 @@ interface StoredAuthResponse {
 
 let refreshPromise: Promise<StoredAuthResponse | null> | null = null;
 
+export type QueryParams = Record<
+  string,
+  string | number | boolean | null | undefined | Array<string | number>
+>;
+
+/** Serialize a request body: leave FormData/undefined untouched, JSON-stringify everything else. */
+const serializeBody = (body: unknown): BodyInit | undefined => {
+  if (body === undefined || body === null) {
+    return undefined;
+  }
+  if (body instanceof FormData || typeof body === "string") {
+    return body as BodyInit;
+  }
+  return JSON.stringify(body);
+};
+
+/** Build a `?a=1&b=2` query string; skips null/undefined, repeats arrays. Returns "" when empty. */
+const buildQueryString = (params?: QueryParams): string => {
+  if (!params) {
+    return "";
+  }
+  const query = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value === null || value === undefined) {
+      continue;
+    }
+    if (Array.isArray(value)) {
+      value.forEach((item) => item != null && query.append(key, String(item)));
+    } else {
+      query.set(key, String(value));
+    }
+  }
+  const qs = query.toString();
+  return qs ? `?${qs}` : "";
+};
+
 const parseResponse = async <T>(response: Response): Promise<T> => {
   if (response.status === 204) {
     return undefined as T;
@@ -164,6 +200,31 @@ export const apiClient = {
       console.error("API Request Error:", error);
       throw error;
     }
+  },
+
+  /** Build a `?a=1&b=2` query string from a params object, skipping null/undefined. */
+  buildQuery(params?: QueryParams): string {
+    return buildQueryString(params);
+  },
+
+  get<T>(endpoint: string, params?: QueryParams, options: RequestInit = {}): Promise<T> {
+    return this.request<T>(`${endpoint}${buildQueryString(params)}`, { ...options, method: "GET" });
+  },
+
+  post<T>(endpoint: string, body?: unknown, options: RequestInit = {}): Promise<T> {
+    return this.request<T>(endpoint, { ...options, method: "POST", body: serializeBody(body) });
+  },
+
+  put<T>(endpoint: string, body?: unknown, options: RequestInit = {}): Promise<T> {
+    return this.request<T>(endpoint, { ...options, method: "PUT", body: serializeBody(body) });
+  },
+
+  patch<T>(endpoint: string, body?: unknown, options: RequestInit = {}): Promise<T> {
+    return this.request<T>(endpoint, { ...options, method: "PATCH", body: serializeBody(body) });
+  },
+
+  del<T = void>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    return this.request<T>(endpoint, { ...options, method: "DELETE" });
   },
 
   setAuthData(token: string, user: StoredAuthUser, refreshToken?: string) {

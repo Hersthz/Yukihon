@@ -34,19 +34,15 @@ export interface AddCardPayload {
 }
 
 export const deckApi = {
-  listMine: () => apiClient.request<Deck[]>("/api/decks/mine"),
-  listPublic: () => apiClient.request<Deck[]>("/api/decks/public"),
-  get: (id: number) => apiClient.request<Deck>(`/api/decks/${id}`),
-  create: (payload: CreateDeckPayload) =>
-    apiClient.request<Deck>("/api/decks", { method: "POST", body: JSON.stringify(payload) }),
-  listCards: (deckId: number) => apiClient.request<DeckCard[]>(`/api/decks/${deckId}/cards`),
+  listMine: () => apiClient.get<Deck[]>("/api/decks/mine"),
+  listPublic: () => apiClient.get<Deck[]>("/api/decks/public"),
+  get: (id: number) => apiClient.get<Deck>(`/api/decks/${id}`),
+  create: (payload: CreateDeckPayload) => apiClient.post<Deck>("/api/decks", payload),
+  listCards: (deckId: number) => apiClient.get<DeckCard[]>(`/api/decks/${deckId}/cards`),
   addCard: (deckId: number, payload: AddCardPayload) =>
-    apiClient.request<DeckCard>(`/api/decks/${deckId}/cards`, {
-      method: "POST",
-      body: JSON.stringify(payload),
-    }),
+    apiClient.post<DeckCard>(`/api/decks/${deckId}/cards`, payload),
   deleteCard: (deckId: number, flashcardId: number) =>
-    apiClient.request<void>(`/api/decks/${deckId}/cards/${flashcardId}`, { method: "DELETE" }),
+    apiClient.del<void>(`/api/decks/${deckId}/cards/${flashcardId}`),
 };
 
 export default deckApi;

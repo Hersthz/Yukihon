@@ -19,28 +19,13 @@ export interface ListParams {
 
 /** Generic client for any @AutoCrud resource served at /api/auto/{path}. */
 export const createAutoCrudApi = (path: string) => ({
-  list: (params: ListParams = {}) => {
-    const query = new URLSearchParams();
-    if (params.page != null) query.set("page", String(params.page));
-    if (params.size != null) query.set("size", String(params.size));
-    if (params.search) query.set("search", params.search);
-    if (params.sort) query.set("sort", params.sort);
-    const qs = query.toString();
-    return apiClient.request<Page<AutoCrudRow>>(`/api/auto/${path}${qs ? `?${qs}` : ""}`);
-  },
-  get: (id: number | string) => apiClient.request<AutoCrudRow>(`/api/auto/${path}/${id}`),
-  create: (body: Record<string, unknown>) =>
-    apiClient.request<AutoCrudRow>(`/api/auto/${path}`, {
-      method: "POST",
-      body: JSON.stringify(body),
-    }),
+  list: (params: ListParams = {}) =>
+    apiClient.get<Page<AutoCrudRow>>(`/api/auto/${path}`, { ...params }),
+  get: (id: number | string) => apiClient.get<AutoCrudRow>(`/api/auto/${path}/${id}`),
+  create: (body: Record<string, unknown>) => apiClient.post<AutoCrudRow>(`/api/auto/${path}`, body),
   update: (id: number | string, body: Record<string, unknown>) =>
-    apiClient.request<AutoCrudRow>(`/api/auto/${path}/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(body),
-    }),
-  remove: (id: number | string) =>
-    apiClient.request<void>(`/api/auto/${path}/${id}`, { method: "DELETE" }),
+    apiClient.put<AutoCrudRow>(`/api/auto/${path}/${id}`, body),
+  remove: (id: number | string) => apiClient.del<void>(`/api/auto/${path}/${id}`),
 });
 
 export default createAutoCrudApi;
