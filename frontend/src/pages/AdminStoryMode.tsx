@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BookOpen, Check, GitBranch, Plus, RefreshCw, Save, Trash2 } from "lucide-react";
 
 import { storyModeApi, type StoryModeAdminStory } from "@/api";
@@ -109,41 +110,41 @@ const normalizeForSave = (story: StoryModeAdminStory): StoryModeAdminStory => ({
 
 const AdminStoryMode = () => {
   const { toast } = useToast();
-  const [stories, setStories] = useState<StoryModeAdminStory[]>([]);
+  const queryClient = useQueryClient();
   const [activeStory, setActiveStory] = useState<StoryModeAdminStory>(createBlankStory);
   const [activeSegmentIndex, setActiveSegmentIndex] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
+
+  const storiesQuery = useQuery({
+    queryKey: ["admin-story-mode"],
+    queryFn: () => storyModeApi.admin.getStories(),
+  });
+
+  const stories = useMemo(() => storiesQuery.data ?? [], [storiesQuery.data]);
+  const loading = storiesQuery.isLoading;
+
+  useEffect(() => {
+    if (storiesQuery.error) {
+      toast({
+        title: "Không tải được StoryMode",
+        description: "Vui lòng kiểm tra quyền admin hoặc backend.",
+        variant: "destructive",
+      });
+    }
+  }, [storiesQuery.error, toast]);
+
+  // Preserve original behavior: auto-select the first story once loaded.
+  useEffect(() => {
+    if (storiesQuery.data && storiesQuery.data.length > 0) {
+      setActiveStory(storiesQuery.data[0]);
+      setActiveSegmentIndex(0);
+    }
+  }, [storiesQuery.data]);
 
   const activeSegment = activeStory.segments[activeSegmentIndex] ?? activeStory.segments[0];
   const publishedCount = useMemo(
     () => stories.filter((story) => story.published).length,
     [stories]
   );
-
-  const loadStories = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await storyModeApi.admin.getStories();
-      setStories(data);
-      if (data.length > 0) {
-        setActiveStory(data[0]);
-        setActiveSegmentIndex(0);
-      }
-    } catch {
-      toast({
-        title: "Không tải được StoryMode",
-        description: "Vui lòng kiểm tra quyền admin hoặc backend.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [toast]);
-
-  useEffect(() => {
-    void loadStories();
-  }, [loadStories]);
 
   const updateStory = (patch: Partial<StoryModeAdminStory>) => {
     setActiveStory((previous) => ({ ...previous, ...patch }));
@@ -207,49 +208,55 @@ const AdminStoryMode = () => {
     setActiveSegmentIndex(0);
   };
 
-  const saveStory = async () => {
-    const payload = normalizeForSave(activeStory);
-
-    try {
-      setSaving(true);
-      const saved =
-        payload.id && typeof payload.id === "number"
-          ? await storyModeApi.admin.updateStory(payload.id, payload)
-          : await storyModeApi.admin.createStory(payload);
-
+  const saveMutation = useMutation({
+    mutationFn: (payload: StoryModeAdminStory) =>
+      payload.id && typeof payload.id === "number"
+        ? storyModeApi.admin.updateStory(payload.id, payload)
+        : storyModeApi.admin.createStory(payload),
+    onSuccess: (saved) => {
       setActiveStory(saved);
       setActiveSegmentIndex(0);
       toast({ title: "Đã lưu StoryMode", description: `${saved.title} đã được lưu trên backend.` });
-      await loadStories();
-    } catch {
+      queryClient.invalidateQueries({ queryKey: ["admin-story-mode"] });
+    },
+    onError: () => {
       toast({
         title: "Không lưu được story",
         description: "Kiểm tra story key trùng, segment thiếu hoặc quyền admin.",
         variant: "destructive",
       });
-    } finally {
-      setSaving(false);
-    }
+    },
+  });
+
+  const saving = saveMutation.isPending;
+
+  const saveStory = () => {
+    saveMutation.mutate(normalizeForSave(activeStory));
   };
 
-  const deleteStory = async (story: StoryModeAdminStory) => {
+  const deleteMutation = useMutation({
+    mutationFn: (story: StoryModeAdminStory) => storyModeApi.admin.deleteStory(story.id as number),
+    onSuccess: (_data, story) => {
+      toast({ title: "Đã xóa story", description: `${story.title} đã được gỡ khỏi backend.` });
+      queryClient.invalidateQueries({ queryKey: ["admin-story-mode"] });
+    },
+    onError: () => {
+      toast({
+        title: "Không xóa được story",
+        description: "Vui lòng thử lại.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteStory = (story: StoryModeAdminStory) => {
     if (!story.id || typeof story.id !== "number") {
       setActiveStory(createBlankStory());
       setActiveSegmentIndex(0);
       return;
     }
 
-    try {
-      await storyModeApi.admin.deleteStory(story.id);
-      toast({ title: "Đã xóa story", description: `${story.title} đã được gỡ khỏi backend.` });
-      await loadStories();
-    } catch {
-      toast({
-        title: "Không xóa được story",
-        description: "Vui lòng thử lại.",
-        variant: "destructive",
-      });
-    }
+    deleteMutation.mutate(story);
   };
 
   return (
@@ -269,7 +276,11 @@ const AdminStoryMode = () => {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={() => void loadStories()} disabled={loading}>
+            <Button
+              variant="outline"
+              onClick={() => void storiesQuery.refetch()}
+              disabled={loading}
+            >
               <RefreshCw className="mr-2 h-4 w-4" />
               Refresh
             </Button>
@@ -283,7 +294,7 @@ const AdminStoryMode = () => {
               <Plus className="mr-2 h-4 w-4" />
               New Story
             </Button>
-            <Button onClick={() => void saveStory()} disabled={saving}>
+            <Button onClick={() => saveStory()} disabled={saving}>
               <Save className="mr-2 h-4 w-4" />
               {saving ? "Saving..." : "Save Story"}
             </Button>
@@ -350,11 +361,7 @@ const AdminStoryMode = () => {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-base">Story Setup</CardTitle>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => void deleteStory(activeStory)}
-                >
+                <Button variant="destructive" size="sm" onClick={() => deleteStory(activeStory)}>
                   <Trash2 className="mr-2 h-4 w-4" />
                   Delete
                 </Button>

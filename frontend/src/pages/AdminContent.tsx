@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
+import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
   BookOpen,
@@ -95,74 +96,94 @@ const normalizeList = <T,>(value: unknown): T[] => {
 
 const AdminContent = () => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const importInputRef = useRef<HTMLInputElement | null>(null);
 
   const [activeTab, setActiveTab] = useState<AdminTab>("lessons");
-  const [lessons, setLessons] = useState<Lesson[]>([]);
-  const [vocabulary, setVocabulary] = useState<VocabItem[]>([]);
-  const [grammar, setGrammar] = useState<GrammarItem[]>([]);
-  const [quizzes, setQuizzes] = useState<QuizItem[]>([]);
-  const [overview, setOverview] = useState<ContentOverview | null>(null);
-  const [lessonVersions, setLessonVersions] = useState<LessonVersion[]>([]);
-
-  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [importing, setImporting] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<EditableItem | null>(null);
   const [levelFilter, setLevelFilter] = useState<string>("ALL");
   const [lessonStatusFilter, setLessonStatusFilter] = useState<string>("ALL");
+  const [versionsLessonId, setVersionsLessonId] = useState<number | null>(null);
 
-  const loadContent = useCallback(async () => {
-    setLoading(true);
+  const contentQueries = useQueries({
+    queries: [
+      {
+        queryKey: ["admin-content", "lessons"],
+        queryFn: async (): Promise<Lesson[]> =>
+          normalizeList<Record<string, unknown>>(await lessonApi.getAll()).map(normalizeLesson),
+      },
+      {
+        queryKey: ["admin-content", "vocabulary"],
+        queryFn: async (): Promise<VocabItem[]> =>
+          normalizeList<Record<string, unknown>>(await vocabularyApi.getAll()).map(
+            normalizeVocabulary
+          ),
+      },
+      {
+        queryKey: ["admin-content", "grammar"],
+        queryFn: async (): Promise<GrammarItem[]> =>
+          normalizeList<Record<string, unknown>>(await grammarApi.getAll()).map(normalizeGrammar),
+      },
+      {
+        queryKey: ["admin-content", "quizzes"],
+        queryFn: async (): Promise<QuizItem[]> =>
+          normalizeList<Record<string, unknown>>(await quizApi.getAll()).map(normalizeQuiz),
+      },
+      {
+        queryKey: ["admin-content", "overview"],
+        queryFn: async (): Promise<ContentOverview> =>
+          (await adminApi.getContentOverview()) as ContentOverview,
+      },
+    ],
+  });
 
-    try {
-      const [lessonData, vocabData, grammarData, quizData, overviewData] = await Promise.all([
-        lessonApi.getAll(),
-        vocabularyApi.getAll(),
-        grammarApi.getAll(),
-        quizApi.getAll(),
-        adminApi.getContentOverview(),
-      ]);
+  const [lessonsQuery, vocabularyQuery, grammarQuery, quizzesQuery, overviewQuery] = contentQueries;
 
-      setLessons(normalizeList<Record<string, unknown>>(lessonData).map(normalizeLesson));
-      setVocabulary(normalizeList<Record<string, unknown>>(vocabData).map(normalizeVocabulary));
-      setGrammar(normalizeList<Record<string, unknown>>(grammarData).map(normalizeGrammar));
-      setQuizzes(normalizeList<Record<string, unknown>>(quizData).map(normalizeQuiz));
-      setOverview(overviewData as ContentOverview);
-    } catch {
+  const lessons = useMemo(() => lessonsQuery.data ?? [], [lessonsQuery.data]);
+  const vocabulary = useMemo(() => vocabularyQuery.data ?? [], [vocabularyQuery.data]);
+  const grammar = useMemo(() => grammarQuery.data ?? [], [grammarQuery.data]);
+  const quizzes = useMemo(() => quizzesQuery.data ?? [], [quizzesQuery.data]);
+  const overview = overviewQuery.data ?? null;
+  const loading = contentQueries.some((query) => query.isLoading);
+
+  useEffect(() => {
+    if (contentQueries.some((query) => query.isError)) {
       toast({
         title: "Load failed",
         description: "Could not load content management data.",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
-  }, [toast]);
+  }, [contentQueries, toast]);
+
+  const loadContent = useCallback(
+    () => queryClient.invalidateQueries({ queryKey: ["admin-content"] }),
+    [queryClient]
+  );
+
+  const lessonVersionsQuery = useQuery({
+    queryKey: ["admin-content", "lesson-versions", versionsLessonId],
+    queryFn: async (): Promise<LessonVersion[]> =>
+      normalizeList<Record<string, unknown>>(
+        await lessonApi.getVersions(versionsLessonId as number)
+      ).map(normalizeLessonVersion),
+    enabled: versionsLessonId != null,
+  });
+
+  const lessonVersions = lessonVersionsQuery.data ?? [];
 
   useEffect(() => {
-    void loadContent();
-  }, [loadContent]);
-
-  const loadLessonVersions = useCallback(
-    async (lessonId: number) => {
-      try {
-        const versionData = await lessonApi.getVersions(lessonId);
-        setLessonVersions(
-          normalizeList<Record<string, unknown>>(versionData).map(normalizeLessonVersion)
-        );
-      } catch {
-        setLessonVersions([]);
-        toast({
-          title: "Version history unavailable",
-          description: "Could not load lesson snapshots right now.",
-          variant: "destructive",
-        });
-      }
-    },
-    [toast]
-  );
+    if (lessonVersionsQuery.isError) {
+      toast({
+        title: "Version history unavailable",
+        description: "Could not load lesson snapshots right now.",
+        variant: "destructive",
+      });
+    }
+  }, [lessonVersionsQuery.isError, toast]);
 
   const currentTabLabel = useMemo(
     () => TABS.find((tab) => tab.value === activeTab)?.label ?? "Content",
@@ -242,62 +263,67 @@ const AdminContent = () => {
     }
   }, []);
 
+  const deleteMutation = useMutation({
+    mutationFn: async ({ tab, id }: { tab: AdminTab; id: unknown }) => {
+      const itemId = Number(id);
+
+      if (tab === "lessons") {
+        await lessonApi.delete(itemId);
+      }
+      if (tab === "vocabulary") {
+        await vocabularyApi.delete(itemId);
+      }
+      if (tab === "grammar") {
+        await grammarApi.delete(itemId);
+      }
+      if (tab === "quizzes") {
+        await quizApi.delete(itemId);
+      }
+    },
+    onSuccess: () => {
+      toast({ title: "Deleted", description: `${currentTabLabel} item deleted.` });
+      queryClient.invalidateQueries({ queryKey: ["admin-content"] });
+    },
+    onError: () => {
+      toast({
+        title: "Delete failed",
+        description: "Could not delete this item.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const deleteItem = useCallback(
-    async (tab: AdminTab, id: unknown) => {
-      try {
-        const itemId = Number(id);
-
-        if (tab === "lessons") {
-          await lessonApi.delete(itemId);
-        }
-        if (tab === "vocabulary") {
-          await vocabularyApi.delete(itemId);
-        }
-        if (tab === "grammar") {
-          await grammarApi.delete(itemId);
-        }
-        if (tab === "quizzes") {
-          await quizApi.delete(itemId);
-        }
-
-        toast({ title: "Deleted", description: `${currentTabLabel} item deleted.` });
-        await loadContent();
-      } catch {
-        toast({
-          title: "Delete failed",
-          description: "Could not delete this item.",
-          variant: "destructive",
-        });
-      }
-    },
-    [currentTabLabel, loadContent, toast]
+    (tab: AdminTab, id: unknown) =>
+      deleteMutation
+        .mutateAsync({ tab, id })
+        .then(() => undefined)
+        .catch(() => undefined),
+    [deleteMutation]
   );
 
-  const openEditor = useCallback(
-    async (tab: AdminTab, item?: EditableItem) => {
-      setActiveTab(tab);
+  const openEditor = useCallback(async (tab: AdminTab, item?: EditableItem) => {
+    setActiveTab(tab);
 
-      if (item) {
-        setEditItem(item);
-        setDialogOpen(true);
-
-        if (tab === "lessons" && item.id) {
-          await loadLessonVersions(item.id);
-        } else {
-          setLessonVersions([]);
-        }
-        return;
-      }
-
-      if (tab === "lessons") setEditItem(createEmptyLesson());
-      if (tab === "vocabulary") setEditItem(createEmptyVocab());
-      if (tab === "grammar") setEditItem(createEmptyGrammar());
-      if (tab === "quizzes") setEditItem(createEmptyQuiz());
-      setLessonVersions([]);
+    if (item) {
+      setEditItem(item);
       setDialogOpen(true);
-    },
-    [loadLessonVersions]
-  );
+
+      if (tab === "lessons" && item.id) {
+        setVersionsLessonId(item.id);
+      } else {
+        setVersionsLessonId(null);
+      }
+      return;
+    }
+
+    if (tab === "lessons") setEditItem(createEmptyLesson());
+    if (tab === "vocabulary") setEditItem(createEmptyVocab());
+    if (tab === "grammar") setEditItem(createEmptyGrammar());
+    if (tab === "quizzes") setEditItem(createEmptyQuiz());
+    setVersionsLessonId(null);
+    setDialogOpen(true);
+  }, []);
 
   const handleSave = useCallback(async () => {
     if (!editItem) {
@@ -310,7 +336,7 @@ const AdminContent = () => {
       toast({ title: "Saved", description: `${currentTabLabel} item saved successfully.` });
       setDialogOpen(false);
       setEditItem(null);
-      setLessonVersions([]);
+      setVersionsLessonId(null);
       await loadContent();
     } catch {
       toast({
@@ -717,7 +743,7 @@ const AdminContent = () => {
             setDialogOpen(open);
             if (!open) {
               setEditItem(null);
-              setLessonVersions([]);
+              setVersionsLessonId(null);
             }
           }}
         >
@@ -746,7 +772,7 @@ const AdminContent = () => {
                 onClick={() => {
                   setDialogOpen(false);
                   setEditItem(null);
-                  setLessonVersions([]);
+                  setVersionsLessonId(null);
                 }}
               >
                 Cancel

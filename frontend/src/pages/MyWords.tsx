@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BookOpen, BookmarkPlus, Brain, KanbanSquare, RefreshCw, Sparkles } from "lucide-react";
 import { myWordsApi } from "@/api";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -18,6 +19,15 @@ import {
 const DICTIONARY_FOLDER = "Dictionary";
 const TRANSLATION_FOLDER = "Translation";
 
+const DEFAULT_STATS: WordStats = {
+  totalSaved: 0,
+  masteredCount: 0,
+  dueTodayCount: 0,
+  kanjiDueTodayCount: 0,
+  vocabularyDueTodayCount: 0,
+  folders: [],
+};
+
 const matchesSourceFilter = (word: SavedWord, sourceFilter: WordSourceFilter) => {
   const folderName = word.folderName?.trim();
 
@@ -36,145 +46,115 @@ const matchesSourceFilter = (word: SavedWord, sourceFilter: WordSourceFilter) =>
 const MyWords = () => {
   const { toast } = useToast();
 
-  const [words, setWords] = useState<SavedWord[]>([]);
-  const [reviewQueue, setReviewQueue] = useState<SavedWord[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [reviewLoading, setReviewLoading] = useState(true);
+  const queryClient = useQueryClient();
+
   const [search, setSearch] = useState("");
   const [filterFolder, setFilterFolder] = useState<string>("");
   const [filterMastered, setFilterMastered] = useState<string>("");
   const [sourceFilter, setSourceFilter] = useState<WordSourceFilter>("ALL");
   const [reviewMode, setReviewMode] = useState<ReviewMode>("ALL");
-  const [stats, setStats] = useState<WordStats>({
-    totalSaved: 0,
-    masteredCount: 0,
-    dueTodayCount: 0,
-    kanjiDueTodayCount: 0,
-    vocabularyDueTodayCount: 0,
-    folders: [],
-  });
   const [editingNote, setEditingNote] = useState<number | null>(null);
   const [noteText, setNoteText] = useState("");
-  const [reviewingId, setReviewingId] = useState<number | null>(null);
 
-  const fetchWords = useCallback(async () => {
-    setLoading(true);
-    try {
-      let data: SavedWord[];
+  const wordsQuery = useQuery({
+    queryKey: ["my-words", "list", filterFolder, filterMastered],
+    queryFn: async (): Promise<SavedWord[]> => {
+      if (filterFolder) return (await myWordsApi.getAll(filterFolder)) as SavedWord[];
+      if (filterMastered === "true") return (await myWordsApi.getMastered(true)) as SavedWord[];
+      if (filterMastered === "false") return (await myWordsApi.getMastered(false)) as SavedWord[];
+      return (await myWordsApi.getAll()) as SavedWord[];
+    },
+  });
+  const words = useMemo(() => wordsQuery.data ?? [], [wordsQuery.data]);
+  const loading = wordsQuery.isLoading;
 
-      if (filterFolder) {
-        data = (await myWordsApi.getAll(filterFolder)) as SavedWord[];
-      } else if (filterMastered === "true") {
-        data = (await myWordsApi.getMastered(true)) as SavedWord[];
-      } else if (filterMastered === "false") {
-        data = (await myWordsApi.getMastered(false)) as SavedWord[];
-      } else {
-        data = (await myWordsApi.getAll()) as SavedWord[];
-      }
+  const reviewQueueQuery = useQuery({
+    queryKey: ["my-words", "review-queue", reviewMode],
+    queryFn: async (): Promise<SavedWord[]> =>
+      (await myWordsApi.getReviewQueue(reviewMode, true)) as SavedWord[],
+  });
+  const reviewQueue = reviewQueueQuery.data ?? [];
+  const reviewLoading = reviewQueueQuery.isLoading;
 
-      setWords(data);
-    } catch {
+  const statsQuery = useQuery({
+    queryKey: ["my-words", "stats"],
+    queryFn: async (): Promise<WordStats> => (await myWordsApi.getStats()) as WordStats,
+  });
+  const stats = statsQuery.data ?? DEFAULT_STATS;
+
+  useEffect(() => {
+    if (wordsQuery.error) {
       toast({
         title: "Khong tai duoc so tay",
         description: "Vui long thu lai.",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
-  }, [filterFolder, filterMastered, toast]);
+  }, [wordsQuery.error, toast]);
 
-  const fetchReviewQueue = useCallback(async () => {
-    setReviewLoading(true);
-    try {
-      const data = (await myWordsApi.getReviewQueue(reviewMode, true)) as SavedWord[];
-      setReviewQueue(data);
-    } catch {
+  useEffect(() => {
+    if (reviewQueueQuery.error) {
       toast({
         title: "Khong tai duoc hang doi review",
         description: "Vui long thu lai.",
         variant: "destructive",
       });
-    } finally {
-      setReviewLoading(false);
     }
-  }, [reviewMode, toast]);
+  }, [reviewQueueQuery.error, toast]);
 
-  const fetchStats = useCallback(async () => {
-    try {
-      const data = (await myWordsApi.getStats()) as WordStats;
-      setStats(data);
-    } catch {
-      // keep the page usable if stats fail
-    }
-  }, []);
+  const invalidateAll = useCallback(
+    () => queryClient.invalidateQueries({ queryKey: ["my-words"] }),
+    [queryClient]
+  );
 
-  useEffect(() => {
-    void fetchWords();
-  }, [fetchWords]);
-
-  useEffect(() => {
-    void fetchReviewQueue();
-  }, [fetchReviewQueue]);
-
-  useEffect(() => {
-    void fetchStats();
-  }, [fetchStats]);
-
-  const refreshAll = useCallback(async () => {
-    await Promise.all([fetchWords(), fetchReviewQueue(), fetchStats()]);
-  }, [fetchReviewQueue, fetchStats, fetchWords]);
-
-  const handleReview = async (wordId: number, rating: ReviewRating) => {
-    try {
-      setReviewingId(wordId);
-      await myWordsApi.reviewWord(wordId, rating);
-      await refreshAll();
+  const reviewMutation = useMutation({
+    mutationFn: ({ wordId, rating }: { wordId: number; rating: ReviewRating }) =>
+      myWordsApi.reviewWord(wordId, rating),
+    onSuccess: () => {
+      invalidateAll();
       toast({ title: "Da cap nhat nhip on", description: "Lich review da duoc tinh lai." });
-    } catch {
+    },
+    onError: () => {
       toast({
         title: "Khong the review",
         description: "Vui long thu lai.",
         variant: "destructive",
       });
-    } finally {
-      setReviewingId(null);
-    }
-  };
+    },
+  });
+  const reviewingId = reviewMutation.isPending ? (reviewMutation.variables?.wordId ?? null) : null;
 
-  const toggleMastered = async (wordId: number) => {
-    try {
-      await myWordsApi.toggleMastered(wordId);
-      await refreshAll();
-    } catch {
-      toast({ title: "Khong the cap nhat", description: "Thu lai sau.", variant: "destructive" });
-    }
-  };
+  const toggleMasteredMutation = useMutation({
+    mutationFn: (wordId: number) => myWordsApi.toggleMastered(wordId),
+    onSuccess: () => invalidateAll(),
+    onError: () =>
+      toast({ title: "Khong the cap nhat", description: "Thu lai sau.", variant: "destructive" }),
+  });
 
-  const removeWord = async (wordId: number) => {
-    try {
-      await myWordsApi.removeWord(wordId);
-      await refreshAll();
-    } catch {
-      toast({ title: "Khong the xoa tu", description: "Thu lai sau.", variant: "destructive" });
-    }
-  };
+  const removeMutation = useMutation({
+    mutationFn: (wordId: number) => myWordsApi.removeWord(wordId),
+    onSuccess: () => invalidateAll(),
+    onError: () =>
+      toast({ title: "Khong the xoa tu", description: "Thu lai sau.", variant: "destructive" }),
+  });
 
-  const updateNote = async (wordId: number) => {
-    try {
-      await myWordsApi.updateNote(wordId, noteText);
+  const updateNoteMutation = useMutation({
+    mutationFn: ({ wordId, note }: { wordId: number; note: string }) =>
+      myWordsApi.updateNote(wordId, note),
+    onSuccess: () => {
       setEditingNote(null);
       setNoteText("");
-      await refreshAll();
+      invalidateAll();
       toast({ title: "Da luu ghi chu", description: "Ghi chu ca nhan da duoc cap nhat." });
-    } catch {
+    },
+    onError: () => {
       toast({
         title: "Khong luu duoc ghi chu",
         description: "Vui long thu lai.",
         variant: "destructive",
       });
-    }
-  };
+    },
+  });
 
   const filteredWords = useMemo(() => {
     const sourceFilteredWords = words.filter((word) => matchesSourceFilter(word, sourceFilter));
@@ -203,7 +183,7 @@ const MyWords = () => {
           action={
             <Button
               className="rounded-2xl border-border bg-card text-foreground/80 hover:bg-card"
-              onClick={() => void refreshAll()}
+              onClick={() => void invalidateAll()}
               variant="outline"
             >
               <RefreshCw className="mr-2 h-4 w-4" />
@@ -245,7 +225,7 @@ const MyWords = () => {
           reviewQueue={reviewQueue}
           reviewingId={reviewingId}
           onReviewModeChange={setReviewMode}
-          onReview={(wordId, rating) => void handleReview(wordId, rating)}
+          onReview={(wordId, rating) => reviewMutation.mutate({ wordId, rating })}
         />
 
         <NotebookSection
@@ -273,9 +253,9 @@ const MyWords = () => {
             setNoteText(note);
           }}
           onNoteTextChange={setNoteText}
-          onSaveNote={(wordId) => void updateNote(wordId)}
-          onToggleMastered={(wordId) => void toggleMastered(wordId)}
-          onRemoveWord={(wordId) => void removeWord(wordId)}
+          onSaveNote={(wordId) => updateNoteMutation.mutate({ wordId, note: noteText })}
+          onToggleMastered={(wordId) => toggleMasteredMutation.mutate(wordId)}
+          onRemoveWord={(wordId) => removeMutation.mutate(wordId)}
         />
       </div>
     </DashboardLayout>

@@ -1,4 +1,5 @@
-﻿import { useEffect, useState, useCallback } from "react";
+﻿import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
   Users,
@@ -51,100 +52,88 @@ interface PagedResponse {
 const AdminUsers = () => {
   const { isAdmin, user: currentUser } = useAuth();
   const { toast } = useToast();
-  const [users, setUsers] = useState<UserManagement[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
+  const [appliedSearch, setAppliedSearch] = useState("");
   const [page, setPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
   const [selectedUser, setSelectedUser] = useState<UserManagement | null>(null);
   const [actionType, setActionType] = useState<"promote" | "demote" | "disable" | "enable" | null>(
     null
   );
 
-  const fetchUsers = useCallback(
-    async (pageNum = 0) => {
-      try {
-        setLoading(true);
-        const data = (await adminApi.getUsers(pageNum, 20)) as PagedResponse;
-        setUsers(data.content);
-        setTotalPages(data.totalPages);
-        setPage(data.number);
-      } catch (error) {
-        console.error("Failed to fetch users:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load users",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
+  const usersQuery = useQuery({
+    queryKey: ["admin-users", appliedSearch, page],
+    queryFn: async (): Promise<PagedResponse> => {
+      if (appliedSearch) {
+        const found = (await adminApi.searchUsers(appliedSearch)) as UserManagement[];
+        return {
+          content: found,
+          totalElements: found.length,
+          totalPages: 1,
+          number: 0,
+          size: found.length,
+        };
       }
+      return (await adminApi.getUsers(page, 20)) as PagedResponse;
     },
-    [toast]
-  );
+  });
+
+  const users = usersQuery.data?.content ?? [];
+  const totalPages = usersQuery.data?.totalPages ?? 0;
+  const loading = usersQuery.isLoading;
 
   useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
-
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) {
-      fetchUsers();
-      return;
+    if (usersQuery.error) {
+      toast({ title: "Error", description: "Failed to load users", variant: "destructive" });
     }
+  }, [usersQuery.error, toast]);
 
-    try {
-      setLoading(true);
-      const data = (await adminApi.searchUsers(searchQuery)) as UserManagement[];
-      setUsers(data);
-      setTotalPages(1);
-      setPage(0);
-    } catch (error) {
-      console.error("Failed to search users:", error);
-      toast({
-        title: "Error",
-        description: "Failed to search users",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAction = async () => {
-    if (!selectedUser || !actionType) return;
-
-    try {
-      switch (actionType) {
+  const actionMutation = useMutation({
+    mutationFn: ({
+      user,
+      action,
+    }: {
+      user: UserManagement;
+      action: NonNullable<typeof actionType>;
+    }) => {
+      switch (action) {
         case "promote":
-          await adminApi.promoteToAdmin(selectedUser.id);
-          toast({ title: "Success", description: "User promoted to admin" });
-          break;
+          return adminApi.promoteToAdmin(user.id);
         case "demote":
-          await adminApi.demoteFromAdmin(selectedUser.id);
-          toast({ title: "Success", description: "Admin demoted to user" });
-          break;
+          return adminApi.demoteFromAdmin(user.id);
         case "disable":
-          await adminApi.updateUserStatus(selectedUser.id, false);
-          toast({ title: "Success", description: "User disabled" });
-          break;
+          return adminApi.updateUserStatus(user.id, false);
         case "enable":
-          await adminApi.updateUserStatus(selectedUser.id, true);
-          toast({ title: "Success", description: "User enabled" });
-          break;
+          return adminApi.updateUserStatus(user.id, true);
       }
-      fetchUsers(page);
-    } catch (error) {
-      console.error("Action failed:", error);
-      toast({
-        title: "Error",
-        description: "Action failed",
-        variant: "destructive",
-      });
-    } finally {
+    },
+    onSuccess: (_data, { action }) => {
+      const messages = {
+        promote: "User promoted to admin",
+        demote: "Admin demoted to user",
+        disable: "User disabled",
+        enable: "User enabled",
+      };
+      toast({ title: "Success", description: messages[action] });
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Action failed", variant: "destructive" });
+    },
+    onSettled: () => {
       setSelectedUser(null);
       setActionType(null);
-    }
+    },
+  });
+
+  const handleSearch = () => {
+    setPage(0);
+    setAppliedSearch(searchQuery.trim());
+  };
+
+  const handleAction = () => {
+    if (!selectedUser || !actionType) return;
+    actionMutation.mutate({ user: selectedUser, action: actionType });
   };
 
   const confirmAction = (user: UserManagement, action: typeof actionType) => {
@@ -201,7 +190,8 @@ const AdminUsers = () => {
                     variant="outline"
                     onClick={() => {
                       setSearchQuery("");
-                      fetchUsers();
+                      setAppliedSearch("");
+                      setPage(0);
                     }}
                   >
                     Clear
@@ -318,7 +308,7 @@ const AdminUsers = () => {
                       variant="outline"
                       size="sm"
                       disabled={page === 0}
-                      onClick={() => fetchUsers(page - 1)}
+                      onClick={() => setPage((p) => Math.max(0, p - 1))}
                     >
                       <ChevronLeft className="w-4 h-4" />
                     </Button>
@@ -329,7 +319,7 @@ const AdminUsers = () => {
                       variant="outline"
                       size="sm"
                       disabled={page >= totalPages - 1}
-                      onClick={() => fetchUsers(page + 1)}
+                      onClick={() => setPage((p) => p + 1)}
                     >
                       <ChevronRight className="w-4 h-4" />
                     </Button>

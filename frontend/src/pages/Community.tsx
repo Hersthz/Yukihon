@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { MessageCircle, MessageSquare, Plus, Trophy, Users } from "lucide-react";
 import { communityApi } from "@/api";
@@ -34,19 +35,14 @@ const Community = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+
   const [page, setPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
   const [activeCategory, setActiveCategory] = useState("");
   const [jlptFilter, setJlptFilter] = useState<(typeof JLPT_OPTIONS)[number]>("ALL");
   const [search, setSearch] = useState("");
   const [appliedSearch, setAppliedSearch] = useState("");
-  const [stats, setStats] = useState<CommunityStats | null>(null);
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [showBookmarkedOnly, setShowBookmarkedOnly] = useState(false);
-  const [chatRooms, setChatRooms] = useState<ChatRoom[]>(DEFAULT_CHAT_ROOMS);
-  const [chatRoomsLoading, setChatRoomsLoading] = useState(true);
   const [selectedRoomId, setSelectedRoomId] = useState(() =>
     normalizeRoomId(localStorage.getItem(CHAT_ROOM_STORAGE_KEY))
   );
@@ -57,89 +53,73 @@ const Community = () => {
   const [newCategory, setNewCategory] = useState("GENERAL");
   const [newJlptLevel, setNewJlptLevel] = useState("");
   const [newTags, setNewTags] = useState("");
-  const [posting, setPosting] = useState(false);
 
   const [openComments, setOpenComments] = useState<number | null>(null);
   const [commentsByPost, setCommentsByPost] = useState<Record<number, Comment[]>>({});
   const [commentInputs, setCommentInputs] = useState<Record<number, string>>({});
   const [loadingComments, setLoadingComments] = useState(false);
 
-  const fetchStats = useCallback(async () => {
-    try {
+  const postsKey = [
+    "community",
+    "posts",
+    activeCategory,
+    jlptFilter,
+    appliedSearch,
+    showBookmarkedOnly,
+    page,
+  ] as const;
+
+  const postsQuery = useQuery({
+    queryKey: postsKey,
+    queryFn: async (): Promise<PagedPosts> =>
+      (await communityApi.getPosts(page, 20, {
+        category: activeCategory || undefined,
+        jlptLevel: jlptFilter === "ALL" ? undefined : jlptFilter,
+        search: appliedSearch.trim() || undefined,
+        bookmarkedOnly: showBookmarkedOnly,
+      })) as PagedPosts,
+  });
+  const posts = postsQuery.data?.content ?? [];
+  const totalPages = postsQuery.data?.totalPages ?? 0;
+  const loading = postsQuery.isLoading;
+
+  useEffect(() => {
+    if (postsQuery.error) {
+      toast({
+        title: "Khong tai duoc cong dong",
+        description: "Vui long thu lai.",
+        variant: "destructive",
+      });
+    }
+  }, [postsQuery.error, toast]);
+
+  const overviewQuery = useQuery({
+    queryKey: ["community", "overview"],
+    queryFn: async () => {
       const [statsData, leaderboardData] = await Promise.all([
         communityApi.getStats() as Promise<CommunityStats>,
         communityApi.getLeaderboard() as Promise<LeaderboardEntry[]>,
       ]);
-      setStats(statsData);
-      setLeaderboard(leaderboardData);
-    } catch {
-      // keep page usable if stats fail
-    }
-  }, []);
-
-  const fetchPosts = useCallback(
-    async (pageNum = 0) => {
-      try {
-        setLoading(true);
-        const data = (await communityApi.getPosts(pageNum, 20, {
-          category: activeCategory || undefined,
-          jlptLevel: jlptFilter === "ALL" ? undefined : jlptFilter,
-          search: appliedSearch.trim() || undefined,
-          bookmarkedOnly: showBookmarkedOnly,
-        })) as PagedPosts;
-
-        setPosts(data.content);
-        setTotalPages(data.totalPages);
-        setPage(data.number);
-      } catch {
-        toast({
-          title: "Khong tai duoc cong dong",
-          description: "Vui long thu lai.",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
+      return { stats: statsData, leaderboard: leaderboardData };
     },
-    [activeCategory, appliedSearch, jlptFilter, showBookmarkedOnly, toast]
-  );
+  });
+  const stats = overviewQuery.data?.stats ?? null;
+  const leaderboard = overviewQuery.data?.leaderboard ?? [];
 
-  useEffect(() => {
-    void fetchPosts(0);
-  }, [fetchPosts]);
+  const chatRoomsQuery = useQuery({
+    queryKey: ["community", "chat-rooms"],
+    queryFn: async (): Promise<ChatRoom[]> => (await communityApi.getChatRooms()) as ChatRoom[],
+  });
+  const chatRooms =
+    Array.isArray(chatRoomsQuery.data) && chatRoomsQuery.data.length > 0
+      ? chatRoomsQuery.data
+      : DEFAULT_CHAT_ROOMS;
+  const chatRoomsLoading = chatRoomsQuery.isLoading;
 
-  useEffect(() => {
-    void fetchStats();
-  }, [fetchStats]);
-
-  useEffect(() => {
-    let isActive = true;
-
-    const fetchChatRooms = async () => {
-      try {
-        const rooms = (await communityApi.getChatRooms()) as ChatRoom[];
-        if (!isActive || !Array.isArray(rooms) || rooms.length === 0) {
-          return;
-        }
-
-        setChatRooms(rooms);
-      } catch {
-        if (isActive) {
-          setChatRooms(DEFAULT_CHAT_ROOMS);
-        }
-      } finally {
-        if (isActive) {
-          setChatRoomsLoading(false);
-        }
-      }
-    };
-
-    void fetchChatRooms();
-
-    return () => {
-      isActive = false;
-    };
-  }, []);
+  const patchPosts = (updater: (current: Post[]) => Post[]) =>
+    queryClient.setQueryData<PagedPosts>(postsKey, (old) =>
+      old ? { ...old, content: updater(old.content) } : old
+    );
 
   useEffect(() => {
     if (!chatRooms.some((room) => room.id === selectedRoomId)) {
@@ -157,87 +137,92 @@ const Community = () => {
     [chatRooms, selectedRoomId]
   );
 
-  const handleCreatePost = async () => {
-    if (!newContent.trim()) return;
-
-    setPosting(true);
-    try {
-      await communityApi.createPost({
+  const createPostMutation = useMutation({
+    mutationFn: () =>
+      communityApi.createPost({
         title: newTitle.trim() || undefined,
         content: newContent,
         category: newCategory,
         jlptLevel: newJlptLevel || undefined,
         tags: newTags.trim() || undefined,
-      });
-
+      }),
+    onSuccess: () => {
       setNewTitle("");
       setNewContent("");
       setNewCategory("GENERAL");
       setNewJlptLevel("");
       setNewTags("");
       setShowCreatePost(false);
-
-      await Promise.all([fetchPosts(0), fetchStats()]);
+      setPage(0);
+      queryClient.invalidateQueries({ queryKey: ["community", "posts"] });
+      queryClient.invalidateQueries({ queryKey: ["community", "overview"] });
       toast({ title: "Da dang bai", description: "Bai viet moi da xuat hien trong feed." });
-    } catch {
+    },
+    onError: () => {
       toast({
         title: "Dang bai chua thanh cong",
         description: "Vui long thu lai.",
         variant: "destructive",
       });
-    } finally {
-      setPosting(false);
-    }
+    },
+  });
+  const posting = createPostMutation.isPending;
+
+  const handleCreatePost = () => {
+    if (!newContent.trim()) return;
+    createPostMutation.mutate();
   };
 
-  const handleLike = async (postId: number) => {
-    try {
-      const updated = (await communityApi.toggleLike(postId)) as Post;
-      setPosts((prev) => prev.map((post) => (post.id === postId ? updated : post)));
-      await fetchStats();
-    } catch {
+  const likeMutation = useMutation({
+    mutationFn: async (postId: number) => (await communityApi.toggleLike(postId)) as Post,
+    onSuccess: (updated, postId) => {
+      patchPosts((current) => current.map((post) => (post.id === postId ? updated : post)));
+      queryClient.invalidateQueries({ queryKey: ["community", "overview"] });
+    },
+    onError: () => {
       toast({
         title: "Khong the tha tim",
         description: "Vui long thu lai.",
         variant: "destructive",
       });
-    }
-  };
+    },
+  });
 
-  const handleBookmark = async (postId: number) => {
-    try {
-      const updated = (await communityApi.toggleBookmark(postId)) as Post;
-
+  const bookmarkMutation = useMutation({
+    mutationFn: async (postId: number) => (await communityApi.toggleBookmark(postId)) as Post,
+    onSuccess: (updated, postId) => {
       if (showBookmarkedOnly && !updated.bookmarkedByCurrentUser) {
-        setPosts((prev) => prev.filter((post) => post.id !== postId));
+        patchPosts((current) => current.filter((post) => post.id !== postId));
         if (posts.length === 1 && page > 0) {
-          await fetchPosts(page - 1);
+          setPage((prev) => prev - 1);
         }
       } else {
-        setPosts((prev) => prev.map((post) => (post.id === postId ? updated : post)));
+        patchPosts((current) => current.map((post) => (post.id === postId ? updated : post)));
       }
-    } catch {
+    },
+    onError: () => {
       toast({
         title: "Khong the bookmark",
         description: "Vui long thu lai.",
         variant: "destructive",
       });
-    }
-  };
+    },
+  });
 
-  const handleDeletePost = async (postId: number) => {
-    try {
-      await communityApi.deletePost(postId);
-      setPosts((prev) => prev.filter((post) => post.id !== postId));
-      await fetchStats();
-    } catch {
+  const deletePostMutation = useMutation({
+    mutationFn: (postId: number) => communityApi.deletePost(postId),
+    onSuccess: (_data, postId) => {
+      patchPosts((current) => current.filter((post) => post.id !== postId));
+      queryClient.invalidateQueries({ queryKey: ["community", "overview"] });
+    },
+    onError: () => {
       toast({
         title: "Khong the xoa bai viet",
         description: "Vui long thu lai.",
         variant: "destructive",
       });
-    }
-  };
+    },
+  });
 
   const loadComments = async (postId: number) => {
     if (openComments === postId) {
@@ -261,27 +246,32 @@ const Community = () => {
     }
   };
 
-  const handleComment = async (postId: number) => {
-    const content = (commentInputs[postId] || "").trim();
-    if (!content) return;
-
-    try {
-      const newComment = (await communityApi.addComment(postId, content)) as Comment;
+  const commentMutation = useMutation({
+    mutationFn: async ({ postId, content }: { postId: number; content: string }) =>
+      (await communityApi.addComment(postId, content)) as Comment,
+    onSuccess: (newComment, { postId }) => {
       setCommentsByPost((prev) => ({ ...prev, [postId]: [newComment, ...(prev[postId] || [])] }));
       setCommentInputs((prev) => ({ ...prev, [postId]: "" }));
-      setPosts((prev) =>
-        prev.map((post) =>
+      patchPosts((current) =>
+        current.map((post) =>
           post.id === postId ? { ...post, commentCount: post.commentCount + 1 } : post
         )
       );
-      await fetchStats();
-    } catch {
+      queryClient.invalidateQueries({ queryKey: ["community", "overview"] });
+    },
+    onError: () => {
       toast({
         title: "Khong gui duoc binh luan",
         description: "Vui long thu lai.",
         variant: "destructive",
       });
-    }
+    },
+  });
+
+  const handleComment = (postId: number) => {
+    const content = (commentInputs[postId] || "").trim();
+    if (!content) return;
+    commentMutation.mutate({ postId, content });
   };
 
   return (
@@ -336,17 +326,27 @@ const Community = () => {
             jlptFilter={jlptFilter}
             search={search}
             showBookmarkedOnly={showBookmarkedOnly}
-            onActiveCategoryChange={setActiveCategory}
-            onJlptFilterChange={setJlptFilter}
+            onActiveCategoryChange={(value) => {
+              setActiveCategory(value);
+              setPage(0);
+            }}
+            onJlptFilterChange={(value) => {
+              setJlptFilter(value);
+              setPage(0);
+            }}
             onSearchChange={setSearch}
             onSearchSubmit={() => {
+              setPage(0);
               if (search === appliedSearch) {
-                void fetchPosts(0);
-                return;
+                void queryClient.invalidateQueries({ queryKey: ["community", "posts"] });
+              } else {
+                setAppliedSearch(search);
               }
-              setAppliedSearch(search);
             }}
-            onToggleBookmarked={() => setShowBookmarkedOnly((prev) => !prev)}
+            onToggleBookmarked={() => {
+              setShowBookmarkedOnly((prev) => !prev);
+              setPage(0);
+            }}
           />
           <div className="space-y-4">
             <CommunityLeaderboard leaderboard={leaderboard} stats={stats} />
@@ -402,15 +402,15 @@ const Community = () => {
           currentUserId={user?.id}
           page={page}
           totalPages={totalPages}
-          onLike={(postId) => void handleLike(postId)}
-          onBookmark={(postId) => void handleBookmark(postId)}
-          onDeletePost={(postId) => void handleDeletePost(postId)}
+          onLike={(postId) => likeMutation.mutate(postId)}
+          onBookmark={(postId) => bookmarkMutation.mutate(postId)}
+          onDeletePost={(postId) => deletePostMutation.mutate(postId)}
           onToggleComments={(postId) => void loadComments(postId)}
           onCommentInputChange={(postId, value) =>
             setCommentInputs((prev) => ({ ...prev, [postId]: value }))
           }
-          onSubmitComment={(postId) => void handleComment(postId)}
-          onPageChange={(nextPage) => void fetchPosts(nextPage)}
+          onSubmitComment={(postId) => handleComment(postId)}
+          onPageChange={(nextPage) => setPage(nextPage)}
         />
       </div>
       <FriendAndPmMessenger />

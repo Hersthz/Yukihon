@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, Loader2, RotateCcw, PartyPopper, Eye } from "lucide-react";
 
@@ -54,67 +55,75 @@ const DeckStudyPage = () => {
   const { toast } = useToast();
   const id = Number(deckId);
 
-  const [deckTitle, setDeckTitle] = useState("");
-  const [queue, setQueue] = useState<StudyQueue | null>(null);
-  const [loading, setLoading] = useState(true);
   const [index, setIndex] = useState(0);
   const [showBack, setShowBack] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const [reviewed, setReviewed] = useState(0);
   const [finished, setFinished] = useState(false);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const studyQuery = useQuery({
+    queryKey: ["deck-study-queue", id],
+    queryFn: async (): Promise<{ queue: StudyQueue; deckTitle: string }> => {
+      const [q, deck] = await Promise.all([srsApi.getQueue(id), deckApi.get(id).catch(() => null)]);
+      return { queue: q, deckTitle: deck ? deck.title : "" };
+    },
+    enabled: Number.isFinite(id),
+  });
+
+  const queue = studyQuery.data?.queue ?? null;
+  const deckTitle = studyQuery.data?.deckTitle ?? "";
+  const loading = studyQuery.isLoading;
+
+  // Reset the study session whenever a fresh queue is fetched (mount or refetch).
+  useEffect(() => {
+    if (!studyQuery.dataUpdatedAt) return;
     setFinished(false);
     setIndex(0);
     setShowBack(false);
     setReviewed(0);
-    try {
-      const [q, deck] = await Promise.all([srsApi.getQueue(id), deckApi.get(id).catch(() => null)]);
-      setQueue(q);
-      if (deck) setDeckTitle(deck.title);
-    } catch (e: unknown) {
-      toast({
-        title: "Không tải được",
-        description: e instanceof Error ? e.message : "Lỗi",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [id, toast]);
+  }, [studyQuery.dataUpdatedAt]);
 
   useEffect(() => {
-    if (Number.isFinite(id)) void load();
-  }, [id, load]);
+    if (studyQuery.error) {
+      toast({
+        title: "Không tải được",
+        description: studyQuery.error instanceof Error ? studyQuery.error.message : "Lỗi",
+        variant: "destructive",
+      });
+    }
+  }, [studyQuery.error, toast]);
 
   const cards = queue?.cards ?? [];
   const current: StudyCard | undefined = cards[index];
 
-  const rate = useCallback(
-    async (rating: SrsRating) => {
-      if (!current || submitting) return;
-      setSubmitting(true);
-      try {
-        await srsApi.review({ deckId: id, flashcardId: current.flashcardId, rating });
-        setReviewed((r) => r + 1);
-        if (index + 1 >= cards.length) {
-          setFinished(true);
-        } else {
-          setIndex((i) => i + 1);
-          setShowBack(false);
-        }
-      } catch (e: unknown) {
-        toast({
-          title: "Lỗi ghi nhận",
-          description: e instanceof Error ? e.message : "Lỗi",
-          variant: "destructive",
-        });
-      } finally {
-        setSubmitting(false);
+  const reviewMutation = useMutation({
+    mutationFn: (rating: SrsRating) =>
+      srsApi.review({ deckId: id, flashcardId: current!.flashcardId, rating }),
+    onSuccess: () => {
+      setReviewed((r) => r + 1);
+      if (index + 1 >= cards.length) {
+        setFinished(true);
+      } else {
+        setIndex((i) => i + 1);
+        setShowBack(false);
       }
     },
-    [current, submitting, id, index, cards.length, toast]
+    onError: (e: unknown) => {
+      toast({
+        title: "Lỗi ghi nhận",
+        description: e instanceof Error ? e.message : "Lỗi",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const submitting = reviewMutation.isPending;
+
+  const rate = useCallback(
+    (rating: SrsRating) => {
+      if (!current || submitting) return;
+      reviewMutation.mutate(rating);
+    },
+    [current, submitting, reviewMutation]
   );
 
   // Keyboard: Space/Enter to flip, 1-4 to rate.
@@ -174,7 +183,7 @@ const DeckStudyPage = () => {
                 <Button variant="outline" onClick={() => navigate("/decks")}>
                   Về thư viện
                 </Button>
-                <Button onClick={() => void load()}>
+                <Button onClick={() => void studyQuery.refetch()}>
                   <RotateCcw className="mr-1 h-4 w-4" /> Tải lại
                 </Button>
               </div>
