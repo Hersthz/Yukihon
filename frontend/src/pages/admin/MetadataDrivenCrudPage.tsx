@@ -46,6 +46,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { metaApi, type EntityMetadata, type FieldMetadata } from "@/api/metaApi";
 import { createAutoCrudApi, type AutoCrudRow } from "@/api/autoCrudApi";
+import { createAutoCrudHooks } from "@/lib/createAutoCrudHooks";
 
 const PAGE_SIZE = 10;
 
@@ -83,20 +84,35 @@ const MetadataDrivenCrudPage = ({ entityName }: MetadataDrivenCrudPageProps) => 
   const { hasPermission } = useAuth();
 
   const [meta, setMeta] = useState<EntityMetadata | null>(null);
-  const [rows, setRows] = useState<AutoCrudRow[]>([]);
   const [page, setPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
-  const [loading, setLoading] = useState(true);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<AutoCrudRow | null>(null);
   const [form, setForm] = useState<FormState>({});
-  const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<AutoCrudRow | null>(null);
 
-  const api = useMemo(() => (meta ? createAutoCrudApi(meta.path) : null), [meta]);
+  const resourcePath = meta?.path ?? "";
+  const api = useMemo(() => createAutoCrudApi(resourcePath), [resourcePath]);
+  const hooks = useMemo(
+    () => createAutoCrudHooks(resourcePath || "auto-crud", api),
+    [resourcePath, api]
+  );
+
+  const listQuery = hooks.useList(
+    { page, size: PAGE_SIZE, search: search || undefined },
+    { enabled: !!meta }
+  );
+  const rows = useMemo(() => listQuery.data?.content ?? [], [listQuery.data]);
+  const totalPages = listQuery.data?.totalPages ?? 0;
+  const loading = listQuery.isLoading;
+
+  const createMut = hooks.useCreate();
+  const updateMut = hooks.useUpdate();
+  const removeMut = hooks.useRemove();
+  const saving = createMut.isPending || updateMut.isPending;
+
   const listFields = useMemo(() => (meta ? meta.fields.filter((f) => f.listVisible) : []), [meta]);
   const formFields = useMemo(() => (meta ? meta.fields.filter(isFormField) : []), [meta]);
 
@@ -131,27 +147,16 @@ const MetadataDrivenCrudPage = ({ entityName }: MetadataDrivenCrudPageProps) => 
     };
   }, [entityName, toast]);
 
-  const loadRows = useCallback(async () => {
-    if (!api) return;
-    setLoading(true);
-    try {
-      const result = await api.list({ page, size: PAGE_SIZE, search: search || undefined });
-      setRows(result.content);
-      setTotalPages(result.totalPages);
-    } catch (error: unknown) {
+  useEffect(() => {
+    if (listQuery.error) {
       toast({
         title: "Không tải được dữ liệu",
-        description: error instanceof Error ? error.message : "Lỗi không xác định",
+        description:
+          listQuery.error instanceof Error ? listQuery.error.message : "Lỗi không xác định",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
-  }, [api, page, search, toast]);
-
-  useEffect(() => {
-    void loadRows();
-  }, [loadRows]);
+  }, [listQuery.error, toast]);
 
   const openCreate = () => {
     if (!meta) return;
@@ -168,44 +173,38 @@ const MetadataDrivenCrudPage = ({ entityName }: MetadataDrivenCrudPageProps) => 
   };
 
   const handleSave = async () => {
-    if (!api || !meta) return;
+    if (!meta) return;
     const body: Record<string, unknown> = {};
     for (const field of formFields) {
       body[field.name] = coerce(field, form[field.name]);
     }
-    setSaving(true);
     try {
       if (editing) {
-        await api.update(editing.id, body);
+        await updateMut.mutateAsync({ id: editing.id, body });
         toast({ title: "Đã cập nhật" });
       } else {
-        await api.create(body);
+        await createMut.mutateAsync(body);
         toast({ title: "Đã tạo mới" });
       }
       setDialogOpen(false);
-      await loadRows();
     } catch (error: unknown) {
       toast({
         title: "Lưu thất bại",
         description: error instanceof Error ? error.message : "Lỗi không xác định",
         variant: "destructive",
       });
-    } finally {
-      setSaving(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!api || !deleteTarget) return;
+    if (!deleteTarget) return;
     try {
-      await api.remove(deleteTarget.id);
+      await removeMut.mutateAsync(deleteTarget.id);
       toast({ title: "Đã xoá" });
       setDeleteTarget(null);
-      // Step back a page if we just removed the last row on it.
+      // Step back a page if we just removed the last row on it (invalidation refetches the rest).
       if (rows.length === 1 && page > 0) {
         setPage((p) => p - 1);
-      } else {
-        await loadRows();
       }
     } catch (error: unknown) {
       toast({
