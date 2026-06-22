@@ -1,19 +1,16 @@
 package com.hoang.basis.yukihon.system.library.controller;
 
+import com.hoang.basis.yukihon.base.security.CurrentUserId;
 import com.hoang.basis.yukihon.exception.ResourceNotFoundException;
 import com.hoang.basis.yukihon.system.library.dto.CreateDeckRequest;
 import com.hoang.basis.yukihon.system.library.dto.DeckDto;
 import com.hoang.basis.yukihon.system.library.entity.Deck;
 import com.hoang.basis.yukihon.system.library.repository.DeckRepository;
-import com.hoang.basis.yukihon.system.user.entity.User;
-import com.hoang.basis.yukihon.system.user.repository.UserRepository;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,18 +25,9 @@ import org.springframework.web.bind.annotation.RestController;
 public class DeckController {
 
     private final DeckRepository deckRepository;
-    private final UserRepository userRepository;
-
-    private Long getUserId(UserDetails userDetails) {
-        User user = userRepository
-                .findByEmail(userDetails.getUsername())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        return user.getId();
-    }
 
     @GetMapping("/mine")
-    public ResponseEntity<List<DeckDto>> myDecks(@AuthenticationPrincipal UserDetails userDetails) {
-        Long userId = getUserId(userDetails);
+    public ResponseEntity<List<DeckDto>> myDecks(@CurrentUserId Long userId) {
         List<DeckDto> decks = deckRepository.findByUserIdAndIsDeletedFalseOrderByUpdatedAtDesc(userId).stream()
                 .map(DeckDto::fromEntity)
                 .toList();
@@ -55,8 +43,7 @@ public class DeckController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<DeckDto> getDeck(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
-        Long userId = getUserId(userDetails);
+    public ResponseEntity<DeckDto> getDeck(@PathVariable Long id, @CurrentUserId Long userId) {
         Deck deck = deckRepository
                 .findById(id)
                 .filter(d -> !Boolean.TRUE.equals(d.getIsDeleted()))
@@ -68,9 +55,7 @@ public class DeckController {
     }
 
     @PostMapping
-    public ResponseEntity<DeckDto> create(
-            @Valid @RequestBody CreateDeckRequest request, @AuthenticationPrincipal UserDetails userDetails) {
-        Long userId = getUserId(userDetails);
+    public ResponseEntity<DeckDto> create(@Valid @RequestBody CreateDeckRequest request, @CurrentUserId Long userId) {
         Deck deck = new Deck();
         deck.setUserId(userId);
         deck.setTitle(request.getTitle());

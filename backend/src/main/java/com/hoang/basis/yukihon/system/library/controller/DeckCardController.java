@@ -1,5 +1,6 @@
 package com.hoang.basis.yukihon.system.library.controller;
 
+import com.hoang.basis.yukihon.base.security.CurrentUserId;
 import com.hoang.basis.yukihon.exception.ResourceNotFoundException;
 import com.hoang.basis.yukihon.system.library.dto.AddCardRequest;
 import com.hoang.basis.yukihon.system.library.dto.DeckCardDto;
@@ -9,8 +10,6 @@ import com.hoang.basis.yukihon.system.library.entity.Flashcard;
 import com.hoang.basis.yukihon.system.library.repository.DeckItemRepository;
 import com.hoang.basis.yukihon.system.library.repository.DeckRepository;
 import com.hoang.basis.yukihon.system.library.repository.FlashcardRepository;
-import com.hoang.basis.yukihon.system.user.entity.User;
-import com.hoang.basis.yukihon.system.user.repository.UserRepository;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
@@ -19,8 +18,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,14 +36,6 @@ public class DeckCardController {
     private final DeckRepository deckRepository;
     private final DeckItemRepository deckItemRepository;
     private final FlashcardRepository flashcardRepository;
-    private final UserRepository userRepository;
-
-    private Long getUserId(UserDetails userDetails) {
-        User user = userRepository
-                .findByEmail(userDetails.getUsername())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        return user.getId();
-    }
 
     private Deck loadDeck(Long deckId) {
         return deckRepository
@@ -64,9 +53,7 @@ public class DeckCardController {
     }
 
     @GetMapping
-    public ResponseEntity<List<DeckCardDto>> list(
-            @PathVariable Long deckId, @AuthenticationPrincipal UserDetails userDetails) {
-        Long userId = getUserId(userDetails);
+    public ResponseEntity<List<DeckCardDto>> list(@PathVariable Long deckId, @CurrentUserId Long userId) {
         Deck deck = loadDeck(deckId);
         if (!deck.getUserId().equals(userId) && !"PUBLIC".equals(deck.getVisibility())) {
             throw new ResourceNotFoundException("Deck not found: " + deckId);
@@ -96,10 +83,8 @@ public class DeckCardController {
     @PostMapping
     @Transactional
     public ResponseEntity<DeckCardDto> add(
-            @PathVariable Long deckId,
-            @Valid @RequestBody AddCardRequest request,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        Deck deck = requireOwner(deckId, getUserId(userDetails));
+            @PathVariable Long deckId, @Valid @RequestBody AddCardRequest request, @CurrentUserId Long userId) {
+        Deck deck = requireOwner(deckId, userId);
 
         Flashcard fc = new Flashcard();
         fc.setCardType("BASIC");
@@ -127,10 +112,8 @@ public class DeckCardController {
     @DeleteMapping("/{flashcardId}")
     @Transactional
     public ResponseEntity<Void> remove(
-            @PathVariable Long deckId,
-            @PathVariable Long flashcardId,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        Deck deck = requireOwner(deckId, getUserId(userDetails));
+            @PathVariable Long deckId, @PathVariable Long flashcardId, @CurrentUserId Long userId) {
+        Deck deck = requireOwner(deckId, userId);
 
         DeckItem item = deckItemRepository
                 .findByDeckIdAndFlashcardIdAndIsDeletedFalse(deckId, flashcardId)

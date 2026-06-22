@@ -1,9 +1,8 @@
 package com.hoang.basis.yukihon.system.community.controller;
 
+import com.hoang.basis.yukihon.base.security.CurrentUserId;
 import com.hoang.basis.yukihon.system.community.dto.*;
 import com.hoang.basis.yukihon.system.community.service.CommunityService;
-import com.hoang.basis.yukihon.system.user.entity.User;
-import com.hoang.basis.yukihon.system.user.repository.UserRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -11,8 +10,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,24 +18,15 @@ import org.springframework.web.bind.annotation.*;
 public class CommunityController {
 
     private final CommunityService communityService;
-    private final UserRepository userRepository;
-
-    private Long getUserId(UserDetails userDetails) {
-        User user = userRepository
-                .findByEmail(userDetails.getUsername())
-                .orElseThrow(() -> new com.hoang.basis.yukihon.exception.ResourceNotFoundException("User not found"));
-        return user.getId();
-    }
 
     @GetMapping("/posts")
     public ResponseEntity<Page<PostDto>> getAllPosts(
-            @AuthenticationPrincipal UserDetails userDetails,
+            @CurrentUserId Long userId,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String jlptLevel,
             @RequestParam(required = false) String search,
             @RequestParam(defaultValue = "false") boolean bookmarkedOnly,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        Long userId = getUserId(userDetails);
         if ((category != null && !category.isEmpty())
                 || (jlptLevel != null && !jlptLevel.isEmpty())
                 || (search != null && !search.isEmpty())
@@ -50,47 +38,37 @@ public class CommunityController {
     }
 
     @GetMapping("/posts/{postId}")
-    public ResponseEntity<PostDto> getPost(
-            @PathVariable Long postId, @AuthenticationPrincipal UserDetails userDetails) {
-        Long userId = getUserId(userDetails);
+    public ResponseEntity<PostDto> getPost(@PathVariable Long postId, @CurrentUserId Long userId) {
         return ResponseEntity.ok(communityService.getPostById(postId, userId));
     }
 
     @GetMapping("/posts/user/{userId}")
     public ResponseEntity<Page<PostDto>> getUserPosts(
             @PathVariable Long userId,
-            @AuthenticationPrincipal UserDetails userDetails,
+            @CurrentUserId Long currentUserId,
             @PageableDefault(size = 20) Pageable pageable) {
-        Long currentUserId = getUserId(userDetails);
         return ResponseEntity.ok(communityService.getPostsByUser(userId, currentUserId, pageable));
     }
 
     @PostMapping("/posts")
     public ResponseEntity<PostDto> createPost(
-            @AuthenticationPrincipal UserDetails userDetails, @Valid @RequestBody CreatePostRequest request) {
-        Long userId = getUserId(userDetails);
+            @CurrentUserId Long userId, @Valid @RequestBody CreatePostRequest request) {
         return ResponseEntity.ok(communityService.createPost(userId, request));
     }
 
     @DeleteMapping("/posts/{postId}")
-    public ResponseEntity<Void> deletePost(
-            @PathVariable Long postId, @AuthenticationPrincipal UserDetails userDetails) {
-        Long userId = getUserId(userDetails);
+    public ResponseEntity<Void> deletePost(@PathVariable Long postId, @CurrentUserId Long userId) {
         communityService.deletePost(postId, userId);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/posts/{postId}/like")
-    public ResponseEntity<PostDto> toggleLike(
-            @PathVariable Long postId, @AuthenticationPrincipal UserDetails userDetails) {
-        Long userId = getUserId(userDetails);
+    public ResponseEntity<PostDto> toggleLike(@PathVariable Long postId, @CurrentUserId Long userId) {
         return ResponseEntity.ok(communityService.toggleLike(postId, userId));
     }
 
     @PostMapping("/posts/{postId}/bookmark")
-    public ResponseEntity<PostDto> toggleBookmark(
-            @PathVariable Long postId, @AuthenticationPrincipal UserDetails userDetails) {
-        Long userId = getUserId(userDetails);
+    public ResponseEntity<PostDto> toggleBookmark(@PathVariable Long postId, @CurrentUserId Long userId) {
         return ResponseEntity.ok(communityService.toggleBookmark(postId, userId));
     }
 
@@ -102,17 +80,12 @@ public class CommunityController {
 
     @PostMapping("/posts/{postId}/comments")
     public ResponseEntity<CommentDto> addComment(
-            @PathVariable Long postId,
-            @AuthenticationPrincipal UserDetails userDetails,
-            @Valid @RequestBody CreateCommentRequest request) {
-        Long userId = getUserId(userDetails);
+            @PathVariable Long postId, @CurrentUserId Long userId, @Valid @RequestBody CreateCommentRequest request) {
         return ResponseEntity.ok(communityService.addComment(postId, userId, request));
     }
 
     @DeleteMapping("/comments/{commentId}")
-    public ResponseEntity<Void> deleteComment(
-            @PathVariable Long commentId, @AuthenticationPrincipal UserDetails userDetails) {
-        Long userId = getUserId(userDetails);
+    public ResponseEntity<Void> deleteComment(@PathVariable Long commentId, @CurrentUserId Long userId) {
         communityService.deleteComment(commentId, userId);
         return ResponseEntity.noContent().build();
     }
