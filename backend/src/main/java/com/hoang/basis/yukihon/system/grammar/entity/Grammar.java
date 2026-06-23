@@ -28,28 +28,29 @@ public class Grammar {
     @Column(nullable = false, length = 200)
     private String title;
 
-    @Column(nullable = false, columnDefinition = "NVARCHAR(100)")
+    @Column(nullable = false, columnDefinition = "VARCHAR(100)")
     private String pattern; // e.g., "〜ている", "〜だろう"
 
-    @Column(columnDefinition = "NVARCHAR(MAX)")
+    @Column(columnDefinition = "LONGTEXT")
     private String explanation;
 
-    @Column(columnDefinition = "NVARCHAR(MAX)")
+    // `usage` is a reserved word in MySQL — force-quote the column identifier.
+    @Column(name = "`usage`", columnDefinition = "LONGTEXT")
     private String usage;
 
-    @Column(columnDefinition = "NVARCHAR(MAX)")
+    @Column(columnDefinition = "LONGTEXT")
     private String exampleJP;
 
-    @Column(columnDefinition = "NVARCHAR(MAX)")
+    @Column(columnDefinition = "LONGTEXT")
     private String exampleEN;
 
     @Column(length = 5)
     private String jlptLevel; // N1, N2, N3, N4, N5
 
-    @Column(columnDefinition = "NVARCHAR(MAX)")
+    @Column(columnDefinition = "LONGTEXT")
     private String relatedPatterns; // Comma-separated related patterns
 
-    @Column(columnDefinition = "NVARCHAR(MAX)")
+    @Column(columnDefinition = "LONGTEXT")
     private String notes;
 
     @Column(nullable = false, updatable = false)

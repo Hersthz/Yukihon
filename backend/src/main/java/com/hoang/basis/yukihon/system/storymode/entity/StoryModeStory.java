@@ -32,7 +32,7 @@ public class StoryModeStory {
     @Column(length = 300)
     private String subtitle;
 
-    @Column(columnDefinition = "NVARCHAR(MAX)")
+    @Column(columnDefinition = "LONGTEXT")
     private String description;
 
     @Column(name = "jlpt_level", nullable = false, length = 20)
@@ -54,7 +54,7 @@ public class StoryModeStory {
     @Column(nullable = false)
     private boolean published = false;
 
-    @Column(name = "content_json", nullable = false, columnDefinition = "NVARCHAR(MAX)")
+    @Column(name = "content_json", nullable = false, columnDefinition = "LONGTEXT")
     private String contentJson;
 
     @Column(nullable = false, updatable = false)

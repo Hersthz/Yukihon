@@ -31,7 +31,7 @@ public class PostComment {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false, columnDefinition = "NVARCHAR(MAX)")
+    @Column(nullable = false, columnDefinition = "LONGTEXT")
     private String content;
 
     @Column(nullable = false, updatable = false)

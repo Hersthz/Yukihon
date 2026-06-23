@@ -34,7 +34,7 @@ public class AiChatMessage {
     @Column(nullable = false, length = 20)
     private String role;
 
-    @Column(nullable = false, columnDefinition = "NVARCHAR(MAX)")
+    @Column(nullable = false, columnDefinition = "LONGTEXT")
     private String text;
 
     @Column(nullable = false, length = 30)

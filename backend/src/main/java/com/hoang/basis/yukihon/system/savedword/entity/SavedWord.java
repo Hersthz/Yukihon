@@ -40,7 +40,7 @@ public class SavedWord {
     @Builder.Default
     private String folderName = "Default";
 
-    @Column(columnDefinition = "NVARCHAR(500)")
+    @Column(columnDefinition = "VARCHAR(500)")
     private String personalNote;
 
     @Builder.Default

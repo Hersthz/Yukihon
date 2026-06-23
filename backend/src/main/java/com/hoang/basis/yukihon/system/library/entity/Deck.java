@@ -60,11 +60,11 @@ public class Deck extends BaseEntity {
     @FieldMeta(label = "Cloned From Deck", type = "number", order = 3)
     private Long originalDeckId;
 
-    @Column(name = "title", nullable = false, columnDefinition = "NVARCHAR(200)")
+    @Column(name = "title", nullable = false, columnDefinition = "VARCHAR(200)")
     @FieldMeta(label = "Title", required = true, order = 4)
     private String title;
 
-    @Column(name = "description", columnDefinition = "NVARCHAR(MAX)")
+    @Column(name = "description", columnDefinition = "LONGTEXT")
     @FieldMeta(label = "Description", type = "textarea", order = 5)
     private String description;
 
@@ -76,7 +76,7 @@ public class Deck extends BaseEntity {
             enumValues = {"PRIVATE", "PUBLIC", "UNLISTED"})
     private String visibility = "PRIVATE";
 
-    @Column(name = "cover_image_url", columnDefinition = "NVARCHAR(MAX)")
+    @Column(name = "cover_image_url", columnDefinition = "LONGTEXT")
     @FieldMeta(label = "Cover Image URL", order = 7)
     private String coverImageUrl;
 

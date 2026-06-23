@@ -51,6 +51,9 @@ public class SecurityConfig {
                                 "/api/auth/forgot-password",
                                 "/api/auth/reset-password",
                                 "/api/health",
+                                "/actuator/health",
+                                "/actuator/health/**",
+                                "/actuator/info",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html")
@@ -68,6 +71,13 @@ public class SecurityConfig {
                         .anyRequest()
                         .authenticated())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .headers(headers -> headers.contentTypeOptions(opts -> {}) // X-Content-Type-Options: nosniff
+                        .frameOptions(frame -> frame.deny()) // X-Frame-Options: DENY (anti-clickjacking)
+                        .referrerPolicy(rp -> rp.policy(
+                                org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter
+                                        .ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                        .httpStrictTransportSecurity(
+                                hsts -> hsts.includeSubDomains(true).maxAgeInSeconds(31536000)))
                 .httpBasic(basic -> basic.disable())
                 .formLogin(form -> form.disable());
 

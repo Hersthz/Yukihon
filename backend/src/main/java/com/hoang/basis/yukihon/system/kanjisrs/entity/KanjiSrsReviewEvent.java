@@ -27,7 +27,7 @@ public class KanjiSrsReviewEvent {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(name = "kanji_character", nullable = false, length = 16, columnDefinition = "NVARCHAR(16)")
+    @Column(name = "kanji_character", nullable = false, length = 16, columnDefinition = "VARCHAR(16)")
     private String character;
 
     @Column(nullable = false, length = 16)

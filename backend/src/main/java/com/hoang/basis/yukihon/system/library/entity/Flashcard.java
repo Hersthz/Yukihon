@@ -57,27 +57,27 @@ public class Flashcard extends BaseEntity {
     @FieldMeta(label = "Item ID", type = "number", order = 3)
     private Long itemId;
 
-    @Column(name = "front", nullable = false, columnDefinition = "NVARCHAR(MAX)")
+    @Column(name = "front", nullable = false, columnDefinition = "LONGTEXT")
     @FieldMeta(label = "Front", type = "textarea", required = true, order = 4)
     private String front;
 
-    @Column(name = "back", nullable = false, columnDefinition = "NVARCHAR(MAX)")
+    @Column(name = "back", nullable = false, columnDefinition = "LONGTEXT")
     @FieldMeta(label = "Back", type = "textarea", required = true, order = 5)
     private String back;
 
-    @Column(name = "hint", columnDefinition = "NVARCHAR(MAX)")
+    @Column(name = "hint", columnDefinition = "LONGTEXT")
     @FieldMeta(label = "Hint", type = "textarea", order = 6)
     private String hint;
 
-    @Column(name = "explanation", columnDefinition = "NVARCHAR(MAX)")
+    @Column(name = "explanation", columnDefinition = "LONGTEXT")
     @FieldMeta(label = "Explanation", type = "textarea", order = 7)
     private String explanation;
 
-    @Column(name = "image_url", columnDefinition = "NVARCHAR(MAX)")
+    @Column(name = "image_url", columnDefinition = "LONGTEXT")
     @FieldMeta(label = "Image URL", order = 8)
     private String imageUrl;
 
-    @Column(name = "audio_url", columnDefinition = "NVARCHAR(MAX)")
+    @Column(name = "audio_url", columnDefinition = "LONGTEXT")
     @FieldMeta(label = "Audio URL", order = 9)
     private String audioUrl;
 }

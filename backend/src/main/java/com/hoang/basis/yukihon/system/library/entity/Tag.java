@@ -35,7 +35,7 @@ public class Tag extends BaseEntity {
     @FieldMeta(label = "User ID", type = "number", order = 1)
     private Long userId;
 
-    @Column(name = "name", nullable = false, columnDefinition = "NVARCHAR(100)")
+    @Column(name = "name", nullable = false, columnDefinition = "VARCHAR(100)")
     @FieldMeta(label = "Name", required = true, order = 2)
     private String name;
 

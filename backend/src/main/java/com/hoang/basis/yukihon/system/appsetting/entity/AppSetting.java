@@ -52,7 +52,7 @@ public class AppSetting extends BaseEntity {
     @FieldMeta(label = "Key", required = true, order = 1, placeholder = "feature.kana-game.enabled")
     private String settingKey;
 
-    @Column(name = "setting_value", columnDefinition = "NVARCHAR(MAX)")
+    @Column(name = "setting_value", columnDefinition = "LONGTEXT")
     @FieldMeta(label = "Value", type = "textarea", order = 2)
     private String settingValue;
 
@@ -60,7 +60,7 @@ public class AppSetting extends BaseEntity {
     @FieldMeta(label = "Category", order = 3, placeholder = "feature-flags")
     private String category;
 
-    @Column(name = "description", columnDefinition = "NVARCHAR(500)")
+    @Column(name = "description", columnDefinition = "VARCHAR(500)")
     @FieldMeta(label = "Description", type = "textarea", order = 4)
     private String description;
 }

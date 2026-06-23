@@ -1,0 +1,64 @@
+# Yukihon full stack: MySQL + Spring Boot backend + nginx-served frontend.
+#   docker compose up --build
+# Frontend → http://localhost:8081   ·   Backend API → http://localhost:8080
+# Override secrets via a .env file (DB_PASSWORD, JWT_SECRET, OPENAI_API_KEY, ...).
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: yukihon-mysql
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-12345}
+      MYSQL_DATABASE: yukihon
+    ports:
+      - "3307:3306" # host 3307 to avoid clashing with a local mysqld on 3306
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${DB_PASSWORD:-12345}"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  backend:
+    build: ./backend
+    container_name: yukihon-backend
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/yukihon?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false&createDatabaseIfNotExist=true
+      DB_USERNAME: root
+      DB_PASSWORD: ${DB_PASSWORD:-12345}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      JWT_SECRET: ${JWT_SECRET:-ZGV2LWxvY2FsLWp3dC1zZWNyZXQtZm9yLXl1a2lob24tYXBwLTIwMjY=}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      FRONTEND_URL: http://localhost:8081
+    ports:
+      - "8080:8080"
+    volumes:
+      - backend-uploads:/app/uploads
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: "" # relative → nginx proxies /api to backend
+    container_name: yukihon-frontend
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "8081:80"
+
+volumes:
+  mysql-data:
+  backend-uploads:

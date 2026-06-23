@@ -39,10 +39,10 @@ public class TranslationHistory {
     @Column(name = "target_lang", nullable = false, length = 10)
     private String targetLang;
 
-    @Column(name = "source_text", nullable = false, columnDefinition = "NVARCHAR(MAX)")
+    @Column(name = "source_text", nullable = false, columnDefinition = "LONGTEXT")
     private String sourceText;
 
-    @Column(name = "translated_text", nullable = false, columnDefinition = "NVARCHAR(MAX)")
+    @Column(name = "translated_text", nullable = false, columnDefinition = "LONGTEXT")
     private String translatedText;
 
     /** Đánh dấu bản dịch yêu thích để ôn tập */

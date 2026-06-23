@@ -64,7 +64,7 @@ public class LearningAnalyticsEvent {
     @Column(name = "score")
     private Integer score;
 
-    @Column(name = "metadata_json", columnDefinition = "NVARCHAR(MAX)")
+    @Column(name = "metadata_json", columnDefinition = "LONGTEXT")
     private String metadataJson;
 
     @Column(name = "created_at", nullable = false, updatable = false)

@@ -30,7 +30,7 @@ public class CommunityPost {
     @Column(length = 200)
     private String title;
 
-    @Column(nullable = false, columnDefinition = "NVARCHAR(MAX)")
+    @Column(nullable = false, columnDefinition = "LONGTEXT")
     private String content;
 
     @Column(length = 50)

@@ -45,7 +45,7 @@ public class AuditLog {
     @Column(name = "actor", length = 255)
     private String actor;
 
-    @Column(name = "snapshot", columnDefinition = "NVARCHAR(MAX)")
+    @Column(name = "snapshot", columnDefinition = "LONGTEXT")
     private String snapshot;
 
     @Column(name = "created_at", nullable = false, updatable = false)

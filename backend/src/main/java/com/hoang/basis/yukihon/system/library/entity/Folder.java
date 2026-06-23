@@ -32,11 +32,11 @@ public class Folder extends BaseEntity {
     @FieldMeta(label = "User ID", type = "number", required = true, order = 1)
     private Long userId;
 
-    @Column(name = "name", nullable = false, columnDefinition = "NVARCHAR(150)")
+    @Column(name = "name", nullable = false, columnDefinition = "VARCHAR(150)")
     @FieldMeta(label = "Name", required = true, order = 2)
     private String name;
 
-    @Column(name = "description", columnDefinition = "NVARCHAR(MAX)")
+    @Column(name = "description", columnDefinition = "LONGTEXT")
     @FieldMeta(label = "Description", type = "textarea", order = 3)
     private String description;
 }

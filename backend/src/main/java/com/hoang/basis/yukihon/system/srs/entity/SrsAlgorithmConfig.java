@@ -43,7 +43,7 @@ public class SrsAlgorithmConfig extends BaseEntity {
     @FieldMeta(label = "Code", required = true, order = 1, placeholder = "SM2_DEFAULT")
     private String code;
 
-    @Column(name = "name", nullable = false, columnDefinition = "NVARCHAR(255)")
+    @Column(name = "name", nullable = false, columnDefinition = "VARCHAR(255)")
     @FieldMeta(label = "Name", required = true, order = 2)
     private String name;
 
@@ -55,7 +55,7 @@ public class SrsAlgorithmConfig extends BaseEntity {
             enumValues = {"SM2", "FSRS", "CUSTOM"})
     private String algorithmType = "SM2";
 
-    @Column(name = "config_json", columnDefinition = "NVARCHAR(MAX)")
+    @Column(name = "config_json", columnDefinition = "LONGTEXT")
     @FieldMeta(label = "Config JSON", type = "textarea", order = 4)
     private String configJson;
 

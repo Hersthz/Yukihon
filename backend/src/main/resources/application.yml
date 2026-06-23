@@ -10,10 +10,10 @@ spring:
     active: ${SPRING_PROFILES_ACTIVE:dev}
 
   datasource:
-    url: ${DB_URL:jdbc:sqlserver://localhost:1433;databaseName=YukihonDB;encrypt=false}
-    username: ${DB_USERNAME:sa}
+    url: ${DB_URL:jdbc:mysql://localhost:3306/yukihon?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false&createDatabaseIfNotExist=true}
+    username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:12345}
-    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maximum-pool-size: ${DB_POOL_MAX_SIZE:20}
       minimum-idle: ${DB_POOL_MIN_IDLE:5}
@@ -34,6 +34,20 @@ spring:
     baseline-on-migrate: ${FLYWAY_BASELINE_ON_MIGRATE:true}
     out-of-order: ${FLYWAY_OUT_OF_ORDER:true}
     locations: classpath:db/migration
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: ${ACTUATOR_ENDPOINTS:health,info,metrics}
+  endpoint:
+    health:
+      show-details: ${ACTUATOR_HEALTH_DETAILS:when_authorized}
+      probes:
+        enabled: true
+  info:
+    env:
+      enabled: true
 
 jwt:
   secret: ${JWT_SECRET:ZGV2LWxvY2FsLWp3dC1zZWNyZXQtZm9yLXl1a2lob24tYXBwLTIwMjY=}

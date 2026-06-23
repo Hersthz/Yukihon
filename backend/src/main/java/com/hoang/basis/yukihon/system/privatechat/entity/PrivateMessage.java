@@ -26,7 +26,7 @@ public class PrivateMessage {
     @JoinColumn(name = "receiver_id", nullable = false)
     private User receiver;
 
-    @Column(nullable = false, columnDefinition = "NVARCHAR(MAX)")
+    @Column(nullable = false, columnDefinition = "LONGTEXT")
     private String content;
 
     @Builder.Default

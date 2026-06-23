@@ -43,7 +43,7 @@ public class Notification {
     @Column(name = "title", nullable = false, length = 200)
     private String title;
 
-    @Column(name = "message", columnDefinition = "NVARCHAR(MAX)")
+    @Column(name = "message", columnDefinition = "LONGTEXT")
     private String message;
 
     @Column(name = "link", length = 500)
