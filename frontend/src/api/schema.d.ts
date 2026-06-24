@@ -1732,6 +1732,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/kanji/{character}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getKanji"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/kanji-srs/dashboard": {
         parameters: {
             query?: never;
@@ -3153,32 +3169,32 @@ export interface components {
             title: string;
         };
         PagePrivateMessageDto: {
-            /** Format: int32 */
-            totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
-            first?: boolean;
-            last?: boolean;
+            /** Format: int32 */
+            totalPages?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["PrivateMessageDto"][];
             /** Format: int32 */
             number?: number;
-            /** Format: int32 */
-            numberOfElements?: number;
             sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
+            first?: boolean;
+            last?: boolean;
             empty?: boolean;
         };
         PageableObject: {
             /** Format: int64 */
             offset?: number;
-            paged?: boolean;
             sort?: components["schemas"]["SortObject"];
-            /** Format: int32 */
-            pageNumber?: number;
+            paged?: boolean;
             /** Format: int32 */
             pageSize?: number;
+            /** Format: int32 */
+            pageNumber?: number;
             unpaged?: boolean;
         };
         PrivateMessageDto: {
@@ -3204,21 +3220,21 @@ export interface components {
             sort?: string[];
         };
         PageTranslationHistoryDto: {
-            /** Format: int32 */
-            totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
-            first?: boolean;
-            last?: boolean;
+            /** Format: int32 */
+            totalPages?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["TranslationHistoryDto"][];
             /** Format: int32 */
             number?: number;
-            /** Format: int32 */
-            numberOfElements?: number;
             sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
+            first?: boolean;
+            last?: boolean;
             empty?: boolean;
         };
         ReminderDto: {
@@ -3240,21 +3256,21 @@ export interface components {
             items?: components["schemas"]["ReminderDto"][];
         };
         PageNotificationDto: {
-            /** Format: int32 */
-            totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
-            first?: boolean;
-            last?: boolean;
+            /** Format: int32 */
+            totalPages?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["NotificationDto"][];
             /** Format: int32 */
             number?: number;
-            /** Format: int32 */
-            numberOfElements?: number;
             sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
+            first?: boolean;
+            last?: boolean;
             empty?: boolean;
         };
         SavedWordStatsDto: {
@@ -3426,6 +3442,15 @@ export interface components {
             estimatedMinutes?: number;
             recommendationReason?: string;
         };
+        KanjiInfoDto: {
+            character?: string;
+            meaning?: string;
+            onReadings?: string[];
+            kunReadings?: string[];
+            /** Format: int32 */
+            strokeCount?: number;
+            jlptLevel?: string;
+        };
         KanjiSrsDashboardDto: {
             /** Format: int32 */
             deckCount?: number;
@@ -3496,39 +3521,39 @@ export interface components {
             trendingTags?: string[];
         };
         PagePostDto: {
-            /** Format: int32 */
-            totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
-            first?: boolean;
-            last?: boolean;
+            /** Format: int32 */
+            totalPages?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["PostDto"][];
             /** Format: int32 */
             number?: number;
-            /** Format: int32 */
-            numberOfElements?: number;
             sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
+            first?: boolean;
+            last?: boolean;
             empty?: boolean;
         };
         PageCommentDto: {
-            /** Format: int32 */
-            totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
-            first?: boolean;
-            last?: boolean;
+            /** Format: int32 */
+            totalPages?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["CommentDto"][];
             /** Format: int32 */
             number?: number;
-            /** Format: int32 */
-            numberOfElements?: number;
             sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
+            first?: boolean;
+            last?: boolean;
             empty?: boolean;
         };
         CommunityLeaderboardEntryDto: {
@@ -3564,21 +3589,21 @@ export interface components {
             createdAt?: string;
         };
         PageObject: {
-            /** Format: int32 */
-            totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
-            first?: boolean;
-            last?: boolean;
+            /** Format: int32 */
+            totalPages?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
             /** Format: int32 */
             size?: number;
             content?: unknown[];
             /** Format: int32 */
             number?: number;
-            /** Format: int32 */
-            numberOfElements?: number;
             sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
+            first?: boolean;
+            last?: boolean;
             empty?: boolean;
         };
         AuditLog: {
@@ -3594,21 +3619,21 @@ export interface components {
             createdAt?: string;
         };
         PageAuditLog: {
-            /** Format: int32 */
-            totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
-            first?: boolean;
-            last?: boolean;
+            /** Format: int32 */
+            totalPages?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["AuditLog"][];
             /** Format: int32 */
             number?: number;
-            /** Format: int32 */
-            numberOfElements?: number;
             sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
+            first?: boolean;
+            last?: boolean;
             empty?: boolean;
         };
         AnkiStudyQueueDto: {
@@ -3635,9 +3660,9 @@ export interface components {
             /** Format: int64 */
             totalMinutes?: number;
             intensity?: string;
-            today?: boolean;
             deadlineDay?: boolean;
             recommendedStudyDay?: boolean;
+            today?: boolean;
         };
         StudyCalendarDto: {
             /** Format: date */
@@ -3693,21 +3718,21 @@ export interface components {
             createdAt?: string;
         };
         PageUserManagementDto: {
-            /** Format: int32 */
-            totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
-            first?: boolean;
-            last?: boolean;
+            /** Format: int32 */
+            totalPages?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["UserManagementDto"][];
             /** Format: int32 */
             number?: number;
-            /** Format: int32 */
-            numberOfElements?: number;
             sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
+            first?: boolean;
+            last?: boolean;
             empty?: boolean;
         };
         SystemStatsDto: {
@@ -7172,6 +7197,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["LearningPathDto"];
+                };
+            };
+        };
+    };
+    getKanji: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                character: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["KanjiInfoDto"];
                 };
             };
         };

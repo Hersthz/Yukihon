@@ -25,3 +25,4 @@ export * from "./srsApi";
 export * from "./deckApi";
 export * from "./friendApi";
 export * from "./privateChatApi";
+export * from "./kanjiApi";

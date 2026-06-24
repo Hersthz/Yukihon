@@ -10,7 +10,9 @@ spring:
     active: ${SPRING_PROFILES_ACTIVE:dev}
 
   datasource:
-    url: ${DB_URL:jdbc:mysql://localhost:3306/yukihon?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false&createDatabaseIfNotExist=true}
+    # Host-dev default points at the Docker MySQL published on 3307 (see docker-compose.yml).
+    # Compose overrides DB_URL to mysql:3306 (internal network).
+    url: ${DB_URL:jdbc:mysql://localhost:3307/yukihon?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false&createDatabaseIfNotExist=true}
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:12345}
     driver-class-name: com.mysql.cj.jdbc.Driver

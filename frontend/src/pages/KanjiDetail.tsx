@@ -3,15 +3,33 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, BookOpen, Languages, Sparkles, WandSparkles } from "lucide-react";
 
-import { vocabularyApi } from "@/api";
+import { kanjiApi, vocabularyApi, type KanjiInfo } from "@/api";
 import KanjiPracticeCanvas from "@/components/kanji/KanjiPracticeCanvas";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { getKanjiByCharacter, kanjiCatalog } from "@/data/kanji";
+import { getKanjiByCharacter, kanjiCatalog, type KanjiEntry } from "@/data/kanji";
 import { useKanjiSrs } from "@/hooks/learning/useKanjiSrs";
 import type { KanjiReviewRating } from "@/lib/kanjiSrs";
+
+/** Map a KanjiInfo (kanjiapi.dev) into the page's KanjiEntry; curated-only fields default empty. */
+const apiToEntry = (d?: KanjiInfo): KanjiEntry | null =>
+  d
+    ? {
+        character: d.character,
+        meaning: d.meaning ?? "",
+        onReadings: d.onReadings ?? [],
+        kunReadings: d.kunReadings ?? [],
+        radical: "",
+        radicalMeaning: "",
+        strokeCount: d.strokeCount ?? 0,
+        jlptLevel: d.jlptLevel ?? "",
+        mnemonic: "",
+        tags: [],
+        exampleWords: [],
+      }
+    : null;
 
 interface VocabularyItem {
   id: number;
@@ -40,8 +58,20 @@ const KanjiDetail = () => {
   const { character = "" } = useParams();
   const navigate = useNavigate();
   const decodedCharacter = decodeURIComponent(character);
-  const kanji = getKanjiByCharacter(decodedCharacter);
+  const staticKanji = getKanjiByCharacter(decodedCharacter);
   const { recordMap, addToSrs, removeFromSrs, review } = useKanjiSrs(kanjiCatalog);
+
+  // Fall back to the live kanji API (kanjiapi.dev, cached) for characters not in the curated catalog.
+  const kanjiInfoQuery = useQuery({
+    queryKey: ["kanji-info", decodedCharacter],
+    queryFn: () => kanjiApi.get(decodedCharacter),
+    enabled: !staticKanji && decodedCharacter.length > 0,
+    retry: false,
+  });
+  const kanji = useMemo(
+    () => staticKanji ?? apiToEntry(kanjiInfoQuery.data),
+    [staticKanji, kanjiInfoQuery.data]
+  );
 
   const { data: vocabulary = [], isLoading: vocabularyLoading } = useQuery({
     queryKey: ["kanji-vocabulary", kanji?.character],
@@ -61,11 +91,17 @@ const KanjiDetail = () => {
     return (
       <DashboardLayout>
         <div className="mx-auto max-w-[1200px]">
-          <EmptyState
-            title="Không tìm thấy kanji"
-            description="Ký tự này chưa có trong kanji system hiện tại."
-            icon={<BookOpen className="h-6 w-6" />}
-          />
+          {kanjiInfoQuery.isFetching ? (
+            <div className="flex items-center justify-center py-20">
+              <div className="h-12 w-12 animate-spin rounded-full border-4 border-sky-100 border-t-sky-500" />
+            </div>
+          ) : (
+            <EmptyState
+              title="Không tìm thấy kanji"
+              description="Ký tự này chưa có trong từ điển kanji."
+              icon={<BookOpen className="h-6 w-6" />}
+            />
+          )}
         </div>
       </DashboardLayout>
     );

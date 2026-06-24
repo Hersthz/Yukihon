@@ -34,14 +34,13 @@ RATE_LIMIT_AI=30
 
 ## Run locally (without Docker)
 
-Needs a MySQL 8 on `localhost:3306` with a `yukihon` database (utf8mb4). Override via env:
+Start just the Dockerized MySQL, then run backend + frontend on the host:
 ```bash
-cd backend
-DB_URL='jdbc:mysql://localhost:3306/yukihon?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false&createDatabaseIfNotExist=true' \
-DB_USERNAME=root DB_PASSWORD=yourpass ./mvnw spring-boot:run
-# frontend
+docker compose up -d mysql        # MySQL on localhost:3307 (utf8mb4)
+cd backend && ./mvnw spring-boot:run   # default DB_URL already points at localhost:3307
 cd frontend && npm install && npm run dev   # http://localhost:5173
 ```
+The backend's default `DB_URL` targets the Docker MySQL on **3307** (host port chosen to avoid clashing with any local mysqld on 3306). Override `DB_URL` only for a different DB. `backend/.env` (loaded by spring-dotenv / the IDE) can also set these.
 
 ## Dictionary data (self-hosted)
 - **Example sentences (Tatoeba)** are cached on demand — no setup; the first lookup of a word fetches + caches them.
