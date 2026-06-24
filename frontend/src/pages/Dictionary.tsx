@@ -1,7 +1,7 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { BookOpen, Check, Plus, Search, Star, Volume2, X } from "lucide-react";
-import { dictionaryApi, myWordsApi, type DictionaryEntry } from "@/api";
+import { dictionaryApi, myWordsApi, type DictionaryEntry, type ExampleSentence } from "@/api";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
@@ -36,6 +36,27 @@ const Dictionary = () => {
   const [selectedWord, setSelectedWord] = useState<DictionaryEntry | null>(null);
   const [savedStatuses, setSavedStatuses] = useState<Record<number, boolean>>({});
   const [savingWordId, setSavingWordId] = useState<number | null>(null);
+  const [examples, setExamples] = useState<ExampleSentence[]>([]);
+  const [examplesLoading, setExamplesLoading] = useState(false);
+
+  useEffect(() => {
+    const word = selectedWord?.kanji || selectedWord?.hiragana;
+    if (!word) {
+      setExamples([]);
+      return;
+    }
+    let active = true;
+    setExamplesLoading(true);
+    setExamples([]);
+    dictionaryApi
+      .getExamples(word)
+      .then((data) => active && setExamples(data))
+      .catch(() => active && setExamples([]))
+      .finally(() => active && setExamplesLoading(false));
+    return () => {
+      active = false;
+    };
+  }, [selectedWord]);
 
   const loadSavedStatuses = useCallback(async (vocabularyIds: number[]) => {
     if (vocabularyIds.length === 0) {
@@ -337,6 +358,29 @@ const Dictionary = () => {
                         Ghi chú
                       </p>
                       <p className="text-sm text-foreground/80">{selectedWord.additionalNotes}</p>
+                    </div>
+                  )}
+
+                  {(examplesLoading || examples.length > 0) && (
+                    <div className="rounded-[20px] border border-border bg-card p-4">
+                      <p className="mb-2 text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                        Câu ví dụ (Tatoeba)
+                      </p>
+                      {examplesLoading ? (
+                        <p className="text-sm text-muted-foreground">Đang tải ví dụ…</p>
+                      ) : (
+                        <ul className="space-y-3">
+                          {examples.map((ex) => (
+                            <li key={ex.tatoebaId} className="border-l-2 border-sky-200 pl-3">
+                              <p className="text-sm text-foreground">{ex.jp}</p>
+                              {ex.vi && <p className="mt-0.5 text-sm text-sky-700">{ex.vi}</p>}
+                              {!ex.vi && ex.en && (
+                                <p className="mt-0.5 text-sm text-muted-foreground">{ex.en}</p>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </div>
                   )}
 

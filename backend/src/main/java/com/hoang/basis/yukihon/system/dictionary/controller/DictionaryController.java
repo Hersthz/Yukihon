@@ -1,5 +1,6 @@
 package com.hoang.basis.yukihon.system.dictionary.controller;
 
+import com.hoang.basis.yukihon.system.dictionary.dto.ExampleSentenceDto;
 import com.hoang.basis.yukihon.system.dictionary.service.DictionaryService;
 import com.hoang.basis.yukihon.system.vocabulary.dto.VocabularyDto;
 import java.util.List;
@@ -17,6 +18,12 @@ public class DictionaryController {
     @GetMapping("/search")
     public ResponseEntity<List<VocabularyDto>> search(@RequestParam String q) {
         return ResponseEntity.ok(dictionaryService.search(q));
+    }
+
+    /** Example sentences (JP + VN/EN) for a word, cached on demand from Tatoeba. */
+    @GetMapping("/examples")
+    public ResponseEntity<List<ExampleSentenceDto>> examples(@RequestParam String q) {
+        return ResponseEntity.ok(dictionaryService.getExamples(q));
     }
 
     @GetMapping("/{id}")
