@@ -59,6 +59,7 @@ public class JmdictParser {
                 .jmdictId(jmdictId)
                 .kanji(kanji)
                 .kana(kana)
+                .romaji(RomajiConverter.toRomaji(kana))
                 .common(common)
                 .glossesEn(truncate(String.join("; ", glosses), MAX_GLOSS))
                 .partOfSpeech(pos.isEmpty() ? null : truncate(String.join(", ", pos), MAX_POS))
