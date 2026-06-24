@@ -4,8 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -74,7 +72,8 @@ class RateLimitFilterTest {
         }
         // ai bucket for the same IP is untouched
         assertThat(call("POST", "/api/ai-chat/respond", "3.3.3.3").getStatus()).isEqualTo(200);
-        assertThat(call("POST", "/api/translation/translate", "3.3.3.3").getStatus()).isEqualTo(200);
+        assertThat(call("POST", "/api/translation/translate", "3.3.3.3").getStatus())
+                .isEqualTo(200);
     }
 
     @Test

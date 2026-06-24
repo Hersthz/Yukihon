@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ToastAction } from "@/components/ui/toast";
 import { useToast } from "@/hooks/use-toast";
+import { speakJapanese } from "@/lib/speech";
 
 const levelClass: Record<string, string> = {
   N5: "border-emerald-200 bg-emerald-50 text-emerald-700",
@@ -361,6 +362,18 @@ const Dictionary = () => {
                     <Button
                       className="rounded-2xl border-border bg-white text-foreground/80"
                       variant="outline"
+                      onClick={() => {
+                        const spoken = speakJapanese(
+                          selectedWord.hiragana || selectedWord.kanji || selectedWord.romaji
+                        );
+                        if (!spoken) {
+                          toast({
+                            title: "Trình duyệt không hỗ trợ phát âm",
+                            description: "Hãy thử Chrome hoặc Edge để nghe phát âm tiếng Nhật.",
+                            variant: "destructive",
+                          });
+                        }
+                      }}
                     >
                       <Volume2 className="mr-2 h-4 w-4" />
                       Phát âm

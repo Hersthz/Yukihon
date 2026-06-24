@@ -1,5 +1,6 @@
 package com.hoang.basis.yukihon.system.dictionary.service;
 
+import com.hoang.basis.yukihon.exception.ResourceNotFoundException;
 import com.hoang.basis.yukihon.system.vocabulary.dto.VocabularyDto;
 import com.hoang.basis.yukihon.system.vocabulary.entity.Vocabulary;
 import com.hoang.basis.yukihon.system.vocabulary.repository.VocabularyRepository;
@@ -37,8 +38,9 @@ public class DictionaryService {
      * Get vocabulary detail by ID
      */
     public VocabularyDto getById(Long id) {
-        Vocabulary v =
-                vocabularyRepository.findById(id).orElseThrow(() -> new RuntimeException("Vocabulary not found"));
+        Vocabulary v = vocabularyRepository
+                .findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Vocabulary not found: " + id));
         return toDto(v);
     }
 
