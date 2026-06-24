@@ -95,6 +95,13 @@ const Dictionary = () => {
   }, [loadSavedStatuses, query, toast]);
 
   const handleSaveWord = async (word: DictionaryEntry) => {
+    if (word.id <= 0) {
+      toast({
+        title: "Chưa thể lưu từ này",
+        description: "Từ tra mở rộng (JMdict) sẽ hỗ trợ lưu ở bản cập nhật sau.",
+      });
+      return;
+    }
     if (savedStatuses[word.id]) {
       toast({
         title: "Đã có trong sổ tay",
@@ -277,7 +284,7 @@ const Dictionary = () => {
                           }}
                           size="sm"
                           variant="ghost"
-                          disabled={isSaved || isSaving}
+                          disabled={isSaved || isSaving || word.id <= 0}
                         >
                           {isSaved ? (
                             <Check className="mr-1 h-4 w-4" />
@@ -389,7 +396,9 @@ const Dictionary = () => {
                       className="rounded-2xl bg-sky-500 text-white hover:bg-sky-400 disabled:bg-emerald-500"
                       onClick={() => void handleSaveWord(selectedWord)}
                       disabled={
-                        !!savedStatuses[selectedWord.id] || savingWordId === selectedWord.id
+                        !!savedStatuses[selectedWord.id] ||
+                        savingWordId === selectedWord.id ||
+                        selectedWord.id <= 0
                       }
                     >
                       {savedStatuses[selectedWord.id] ? (

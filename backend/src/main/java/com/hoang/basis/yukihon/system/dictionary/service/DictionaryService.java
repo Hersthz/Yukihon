@@ -4,13 +4,17 @@ import com.hoang.basis.yukihon.exception.ResourceNotFoundException;
 import com.hoang.basis.yukihon.system.dictionary.client.TatoebaClient;
 import com.hoang.basis.yukihon.system.dictionary.dto.ExampleSentenceDto;
 import com.hoang.basis.yukihon.system.dictionary.entity.DictSentence;
+import com.hoang.basis.yukihon.system.dictionary.entity.DictWord;
 import com.hoang.basis.yukihon.system.dictionary.repository.DictSentenceRepository;
+import com.hoang.basis.yukihon.system.dictionary.repository.DictWordRepository;
 import com.hoang.basis.yukihon.system.vocabulary.dto.VocabularyDto;
 import com.hoang.basis.yukihon.system.vocabulary.entity.Vocabulary;
 import com.hoang.basis.yukihon.system.vocabulary.repository.VocabularyRepository;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class DictionaryService {
 
     private final VocabularyRepository vocabularyRepository;
+    private final DictWordRepository dictWordRepository;
     private final DictSentenceRepository dictSentenceRepository;
     private final TatoebaClient tatoebaClient;
 
@@ -45,9 +50,37 @@ public class DictionaryService {
             return List.of();
         }
 
-        return vocabularyRepository.searchForDictionary(q, PageRequest.of(0, 50)).stream()
+        // Curated local vocabulary first (Vietnamese meanings), then JMdict for full coverage,
+        // skipping JMdict entries that duplicate a curated word.
+        List<VocabularyDto> result = vocabularyRepository.searchForDictionary(q, PageRequest.of(0, 50)).stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
+
+        Set<String> seen = result.stream().map(this::dedupeKey).collect(Collectors.toCollection(HashSet::new));
+        for (DictWord w : dictWordRepository.search(q, PageRequest.of(0, 50))) {
+            VocabularyDto dto = toDto(w);
+            if (seen.add(dedupeKey(dto)) && result.size() < 50) {
+                result.add(dto);
+            }
+        }
+        return result;
+    }
+
+    private String dedupeKey(VocabularyDto dto) {
+        return (dto.getKanji() == null ? "" : dto.getKanji()) + "|"
+                + (dto.getHiragana() == null ? "" : dto.getHiragana());
+    }
+
+    /** Map a JMdict entry to the shared DTO. Synthetic negative id marks it as not-yet-curated. */
+    private VocabularyDto toDto(DictWord w) {
+        VocabularyDto dto = new VocabularyDto();
+        dto.setId(-w.getId());
+        dto.setKanji(w.getKanji());
+        dto.setHiragana(w.getKana());
+        dto.setRomaji(w.getRomaji());
+        dto.setMeaning(w.getGlossesEn());
+        dto.setWordType(w.getPartOfSpeech());
+        return dto;
     }
 
     /**

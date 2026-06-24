@@ -68,6 +68,12 @@ app:
     enabled: ${RATE_LIMIT_ENABLED:true}
     auth-capacity-per-minute: ${RATE_LIMIT_AUTH:10}
     ai-capacity-per-minute: ${RATE_LIMIT_AI:30}
+  # Dictionary: example sentences (Tatoeba) + self-hosted JMdict word lookup.
+  dictionary:
+    examples-limit: ${DICT_EXAMPLES_LIMIT:6}
+    external-enabled: ${DICT_EXTERNAL_ENABLED:true}
+    jmdict:
+      url: ${JMDICT_URL:}
   # Dev default: seed demo users + sample content on first run. Prod overrides to false
   # (application-prod.yml). Disable in dev with SEED_ENABLED=false. Idempotent (skips when data exists).
   seed:

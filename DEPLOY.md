@@ -43,6 +43,16 @@ DB_USERNAME=root DB_PASSWORD=yourpass ./mvnw spring-boot:run
 cd frontend && npm install && npm run dev   # http://localhost:5173
 ```
 
+## Dictionary data (self-hosted)
+- **Example sentences (Tatoeba)** are cached on demand — no setup; the first lookup of a word fetches + caches them.
+- **Full word lookup (JMdict)** is self-hosted. After deploy, import once (ADMIN):
+  ```
+  curl -X POST "http://localhost:8080/api/admin/dictionary/import/jmdict?url=<jmdict-simplified release .json.zip>" \
+       -H "Authorization: Bearer <admin-token>"
+  ```
+  Get a release URL from github.com/scriptin/jmdict-simplified/releases (the `jmdict-eng-*.json.zip`). Set `JMDICT_URL` to skip the `url` param. Idempotent; runs in the background (watch logs). `&force=true` re-imports.
+- Attribution required (add to a credits page): JMdict — EDRDG; Tatoeba — CC-BY.
+
 ## Database notes
 - Engine: **MySQL 8**, charset **utf8mb4** (stores Japanese/Vietnamese natively — no NVARCHAR needed).
 - Migrations: `backend/src/main/resources/db/migration` — `V1__init.sql` (baseline schema) + `V2__hot_path_indexes.sql`.
