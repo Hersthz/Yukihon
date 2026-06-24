@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { BookOpen, Check, Plus, Search, Star, Volume2, X } from "lucide-react";
-import { dictionaryApi, myWordsApi, type DictionaryEntry, type ExampleSentence } from "@/api";
+import { dictionaryApi, myWordsApi, type DictionaryEntry } from "@/api";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
@@ -29,108 +30,87 @@ const normalizeSavedStatuses = (statuses: Record<string, boolean>) =>
 const Dictionary = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<DictionaryEntry[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [searched, setSearched] = useState(false);
+  const [committedQuery, setCommittedQuery] = useState("");
   const [selectedWord, setSelectedWord] = useState<DictionaryEntry | null>(null);
-  const [savedStatuses, setSavedStatuses] = useState<Record<number, boolean>>({});
-  const [savingWordId, setSavingWordId] = useState<number | null>(null);
-  const [examples, setExamples] = useState<ExampleSentence[]>([]);
-  const [examplesLoading, setExamplesLoading] = useState(false);
-  const [translating, setTranslating] = useState(false);
+  // Optimistic "saved" flags for words saved this session (keyed by displayed id, incl. JMdict).
+  const [savedOverrides, setSavedOverrides] = useState<Record<number, boolean>>({});
 
-  const handleTranslate = async (word: DictionaryEntry) => {
-    if (word.id >= 0) return; // only JMdict (English) results need translating
-    setTranslating(true);
-    try {
-      const { vi } = await dictionaryApi.translateMeaning(-word.id);
-      if (vi) {
-        const updated = { ...word, meaning: vi };
-        setSelectedWord(updated);
-        setResults((prev) => prev.map((w) => (w.id === word.id ? updated : w)));
-      }
-    } catch {
-      toast({
-        title: "Không dịch được",
-        description: "Vui lòng thử lại sau ít phút.",
-        variant: "destructive",
-      });
-    } finally {
-      setTranslating(false);
-    }
-  };
+  const searchKey = ["dictionary", "search", committedQuery] as const;
+  const searchQuery = useQuery({
+    queryKey: searchKey,
+    queryFn: () => dictionaryApi.search(committedQuery),
+    enabled: committedQuery.trim().length > 0,
+  });
+  const results = useMemo(() => searchQuery.data ?? [], [searchQuery.data]);
+  const loading = searchQuery.isFetching;
+  const searched = committedQuery.trim().length > 0;
 
   useEffect(() => {
-    const word = selectedWord?.kanji || selectedWord?.hiragana;
-    if (!word) {
-      setExamples([]);
-      return;
-    }
-    let active = true;
-    setExamplesLoading(true);
-    setExamples([]);
-    dictionaryApi
-      .getExamples(word)
-      .then((data) => active && setExamples(data))
-      .catch(() => active && setExamples([]))
-      .finally(() => active && setExamplesLoading(false));
-    return () => {
-      active = false;
-    };
-  }, [selectedWord]);
-
-  const loadSavedStatuses = useCallback(async (vocabularyIds: number[]) => {
-    if (vocabularyIds.length === 0) {
-      setSavedStatuses({});
-      return;
-    }
-
-    try {
-      const response = await myWordsApi.getSavedStatuses(vocabularyIds);
-      setSavedStatuses(normalizeSavedStatuses(response));
-    } catch {
-      setSavedStatuses({});
-    }
-  }, []);
-
-  const handleSearch = useCallback(async () => {
-    if (!query.trim()) return;
-
-    setLoading(true);
-    setSearched(true);
-
-    try {
-      const data = await dictionaryApi.search(query.trim());
-      setResults(data);
-      await loadSavedStatuses(data.map((item) => item.id));
-    } catch (error) {
-      console.error("Dictionary search failed", error);
+    if (searchQuery.error) {
       toast({
         title: "Không thể tra cứu",
         description: "Vui lòng thử lại sau ít phút.",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
-  }, [loadSavedStatuses, query, toast]);
+  }, [searchQuery.error, toast]);
 
-  const handleSaveWord = async (word: DictionaryEntry) => {
-    if (savedStatuses[word.id]) {
+  // Initial saved state for curated (positive-id) results; session saves tracked in savedOverrides.
+  const savedIds = useMemo(() => results.filter((w) => w.id > 0).map((w) => w.id), [results]);
+  const savedQuery = useQuery({
+    queryKey: ["dictionary", "saved", savedIds],
+    queryFn: () => myWordsApi.getSavedStatuses(savedIds),
+    enabled: savedIds.length > 0,
+  });
+  const savedMap = normalizeSavedStatuses(savedQuery.data ?? {});
+  const wordSaved = (id: number) => savedOverrides[id] ?? !!savedMap[id];
+
+  const exampleWord = selectedWord?.kanji || selectedWord?.hiragana || "";
+  const examplesQuery = useQuery({
+    queryKey: ["dictionary", "examples", exampleWord],
+    queryFn: () => dictionaryApi.getExamples(exampleWord),
+    enabled: exampleWord.length > 0,
+  });
+  const examples = examplesQuery.data ?? [];
+  const examplesLoading = examplesQuery.isFetching;
+
+  const handleSearch = () => setCommittedQuery(query.trim());
+
+  const translateMutation = useMutation({
+    mutationFn: (dictWordId: number) => dictionaryApi.translateMeaning(dictWordId),
+    onSuccess: ({ vi }, dictWordId) => {
+      if (!vi) return;
+      const displayId = -dictWordId;
+      setSelectedWord((prev) => (prev && prev.id === displayId ? { ...prev, meaning: vi } : prev));
+      queryClient.setQueryData<DictionaryEntry[]>(searchKey, (old) =>
+        old?.map((w) => (w.id === displayId ? { ...w, meaning: vi } : w))
+      );
+    },
+    onError: () =>
       toast({
-        title: "Đã có trong sổ tay",
-        description: `${word.kanji || word.hiragana} đang nằm trong My Words rồi.`,
-      });
-      return;
-    }
+        title: "Không dịch được",
+        description: "Vui lòng thử lại sau ít phút.",
+        variant: "destructive",
+      }),
+  });
+  const translating = translateMutation.isPending;
 
-    try {
-      setSavingWordId(word.id);
+  const handleTranslate = (word: DictionaryEntry) => {
+    if (word.id >= 0) return; // only JMdict (English) results need translating
+    translateMutation.mutate(-word.id);
+  };
+
+  const saveMutation = useMutation({
+    mutationFn: async (word: DictionaryEntry) => {
       // JMdict results (synthetic negative id) aren't in vocabulary yet — promote first.
       const vocabularyId = word.id > 0 ? word.id : (await dictionaryApi.materialize(-word.id)).id;
       await myWordsApi.saveWord({ vocabularyId, folderName: "Dictionary" });
-      setSavedStatuses((prev) => ({ ...prev, [word.id]: true }));
+      return word;
+    },
+    onSuccess: (word) => {
+      setSavedOverrides((prev) => ({ ...prev, [word.id]: true }));
       toast({
         title: "Đã lưu",
         description: `${word.kanji || word.hiragana} đã được thêm vào My Words.`,
@@ -140,15 +120,25 @@ const Dictionary = () => {
           </ToastAction>
         ),
       });
-    } catch {
+    },
+    onError: () =>
       toast({
         title: "Lưu chưa thành công",
         description: "Vui lòng thử lại sau ít phút.",
         variant: "destructive",
+      }),
+  });
+  const savingWordId = saveMutation.isPending ? (saveMutation.variables?.id ?? null) : null;
+
+  const handleSaveWord = (word: DictionaryEntry) => {
+    if (wordSaved(word.id)) {
+      toast({
+        title: "Đã có trong sổ tay",
+        description: `${word.kanji || word.hiragana} đang nằm trong My Words rồi.`,
       });
-    } finally {
-      setSavingWordId(null);
+      return;
     }
+    saveMutation.mutate(word);
   };
 
   const quickStats = useMemo(
@@ -250,7 +240,7 @@ const Dictionary = () => {
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               <AnimatePresence>
                 {results.map((word, index) => {
-                  const isSaved = !!savedStatuses[word.id];
+                  const isSaved = wordSaved(word.id);
                   const isSaving = savingWordId === word.id;
 
                   return (
@@ -433,16 +423,14 @@ const Dictionary = () => {
                     <Button
                       className="rounded-2xl bg-sky-500 text-white hover:bg-sky-400 disabled:bg-emerald-500"
                       onClick={() => void handleSaveWord(selectedWord)}
-                      disabled={
-                        !!savedStatuses[selectedWord.id] || savingWordId === selectedWord.id
-                      }
+                      disabled={!!wordSaved(selectedWord.id) || savingWordId === selectedWord.id}
                     >
-                      {savedStatuses[selectedWord.id] ? (
+                      {wordSaved(selectedWord.id) ? (
                         <Check className="mr-2 h-4 w-4" />
                       ) : (
                         <Star className="mr-2 h-4 w-4" />
                       )}
-                      {savedStatuses[selectedWord.id]
+                      {wordSaved(selectedWord.id)
                         ? "Đã có trong sổ tay"
                         : savingWordId === selectedWord.id
                           ? "Đang lưu..."

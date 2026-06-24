@@ -596,6 +596,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/dictionary/words/{dictWordId}/translate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["translate_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dictionary/words/{dictWordId}/materialize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["materialize"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/decks": {
         parameters: {
             query?: never;
@@ -958,6 +990,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["upload"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/dictionary/import/jmdict": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["importJmdict"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1788,6 +1836,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["search"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dictionary/examples": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["examples"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3109,12 +3173,12 @@ export interface components {
         PageableObject: {
             /** Format: int64 */
             offset?: number;
+            paged?: boolean;
             sort?: components["schemas"]["SortObject"];
             /** Format: int32 */
-            pageSize?: number;
-            /** Format: int32 */
             pageNumber?: number;
-            paged?: boolean;
+            /** Format: int32 */
+            pageSize?: number;
             unpaged?: boolean;
         };
         PrivateMessageDto: {
@@ -3408,6 +3472,13 @@ export interface components {
             /** Format: date-time */
             nextReviewAt?: string;
             reason?: string;
+        };
+        ExampleSentenceDto: {
+            /** Format: int64 */
+            tatoebaId?: number;
+            jp?: string;
+            vi?: string;
+            en?: string;
         };
         CommunityStatsDto: {
             /** Format: int64 */
@@ -5305,6 +5376,52 @@ export interface operations {
             };
         };
     };
+    translate_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dictWordId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: string;
+                    };
+                };
+            };
+        };
+    };
+    materialize: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dictWordId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["VocabularyDto"];
+                };
+            };
+        };
+    };
     create: {
         parameters: {
             query?: never;
@@ -5983,6 +6100,31 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["MediaUploadResponse"];
+                };
+            };
+        };
+    };
+    importJmdict: {
+        parameters: {
+            query?: {
+                url?: string;
+                force?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: string;
+                    };
                 };
             };
         };
@@ -7180,6 +7322,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["VocabularyDto"][];
+                };
+            };
+        };
+    };
+    examples: {
+        parameters: {
+            query: {
+                q: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ExampleSentenceDto"][];
                 };
             };
         };

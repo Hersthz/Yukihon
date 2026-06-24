@@ -1,24 +1,12 @@
 import apiClient from "@/lib/apiClient";
+import type { Schema } from "@/api/types";
 
-export interface DictionaryEntry {
-  id: number;
-  kanji: string;
-  hiragana: string;
-  romaji: string;
-  meaning: string;
-  exampleSentenceJP: string;
-  exampleSentenceEN: string;
-  wordType: string;
-  jlptLevel: string;
-  additionalNotes: string;
-}
+// Sourced from the OpenAPI schema (run `npm run gen:api` after BE DTO changes).
+// springdoc marks every field optional; the dictionary view-model treats them as present.
+export type DictionaryEntry = Required<Schema<"VocabularyDto">>;
 
-export interface ExampleSentence {
-  tatoebaId: number;
-  jp: string;
-  vi: string | null;
-  en: string | null;
-}
+export type ExampleSentence = Required<Pick<Schema<"ExampleSentenceDto">, "tatoebaId" | "jp">> &
+  Pick<Schema<"ExampleSentenceDto">, "vi" | "en">;
 
 export const dictionaryApi = {
   search: (query: string) =>
