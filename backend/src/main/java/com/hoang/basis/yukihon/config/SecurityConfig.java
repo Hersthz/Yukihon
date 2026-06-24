@@ -1,5 +1,8 @@
 package com.hoang.basis.yukihon.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hoang.basis.yukihon.base.security.RateLimitFilter;
+import com.hoang.basis.yukihon.base.security.RateLimitProperties;
 import com.hoang.basis.yukihon.security.JwtAuthenticationFilter;
 import com.hoang.basis.yukihon.security.RestAuthenticationEntryPoint;
 import java.util.Arrays;
@@ -31,6 +34,8 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final RestAuthenticationEntryPoint authenticationEntryPoint;
+    private final RateLimitProperties rateLimitProperties;
+    private final ObjectMapper objectMapper;
 
     @Value("${app.frontend-url}")
     private String frontendUrl;
@@ -82,6 +87,8 @@ public class SecurityConfig {
                 .formLogin(form -> form.disable());
 
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        // Rate limit runs before auth so brute-force/abuse is rejected with 429 early.
+        http.addFilterBefore(new RateLimitFilter(rateLimitProperties, objectMapper), JwtAuthenticationFilter.class);
 
         return http.build();
     }

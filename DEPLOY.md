@@ -27,6 +27,9 @@ DB_PASSWORD=change-me
 JWT_SECRET=<base64 256-bit secret>
 OPENAI_API_KEY=sk-...
 SPRING_PROFILES_ACTIVE=dev   # use 'prod' for production
+# Per-IP rate limits (requests/minute); RATE_LIMIT_ENABLED=false to disable
+RATE_LIMIT_AUTH=10
+RATE_LIMIT_AI=30
 ```
 
 ## Run locally (without Docker)
@@ -51,7 +54,8 @@ cd frontend && npm install && npm run dev   # http://localhost:5173
 - Set strong `JWT_SECRET` and `DB_PASSWORD`; never use the dev defaults.
 - Serve over HTTPS (HSTS header is already configured; only takes effect over TLS).
 - Actuator exposes only `health,info,metrics`; `metrics` requires auth. Lock down further via `ACTUATOR_ENDPOINTS`.
-- Observability + hardening backlog: request rate-limiting on auth/AI endpoints, error tracking (e.g. Sentry), centralized logs.
+- Rate limiting is on by default (per-IP token bucket: auth 10/min, AI/translation 30/min); tune via `RATE_LIMIT_*`. In-memory — back with Redis for multi-instance.
+- Hardening backlog: error tracking (e.g. Sentry), centralized logs, CD pipeline.
 
 ## CI
 `.github/workflows/ci.yml` runs on push/PR to `main`: backend `spotless:check` + `mvn verify`; frontend `format:check` + `lint` + `typecheck` + `test` + `build`.

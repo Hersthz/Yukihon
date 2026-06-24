@@ -65,6 +65,13 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
+        <!-- Rate limiting (token bucket) for auth + expensive AI/translation endpoints -->
+        <dependency>
+            <groupId>com.bucket4j</groupId>
+            <artifactId>bucket4j-core</artifactId>
+            <version>8.10.1</version>
+        </dependency>
+
         <!-- Mail (password reset). JavaMailSender bean only created when spring.mail.host is set. -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
