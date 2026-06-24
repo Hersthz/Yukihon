@@ -46,6 +46,10 @@ public class DictWord {
     @Column(name = "glosses_en", nullable = false, length = 2000)
     private String glossesEn;
 
+    /** Cached Vietnamese meaning (translated on demand from the English glosses). */
+    @Column(name = "vie_meaning", length = 2000)
+    private String vieMeaning;
+
     @Column(name = "part_of_speech", length = 255)
     private String partOfSpeech;
 }

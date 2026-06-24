@@ -18,6 +18,7 @@ const Auth = lazy(() => import("@/pages/Auth"));
 const Community = lazy(() => import("@/pages/Community"));
 const CourseDetail = lazy(() => import("@/pages/CourseDetail"));
 const Courses = lazy(() => import("@/pages/Courses"));
+const Credits = lazy(() => import("@/pages/Credits"));
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
 const Dictionary = lazy(() => import("@/pages/Dictionary"));
 const Grammar = lazy(() => import("@/pages/Grammar"));
@@ -74,6 +75,7 @@ export const AppRoutes = () => {
         <Route path="/community" element={withProtectedRoute(<Community />)} />
         <Route path="/my-words" element={withProtectedRoute(<MyWords />)} />
         <Route path="/settings" element={withProtectedRoute(<Settings />)} />
+        <Route path="/credits" element={withProtectedRoute(<Credits />)} />
         <Route
           path="/admin/creator-mode"
           element={withProtectedRoute(

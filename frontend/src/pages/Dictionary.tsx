@@ -38,6 +38,28 @@ const Dictionary = () => {
   const [savingWordId, setSavingWordId] = useState<number | null>(null);
   const [examples, setExamples] = useState<ExampleSentence[]>([]);
   const [examplesLoading, setExamplesLoading] = useState(false);
+  const [translating, setTranslating] = useState(false);
+
+  const handleTranslate = async (word: DictionaryEntry) => {
+    if (word.id >= 0) return; // only JMdict (English) results need translating
+    setTranslating(true);
+    try {
+      const { vi } = await dictionaryApi.translateMeaning(-word.id);
+      if (vi) {
+        const updated = { ...word, meaning: vi };
+        setSelectedWord(updated);
+        setResults((prev) => prev.map((w) => (w.id === word.id ? updated : w)));
+      }
+    } catch {
+      toast({
+        title: "Không dịch được",
+        description: "Vui lòng thử lại sau ít phút.",
+        variant: "destructive",
+      });
+    } finally {
+      setTranslating(false);
+    }
+  };
 
   useEffect(() => {
     const word = selectedWord?.kanji || selectedWord?.hiragana;
@@ -95,13 +117,6 @@ const Dictionary = () => {
   }, [loadSavedStatuses, query, toast]);
 
   const handleSaveWord = async (word: DictionaryEntry) => {
-    if (word.id <= 0) {
-      toast({
-        title: "Chưa thể lưu từ này",
-        description: "Từ tra mở rộng (JMdict) sẽ hỗ trợ lưu ở bản cập nhật sau.",
-      });
-      return;
-    }
     if (savedStatuses[word.id]) {
       toast({
         title: "Đã có trong sổ tay",
@@ -112,7 +127,9 @@ const Dictionary = () => {
 
     try {
       setSavingWordId(word.id);
-      await myWordsApi.saveWord({ vocabularyId: word.id, folderName: "Dictionary" });
+      // JMdict results (synthetic negative id) aren't in vocabulary yet — promote first.
+      const vocabularyId = word.id > 0 ? word.id : (await dictionaryApi.materialize(-word.id)).id;
+      await myWordsApi.saveWord({ vocabularyId, folderName: "Dictionary" });
       setSavedStatuses((prev) => ({ ...prev, [word.id]: true }));
       toast({
         title: "Đã lưu",
@@ -284,7 +301,7 @@ const Dictionary = () => {
                           }}
                           size="sm"
                           variant="ghost"
-                          disabled={isSaved || isSaving || word.id <= 0}
+                          disabled={isSaved || isSaving}
                         >
                           {isSaved ? (
                             <Check className="mr-1 h-4 w-4" />
@@ -301,6 +318,17 @@ const Dictionary = () => {
             </div>
           )}
         </PageSection>
+
+        <p className="mt-4 text-center text-xs text-muted-foreground">
+          Dữ liệu từ JMdict &amp; Tatoeba —{" "}
+          <button
+            type="button"
+            className="text-sky-700 hover:underline"
+            onClick={() => navigate("/credits")}
+          >
+            Giấy phép &amp; nguồn
+          </button>
+        </p>
 
         <AnimatePresence>
           {selectedWord && (
@@ -343,6 +371,16 @@ const Dictionary = () => {
                       Nghĩa
                     </p>
                     <p className="text-base text-foreground">{selectedWord.meaning}</p>
+                    {selectedWord.id < 0 && (
+                      <Button
+                        className="mt-2 h-auto p-0 text-sm text-sky-700"
+                        variant="link"
+                        onClick={() => void handleTranslate(selectedWord)}
+                        disabled={translating}
+                      >
+                        {translating ? "Đang dịch…" : "Dịch nghĩa sang tiếng Việt"}
+                      </Button>
+                    )}
                   </div>
 
                   {selectedWord.exampleSentenceJP && (
@@ -396,9 +434,7 @@ const Dictionary = () => {
                       className="rounded-2xl bg-sky-500 text-white hover:bg-sky-400 disabled:bg-emerald-500"
                       onClick={() => void handleSaveWord(selectedWord)}
                       disabled={
-                        !!savedStatuses[selectedWord.id] ||
-                        savingWordId === selectedWord.id ||
-                        selectedWord.id <= 0
+                        !!savedStatuses[selectedWord.id] || savingWordId === selectedWord.id
                       }
                     >
                       {savedStatuses[selectedWord.id] ? (

@@ -7,6 +7,7 @@ import com.hoang.basis.yukihon.system.dictionary.entity.DictSentence;
 import com.hoang.basis.yukihon.system.dictionary.entity.DictWord;
 import com.hoang.basis.yukihon.system.dictionary.repository.DictSentenceRepository;
 import com.hoang.basis.yukihon.system.dictionary.repository.DictWordRepository;
+import com.hoang.basis.yukihon.system.translation.service.TranslationService;
 import com.hoang.basis.yukihon.system.vocabulary.dto.VocabularyDto;
 import com.hoang.basis.yukihon.system.vocabulary.entity.Vocabulary;
 import com.hoang.basis.yukihon.system.vocabulary.repository.VocabularyRepository;
@@ -32,6 +33,7 @@ public class DictionaryService {
     private final DictWordRepository dictWordRepository;
     private final DictSentenceRepository dictSentenceRepository;
     private final TatoebaClient tatoebaClient;
+    private final TranslationService translationService;
 
     @Value("${app.dictionary.examples-limit:6}")
     private int examplesLimit;
@@ -78,9 +80,57 @@ public class DictionaryService {
         dto.setKanji(w.getKanji());
         dto.setHiragana(w.getKana());
         dto.setRomaji(w.getRomaji());
-        dto.setMeaning(w.getGlossesEn());
+        // Prefer the cached Vietnamese meaning once it has been translated; else English glosses.
+        boolean hasVie = w.getVieMeaning() != null && !w.getVieMeaning().isBlank();
+        dto.setMeaning(hasVie ? w.getVieMeaning() : w.getGlossesEn());
         dto.setWordType(w.getPartOfSpeech());
         return dto;
+    }
+
+    /**
+     * Translate a JMdict word's English glosses to Vietnamese on demand and cache the result on the
+     * entry, so it is shown directly in future searches. Returns the Vietnamese meaning.
+     */
+    @Transactional
+    public String translateToVietnamese(Long dictWordId) {
+        DictWord w = dictWordRepository
+                .findById(dictWordId)
+                .orElseThrow(() -> new ResourceNotFoundException("Dictionary word not found: " + dictWordId));
+        if (w.getVieMeaning() != null && !w.getVieMeaning().isBlank()) {
+            return w.getVieMeaning();
+        }
+        String vi = translationService.translateText(w.getGlossesEn(), "en", "vi");
+        if (vi != null && !vi.isBlank()) {
+            w.setVieMeaning(vi.length() > 2000 ? vi.substring(0, 2000) : vi);
+            dictWordRepository.save(w);
+        }
+        return w.getVieMeaning() != null ? w.getVieMeaning() : "";
+    }
+
+    /**
+     * Promote a JMdict word into the curated `vocabulary` table so it can be saved to My Words.
+     * Reuses an existing vocabulary row with the same headword; otherwise creates one. Required
+     * vocabulary columns (kanji/romaji/meaning) are filled with sensible fallbacks.
+     */
+    @Transactional
+    public VocabularyDto materialize(Long dictWordId) {
+        DictWord w = dictWordRepository
+                .findById(dictWordId)
+                .orElseThrow(() -> new ResourceNotFoundException("Dictionary word not found: " + dictWordId));
+
+        String headword = w.getKanji() != null && !w.getKanji().isBlank() ? w.getKanji() : w.getKana();
+        return vocabularyRepository.findByKanji(headword).map(this::toDto).orElseGet(() -> {
+            String meaning =
+                    w.getVieMeaning() != null && !w.getVieMeaning().isBlank() ? w.getVieMeaning() : w.getGlossesEn();
+            Vocabulary v = Vocabulary.builder()
+                    .kanji(headword)
+                    .hiragana(w.getKana())
+                    .romaji(w.getRomaji() != null && !w.getRomaji().isBlank() ? w.getRomaji() : w.getKana())
+                    .meaning(meaning)
+                    .wordType(w.getPartOfSpeech())
+                    .build();
+            return toDto(vocabularyRepository.save(v));
+        });
     }
 
     /**

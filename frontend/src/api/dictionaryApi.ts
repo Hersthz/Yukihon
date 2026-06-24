@@ -26,4 +26,10 @@ export const dictionaryApi = {
   getDetail: (id: number) => apiClient.get<DictionaryEntry>(`/api/dictionary/${id}`),
   getExamples: (query: string) =>
     apiClient.get<ExampleSentence[]>(`/api/dictionary/examples`, { q: query }),
+  /** Promote a JMdict word into vocabulary (so it can be saved). Returns the curated entry. */
+  materialize: (dictWordId: number) =>
+    apiClient.post<DictionaryEntry>(`/api/dictionary/words/${dictWordId}/materialize`),
+  /** Translate a JMdict word's English meaning to Vietnamese (cached server-side). */
+  translateMeaning: (dictWordId: number) =>
+    apiClient.post<{ vi: string }>(`/api/dictionary/words/${dictWordId}/translate`),
 };

@@ -41,6 +41,17 @@ public class TranslationService {
     private final ObjectMapper objectMapper;
 
     @Transactional
+    /**
+     * Translate raw text without persisting any history — for internal callers (e.g. the dictionary
+     * translating English glosses to Vietnamese). Returns "" for blank input.
+     */
+    public String translateText(String text, String sourceLang, String targetLang) {
+        if (text == null || text.isBlank()) {
+            return "";
+        }
+        return callTranslationApi(text.trim(), sourceLang.toLowerCase(), targetLang.toLowerCase());
+    }
+
     public TranslateResponse translate(Long userId, TranslateRequest request) {
         validateRequest(request);
 
