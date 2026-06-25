@@ -1,32 +1,33 @@
 import { Link } from "react-router-dom";
 import { Github, Instagram, Mail, Twitter } from "lucide-react";
+import { WinterMark } from "@/components/winter";
 
 const footerColumns = [
   {
-    title: "Learning",
+    title: "Học tập",
     links: [
-      { label: "Courses", to: "/courses" },
-      { label: "Vocabulary", to: "/vocabulary" },
-      { label: "Dictionary", to: "/dictionary" },
-      { label: "JLPT Paths", to: "/jlpt-lessons" },
+      { label: "Khóa học", to: "/courses" },
+      { label: "Từ vựng", to: "/vocabulary" },
+      { label: "Từ điển", to: "/dictionary" },
+      { label: "Lộ trình JLPT", to: "/jlpt-lessons" },
     ],
   },
   {
-    title: "Product",
+    title: "Sản phẩm",
     links: [
-      { label: "AI Chat", to: "/ai-chat" },
-      { label: "Story Mode", to: "/story-mode" },
-      { label: "Community", to: "/community" },
-      { label: "My Words", to: "/my-words" },
+      { label: "Trợ lý AI", to: "/ai-chat" },
+      { label: "Học qua truyện", to: "/story-mode" },
+      { label: "Cộng đồng", to: "/community" },
+      { label: "Sổ từ của tôi", to: "/my-words" },
     ],
   },
   {
-    title: "Support",
+    title: "Hỗ trợ",
     links: [
-      { label: "Profile", to: "/profile" },
-      { label: "Calendar", to: "/calendar" },
-      { label: "Translation", to: "/translation" },
-      { label: "Settings", to: "/settings" },
+      { label: "Hồ sơ", to: "/profile" },
+      { label: "Lịch học", to: "/calendar" },
+      { label: "Dịch thuật", to: "/translation" },
+      { label: "Cài đặt", to: "/settings" },
     ],
   },
 ];
@@ -34,25 +35,33 @@ const footerColumns = [
 const Footer = () => {
   return (
     <footer className="relative pb-10 pt-20">
-      <div className="mx-auto max-w-[1440px] px-4 sm:px-6">
-        <div className="surface-panel overflow-hidden bg-white/92 px-6 py-8 sm:px-8 sm:py-10">
+      <div className="mx-auto max-w-[1280px] px-4 sm:px-6">
+        <div className="winter-glass overflow-hidden px-6 py-8 sm:px-8 sm:py-10">
           <div className="grid gap-10 lg:grid-cols-[1.1fr_1fr]">
             <div className="max-w-xl">
               <div className="flex items-center gap-3">
-                <div className="flex h-14 w-14 items-center justify-center rounded-[1.2rem] bg-[#ffcfc6]">
-                  <span className="display-font text-3xl font-bold text-foreground">Y</span>
+                <div
+                  className="flex h-12 w-12 items-center justify-center rounded-2xl"
+                  style={{
+                    color: "hsl(var(--w-accent-fg))",
+                    background:
+                      "linear-gradient(135deg, hsl(var(--w-accent)), hsl(var(--w-accent-strong)))",
+                    boxShadow: "0 8px 20px -10px hsl(var(--w-accent) / 0.8)",
+                  }}
+                >
+                  <WinterMark size={24} />
                 </div>
                 <div>
-                  <p className="text-3xl font-black tracking-tight text-foreground">Yukihon</p>
+                  <p className="text-2xl font-black tracking-tight text-foreground">Yukihon</p>
                   <p className="text-sm text-muted-foreground">
-                    A light-first Japanese learning workspace.
+                    Không gian học tiếng Nhật tĩnh lặng như tuyết.
                   </p>
                 </div>
               </div>
 
               <p className="mt-5 max-w-lg text-sm leading-7 text-muted-foreground">
-                Built around quick sessions, strong visual hierarchy, and calm study momentum. The
-                whole product now follows one warm, clean light theme from landing to dashboard.
+                Xây quanh những buổi học ngắn, phân cấp thị giác mạnh và nhịp học bền bỉ. Toàn bộ
+                sản phẩm theo một ngôn ngữ thiết kế nhất quán từ trang chủ đến tổng quan.
               </p>
 
               <div className="mt-6 flex items-center gap-3">
@@ -60,7 +69,12 @@ const Footer = () => {
                   <a
                     key={index}
                     href="#"
-                    className="flex h-11 w-11 items-center justify-center rounded-[1rem] border border-border/80 bg-white text-muted-foreground transition hover:-translate-y-1 hover:text-foreground"
+                    className="flex h-11 w-11 items-center justify-center rounded-2xl transition-transform hover:-translate-y-1"
+                    style={{
+                      color: "hsl(var(--w-ink-soft))",
+                      background: "hsl(var(--w-card))",
+                      border: "1px solid hsl(var(--w-glass-border))",
+                    }}
                   >
                     <Icon className="h-4 w-4" />
                   </a>
@@ -71,7 +85,7 @@ const Footer = () => {
             <div className="grid gap-8 sm:grid-cols-3">
               {footerColumns.map((column) => (
                 <div key={column.title}>
-                  <p className="text-sm font-black uppercase tracking-[0.18em] text-foreground">
+                  <p className="text-sm font-black uppercase tracking-[0.16em] text-foreground">
                     {column.title}
                   </p>
                   <div className="mt-4 space-y-3">
@@ -79,7 +93,7 @@ const Footer = () => {
                       <Link
                         key={link.label}
                         to={link.to}
-                        className="block text-sm text-muted-foreground transition-colors hover:text-foreground"
+                        className="block text-sm text-muted-foreground transition-colors hover:text-primary"
                       >
                         {link.label}
                       </Link>
@@ -90,9 +104,12 @@ const Footer = () => {
             </div>
           </div>
 
-          <div className="mt-10 flex flex-col gap-3 border-t border-border/80 pt-6 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-            <p>Palette: cream canvas, navy outline, mint CTA, sky + peach accents.</p>
-            <p>© 2026 Yukihon. Designed for a lighter learning flow.</p>
+          <div
+            className="mt-10 flex flex-col gap-3 pt-6 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between"
+            style={{ borderTop: "1px solid hsl(var(--w-border))" }}
+          >
+            <p>Bảng màu: trời tuyết, xanh băng, kính mờ và viền mảnh.</p>
+            <p>© 2026 Yukihon. Thiết kế cho một luồng học nhẹ nhàng.</p>
           </div>
         </div>
       </div>

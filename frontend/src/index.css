@@ -409,3 +409,273 @@ html {
     scroll-behavior: auto !important;
   }
 }
+
+/* ============================================================
+   WINTER THEME — scoped to public pages (landing + auth) only.
+   Wrap a page root in `.winter` (light) / `.winter.is-dark`.
+   Does NOT touch the global app palette (logged-in app stays green).
+   ============================================================ */
+@layer components {
+  .winter {
+    /* sky / canvas */
+    --w-sky-1: 209 64% 83%; /* top of sky */
+    --w-sky-2: 205 72% 92%;
+    --w-sky-3: 0 0% 100%; /* snow horizon */
+    --w-hill-far: 206 45% 90%;
+    --w-hill-near: 208 40% 95%;
+
+    /* ink / text */
+    --w-ink: 215 47% 17%;
+    --w-ink-soft: 214 20% 42%;
+    --w-ink-faint: 213 18% 56%;
+
+    /* accent (winter blue) */
+    --w-accent: 213 88% 54%;
+    --w-accent-strong: 216 90% 48%;
+    --w-accent-fg: 0 0% 100%;
+    --w-accent-soft: 208 90% 95%;
+
+    /* surfaces */
+    --w-card: 0 0% 100% / 0.74;
+    --w-card-solid: 206 60% 99%;
+    --w-border: 210 42% 87%;
+    --w-glass-border: 0 0% 100% / 0.85;
+    --w-snow: 0 0% 100%;
+    --w-shadow: 18px 30px 60px -34px rgba(30, 64, 124, 0.45);
+    --w-shadow-sm: 0 1px 2px rgba(30, 64, 124, 0.08), 0 8px 22px -18px rgba(30, 64, 124, 0.3);
+    --w-glow: 0 0 0 rgba(0, 0, 0, 0);
+
+    position: relative;
+    min-height: 100vh;
+    color: hsl(var(--w-ink));
+    background: transparent;
+  }
+
+  .winter.is-dark {
+    --w-sky-1: 218 56% 8%;
+    --w-sky-2: 216 50% 12%;
+    --w-sky-3: 213 44% 19%;
+    --w-hill-far: 215 40% 16%;
+    --w-hill-near: 214 38% 22%;
+
+    --w-ink: 210 44% 96%;
+    --w-ink-soft: 212 26% 74%;
+    --w-ink-faint: 212 20% 60%;
+
+    --w-accent: 202 100% 68%;
+    --w-accent-strong: 200 100% 74%;
+    --w-accent-fg: 215 60% 11%;
+    --w-accent-soft: 210 60% 22%;
+
+    --w-card: 214 44% 15% / 0.55;
+    --w-card-solid: 215 44% 14%;
+    --w-border: 205 70% 90% / 0.14;
+    --w-glass-border: 205 80% 86% / 0.2;
+    --w-snow: 205 100% 94%;
+    --w-shadow: 22px 40px 70px -36px rgba(0, 0, 0, 0.7);
+    --w-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35), 0 10px 30px -20px rgba(0, 0, 0, 0.6);
+    --w-glow: 0 0 32px -6px hsl(var(--w-accent) / 0.55);
+  }
+
+  /* ---- Winter primitives ---- */
+  .winter-pill {
+    @apply inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.16em];
+    color: hsl(var(--w-accent-strong));
+    background: hsl(var(--w-accent) / 0.1);
+    border: 1px solid hsl(var(--w-accent) / 0.24);
+    backdrop-filter: blur(8px);
+  }
+
+  .winter-glass {
+    border-radius: 1.4rem;
+    background: hsl(var(--w-card));
+    border: 1px solid hsl(var(--w-glass-border));
+    box-shadow: var(--w-shadow);
+    backdrop-filter: blur(18px) saturate(1.15);
+    -webkit-backdrop-filter: blur(18px) saturate(1.15);
+  }
+
+  .winter-card {
+    border-radius: 1.25rem;
+    background: hsl(var(--w-card-solid) / 0.92);
+    border: 1px solid hsl(var(--w-border));
+    box-shadow: var(--w-shadow-sm);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition:
+      transform 0.25s ease,
+      box-shadow 0.25s ease,
+      border-color 0.25s ease;
+  }
+
+  .winter-card:hover {
+    transform: translateY(-3px);
+    border-color: hsl(var(--w-accent) / 0.4);
+    box-shadow: var(--w-shadow-sm), var(--w-glow);
+  }
+
+  .winter-btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-base font-bold transition-all duration-200;
+    color: hsl(var(--w-accent-fg));
+    background: linear-gradient(135deg, hsl(var(--w-accent)) 0%, hsl(var(--w-accent-strong)) 100%);
+    box-shadow:
+      0 10px 28px -12px hsl(var(--w-accent) / 0.7),
+      inset 0 1px 0 hsl(0 0% 100% / 0.25);
+  }
+
+  .winter-btn:hover {
+    filter: brightness(1.06);
+    transform: translateY(-2px);
+    box-shadow:
+      0 16px 34px -12px hsl(var(--w-accent) / 0.8),
+      inset 0 1px 0 hsl(0 0% 100% / 0.25);
+  }
+
+  .winter-btn:active {
+    transform: translateY(0);
+  }
+
+  .winter-btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-base font-bold transition-all duration-200;
+    color: hsl(var(--w-ink));
+    background: hsl(var(--w-card));
+    border: 1px solid hsl(var(--w-glass-border));
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .winter-btn-ghost:hover {
+    border-color: hsl(var(--w-accent) / 0.45);
+    color: hsl(var(--w-accent-strong));
+    transform: translateY(-2px);
+  }
+
+  .winter-input {
+    @apply h-12 w-full rounded-2xl px-4 outline-none transition-all duration-200;
+    color: hsl(var(--w-ink));
+    background: hsl(var(--w-card-solid) / 0.7);
+    border: 1px solid hsl(var(--w-border));
+  }
+
+  .winter-input::placeholder {
+    color: hsl(var(--w-ink-faint));
+  }
+
+  .winter-input:focus {
+    border-color: hsl(var(--w-accent));
+    box-shadow: 0 0 0 4px hsl(var(--w-accent) / 0.14);
+    background: hsl(var(--w-card-solid) / 0.95);
+  }
+
+  .winter-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, hsl(var(--w-border)), transparent);
+  }
+
+  /* ---- Scoped remap so reused app classes adopt winter inside `.winter` ---- */
+  .winter .text-foreground {
+    color: hsl(var(--w-ink));
+  }
+  .winter .text-muted-foreground {
+    color: hsl(var(--w-ink-soft));
+  }
+  .winter .text-primary {
+    color: hsl(var(--w-accent-strong));
+  }
+  .winter .bg-primary {
+    background-color: hsl(var(--w-accent)) !important;
+    color: hsl(var(--w-accent-fg)) !important;
+  }
+  .winter .border-primary {
+    border-color: hsl(var(--w-accent)) !important;
+  }
+  .winter .border-border,
+  .winter .border-border\/40,
+  .winter .border-border\/70,
+  .winter .border-border\/80 {
+    border-color: hsl(var(--w-border)) !important;
+  }
+
+  /* reused surface classes -> winter glass */
+  .winter .surface-panel,
+  .winter .surface-panel-soft,
+  .winter .learnhub-card,
+  .winter .yukihon-card,
+  .winter .yukihon-card-sm,
+  .winter .glass-card {
+    background: hsl(var(--w-card)) !important;
+    border: 1px solid hsl(var(--w-glass-border)) !important;
+    box-shadow: var(--w-shadow-sm) !important;
+    backdrop-filter: blur(16px) saturate(1.1);
+    -webkit-backdrop-filter: blur(16px) saturate(1.1);
+    color: hsl(var(--w-ink));
+  }
+
+  .winter .learnhub-edge {
+    border-color: hsl(var(--w-glass-border)) !important;
+  }
+
+  .winter .learnhub-input {
+    background: hsl(var(--w-card-solid) / 0.7) !important;
+    border-color: hsl(var(--w-border)) !important;
+    color: hsl(var(--w-ink));
+  }
+  .winter .learnhub-input:focus {
+    border-color: hsl(var(--w-accent)) !important;
+    box-shadow: 0 0 0 4px hsl(var(--w-accent) / 0.14) !important;
+  }
+
+  .winter .section-kicker {
+    color: hsl(var(--w-accent-strong));
+    background: hsl(var(--w-accent) / 0.1);
+    border-color: hsl(var(--w-accent) / 0.24);
+  }
+
+  /* recolor primary->secondary gradients (auth submit button + hero headline) */
+  .winter .from-primary {
+    --tw-gradient-from: hsl(var(--w-accent)) var(--tw-gradient-from-position) !important;
+    --tw-gradient-to: hsl(var(--w-accent) / 0) var(--tw-gradient-to-position) !important;
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+  }
+  .winter .to-secondary {
+    --tw-gradient-to: hsl(var(--w-accent-strong)) var(--tw-gradient-to-position) !important;
+  }
+
+  /* ---- Winter scene background ---- */
+  .winter-scene {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    background:
+      radial-gradient(120% 80% at 78% -10%, hsl(var(--w-accent) / 0.18), transparent 55%),
+      linear-gradient(
+        180deg,
+        hsl(var(--w-sky-1)) 0%,
+        hsl(var(--w-sky-2)) 45%,
+        hsl(var(--w-sky-3)) 100%
+      );
+    transition: background 0.5s ease;
+  }
+
+  .winter-orb {
+    position: absolute;
+    top: 7%;
+    right: 12%;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, hsl(var(--w-snow)), hsl(var(--w-accent-soft)));
+    box-shadow: 0 0 80px 12px hsl(var(--w-snow) / 0.55);
+    opacity: 0.85;
+  }
+
+  .winter-snowflake {
+    position: absolute;
+    top: -16px;
+    border-radius: 50%;
+    background: hsl(var(--w-snow));
+    pointer-events: none;
+    will-change: transform;
+  }
+}

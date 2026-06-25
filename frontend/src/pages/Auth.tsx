@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, CheckCircle2, Sparkles } from "lucide-react";
+import { ArrowLeft, CheckCircle2 } from "lucide-react";
 
 import { authApi } from "@/api";
 import { AuthFormCard, AuthHero, type AuthMode } from "@/components/auth";
 import { useAuth } from "@/hooks/use-auth";
+import { useWinterTheme } from "@/hooks/use-winter-theme";
+import { WinterScene, WinterThemeToggle, WinterMark } from "@/components/winter";
 
 const KANJI_SEQUENCE = "Tiếng Nhật, mỗi ngày.";
 
@@ -35,6 +37,7 @@ const Auth = () => {
 
   const navigate = useNavigate();
   const { login, loginWithGoogleCode, register } = useAuth();
+  const { isDark, toggle } = useWinterTheme();
 
   const authenticateWithGoogle = useCallback(
     async (code: string, targetPath: string) => {
@@ -234,44 +237,51 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background px-4 pb-10 pt-6 sm:px-6">
-      <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(255,216,207,0.52),transparent_32%),radial-gradient(circle_at_top_right,rgba(201,240,255,0.58),transparent_28%),linear-gradient(180deg,#fffaf4_0%,#fff5ed_40%,#f8f0e8_100%)]" />
+    <div className={`winter min-h-screen px-4 pb-10 pt-6 sm:px-6 ${isDark ? "is-dark" : ""}`}>
+      <WinterScene isDark={isDark} flakes={24} />
 
       <motion.nav
         initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mx-auto max-w-[1360px]"
+        className="mx-auto max-w-[1280px]"
       >
-        <div className="surface-panel flex items-center justify-between bg-white/92 px-5 py-4 backdrop-blur-xl sm:px-6">
+        <div className="winter-glass flex items-center justify-between px-4 py-3 sm:px-5">
           <Link
             to="/"
-            className="flex items-center gap-3 text-foreground/76 transition-colors hover:text-foreground"
+            className="flex items-center gap-2.5 transition-colors"
+            style={{ color: "hsl(var(--w-ink-soft))" }}
           >
             <ArrowLeft className="h-4 w-4" />
-            <div className="flex h-11 w-11 items-center justify-center rounded-[1rem] bg-[#ffcfc6]">
-              <span className="display-font text-2xl font-bold text-foreground">Y</span>
+            <div
+              className="flex h-10 w-10 items-center justify-center rounded-xl"
+              style={{
+                color: "hsl(var(--w-accent-fg))",
+                background:
+                  "linear-gradient(135deg, hsl(var(--w-accent)), hsl(var(--w-accent-strong)))",
+                boxShadow: "0 8px 20px -10px hsl(var(--w-accent) / 0.8)",
+              }}
+            >
+              <WinterMark size={20} />
             </div>
             <div>
               <p className="text-xl font-black tracking-tight text-foreground">Yukihon</p>
-              <p className="hidden text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground sm:block">
-                Bắt đầu nhẹ nhàng
+              <p
+                className="hidden text-[10px] font-semibold uppercase tracking-[0.18em] sm:block"
+                style={{ color: "hsl(var(--w-ink-faint))" }}
+              >
+                Học nhẹ nhàng, đi đường dài
               </p>
             </div>
           </Link>
 
-          <div className="hidden items-center gap-3 rounded-full bg-[#f7f3ee] px-4 py-2 sm:flex">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <span className="text-sm font-semibold text-foreground">
-              Chế độ tối tạm gác lại. Hiện chỉ có chế độ sáng.
-            </span>
-          </div>
+          <WinterThemeToggle isDark={isDark} onToggle={toggle} />
         </div>
       </motion.nav>
 
-      <div className="mx-auto mt-8 grid max-w-[1360px] gap-8 lg:grid-cols-[1.02fr_0.98fr]">
+      <div className="mx-auto mt-8 grid max-w-[1280px] gap-8 lg:grid-cols-[1.02fr_0.98fr]">
         <div className="hidden lg:block">
-          <div className="surface-panel-soft h-full p-8">
-            <div className="section-kicker">
+          <div className="winter-glass h-full p-8">
+            <div className="winter-pill">
               <CheckCircle2 className="h-3.5 w-3.5" />
               Trải nghiệm lần đầu mượt hơn
             </div>
@@ -281,7 +291,7 @@ const Auth = () => {
           </div>
         </div>
 
-        <div className="surface-panel-soft flex items-center justify-center p-3 sm:p-5 lg:p-6">
+        <div className="winter-glass flex items-center justify-center p-3 sm:p-5 lg:p-6">
           <AuthFormCard
             mode={mode}
             setMode={handleModeChange}

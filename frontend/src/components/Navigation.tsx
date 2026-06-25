@@ -2,21 +2,26 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
+import { WinterMark, WinterThemeToggle } from "@/components/winter";
 
 type SectionId = "hero" | "how-it-works" | "jlpt" | "features" | "testimonials";
 
 const NAV_SECTIONS: { id: SectionId; label: string }[] = [
-  { id: "hero", label: "Home" },
-  { id: "how-it-works", label: "Method" },
+  { id: "hero", label: "Trang chủ" },
+  { id: "how-it-works", label: "Phương pháp" },
   { id: "jlpt", label: "JLPT" },
-  { id: "features", label: "Features" },
-  { id: "testimonials", label: "Stories" },
+  { id: "features", label: "Tính năng" },
+  { id: "testimonials", label: "Cảm nhận" },
 ];
 
-const Navigation = () => {
+interface NavigationProps {
+  isDark: boolean;
+  onToggleTheme: () => void;
+}
+
+const Navigation = ({ isDark, onToggleTheme }: NavigationProps) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<SectionId>("hero");
   const [scrolled, setScrolled] = useState(false);
@@ -77,87 +82,122 @@ const Navigation = () => {
     <header
       className={cn(
         "fixed inset-x-0 top-0 z-50 transition-all duration-300",
-        scrolled ? "pt-4" : "pt-6"
+        scrolled ? "pt-3" : "pt-5"
       )}
     >
-      <nav className="mx-auto flex max-w-[1440px] items-center justify-between px-4 sm:px-6">
-        <div className="surface-panel flex w-full items-center justify-between gap-4 bg-white/92 px-5 py-4 backdrop-blur-xl sm:px-6">
-          <Link to="/" className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-[1.1rem] bg-[#ffcfc6]">
-              <span className="display-font text-2xl font-bold text-foreground">Y</span>
+      <nav className="mx-auto flex max-w-[1280px] items-center justify-between px-4 sm:px-6">
+        <div
+          className={cn(
+            "winter-glass flex w-full items-center justify-between gap-4 px-4 py-3 transition-all sm:px-5",
+            scrolled && "shadow-lg"
+          )}
+        >
+          <Link to="/" className="flex items-center gap-2.5">
+            <div
+              className="flex h-10 w-10 items-center justify-center rounded-xl"
+              style={{
+                color: "hsl(var(--w-accent-fg))",
+                background:
+                  "linear-gradient(135deg, hsl(var(--w-accent)), hsl(var(--w-accent-strong)))",
+                boxShadow: "0 8px 20px -10px hsl(var(--w-accent) / 0.8)",
+              }}
+            >
+              <WinterMark size={20} />
             </div>
             <div className="min-w-0">
-              <p className="truncate text-2xl font-black tracking-tight text-foreground">Yukihon</p>
-              <p className="hidden text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground sm:block">
-                Learn light, stay consistent
+              <p
+                className="truncate text-xl font-black tracking-tight"
+                style={{ color: "hsl(var(--w-ink))" }}
+              >
+                Yukihon
+              </p>
+              <p
+                className="hidden text-[10px] font-semibold uppercase tracking-[0.18em] sm:block"
+                style={{ color: "hsl(var(--w-ink-faint))" }}
+              >
+                Học nhẹ nhàng, đi đường dài
               </p>
             </div>
           </Link>
 
-          <div className="hidden items-center gap-1 rounded-full bg-[#fbf7f2] p-1 lg:flex">
-            {NAV_SECTIONS.map((section) => (
-              <button
-                key={section.id}
-                onClick={() => scrollToSection(section.id)}
-                className={cn(
-                  "rounded-full px-4 py-2 text-sm font-semibold transition-all",
-                  activeSection === section.id
-                    ? "bg-white text-foreground shadow-[0_10px_20px_-18px_rgba(32,48,74,0.5)]"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-                type="button"
-              >
-                {section.label}
-              </button>
-            ))}
+          <div
+            className="hidden items-center gap-1 rounded-full p-1 lg:flex"
+            style={{
+              background: "hsl(var(--w-accent) / 0.06)",
+              border: "1px solid hsl(var(--w-glass-border))",
+            }}
+          >
+            {NAV_SECTIONS.map((section) => {
+              const active = activeSection === section.id;
+              return (
+                <button
+                  key={section.id}
+                  onClick={() => scrollToSection(section.id)}
+                  className="rounded-full px-4 py-1.5 text-sm font-semibold transition-all"
+                  style={{
+                    color: active ? "hsl(var(--w-accent-fg))" : "hsl(var(--w-ink-soft))",
+                    background: active
+                      ? "linear-gradient(135deg, hsl(var(--w-accent)), hsl(var(--w-accent-strong)))"
+                      : "transparent",
+                    boxShadow: active ? "0 8px 18px -10px hsl(var(--w-accent) / 0.7)" : "none",
+                  }}
+                  type="button"
+                >
+                  {section.label}
+                </button>
+              );
+            })}
           </div>
 
-          <div className="hidden items-center gap-3 lg:flex">
+          <div className="hidden items-center gap-2.5 lg:flex">
+            <WinterThemeToggle isDark={isDark} onToggle={onToggleTheme} />
             <Link
               to={isAuthenticated ? "/dashboard" : "/auth"}
-              className="px-2 text-sm font-semibold text-foreground/72 transition-colors hover:text-foreground"
+              className="px-2 text-sm font-semibold transition-colors"
+              style={{ color: "hsl(var(--w-ink-soft))" }}
             >
-              {isAuthenticated ? "Dashboard" : "Log in"}
+              {isAuthenticated ? "Tổng quan" : "Đăng nhập"}
             </Link>
-            <Link to={primaryCta}>
-              <Button className="min-w-[160px]">
-                {isAuthenticated ? "Open Dashboard" : "Start Free"}
-              </Button>
+            <Link to={primaryCta} className="winter-btn px-5 py-2.5 text-sm">
+              {isAuthenticated ? "Vào học" : "Bắt đầu miễn phí"}
             </Link>
           </div>
 
           <div className="flex items-center gap-2 lg:hidden">
-            <Link to={primaryCta}>
-              <Button size="sm">{isAuthenticated ? "Dashboard" : "Start"}</Button>
-            </Link>
-            <Button
-              size="icon"
-              variant="outline"
+            <WinterThemeToggle isDark={isDark} onToggle={onToggleTheme} />
+            <button
+              type="button"
               onClick={() => setMobileOpen((previous) => !previous)}
+              className="flex h-10 w-10 items-center justify-center rounded-full"
+              style={{
+                color: "hsl(var(--w-ink))",
+                background: "hsl(var(--w-card))",
+                border: "1px solid hsl(var(--w-glass-border))",
+              }}
+              aria-label="Mở menu"
             >
               {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
+            </button>
           </div>
         </div>
       </nav>
 
       <div
         className={cn(
-          "mx-auto mt-3 max-w-[1440px] overflow-hidden px-4 transition-all duration-300 sm:px-6 lg:hidden",
-          mobileOpen ? "max-h-[420px] opacity-100" : "max-h-0 opacity-0"
+          "mx-auto mt-3 max-w-[1280px] overflow-hidden px-4 transition-all duration-300 sm:px-6 lg:hidden",
+          mobileOpen ? "max-h-[440px] opacity-100" : "max-h-0 opacity-0"
         )}
       >
-        <div className="rounded-[1.8rem] border-2 border-border/80 bg-white/96 p-4 shadow-[0_26px_60px_-36px_rgba(32,48,74,0.32)] backdrop-blur-xl">
+        <div className="winter-glass p-4">
           <div className="space-y-2">
             {NAV_SECTIONS.map((section) => (
               <button
                 key={section.id}
-                className={cn(
-                  "flex w-full items-center justify-between rounded-[1rem] px-4 py-3 text-left text-sm font-semibold transition-all",
-                  activeSection === section.id
-                    ? "bg-[#f0faf0] text-foreground"
-                    : "bg-[#faf7f3] text-foreground/75"
-                )}
+                className="flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left text-sm font-semibold transition-all"
+                style={{
+                  color: "hsl(var(--w-ink))",
+                  background: "hsl(var(--w-accent) / 0.07)",
+                }}
                 onClick={() => {
                   scrollToSection(section.id);
                   setMobileOpen(false);
@@ -165,23 +205,16 @@ const Navigation = () => {
                 type="button"
               >
                 <span>{section.label}</span>
-                <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                  Go
-                </span>
               </button>
             ))}
           </div>
 
           <div className="mt-4 grid gap-2 sm:grid-cols-2">
-            <Link to="/courses" onClick={() => setMobileOpen(false)}>
-              <Button className="w-full" variant="outline">
-                Browse Courses
-              </Button>
+            <Link to="/courses" onClick={() => setMobileOpen(false)} className="winter-btn-ghost">
+              Khám phá khóa học
             </Link>
-            <Link to={primaryCta} onClick={() => setMobileOpen(false)}>
-              <Button className="w-full">
-                {isAuthenticated ? "Open Dashboard" : "Start Free"}
-              </Button>
+            <Link to={primaryCta} onClick={() => setMobileOpen(false)} className="winter-btn">
+              {isAuthenticated ? "Vào học" : "Bắt đầu miễn phí"}
             </Link>
           </div>
         </div>
