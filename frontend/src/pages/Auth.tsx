@@ -1,15 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { ArrowLeft, CheckCircle2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import { authApi } from "@/api";
-import { AuthFormCard, AuthHero, type AuthMode } from "@/components/auth";
+import { SlidingAuthCard, type AuthMode } from "@/components/auth";
 import { useAuth } from "@/hooks/use-auth";
 import { useWinterTheme } from "@/hooks/use-winter-theme";
-import { WinterScene, WinterThemeToggle, WinterMark } from "@/components/winter";
-
-const KANJI_SEQUENCE = "Tiếng Nhật, mỗi ngày.";
+import { WinterScene } from "@/components/winter";
 
 const getSafeRedirectPath = (params: URLSearchParams) => {
   const from = params.get("from");
@@ -20,8 +16,17 @@ const getSafeRedirectPath = (params: URLSearchParams) => {
   return from;
 };
 
+const getInitialMode = (): AuthMode => {
+  if (typeof window === "undefined") return "login";
+  const params = new URLSearchParams(window.location.search);
+  const m = params.get("mode");
+  if (params.get("token")) return "reset";
+  if (m === "register" || m === "reset" || m === "forgot") return m;
+  return "login";
+};
+
 const Auth = () => {
-  const [mode, setMode] = useState<AuthMode>("login");
+  const [mode, setMode] = useState<AuthMode>(getInitialMode);
   const [showPassword, setShowPassword] = useState(false);
   const [jlptTarget, setJlptTarget] = useState("N4");
   const [displayName, setDisplayName] = useState("");
@@ -32,7 +37,6 @@ const Auth = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
-  const [typingKanji, setTypingKanji] = useState("");
   const [redirectPath, setRedirectPath] = useState("/dashboard");
 
   const navigate = useNavigate();
@@ -58,23 +62,6 @@ const Auth = () => {
   );
 
   useEffect(() => {
-    let index = 0;
-    const timer = setInterval(() => {
-      setTypingKanji(KANJI_SEQUENCE.slice(0, index + 1));
-      index += 1;
-
-      if (index >= KANJI_SEQUENCE.length) {
-        setTimeout(() => {
-          index = 0;
-          setTypingKanji("");
-        }, 1800);
-      }
-    }, 110);
-
-    return () => clearInterval(timer);
-  }, []);
-
-  useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code");
     const error = params.get("error");
@@ -89,6 +76,8 @@ const Auth = () => {
       if (token) {
         setResetToken(token);
       }
+    } else if (authMode === "register") {
+      setMode("register");
     }
 
     if (reason === "session_expired") {
@@ -237,86 +226,38 @@ const Auth = () => {
   };
 
   return (
-    <div className={`winter min-h-screen px-4 pb-10 pt-6 sm:px-6 ${isDark ? "is-dark" : ""}`}>
-      <WinterScene isDark={isDark} flakes={24} />
+    <div
+      className={`winter flex min-h-screen items-center justify-center px-4 py-10 ${
+        isDark ? "is-dark" : ""
+      }`}
+    >
+      <WinterScene isDark={isDark} flakes={28} />
 
-      <motion.nav
-        initial={{ opacity: 0, y: -12 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mx-auto max-w-[1280px]"
-      >
-        <div className="winter-glass flex items-center justify-between px-4 py-3 sm:px-5">
-          <Link
-            to="/"
-            className="flex items-center gap-2.5 transition-colors"
-            style={{ color: "hsl(var(--w-ink-soft))" }}
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <div
-              className="flex h-10 w-10 items-center justify-center rounded-xl"
-              style={{
-                color: "hsl(var(--w-accent-fg))",
-                background:
-                  "linear-gradient(135deg, hsl(var(--w-accent)), hsl(var(--w-accent-strong)))",
-                boxShadow: "0 8px 20px -10px hsl(var(--w-accent) / 0.8)",
-              }}
-            >
-              <WinterMark size={20} />
-            </div>
-            <div>
-              <p className="text-xl font-black tracking-tight text-foreground">Yukihon</p>
-              <p
-                className="hidden text-[10px] font-semibold uppercase tracking-[0.18em] sm:block"
-                style={{ color: "hsl(var(--w-ink-faint))" }}
-              >
-                Học nhẹ nhàng, đi đường dài
-              </p>
-            </div>
-          </Link>
-
-          <WinterThemeToggle isDark={isDark} onToggle={toggle} />
-        </div>
-      </motion.nav>
-
-      <div className="mx-auto mt-8 grid max-w-[1280px] gap-8 lg:grid-cols-[1.02fr_0.98fr]">
-        <div className="hidden lg:block">
-          <div className="winter-glass h-full p-8">
-            <div className="winter-pill">
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              Trải nghiệm lần đầu mượt hơn
-            </div>
-            <div className="mt-8">
-              <AuthHero mode={mode} typingKanji={typingKanji} />
-            </div>
-          </div>
-        </div>
-
-        <div className="winter-glass flex items-center justify-center p-3 sm:p-5 lg:p-6">
-          <AuthFormCard
-            mode={mode}
-            setMode={handleModeChange}
-            isSubmitting={isSubmitting}
-            errorMsg={errorMsg}
-            successMsg={successMsg}
-            displayName={displayName}
-            setDisplayName={setDisplayName}
-            email={email}
-            setEmail={setEmail}
-            password={password}
-            setPassword={setPassword}
-            confirmPassword={confirmPassword}
-            setConfirmPassword={setConfirmPassword}
-            resetToken={resetToken}
-            setResetToken={setResetToken}
-            jlptTarget={jlptTarget}
-            setJlptTarget={setJlptTarget}
-            showPassword={showPassword}
-            setShowPassword={setShowPassword}
-            onSubmit={handleSubmit}
-            onGoogleLogin={handleGoogleLogin}
-          />
-        </div>
-      </div>
+      <SlidingAuthCard
+        mode={mode}
+        setMode={handleModeChange}
+        isSubmitting={isSubmitting}
+        errorMsg={errorMsg}
+        successMsg={successMsg}
+        displayName={displayName}
+        setDisplayName={setDisplayName}
+        email={email}
+        setEmail={setEmail}
+        password={password}
+        setPassword={setPassword}
+        confirmPassword={confirmPassword}
+        setConfirmPassword={setConfirmPassword}
+        resetToken={resetToken}
+        setResetToken={setResetToken}
+        jlptTarget={jlptTarget}
+        setJlptTarget={setJlptTarget}
+        showPassword={showPassword}
+        setShowPassword={setShowPassword}
+        onSubmit={handleSubmit}
+        onGoogleLogin={handleGoogleLogin}
+        isDark={isDark}
+        onToggleTheme={toggle}
+      />
     </div>
   );
 };

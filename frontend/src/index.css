@@ -445,6 +445,10 @@ html {
     --w-shadow-sm: 0 1px 2px rgba(30, 64, 124, 0.08), 0 8px 22px -18px rgba(30, 64, 124, 0.3);
     --w-glow: 0 0 0 rgba(0, 0, 0, 0);
 
+    --w-overlay-from: 213 88% 54%;
+    --w-overlay-to: 216 82% 42%;
+    --w-overlay-fg: 0 0% 100%;
+
     position: relative;
     min-height: 100vh;
     color: hsl(var(--w-ink));
@@ -475,6 +479,10 @@ html {
     --w-shadow: 22px 40px 70px -36px rgba(0, 0, 0, 0.7);
     --w-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35), 0 10px 30px -20px rgba(0, 0, 0, 0.6);
     --w-glow: 0 0 32px -6px hsl(var(--w-accent) / 0.55);
+
+    --w-overlay-from: 214 58% 24%;
+    --w-overlay-to: 217 66% 13%;
+    --w-overlay-fg: 205 100% 93%;
   }
 
   /* ---- Winter primitives ---- */
@@ -551,20 +559,22 @@ html {
   }
 
   .winter-input {
+    /* !important beats shadcn Input's bg-background/border-input utilities */
     @apply h-12 w-full rounded-2xl px-4 outline-none transition-all duration-200;
-    color: hsl(var(--w-ink));
-    background: hsl(var(--w-card-solid) / 0.7);
-    border: 1px solid hsl(var(--w-border));
+    color: hsl(var(--w-ink)) !important;
+    background: hsl(var(--w-card-solid) / 0.7) !important;
+    border: 1px solid hsl(var(--w-border)) !important;
   }
 
   .winter-input::placeholder {
-    color: hsl(var(--w-ink-faint));
+    color: hsl(var(--w-ink-faint)) !important;
   }
 
-  .winter-input:focus {
-    border-color: hsl(var(--w-accent));
-    box-shadow: 0 0 0 4px hsl(var(--w-accent) / 0.14);
-    background: hsl(var(--w-card-solid) / 0.95);
+  .winter-input:focus,
+  .winter-input:focus-visible {
+    border-color: hsl(var(--w-accent)) !important;
+    box-shadow: 0 0 0 4px hsl(var(--w-accent) / 0.14) !important;
+    background: hsl(var(--w-card-solid) / 0.95) !important;
   }
 
   .winter-divider {
@@ -677,5 +687,135 @@ html {
     background: hsl(var(--w-snow));
     pointer-events: none;
     will-change: transform;
+  }
+}
+
+/* ============================================================
+   SLIDING AUTH CARD — one centered rectangle, login/register on
+   each side, animated overlay panel slides across to switch.
+   Scoped under `.winter` so it adopts winter tokens (light/dark).
+   ============================================================ */
+@layer components {
+  .auth-shell {
+    position: relative;
+    width: 100%;
+    max-width: 960px;
+    min-height: 600px;
+    overflow: hidden;
+    border-radius: 1.75rem;
+  }
+
+  .auth-form-panel {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 2.75rem 3rem;
+    overflow-y: auto;
+    transition:
+      transform 0.7s cubic-bezier(0.65, 0, 0.35, 1),
+      opacity 0.6s ease;
+  }
+
+  .auth-panel-signin {
+    left: 0;
+    z-index: 2;
+  }
+  .auth-panel-signup {
+    left: 0;
+    z-index: 1;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .auth-shell.is-signup .auth-panel-signin {
+    transform: translateX(100%);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .auth-shell.is-signup .auth-panel-signup {
+    transform: translateX(100%);
+    opacity: 1;
+    z-index: 5;
+    pointer-events: auto;
+  }
+
+  .auth-overlay-wrap {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 50%;
+    height: 100%;
+    overflow: hidden;
+    z-index: 100;
+    transition: transform 0.7s cubic-bezier(0.65, 0, 0.35, 1);
+  }
+  .auth-shell.is-signup .auth-overlay-wrap {
+    transform: translateX(-100%);
+  }
+
+  .auth-overlay {
+    position: relative;
+    left: -100%;
+    width: 200%;
+    height: 100%;
+    transform: translateX(0);
+    transition: transform 0.7s cubic-bezier(0.65, 0, 0.35, 1);
+    color: hsl(var(--w-overlay-fg));
+    background:
+      radial-gradient(80% 60% at 80% 10%, hsl(0 0% 100% / 0.18), transparent 60%),
+      linear-gradient(135deg, hsl(var(--w-overlay-from)) 0%, hsl(var(--w-overlay-to)) 100%);
+  }
+  .auth-shell.is-signup .auth-overlay {
+    transform: translateX(50%);
+  }
+
+  .auth-overlay-panel {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 0 2.75rem;
+  }
+  .auth-overlay-left {
+    left: 0;
+  }
+  .auth-overlay-right {
+    right: 0;
+  }
+
+  /* Mobile: drop the slide, stack a single active form */
+  @media (max-width: 860px) {
+    .auth-shell {
+      min-height: auto;
+    }
+    .auth-overlay-wrap {
+      display: none;
+    }
+    .auth-form-panel {
+      position: relative;
+      width: 100%;
+      padding: 2rem 1.5rem;
+      transform: none !important;
+      opacity: 1;
+    }
+    .auth-panel-signup {
+      display: none;
+    }
+    .auth-shell.is-signup .auth-panel-signin {
+      display: none;
+    }
+    .auth-shell.is-signup .auth-panel-signup {
+      display: flex;
+      pointer-events: auto;
+    }
   }
 }
