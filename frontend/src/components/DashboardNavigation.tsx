@@ -1,4 +1,4 @@
-import { type ElementType, useEffect, useMemo, useState } from "react";
+import { type ElementType, Fragment, useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -8,12 +8,11 @@ import {
   Bot,
   Brain,
   CalendarDays,
-  ChevronLeft,
   ChevronRight,
   Compass,
-  Flame,
   Globe2,
   GraduationCap,
+  Home,
   Layers,
   LayoutDashboard,
   LogOut,
@@ -55,8 +54,9 @@ interface DashboardNavigationProps {
   onToggleCollapse: () => void;
 }
 
-const SIDEBAR_EXPANDED = 296;
-const SIDEBAR_COLLAPSED = 112;
+export const SIDEBAR_EXPANDED = 244;
+export const SIDEBAR_COLLAPSED = 72;
+export const TOPBAR_HEIGHT = 60;
 
 const NAV_GROUPS: NavGroup[] = [
   {
@@ -86,32 +86,40 @@ const NAV_GROUPS: NavGroup[] = [
   },
 ];
 
+const ADMIN_ITEMS: NavItem[] = [
+  { label: "Creator Studio", path: "/admin/creator-mode", icon: Wand2 },
+  { label: "Story Admin", path: "/admin/story-mode", icon: BookOpen },
+  { label: "Admin Panel", path: "/admin", icon: Shield },
+];
+
 const PERSONAL_ITEMS: NavItem[] = [{ label: "Profile", path: "/profile", icon: User }];
 
-const PAGE_META: Record<string, { eyebrow: string; title: string }> = {
-  "/dashboard": { eyebrow: "Study cockpit", title: "Dashboard" },
-  "/calendar": { eyebrow: "Daily rhythm", title: "Calendar" },
-  "/dictionary": { eyebrow: "Search and save", title: "Dictionary" },
-  "/story-mode": { eyebrow: "Narrative practice", title: "Story Mode" },
-  "/ai-chat": { eyebrow: "Personal helper", title: "AI Chat" },
-  "/translation": { eyebrow: "Translate and compare", title: "Translation" },
-  "/community": { eyebrow: "Learn together", title: "Community" },
-  "/mistake-dna": { eyebrow: "Pattern insights", title: "Mistake DNA" },
-  "/jlpt-lessons": { eyebrow: "Structured learning", title: "JLPT Paths" },
-  "/vocabulary": { eyebrow: "Words and review", title: "Vocabulary" },
-  "/decks": { eyebrow: "Spaced repetition", title: "Học SRS" },
-  "/grammar": { eyebrow: "Pattern library", title: "Grammar" },
-  "/quiz": { eyebrow: "Quick checks", title: "Quiz" },
-  "/courses": { eyebrow: "Full programs", title: "Courses" },
-  "/kanji-library": { eyebrow: "Characters and meaning", title: "Kanji Library" },
-  "/my-words": { eyebrow: "Your notebook", title: "My Words" },
-  "/profile": { eyebrow: "Account and goals", title: "Profile" },
-  "/admin": { eyebrow: "Control room", title: "Admin Dashboard" },
-  "/admin/users": { eyebrow: "Operations", title: "User Management" },
-  "/admin/content": { eyebrow: "Editorial workspace", title: "Content CMS" },
-  "/admin/story-mode": { eyebrow: "Narrative CMS", title: "StoryMode Admin" },
-  "/admin/creator-mode": { eyebrow: "Builder workspace", title: "Creator Studio" },
-  "/admin/app-settings": { eyebrow: "System config", title: "App Settings" },
+const PAGE_META: Record<string, { title: string }> = {
+  "/dashboard": { title: "Dashboard" },
+  "/calendar": { title: "Lịch học" },
+  "/dictionary": { title: "Từ điển" },
+  "/story-mode": { title: "Story Mode" },
+  "/ai-chat": { title: "AI Chat" },
+  "/translation": { title: "Dịch thuật" },
+  "/community": { title: "Cộng đồng" },
+  "/mistake-dna": { title: "Mistake DNA" },
+  "/jlpt-lessons": { title: "JLPT Paths" },
+  "/vocabulary": { title: "Từ vựng" },
+  "/decks": { title: "Học SRS" },
+  "/grammar": { title: "Ngữ pháp" },
+  "/quiz": { title: "Quiz" },
+  "/courses": { title: "Khóa học" },
+  "/kanji-library": { title: "Kanji Library" },
+  "/kanji": { title: "Kanji" },
+  "/my-words": { title: "My Words" },
+  "/profile": { title: "Hồ sơ" },
+  "/credits": { title: "Credits" },
+  "/admin": { title: "Admin" },
+  "/admin/users": { title: "Người dùng" },
+  "/admin/content": { title: "Content CMS" },
+  "/admin/story-mode": { title: "StoryMode Admin" },
+  "/admin/creator-mode": { title: "Creator Studio" },
+  "/admin/app-settings": { title: "App Settings" },
 };
 
 const AUTO_MENU_ICONS: Record<string, ElementType> = {
@@ -127,6 +135,28 @@ const resolveAutoIcon = (name: string): ElementType => AUTO_MENU_ICONS[name] ?? 
 
 const isItemActive = (pathname: string, itemPath: string) =>
   pathname === itemPath || pathname.startsWith(`${itemPath}/`);
+
+const humanize = (segment: string) =>
+  decodeURIComponent(segment)
+    .replace(/-/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+
+type Crumb = { path: string; label: string; isLast: boolean };
+
+const buildCrumbs = (pathname: string): Crumb[] => {
+  const segments = pathname.split("/").filter(Boolean);
+  const crumbs: Crumb[] = [];
+  let acc = "";
+  segments.forEach((segment, index) => {
+    acc += `/${segment}`;
+    crumbs.push({
+      path: acc,
+      label: PAGE_META[acc]?.title ?? humanize(segment),
+      isLast: index === segments.length - 1,
+    });
+  });
+  return crumbs;
+};
 
 const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigationProps) => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -156,10 +186,8 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
     }
   }, [markRead, onCommunityPage]);
 
-  const pageMeta = useMemo(
-    () => PAGE_META[location.pathname] ?? { eyebrow: "Yukihon workspace", title: "Learning space" },
-    [location.pathname]
-  );
+  const crumbs = useMemo(() => buildCrumbs(location.pathname), [location.pathname]);
+  const currentTitle = crumbs[crumbs.length - 1]?.label ?? "Yukihon";
 
   const userName = user?.displayName || "Learner";
   const userInitial = userName.charAt(0).toUpperCase();
@@ -187,200 +215,121 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
         to={item.path}
         onClick={() => setMobileOpen(false)}
         className={cn(
-          "group flex items-center rounded-[1.2rem] transition-all duration-200",
-          compact ? "justify-center px-2 py-2.5" : "justify-between px-3 py-3",
+          "group relative flex items-center rounded-lg text-sm transition-colors duration-150",
+          compact ? "h-10 justify-center" : "gap-3 px-3 py-2",
           active
-            ? "bg-[#eef9ee] text-foreground shadow-[inset_0_0_0_2px_rgba(34,197,94,0.12)]"
-            : "text-foreground/72 hover:bg-white/90 hover:text-foreground"
+            ? "bg-primary/10 font-semibold text-primary"
+            : "font-medium text-foreground/70 hover:bg-muted hover:text-foreground"
         )}
       >
-        <div className={cn("flex min-w-0 items-center", compact ? "justify-center" : "gap-3")}>
-          <div
-            className={cn(
-              "flex h-11 w-11 items-center justify-center rounded-[1rem] transition-colors",
-              active
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground group-hover:bg-secondary"
+        {active && !compact && (
+          <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-primary" />
+        )}
+        <Icon className={cn("h-[18px] w-[18px] shrink-0", active && "text-primary")} />
+        {!compact && (
+          <>
+            <span className="min-w-0 flex-1 truncate">{item.label}</span>
+            {computedBadge && (
+              <span className="rounded-full bg-primary/12 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary">
+                {computedBadge}
+              </span>
             )}
-          >
-            <Icon className="h-4 w-4" />
-          </div>
-          {!compact && (
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold">{item.label}</p>
-              {computedBadge && (
-                <p className="mt-0.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
-                  {computedBadge}
-                </p>
-              )}
-            </div>
-          )}
-        </div>
-
-        {!compact && !computedBadge && (
-          <ChevronRight
-            className={cn("h-4 w-4", active ? "text-primary" : "text-muted-foreground")}
-          />
+          </>
         )}
       </Link>
     );
   };
 
+  const renderGroup = (label: string, items: NavItem[], compact: boolean) => (
+    <div key={label} className="mb-4">
+      {compact ? (
+        <div className="mx-auto mb-2 h-px w-6 bg-border" />
+      ) : (
+        <p className="px-3 pb-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground/70">
+          {label}
+        </p>
+      )}
+      <div className="space-y-0.5">{items.map((item) => renderItem(item, compact))}</div>
+    </div>
+  );
+
   const sidebarContent = (compact: boolean) => (
     <div className="flex h-full flex-col">
-      <div className={cn("border-b border-border/80", compact ? "px-3 py-4" : "px-4 py-5")}>
-        <Link
-          to="/dashboard"
-          className={cn("flex items-center", compact ? "justify-center" : "gap-3")}
-          onClick={() => setMobileOpen(false)}
+      {/* Header: ☰ toggle + brand */}
+      <div
+        className={cn(
+          "flex items-center border-b border-border/70",
+          compact ? "h-[60px] justify-center px-2" : "h-[60px] gap-2 px-3"
+        )}
+      >
+        <button
+          aria-label={collapsed ? "Mở rộng menu" : "Thu gọn menu"}
+          className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-foreground/70 transition hover:bg-muted hover:text-foreground"
+          onClick={onToggleCollapse}
+          type="button"
         >
-          <div className="flex h-14 w-14 items-center justify-center rounded-[1.35rem] bg-[#ffcdc4] text-xl text-foreground">
-            <span className="display-font text-2xl font-bold">Y</span>
-          </div>
-          {!compact && (
-            <div className="min-w-0">
-              <p className="truncate text-[1.35rem] font-black tracking-tight text-foreground">
-                Yukihon
-              </p>
-              <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                Light study system
-              </p>
-            </div>
-          )}
-        </Link>
-
+          <Menu className="h-[18px] w-[18px]" />
+        </button>
         {!compact && (
-          <div className="mt-4 rounded-[1.45rem] border border-border/80 bg-[#f8fbf7] p-3 shadow-[0_12px_24px_-22px_rgba(32,48,74,0.35)]">
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-[1rem] bg-[#e6f7ff] text-sm font-bold text-foreground">
-                {userInitial}
-              </div>
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-foreground">{userName}</p>
-                <div className="mt-1 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <Flame className="h-3.5 w-3.5 text-[#ff8b4b]" />
-                    12 day
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Sparkles className="h-3.5 w-3.5 text-primary" />
-                    Focus
-                  </span>
-                </div>
-              </div>
+          <Link
+            to="/dashboard"
+            className="flex min-w-0 items-center gap-2"
+            onClick={() => setMobileOpen(false)}
+          >
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#ffcdc4]">
+              <span className="display-font text-lg font-bold text-foreground">Y</span>
             </div>
-          </div>
+            <span className="display-font truncate text-lg font-bold tracking-tight text-foreground">
+              Yukihon
+            </span>
+          </Link>
         )}
       </div>
 
-      <div className={cn("flex-1 overflow-y-auto pb-4", compact ? "px-2 pt-4" : "px-3 pt-5")}>
-        {NAV_GROUPS.map((group) => (
-          <div key={group.label} className="mb-5">
-            {!compact && (
-              <p className="px-3 pb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-                {group.label}
-              </p>
-            )}
-            <div className="space-y-1.5">
-              {group.items.map((item) => renderItem(item, compact))}
+      {/* Nav */}
+      <nav className={cn("flex-1 overflow-y-auto py-3", compact ? "px-2" : "px-2")}>
+        {NAV_GROUPS.map((group) => renderGroup(group.label, group.items, compact))}
+
+        {autoMenu.map((group) =>
+          renderGroup(
+            group.group,
+            group.items.map((item) => ({
+              label: item.title,
+              path: item.url,
+              icon: resolveAutoIcon(item.icon),
+            })),
+            compact
+          )
+        )}
+
+        {renderGroup("Personal", PERSONAL_ITEMS, compact)}
+        {isAdmin() && renderGroup("Admin", ADMIN_ITEMS, compact)}
+      </nav>
+
+      {/* Footer: user + sign out */}
+      <div className={cn("border-t border-border/70 p-2", compact && "px-2")}>
+        {!compact && (
+          <div className="mb-1 flex items-center gap-2.5 rounded-lg px-2 py-2">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#e6f7ff] text-sm font-bold text-foreground">
+              {userInitial}
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-foreground">{userName}</p>
+              <p className="truncate text-xs text-muted-foreground">Light study system</p>
             </div>
           </div>
-        ))}
-
-        {autoMenu.map((group) => (
-          <div key={group.group} className="mb-5">
-            {!compact && (
-              <p className="px-3 pb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-                {group.group}
-              </p>
-            )}
-            <div className="space-y-1.5">
-              {group.items.map((item) =>
-                renderItem(
-                  { label: item.title, path: item.url, icon: resolveAutoIcon(item.icon) },
-                  compact
-                )
-              )}
-            </div>
-          </div>
-        ))}
-
-        <div className="mb-4">
-          {!compact && (
-            <p className="px-3 pb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-              Personal
-            </p>
-          )}
-          <div className="space-y-1.5">
-            {PERSONAL_ITEMS.map((item) => renderItem(item, compact))}
-            {isAdmin() && (
-              <Link
-                to="/admin/creator-mode"
-                onClick={() => setMobileOpen(false)}
-                className={cn(
-                  "group flex items-center rounded-[1.2rem] transition-all duration-200",
-                  compact ? "justify-center px-2 py-2.5" : "gap-3 px-3 py-3",
-                  "bg-[#fff7e5] text-foreground hover:bg-[#fff1cd]"
-                )}
-              >
-                <div className="flex h-11 w-11 items-center justify-center rounded-[1rem] bg-[#d4efff] text-foreground">
-                  <Wand2 className="h-4 w-4" />
-                </div>
-                {!compact && <span className="text-sm font-semibold">Creator Studio</span>}
-              </Link>
-            )}
-            {isAdmin() && (
-              <Link
-                to="/admin/story-mode"
-                onClick={() => setMobileOpen(false)}
-                className={cn(
-                  "group flex items-center rounded-[1.2rem] transition-all duration-200",
-                  compact ? "justify-center px-2 py-2.5" : "gap-3 px-3 py-3",
-                  "bg-[#fff0f3] text-foreground hover:bg-[#ffe4eb]"
-                )}
-              >
-                <div className="flex h-11 w-11 items-center justify-center rounded-[1rem] bg-[#ffd8df] text-foreground">
-                  <BookOpen className="h-4 w-4" />
-                </div>
-                {!compact && <span className="text-sm font-semibold">Story Admin</span>}
-              </Link>
-            )}
-            {isAdmin() && (
-              <Link
-                to="/admin"
-                onClick={() => setMobileOpen(false)}
-                className={cn(
-                  "group flex items-center rounded-[1.2rem] transition-all duration-200",
-                  compact ? "justify-center px-2 py-2.5" : "gap-3 px-3 py-3",
-                  "bg-[#f6f2ff] text-foreground hover:bg-[#efe6ff]"
-                )}
-              >
-                <div className="flex h-11 w-11 items-center justify-center rounded-[1rem] bg-[#e2daff] text-foreground">
-                  <Shield className="h-4 w-4" />
-                </div>
-                {!compact && <span className="text-sm font-semibold">Admin Panel</span>}
-              </Link>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div className={cn("border-t border-border/80 py-4", compact ? "px-2" : "px-3")}>
+        )}
         <button
-          title={compact ? "Sign out" : undefined}
+          title={compact ? "Đăng xuất" : undefined}
           type="button"
           onClick={handleLogout}
           className={cn(
-            "flex w-full items-center rounded-[1.2rem] bg-white px-4 py-3 text-sm font-semibold text-foreground/72 transition hover:bg-[#fff2f2] hover:text-[#d14f4f]",
-            compact ? "justify-center px-2" : "justify-between",
-            "border border-border/80"
+            "flex w-full items-center rounded-lg text-sm font-medium text-foreground/70 transition hover:bg-rose-50 hover:text-rose-600",
+            compact ? "h-10 justify-center" : "gap-3 px-3 py-2"
           )}
         >
-          <span className={cn("flex items-center", compact ? "justify-center" : "gap-3")}>
-            <LogOut className="h-4 w-4" />
-            {!compact && "Sign out"}
-          </span>
-          {!compact && <ChevronRight className="h-4 w-4" />}
+          <LogOut className="h-[18px] w-[18px]" />
+          {!compact && "Đăng xuất"}
         </button>
       </div>
     </div>
@@ -388,59 +337,60 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
 
   return (
     <>
+      {/* Desktop sidebar (flush, full-height) */}
       <aside
-        className={cn(
-          "fixed inset-y-4 left-4 z-40 hidden overflow-hidden rounded-[2rem] border-2 border-border/80 bg-white/86 shadow-[0_28px_70px_-42px_rgba(32,48,74,0.42)] backdrop-blur-2xl lg:block",
-          collapsed ? "w-[96px]" : "w-[280px]"
-        )}
+        className="fixed inset-y-0 left-0 z-40 hidden border-r border-border/70 bg-white/95 backdrop-blur-xl transition-[width] duration-300 lg:block"
+        style={{ width: collapsed ? SIDEBAR_COLLAPSED : SIDEBAR_EXPANDED }}
       >
         {sidebarContent(collapsed)}
       </aside>
 
-      <div
-        className="fixed right-4 top-4 z-50 hidden rounded-[1.8rem] border-2 border-border/80 bg-white/88 shadow-[0_24px_64px_-42px_rgba(32,48,74,0.38)] backdrop-blur-2xl lg:block"
-        style={{ left: collapsed ? SIDEBAR_COLLAPSED + 24 : SIDEBAR_EXPANDED + 16 }}
+      {/* Desktop topbar with breadcrumb */}
+      <header
+        className="fixed right-0 top-0 z-30 hidden border-b border-border/70 bg-white/85 backdrop-blur-xl transition-[left] duration-300 lg:block"
+        style={{ left: collapsed ? SIDEBAR_COLLAPSED : SIDEBAR_EXPANDED, height: TOPBAR_HEIGHT }}
       >
-        <div className="flex h-[84px] items-center justify-between gap-4 px-5 xl:px-6">
-          <div className="flex items-center gap-3">
-            <button
-              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-[1rem] border border-border/80 bg-card text-foreground/80 transition hover:bg-muted"
-              onClick={onToggleCollapse}
-              type="button"
+        <div className="flex h-full items-center justify-between gap-4 px-6">
+          {/* Breadcrumb */}
+          <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-1.5 text-sm">
+            <Link
+              to="/dashboard"
+              className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition hover:bg-muted hover:text-foreground"
             >
-              {collapsed ? (
-                <ChevronRight className="h-4 w-4" />
-              ) : (
-                <ChevronLeft className="h-4 w-4" />
-              )}
-            </button>
+              <Home className="h-4 w-4" />
+            </Link>
+            {crumbs.map((crumb) => (
+              <Fragment key={crumb.path}>
+                <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />
+                {crumb.isLast ? (
+                  <span className="truncate font-semibold text-foreground">{crumb.label}</span>
+                ) : (
+                  <Link
+                    to={crumb.path}
+                    className="truncate text-muted-foreground transition hover:text-foreground"
+                  >
+                    {crumb.label}
+                  </Link>
+                )}
+              </Fragment>
+            ))}
+          </nav>
 
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
-                {pageMeta.eyebrow}
-              </p>
-              <h1 className="display-font text-[2rem] leading-none text-foreground">
-                {pageMeta.title}
-              </h1>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => navigate("/dictionary")}
-              className="hidden min-w-[260px] items-center gap-3 rounded-[1.1rem] border border-border/80 bg-[#f8fbff] px-4 py-3 text-sm text-muted-foreground transition hover:bg-white xl:flex"
+              className="hidden items-center gap-2 rounded-lg border border-border/70 bg-muted/40 px-3 py-2 text-sm text-muted-foreground transition hover:bg-muted xl:flex"
             >
-              <Search className="h-4 w-4 text-primary" />
-              Quick search vocabulary or kanji
+              <Search className="h-4 w-4" />
+              <span className="text-xs">Tra cứu từ vựng, kanji…</span>
             </button>
 
             <Popover onOpenChange={(open) => open && void refreshReminders()}>
               <PopoverTrigger asChild>
                 <button
-                  aria-label="Notifications"
-                  className="relative inline-flex h-11 w-11 items-center justify-center rounded-[1rem] border border-border/80 bg-card text-foreground/80 transition hover:bg-muted"
+                  aria-label="Thông báo"
+                  className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border/70 bg-white text-foreground/70 transition hover:bg-muted"
                   type="button"
                 >
                   <Bell className="h-4 w-4" />
@@ -453,24 +403,24 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
               </PopoverTrigger>
               <PopoverContent
                 align="end"
-                className="w-[360px] rounded-[1.4rem] border-border/80 bg-white p-3"
+                className="w-[360px] rounded-[1rem] border-border/70 bg-white p-3"
               >
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-sm font-semibold text-foreground">Reminders</p>
+                    <p className="text-sm font-semibold text-foreground">Nhắc nhở</p>
                     <p className="text-xs text-muted-foreground">
-                      Due reviews, story progress, and chat signals.
+                      Ôn tập đến hạn, tiến độ truyện và tín hiệu chat.
                     </p>
                   </div>
                   {reminderSummary.urgentCount > 0 ? (
-                    <Badge className="bg-rose-500 text-white">Urgent</Badge>
+                    <Badge className="bg-rose-500 text-white">Gấp</Badge>
                   ) : null}
                 </div>
 
                 <div className="space-y-2">
                   {unreadCount > 0 && (
                     <button
-                      className="w-full rounded-[1rem] border border-sky-100 bg-sky-50/80 p-3 text-left transition hover:bg-sky-50"
+                      className="w-full rounded-lg border border-sky-100 bg-sky-50/80 p-3 text-left transition hover:bg-sky-50"
                       onClick={() => {
                         markRead();
                         navigate("/community");
@@ -492,13 +442,13 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
                   )}
 
                   {remindersLoading && (
-                    <div className="rounded-[1rem] border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
+                    <div className="rounded-lg border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
                       Đang tải reminder...
                     </div>
                   )}
 
                   {!remindersLoading && reminderSummary.items.length === 0 && unreadCount === 0 && (
-                    <div className="rounded-[1rem] border border-border bg-muted/30 p-4 text-center">
+                    <div className="rounded-lg border border-border bg-muted/30 p-4 text-center">
                       <p className="text-sm font-semibold text-foreground">Không có gì đến hạn</p>
                       <p className="mt-1 text-xs text-muted-foreground">
                         Hàng đợi đang sạch. Một cảnh hiếm gặp, tận hưởng đi.
@@ -510,7 +460,7 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
                     reminderSummary.items.map((item) => (
                       <button
                         key={item.id}
-                        className="w-full rounded-[1rem] border border-border bg-card p-3 text-left transition hover:bg-muted/40"
+                        className="w-full rounded-lg border border-border bg-card p-3 text-left transition hover:bg-muted/40"
                         onClick={() => navigate(item.actionPath)}
                         type="button"
                       >
@@ -546,30 +496,28 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
               </PopoverContent>
             </Popover>
 
-            <div className="hidden items-center gap-3 rounded-[1.2rem] border border-border/80 bg-white px-3 py-2.5 shadow-[0_10px_28px_-24px_rgba(32,48,74,0.35)] sm:flex">
-              <div className="flex h-10 w-10 items-center justify-center rounded-[1rem] bg-[#ffded8] text-sm font-bold text-foreground">
+            <div className="flex items-center gap-2 rounded-lg border border-border/70 bg-white px-2 py-1.5">
+              <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#ffded8] text-xs font-bold text-foreground">
                 {userInitial}
               </div>
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-foreground">{userName}</p>
-                <p className="text-xs text-muted-foreground">Light theme workspace</p>
-              </div>
+              <span className="hidden max-w-[120px] truncate text-sm font-semibold text-foreground sm:block">
+                {userName}
+              </span>
             </div>
           </div>
         </div>
-      </div>
+      </header>
 
-      <div className="fixed inset-x-0 top-0 z-50 flex items-center justify-between px-4 pt-4 lg:hidden">
-        <div className="rounded-[1.2rem] border-2 border-border/80 bg-white/92 px-4 py-3 shadow-[0_18px_46px_-28px_rgba(32,48,74,0.3)] backdrop-blur-xl">
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-            {pageMeta.eyebrow}
-          </p>
-          <p className="display-font text-2xl leading-none">{pageMeta.title}</p>
+      {/* Mobile top bar */}
+      <div className="fixed inset-x-0 top-0 z-30 flex h-[56px] items-center justify-between border-b border-border/70 bg-white/90 px-4 backdrop-blur-xl lg:hidden">
+        <div className="flex min-w-0 items-center gap-2">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#ffcdc4]">
+            <span className="display-font text-base font-bold text-foreground">Y</span>
+          </div>
+          <p className="truncate text-base font-semibold text-foreground">{currentTitle}</p>
         </div>
-
         <Button
-          aria-label="Open navigation"
-          className="shadow-[0_18px_46px_-28px_rgba(32,48,74,0.3)]"
+          aria-label="Mở menu"
           size="icon"
           variant="outline"
           onClick={() => setMobileOpen(true)}
@@ -578,6 +526,7 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
         </Button>
       </div>
 
+      {/* Mobile drawer */}
       <AnimatePresence>
         {mobileOpen && (
           <>
@@ -591,14 +540,14 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
             />
             <motion.aside
               animate={{ x: 0 }}
-              className="fixed inset-y-4 left-4 z-50 w-[286px] overflow-hidden rounded-[2rem] border-2 border-border/80 bg-white/94 shadow-[0_32px_72px_-40px_rgba(32,48,74,0.42)] backdrop-blur-2xl lg:hidden"
+              className="fixed inset-y-0 left-0 z-50 w-[260px] overflow-hidden border-r border-border/70 bg-white lg:hidden"
               exit={{ x: "-110%" }}
               initial={{ x: "-110%" }}
               transition={{ type: "spring", stiffness: 280, damping: 30 }}
             >
               <button
-                aria-label="Close navigation"
-                className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-[1rem] border border-border/80 bg-card text-foreground/80"
+                aria-label="Đóng menu"
+                className="absolute right-3 top-[14px] inline-flex h-8 w-8 items-center justify-center rounded-lg text-foreground/70 hover:bg-muted"
                 onClick={() => setMobileOpen(false)}
                 type="button"
               >

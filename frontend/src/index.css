@@ -6,7 +6,7 @@
 
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: 112px;
+  scroll-padding-top: 72px;
 }
 
 ::selection {
@@ -57,13 +57,12 @@ html {
     --info: 202 72% 50%;
     --info-foreground: 0 0% 100%;
 
-    --radius: 1.15rem;
+    --radius: 0.85rem;
 
-    --card-border-width: 3px;
-    --card-border-color: 221 26% 24%;
-    --card-shadow-offset: 0 8px 0 0 hsl(var(--card-border-color));
-    --card-shadow-full:
-      0 8px 0 0 hsl(var(--card-border-color)), 0 20px 44px -22px rgba(32, 48, 74, 0.26);
+    --card-border-width: 1px;
+    --card-border-color: 220 22% 90%;
+    --card-shadow-offset: 0 1px 2px rgba(32, 48, 74, 0.05);
+    --card-shadow-full: 0 1px 2px rgba(32, 48, 74, 0.04), 0 10px 28px -20px rgba(32, 48, 74, 0.22);
 
     --glass-bg: 0 0% 100% / 0.7;
     --glass-border: 221 26% 24% / 0.14;
@@ -93,24 +92,8 @@ html {
       "kern" 1,
       "liga" 1,
       "calt" 1;
-    background-image:
-      radial-gradient(circle at top left, rgba(255, 207, 196, 0.45), transparent 32%),
-      radial-gradient(circle at top right, rgba(178, 238, 255, 0.42), transparent 28%),
-      linear-gradient(180deg, #fffaf4 0%, #fff6ef 36%, #f7efe7 100%);
+    background-image: linear-gradient(180deg, #fdfaf6 0%, #fbf7f2 100%);
     min-height: 100vh;
-  }
-
-  body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    background-image:
-      linear-gradient(rgba(255, 255, 255, 0.22) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.22) 1px, transparent 1px);
-    background-size: 42px 42px;
-    opacity: 0.25;
-    z-index: -2;
   }
 
   h1,
@@ -131,10 +114,10 @@ html {
   }
 
   .section-kicker {
-    @apply inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-[0.2em];
-    background: rgba(137, 247, 144, 0.2);
-    color: hsl(var(--foreground));
-    border: 2px solid rgba(34, 197, 94, 0.16);
+    @apply inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em];
+    background: rgba(34, 197, 94, 0.08);
+    color: hsl(var(--primary));
+    border: 1px solid rgba(34, 197, 94, 0.18);
   }
 
   .section-title {
@@ -143,83 +126,80 @@ html {
   }
 
   .surface-panel {
-    @apply rounded-[2rem] bg-card;
-    border: var(--card-border-width) solid hsl(var(--card-border-color));
+    @apply rounded-[1.1rem] bg-card;
+    border: 1px solid hsl(var(--card-border-color));
     box-shadow: var(--card-shadow-full);
   }
 
   .surface-panel-soft {
-    @apply rounded-[1.6rem] backdrop-blur-xl;
-    background-color: rgba(255, 255, 255, 0.88);
-    border: 2px solid hsl(var(--border));
-    box-shadow: 0 16px 36px -24px rgba(32, 48, 74, 0.2);
+    @apply rounded-[1rem];
+    background-color: hsl(var(--card));
+    border: 1px solid hsl(var(--card-border-color));
+    box-shadow: 0 1px 2px rgba(32, 48, 74, 0.04);
   }
 
   .yukihon-card {
-    @apply rounded-[2rem] bg-card transition-all duration-300;
-    border: var(--card-border-width) solid hsl(var(--card-border-color));
+    @apply rounded-[1.1rem] bg-card transition-all duration-200;
+    border: 1px solid hsl(var(--card-border-color));
     box-shadow: var(--card-shadow-full);
   }
 
   .yukihon-card:hover {
-    transform: translateY(-4px);
+    border-color: hsl(var(--primary) / 0.35);
     box-shadow:
-      0 10px 0 0 hsl(var(--card-border-color)),
-      0 28px 48px -26px rgba(32, 48, 74, 0.28);
+      0 2px 4px rgba(32, 48, 74, 0.05),
+      0 16px 34px -22px rgba(32, 48, 74, 0.24);
   }
 
   .yukihon-card-sm {
-    @apply rounded-[1.55rem] bg-card transition-all duration-300;
-    border: 2.5px solid hsl(var(--card-border-color));
-    box-shadow:
-      0 6px 0 0 hsl(var(--card-border-color)),
-      0 16px 34px -24px rgba(32, 48, 74, 0.24);
+    @apply rounded-[1rem] bg-card transition-all duration-200;
+    border: 1px solid hsl(var(--card-border-color));
+    box-shadow: 0 1px 2px rgba(32, 48, 74, 0.04);
   }
 
   .yukihon-card-sm:hover {
-    transform: translateY(-3px);
+    border-color: hsl(var(--primary) / 0.28);
   }
 
   .yukihon-card-flat {
-    @apply rounded-[1.45rem] backdrop-blur-xl transition-all duration-300;
-    background-color: rgba(255, 255, 255, 0.9);
-    border: 2px solid hsl(var(--border));
-    box-shadow: 0 14px 30px -26px rgba(32, 48, 74, 0.28);
+    @apply rounded-[0.85rem] transition-all duration-200;
+    background-color: hsl(var(--card));
+    border: 1px solid hsl(var(--card-border-color));
+    box-shadow: 0 1px 2px rgba(32, 48, 74, 0.04);
   }
 
   .yukihon-card-flat:hover {
-    transform: translateY(-2px);
-    border-color: hsl(var(--primary) / 0.4);
+    border-color: hsl(var(--primary) / 0.35);
   }
 
   .yukihon-btn {
-    @apply rounded-[1.15rem] font-bold transition-all duration-200;
-    border: 3px solid hsl(var(--card-border-color));
-    box-shadow: 0 6px 0 0 hsl(var(--card-border-color));
+    @apply rounded-[0.8rem] font-semibold transition-all duration-150;
+    border: 1px solid hsl(var(--card-border-color));
+    box-shadow: 0 1px 2px rgba(32, 48, 74, 0.06);
   }
 
   .yukihon-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 0 0 hsl(var(--card-border-color));
+    border-color: hsl(var(--primary) / 0.4);
+    box-shadow: 0 2px 6px rgba(32, 48, 74, 0.1);
   }
 
   .yukihon-btn:active {
     transform: translateY(1px);
-    box-shadow: 0 3px 0 0 hsl(var(--card-border-color));
+    box-shadow: 0 1px 2px rgba(32, 48, 74, 0.06);
   }
 
   .glass-card {
-    @apply rounded-[2rem] backdrop-blur-[20px];
-    background-color: rgba(255, 255, 255, 0.72);
-    border: 2px solid hsl(var(--border));
-    box-shadow: 0 22px 48px -34px rgba(32, 48, 74, 0.24);
+    @apply rounded-[1.1rem] backdrop-blur-[12px];
+    background-color: rgba(255, 255, 255, 0.78);
+    border: 1px solid hsl(var(--card-border-color));
+    box-shadow: 0 1px 2px rgba(32, 48, 74, 0.04);
   }
 
   .glass-card-light {
-    @apply rounded-[2rem] backdrop-blur-[18px];
-    background-color: rgba(255, 255, 255, 0.72);
-    border: 1.5px solid rgba(255, 255, 255, 0.7);
-    box-shadow: 0 20px 50px -38px rgba(32, 48, 74, 0.28);
+    @apply rounded-[1.1rem] backdrop-blur-[10px];
+    background-color: rgba(255, 255, 255, 0.78);
+    border: 1px solid hsl(var(--card-border-color));
+    box-shadow: 0 1px 2px rgba(32, 48, 74, 0.04);
   }
 
   .clay-card {
@@ -231,7 +211,7 @@ html {
   }
 
   .learnhub-edge {
-    border: var(--card-border-width) solid hsl(var(--card-border-color));
+    border: 1px solid hsl(var(--card-border-color));
   }
 
   .learnhub-shadow {
@@ -239,26 +219,23 @@ html {
   }
 
   .learnhub-shadow-sm {
-    box-shadow:
-      0 6px 0 0 hsl(var(--card-border-color)),
-      0 16px 34px -24px rgba(32, 48, 74, 0.2);
+    box-shadow: 0 1px 2px rgba(32, 48, 74, 0.04);
   }
 
   .learnhub-card {
-    @apply rounded-[2rem] backdrop-blur-xl transition-all duration-300;
-    background-color: rgba(255, 255, 255, 0.92);
-    border: var(--card-border-width) solid hsl(var(--card-border-color));
+    @apply rounded-[1.1rem] transition-all duration-200;
+    background-color: hsl(var(--card));
+    border: 1px solid hsl(var(--card-border-color));
     box-shadow: var(--card-shadow-full);
   }
 
   .learnhub-card:hover {
-    transform: translateY(-4px);
+    border-color: hsl(var(--primary) / 0.35);
   }
 
   .learnhub-input {
-    @apply h-12 w-full rounded-[1.15rem] bg-white px-4 text-foreground outline-none transition-all duration-200;
-    border: 2px solid hsl(var(--border));
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    @apply h-11 w-full rounded-[0.8rem] bg-white px-4 text-foreground outline-none transition-all duration-200;
+    border: 1px solid hsl(var(--card-border-color));
   }
 
   .learnhub-input:focus {

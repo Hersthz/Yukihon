@@ -1,6 +1,10 @@
-import { ReactNode, useEffect, useState } from "react";
+import { type CSSProperties, ReactNode, useEffect, useState } from "react";
 
-import DashboardNavigation from "@/components/DashboardNavigation";
+import DashboardNavigation, {
+  SIDEBAR_COLLAPSED,
+  SIDEBAR_EXPANDED,
+  TOPBAR_HEIGHT,
+} from "@/components/DashboardNavigation";
 import { cn } from "@/lib/utils";
 
 interface DashboardLayoutProps {
@@ -27,29 +31,21 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,#fffaf4_0%,#fff5ed_42%,#f8f0e8_100%)]" />
-        <div className="absolute left-[-8rem] top-[-6rem] h-[20rem] w-[20rem] rounded-full bg-[#ffd8cf]/70 blur-[120px]" />
-        <div className="absolute right-[-5rem] top-[8rem] h-[18rem] w-[18rem] rounded-full bg-[#bfeefe]/70 blur-[120px]" />
-        <div className="absolute bottom-[-8rem] left-[20%] h-[16rem] w-[16rem] rounded-full bg-[#c7ffc6]/60 blur-[120px]" />
-        <div className="absolute inset-0 opacity-70 bg-noise" />
-      </div>
-
       <DashboardNavigation collapsed={collapsed} onToggleCollapse={handleToggleCollapse} />
 
       <main
-        className={cn(
-          "relative pt-[112px] transition-[padding] duration-300",
-          collapsed ? "lg:pl-[112px]" : "lg:pl-[296px]"
-        )}
+        className={cn("transition-[padding] duration-300")}
+        style={{ paddingTop: TOPBAR_HEIGHT }}
       >
-        <div className="mx-auto w-full max-w-[1680px] px-4 pb-8 sm:px-5 lg:px-6 xl:px-8">
-          <div
-            className={cn(
-              "min-h-[calc(100vh-136px)] rounded-[2rem] px-0",
-              collapsed ? "lg:ml-2" : "lg:ml-3"
-            )}
-          >
+        <div
+          className="transition-[padding] duration-300 lg:[padding-left:var(--sidebar-w)]"
+          style={
+            {
+              "--sidebar-w": `${collapsed ? SIDEBAR_COLLAPSED : SIDEBAR_EXPANDED}px`,
+            } as CSSProperties
+          }
+        >
+          <div className="mx-auto w-full max-w-[1320px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
             {children}
           </div>
         </div>

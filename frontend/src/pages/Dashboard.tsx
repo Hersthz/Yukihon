@@ -190,7 +190,7 @@ const Dashboard = () => {
           className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"
         >
           <div>
-            <h2 className="text-[2rem] font-semibold leading-tight text-foreground">
+            <h2 className="text-2xl font-bold leading-tight text-foreground">
               {greeting}, {greetingName}!
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
