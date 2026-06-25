@@ -75,9 +75,8 @@ public class BlogPostService {
     }
 
     public BlogPostDto update(Long id, BlogPostRequest req) {
-        BlogPost post = blogPostRepository
-                .findById(id)
-                .orElseThrow(() -> new RuntimeException("Blog post not found: " + id));
+        BlogPost post =
+                blogPostRepository.findById(id).orElseThrow(() -> new RuntimeException("Blog post not found: " + id));
 
         post.setTitle(req.getTitle());
         if (req.getSlug() != null && !req.getSlug().isBlank()) {
@@ -94,8 +93,7 @@ public class BlogPostService {
         post.setAuthorName(req.getAuthorName());
 
         BlogPost.BlogPostStatus newStatus = parseStatus(req.getStatus());
-        if (newStatus == BlogPost.BlogPostStatus.PUBLISHED
-                && post.getStatus() != BlogPost.BlogPostStatus.PUBLISHED) {
+        if (newStatus == BlogPost.BlogPostStatus.PUBLISHED && post.getStatus() != BlogPost.BlogPostStatus.PUBLISHED) {
             post.setPublishedAt(Instant.now());
         }
         post.setStatus(newStatus);

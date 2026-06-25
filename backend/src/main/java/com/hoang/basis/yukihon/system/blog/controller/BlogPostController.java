@@ -51,8 +51,7 @@ public class BlogPostController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('CONTENT_MANAGE')")
-    public ResponseEntity<BlogPostDto> update(
-            @PathVariable Long id, @Valid @RequestBody BlogPostRequest req) {
+    public ResponseEntity<BlogPostDto> update(@PathVariable Long id, @Valid @RequestBody BlogPostRequest req) {
         return ResponseEntity.ok(blogPostService.update(id, req));
     }
 

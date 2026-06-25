@@ -16,7 +16,11 @@ const formatDate = (iso: string) =>
 const BlogDetail = () => {
   const { slug } = useParams<{ slug: string }>();
 
-  const { data: post, isLoading, isError } = useQuery({
+  const {
+    data: post,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["blog", "slug", slug],
     queryFn: () => blogApi.getPublishedBySlug(slug!),
     enabled: !!slug,
@@ -29,7 +33,11 @@ const BlogDetail = () => {
         <div className="h-4 bg-muted/30 rounded animate-pulse w-1/2" />
         <div className="space-y-3 mt-8">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="h-4 bg-muted/25 rounded animate-pulse" style={{ width: `${70 + (i % 3) * 10}%` }} />
+            <div
+              key={i}
+              className="h-4 bg-muted/25 rounded animate-pulse"
+              style={{ width: `${70 + (i % 3) * 10}%` }}
+            />
           ))}
         </div>
       </div>
@@ -100,14 +108,16 @@ const BlogDetail = () => {
 
       {/* Content */}
       {post.content ? (
-        <div className="prose prose-sm prose-slate max-w-none
+        <div
+          className="prose prose-sm prose-slate max-w-none
           prose-headings:font-semibold prose-headings:text-foreground
           prose-p:text-foreground/85 prose-p:leading-relaxed
           prose-a:text-primary prose-a:no-underline hover:prose-a:underline
           prose-code:text-primary prose-code:bg-muted prose-code:px-1 prose-code:rounded
           prose-pre:bg-muted prose-pre:border prose-pre:border-border/50
           prose-blockquote:border-l-primary prose-blockquote:text-muted-foreground
-          prose-img:rounded-lg">
+          prose-img:rounded-lg"
+        >
           <ReactMarkdown>{post.content}</ReactMarkdown>
         </div>
       ) : (

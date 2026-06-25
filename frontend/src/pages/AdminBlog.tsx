@@ -52,9 +52,11 @@ const COLUMNS: ColumnDef[] = [
     key: "publishedAt",
     label: "Ngày đăng",
     render: (v) =>
-      v
-        ? new Date(v as string).toLocaleDateString("vi-VN")
-        : <span className="text-muted-foreground/60">—</span>,
+      v ? (
+        new Date(v as string).toLocaleDateString("vi-VN")
+      ) : (
+        <span className="text-muted-foreground/60">—</span>
+      ),
   },
   {
     key: "tags",
@@ -70,7 +72,9 @@ const COLUMNS: ColumnDef[] = [
             </Badge>
           ))}
           {tags.length > 3 && (
-            <Badge variant="secondary" className="text-xs">+{tags.length - 3}</Badge>
+            <Badge variant="secondary" className="text-xs">
+              +{tags.length - 3}
+            </Badge>
           )}
         </div>
       );
@@ -298,7 +302,9 @@ const AdminBlog = () => {
           </div>
 
           <DialogFooter>
-            <Button variant="ghost" onClick={closeDialog}>Hủy</Button>
+            <Button variant="ghost" onClick={closeDialog}>
+              Hủy
+            </Button>
             <Button onClick={handleSubmit} disabled={isSaving || !form.title.trim()}>
               {isSaving ? "Đang lưu..." : editId ? "Cập nhật" : "Tạo bài viết"}
             </Button>
