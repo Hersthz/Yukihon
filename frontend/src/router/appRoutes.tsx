@@ -4,6 +4,9 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { Suspense, lazy } from "react";
 import { Route, Routes } from "react-router-dom";
 
+const AdminBlog = lazy(() => import("@/pages/AdminBlog"));
+const Blog = lazy(() => import("@/pages/Blog"));
+const BlogDetail = lazy(() => import("@/pages/BlogDetail"));
 const AdminContent = lazy(() => import("@/pages/AdminContent"));
 const AdminCreatorMode = lazy(() => import("@/pages/AdminCreatorMode"));
 const AdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
@@ -76,6 +79,8 @@ export const AppRoutes = () => {
         <Route path="/my-words" element={withProtectedRoute(<MyWords />)} />
         <Route path="/settings" element={withProtectedRoute(<Settings />)} />
         <Route path="/credits" element={withProtectedRoute(<Credits />)} />
+        <Route path="/blog" element={withProtectedRoute(<Blog />)} />
+        <Route path="/blog/:slug" element={withProtectedRoute(<BlogDetail />)} />
         <Route
           path="/admin/creator-mode"
           element={withProtectedRoute(
@@ -94,6 +99,7 @@ export const AppRoutes = () => {
             path="/admin/app-settings"
             element={<MetadataDrivenCrudPage entityName="AppSetting" />}
           />
+          <Route path="/admin/blog" element={<AdminBlog />} />
         </Route>
 
         <Route path="*" element={<NotFound />} />

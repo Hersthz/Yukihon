@@ -116,6 +116,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/posts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getById"];
+        put: operations["update"];
+        post?: never;
+        delete: operations["delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/notifications/{id}/read": {
         parameters: {
             query?: never;
@@ -204,9 +220,9 @@ export interface paths {
             cookie?: never;
         };
         get: operations["get"];
-        put: operations["update"];
+        put: operations["update_1"];
         post?: never;
-        delete: operations["delete"];
+        delete: operations["delete_1"];
         options?: never;
         head?: never;
         patch?: never;
@@ -468,6 +484,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/posts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAll"];
+        put?: never;
+        post: operations["create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/my-words": {
         parameters: {
             query?: never;
@@ -637,7 +669,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["create"];
+        post: operations["create_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -733,7 +765,7 @@ export interface paths {
         };
         get: operations["list_1"];
         put?: never;
-        post: operations["create_1"];
+        post: operations["create_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1436,6 +1468,38 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getUserProgressByStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/posts/published": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getPublished"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/posts/published/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getPublishedBySlug"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2541,6 +2605,31 @@ export interface components {
             createdAt?: string;
             completedAt?: string;
         };
+        BlogPostRequest: {
+            title: string;
+            slug?: string;
+            excerpt?: string;
+            content?: string;
+            coverImageUrl?: string;
+            tags?: string[];
+            authorName?: string;
+            status?: string;
+        };
+        BlogPostDto: {
+            /** Format: int64 */
+            id?: number;
+            title?: string;
+            slug?: string;
+            excerpt?: string;
+            content?: string;
+            coverImageUrl?: string;
+            tags?: string[];
+            authorName?: string;
+            status?: string;
+            publishedAt?: string;
+            createdAt?: string;
+            updatedAt?: string;
+        };
         NotificationDto: {
             /** Format: int64 */
             id?: number;
@@ -3169,17 +3258,17 @@ export interface components {
             title: string;
         };
         PagePrivateMessageDto: {
-            /** Format: int64 */
-            totalElements?: number;
             /** Format: int32 */
             totalPages?: number;
-            /** Format: int32 */
-            numberOfElements?: number;
+            /** Format: int64 */
+            totalElements?: number;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["PrivateMessageDto"][];
             /** Format: int32 */
             number?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
             sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
             first?: boolean;
@@ -3190,12 +3279,12 @@ export interface components {
             /** Format: int64 */
             offset?: number;
             sort?: components["schemas"]["SortObject"];
-            paged?: boolean;
             /** Format: int32 */
             pageSize?: number;
             /** Format: int32 */
             pageNumber?: number;
             unpaged?: boolean;
+            paged?: boolean;
         };
         PrivateMessageDto: {
             /** Format: int64 */
@@ -3209,8 +3298,8 @@ export interface components {
         };
         SortObject: {
             empty?: boolean;
-            sorted?: boolean;
             unsorted?: boolean;
+            sorted?: boolean;
         };
         Pageable: {
             /** Format: int32 */
@@ -3220,17 +3309,17 @@ export interface components {
             sort?: string[];
         };
         PageTranslationHistoryDto: {
-            /** Format: int64 */
-            totalElements?: number;
             /** Format: int32 */
             totalPages?: number;
-            /** Format: int32 */
-            numberOfElements?: number;
+            /** Format: int64 */
+            totalElements?: number;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["TranslationHistoryDto"][];
             /** Format: int32 */
             number?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
             sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
             first?: boolean;
@@ -3256,17 +3345,17 @@ export interface components {
             items?: components["schemas"]["ReminderDto"][];
         };
         PageNotificationDto: {
-            /** Format: int64 */
-            totalElements?: number;
             /** Format: int32 */
             totalPages?: number;
-            /** Format: int32 */
-            numberOfElements?: number;
+            /** Format: int64 */
+            totalElements?: number;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["NotificationDto"][];
             /** Format: int32 */
             number?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
             sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
             first?: boolean;
@@ -3521,17 +3610,17 @@ export interface components {
             trendingTags?: string[];
         };
         PagePostDto: {
-            /** Format: int64 */
-            totalElements?: number;
             /** Format: int32 */
             totalPages?: number;
-            /** Format: int32 */
-            numberOfElements?: number;
+            /** Format: int64 */
+            totalElements?: number;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["PostDto"][];
             /** Format: int32 */
             number?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
             sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
             first?: boolean;
@@ -3539,17 +3628,17 @@ export interface components {
             empty?: boolean;
         };
         PageCommentDto: {
-            /** Format: int64 */
-            totalElements?: number;
             /** Format: int32 */
             totalPages?: number;
-            /** Format: int32 */
-            numberOfElements?: number;
+            /** Format: int64 */
+            totalElements?: number;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["CommentDto"][];
             /** Format: int32 */
             number?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
             sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
             first?: boolean;
@@ -3589,17 +3678,17 @@ export interface components {
             createdAt?: string;
         };
         PageObject: {
-            /** Format: int64 */
-            totalElements?: number;
             /** Format: int32 */
             totalPages?: number;
-            /** Format: int32 */
-            numberOfElements?: number;
+            /** Format: int64 */
+            totalElements?: number;
             /** Format: int32 */
             size?: number;
             content?: unknown[];
             /** Format: int32 */
             number?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
             sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
             first?: boolean;
@@ -3619,17 +3708,17 @@ export interface components {
             createdAt?: string;
         };
         PageAuditLog: {
-            /** Format: int64 */
-            totalElements?: number;
             /** Format: int32 */
             totalPages?: number;
-            /** Format: int32 */
-            numberOfElements?: number;
+            /** Format: int64 */
+            totalElements?: number;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["AuditLog"][];
             /** Format: int32 */
             number?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
             sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
             first?: boolean;
@@ -3718,17 +3807,17 @@ export interface components {
             createdAt?: string;
         };
         PageUserManagementDto: {
-            /** Format: int64 */
-            totalElements?: number;
             /** Format: int32 */
             totalPages?: number;
-            /** Format: int32 */
-            numberOfElements?: number;
+            /** Format: int64 */
+            totalElements?: number;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["UserManagementDto"][];
             /** Format: int32 */
             number?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
             sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
             first?: boolean;
@@ -4269,6 +4358,74 @@ export interface operations {
             };
         };
     };
+    getById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["BlogPostDto"];
+                };
+            };
+        };
+    };
+    update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BlogPostRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["BlogPostDto"];
+                };
+            };
+        };
+    };
+    delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     markRead: {
         parameters: {
             query?: never;
@@ -4500,7 +4657,7 @@ export interface operations {
             };
         };
     };
-    update: {
+    update_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -4527,7 +4684,7 @@ export interface operations {
             };
         };
     };
-    delete: {
+    delete_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -5125,6 +5282,50 @@ export interface operations {
             };
         };
     };
+    getAll: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["BlogPostDto"][];
+                };
+            };
+        };
+    };
+    create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BlogPostRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["BlogPostDto"];
+                };
+            };
+        };
+    };
     getMyWords: {
         parameters: {
             query?: {
@@ -5447,7 +5648,7 @@ export interface operations {
             };
         };
     };
-    create: {
+    create_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -5688,7 +5889,7 @@ export interface operations {
             };
         };
     };
-    create_1: {
+    create_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -6808,6 +7009,48 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["UserProgressDto"][];
+                };
+            };
+        };
+    };
+    getPublished: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["BlogPostDto"][];
+                };
+            };
+        };
+    };
+    getPublishedBySlug: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["BlogPostDto"];
                 };
             };
         };

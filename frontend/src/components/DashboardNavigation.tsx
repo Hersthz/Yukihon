@@ -17,6 +17,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  Newspaper,
   Search,
   Settings,
   Shield,
@@ -71,6 +72,7 @@ const NAV_GROUPS: NavGroup[] = [
       { label: "Cộng đồng", path: "/community", icon: Users },
       { label: "Phân tích lỗi", path: "/mistake-dna", icon: Sparkles },
       { label: "Lộ trình JLPT", path: "/jlpt-lessons", icon: GraduationCap },
+      { label: "Blog", path: "/blog", icon: Newspaper },
     ],
   },
   {
@@ -89,6 +91,7 @@ const NAV_GROUPS: NavGroup[] = [
 const ADMIN_ITEMS: NavItem[] = [
   { label: "Xưởng nội dung", path: "/admin/creator-mode", icon: Wand2 },
   { label: "Quản lý truyện", path: "/admin/story-mode", icon: BookOpen },
+  { label: "Quản lý Blog", path: "/admin/blog", icon: Newspaper },
   { label: "Bảng quản trị", path: "/admin", icon: Shield },
 ];
 
@@ -120,6 +123,8 @@ const PAGE_META: Record<string, { title: string }> = {
   "/admin/story-mode": { title: "Quản lý truyện" },
   "/admin/creator-mode": { title: "Xưởng nội dung" },
   "/admin/app-settings": { title: "Cài đặt hệ thống" },
+  "/blog": { title: "Blog" },
+  "/admin/blog": { title: "Quản lý Blog" },
 };
 
 const AUTO_MENU_ICONS: Record<string, ElementType> = {

@@ -26,3 +26,4 @@ export * from "./deckApi";
 export * from "./friendApi";
 export * from "./privateChatApi";
 export * from "./kanjiApi";
+export * from "./blogApi";
