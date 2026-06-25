@@ -5,13 +5,14 @@ import { BookOpen, Check, Plus, Search, Star, Volume2, X } from "lucide-react";
 import { dictionaryApi, myWordsApi, type DictionaryEntry } from "@/api";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
+import { EmptyState, PageHeader, PageSection } from "@/components/layout/UserPage";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { ToastAction } from "@/components/ui/toast";
 import { useToast } from "@/hooks/use-toast";
 import { speakJapanese } from "@/lib/speech";
+import { Leaf } from "lucide-react";
+import type { SavedWord } from "@/pages/my-words/types";
 
 const levelClass: Record<string, string> = {
   N5: "border-emerald-200 bg-emerald-50 text-emerald-700",
@@ -141,170 +142,166 @@ const Dictionary = () => {
     saveMutation.mutate(word);
   };
 
-  const quickStats = useMemo(
-    () => [
-      {
-        label: "Kết quả",
-        value: searched ? results.length : "-",
-        icon: <Search className="h-4 w-4 text-sky-500" />,
-        hint: "Số mục phù hợp",
-      },
-      {
-        label: "Từ khóa",
-        value: query.trim() ? query.trim().slice(0, 14) : "-",
-        icon: <Star className="h-4 w-4 text-violet-500" />,
-        hint: "Từ đang tra cứu",
-      },
-      {
-        label: "Chế độ",
-        value: "Nhật - Việt",
-        icon: <BookOpen className="h-4 w-4 text-emerald-500" />,
-        hint: "Tra nhanh trong một khung",
-      },
-    ],
-    [query, results.length, searched]
-  );
+  const savedWordsQuery = useQuery({
+    queryKey: ["dictionary", "saved-words"],
+    queryFn: () => myWordsApi.getAll() as Promise<SavedWord[]>,
+  });
+  const savedWords = savedWordsQuery.data ?? [];
 
   return (
     <DashboardLayout>
       <div className="mx-auto max-w-[1380px]">
         <PageHeader
           icon={<BookOpen className="h-6 w-6 text-primary" />}
-          title="Tra cứu"
-          description="Giữ giao diện gọn, nhìn được nhiều kết quả hơn và mở nhanh phần chi tiết khi cần."
-          eyebrow="Từ điển"
-          action={
-            <Button
-              className="rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90"
-              onClick={handleSearch}
-            >
-              <Search className="mr-2 h-4 w-4" />
-              Tra cứu
-            </Button>
-          }
+          title="Từ điển"
+          description="Tra kanji, hiragana, romaji hoặc nghĩa tiếng Việt — kết quả gọn, mở nhanh phần chi tiết."
+          eyebrow="Tra cứu Nhật – Việt"
         />
 
-        <div className="mb-4 grid gap-3 md:grid-cols-3">
-          {quickStats.map((item) => (
-            <MetricCard
-              key={item.label}
-              hint={item.hint}
-              icon={item.icon}
-              label={item.label}
-              value={item.value}
+        {/* Big centered search */}
+        <div className="mx-auto mb-8 max-w-2xl">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-primary" />
+            <input
+              className="h-16 w-full rounded-full border border-primary/25 bg-card pl-14 pr-5 text-lg text-foreground outline-none transition-shadow placeholder:text-muted-foreground"
+              style={{
+                boxShadow:
+                  "0 0 0 6px hsl(var(--primary) / 0.08), 0 16px 36px -16px hsl(var(--primary) / 0.45)",
+              }}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && void handleSearch()}
+              placeholder="Ví dụ: 勉強, benkyou, học tập…"
+              value={query}
             />
-          ))}
+          </div>
         </div>
 
-        <PageSection
-          className="mb-4"
-          title="Ô tìm kiếm"
-          description="Nhập kanji, hiragana, romaji hoặc nghĩa tiếng Việt."
-        >
-          <div className="flex flex-col gap-3 lg:flex-row">
-            <div className="relative flex-1">
-              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                className="h-12 rounded-2xl border-border bg-card pl-11 text-base text-foreground placeholder:text-muted-foreground"
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && void handleSearch()}
-                placeholder="Ví dụ: 勉強, benkyou, học tập..."
-                value={query}
-              />
-            </div>
-            <Button
-              className="h-12 rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90"
-              onClick={handleSearch}
-            >
-              <Search className="mr-2 h-4 w-4" />
-              Tìm ngay
-            </Button>
+        {/* Results */}
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary/20 border-t-primary" />
           </div>
-        </PageSection>
+        ) : searched && results.length === 0 ? (
+          <EmptyState
+            description={`Không tìm thấy mục phù hợp với "${query}". Thử romaji, nghĩa tiếng Việt hoặc từ ngắn hơn.`}
+            icon={<Search className="h-6 w-6" />}
+            title="Chưa có kết quả"
+          />
+        ) : results.length > 0 ? (
+          <div className="mb-8 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            <AnimatePresence>
+              {results.map((word, index) => {
+                const isSaved = wordSaved(word.id);
+                const isSaving = savingWordId === word.id;
 
+                return (
+                  <motion.button
+                    key={word.id}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="yukihon-card flex items-center gap-4 p-4 text-left"
+                    exit={{ opacity: 0, y: -10 }}
+                    initial={{ opacity: 0, y: 10 }}
+                    onClick={() => setSelectedWord(word)}
+                    transition={{ delay: index * 0.03 }}
+                    type="button"
+                  >
+                    <span className="shrink-0 text-[2.6rem] font-semibold leading-none text-foreground">
+                      {word.kanji || word.hiragana}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-primary">
+                        {word.hiragana} · {word.romaji}
+                      </p>
+                      <p className="line-clamp-2 text-sm text-foreground/80">{word.meaning}</p>
+                    </div>
+                    <div className="flex shrink-0 flex-col items-end gap-2">
+                      {word.jlptLevel && (
+                        <Badge
+                          className={`rounded-full border ${levelClass[word.jlptLevel] || "border-border bg-muted text-foreground/80"}`}
+                        >
+                          {word.jlptLevel}
+                        </Badge>
+                      )}
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          void handleSaveWord(word);
+                        }}
+                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                          isSaved
+                            ? "bg-emerald-50 text-emerald-700"
+                            : "bg-primary/10 text-primary hover:bg-primary/15"
+                        }`}
+                      >
+                        {isSaved ? (
+                          <Check className="h-3.5 w-3.5" />
+                        ) : (
+                          <Plus className="h-3.5 w-3.5" />
+                        )}
+                        {isSaved ? "Đã lưu" : isSaving ? "Đang lưu" : "Lưu"}
+                      </span>
+                    </div>
+                  </motion.button>
+                );
+              })}
+            </AnimatePresence>
+          </div>
+        ) : null}
+
+        {/* Saved words */}
         <PageSection
-          title="Kết quả"
-          description="Card thấp, rõ nghĩa và đủ metadata để quét nhanh."
+          title="Từ đã lưu"
+          description="Những từ bạn đã thêm vào Sổ từ của tôi."
+          action={
+            <Button
+              variant="ghost"
+              className="rounded-full text-primary hover:bg-primary/10"
+              onClick={() => navigate("/my-words")}
+            >
+              Xem tất cả
+            </Button>
+          }
         >
-          {loading ? (
-            <div className="flex items-center justify-center py-20">
-              <div className="h-12 w-12 rounded-full border-4 border-sky-100 border-t-sky-500 animate-spin" />
+          {savedWordsQuery.isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary/20 border-t-primary" />
             </div>
-          ) : searched && results.length === 0 ? (
+          ) : savedWords.length === 0 ? (
             <EmptyState
-              description={`Không tìm thấy mục phù hợp với "${query}". Thử romaji, nghĩa tiếng Việt hoặc từ ngắn hơn.`}
-              icon={<Search className="h-6 w-6" />}
-              title="Chưa có kết quả"
+              icon={<Star className="h-6 w-6" />}
+              title="Chưa có từ nào được lưu"
+              description="Tra một từ rồi nhấn Lưu để thêm vào sổ tay của bạn."
             />
           ) : (
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-              <AnimatePresence>
-                {results.map((word, index) => {
-                  const isSaved = wordSaved(word.id);
-                  const isSaving = savingWordId === word.id;
-
-                  return (
-                    <motion.button
-                      key={word.id}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="rounded-[22px] border border-white bg-card p-4 text-left shadow-[0_10px_24px_rgba(148,163,184,0.10)] transition hover:-translate-y-1 hover:shadow-[0_16px_30px_rgba(148,163,184,0.16)]"
-                      exit={{ opacity: 0, y: -10 }}
-                      initial={{ opacity: 0, y: 10 }}
-                      onClick={() => setSelectedWord(word)}
-                      transition={{ delay: index * 0.03 }}
-                      type="button"
-                    >
-                      <div className="mb-3 flex items-start justify-between gap-3">
-                        <div>
-                          <p className="text-[1.65rem] font-semibold text-foreground">
-                            {word.kanji || word.hiragana}
-                          </p>
-                          <p className="text-sm text-sky-700">
-                            {word.hiragana} · {word.romaji}
-                          </p>
-                        </div>
-                        {word.jlptLevel && (
-                          <Badge
-                            className={`rounded-full border ${levelClass[word.jlptLevel] || "border-border bg-muted text-foreground/80"}`}
-                          >
-                            {word.jlptLevel}
-                          </Badge>
-                        )}
-                      </div>
-
-                      <p className="line-clamp-2 text-sm text-foreground/80">{word.meaning}</p>
-
-                      <div className="mt-3 flex items-center justify-between gap-2">
-                        {word.wordType ? (
-                          <Badge className="rounded-full border border-border bg-muted text-muted-foreground">
-                            {word.wordType}
-                          </Badge>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">Nhấn để xem ví dụ</span>
-                        )}
-
-                        <Button
-                          className="rounded-xl bg-sky-50 text-sky-700 hover:bg-sky-100 disabled:bg-emerald-50 disabled:text-emerald-700"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            void handleSaveWord(word);
-                          }}
-                          size="sm"
-                          variant="ghost"
-                          disabled={isSaved || isSaving}
-                        >
-                          {isSaved ? (
-                            <Check className="mr-1 h-4 w-4" />
-                          ) : (
-                            <Plus className="mr-1 h-4 w-4" />
-                          )}
-                          {isSaved ? "Đã lưu" : isSaving ? "Đang lưu..." : "Lưu"}
-                        </Button>
-                      </div>
-                    </motion.button>
-                  );
-                })}
-              </AnimatePresence>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {savedWords.slice(0, 12).map((word) => (
+                <div key={word.id} className="yukihon-card-flat p-4">
+                  <span
+                    className={`mb-2 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
+                      word.mastered
+                        ? "bg-amber-50 text-amber-700"
+                        : "bg-emerald-50 text-emerald-700"
+                    }`}
+                  >
+                    {word.mastered ? (
+                      <Star className="h-3 w-3 fill-current" />
+                    ) : (
+                      <Leaf className="h-3 w-3" />
+                    )}
+                    {word.mastered ? "Đã thuộc" : "Đang học"}
+                  </span>
+                  <p className="text-2xl font-semibold text-foreground">
+                    {word.kanji || word.hiragana}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {word.hiragana}
+                    {word.romaji ? ` · ${word.romaji}` : ""}
+                  </p>
+                  <p className="mt-1 line-clamp-2 text-sm text-foreground/80">{word.meaning}</p>
+                </div>
+              ))}
             </div>
           )}
         </PageSection>

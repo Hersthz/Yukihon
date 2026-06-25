@@ -318,14 +318,14 @@ const StudyCalendar = () => {
 
                   {selectedDay.recommendedStudyDay && (
                     <div className="rounded-[20px] border border-sky-200 bg-sky-50/80 p-4 text-sm leading-6 text-sky-900">
-                      Day la mot ngay nen uu tien hoc de giu nhip va bam sat ke hoach hien tai.
+                      Đây là ngày nên ưu tiên học để giữ nhịp và bám sát kế hoạch hiện tại.
                     </div>
                   )}
 
                   {selectedDay.deadlineDay && (
                     <div className="rounded-[20px] border border-rose-200 bg-rose-50/80 p-4 text-sm leading-6 text-rose-900">
-                      Day la moc deadline JLPT cua ban. Nen danh mot phien hoc tap trung hon binh
-                      thuong.
+                      Đây là mốc deadline JLPT của bạn. Nên dành một phiên học tập trung hơn bình
+                      thường.
                     </div>
                   )}
 
@@ -333,29 +333,29 @@ const StudyCalendar = () => {
                     !selectedDay.recommendedStudyDay &&
                     !selectedDay.deadlineDay && (
                       <div className="rounded-[20px] border border-border bg-muted/30 p-4 text-sm leading-6 text-muted-foreground">
-                        Khong co su kien nao trong ngay nay. Neu muon giu streak on dinh, hay chen
-                        mot phien hoc ngan 10-15 phut.
+                        Không có sự kiện nào trong ngày này. Nếu muốn giữ streak ổn định, hãy chèn
+                        một phiên học ngắn 10–15 phút.
                       </div>
                     )}
                 </div>
               ) : (
                 <div className="rounded-[20px] border border-dashed border-border bg-muted/30 px-5 py-10 text-center text-sm text-muted-foreground">
-                  Chon mot ngay trong lich de xem activity va goi y.
+                  Chọn một ngày trong lịch để xem hoạt động và gợi ý.
                 </div>
               )}
             </PageSection>
 
             <PageSection
-              title="Tien do muc tieu"
-              description="Tom tat nhanh de biet minh dang o dau trong hanh trinh JLPT."
+              title="Tiến độ mục tiêu"
+              description="Tóm tắt nhanh để biết bạn đang ở đâu trong hành trình JLPT."
             >
               <div className="space-y-3">
                 <div className="rounded-[20px] border border-border bg-card p-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                    Muc tieu hien tai
+                    Mục tiêu hiện tại
                   </p>
                   <p className="mt-2 text-lg font-semibold text-foreground">
-                    {data?.targetJlptLevel || "N5"} • {data?.dailyGoalMinutes || 0} phut/ngay
+                    {data?.targetJlptLevel || "N5"} • {data?.dailyGoalMinutes || 0} phút/ngày
                   </p>
                 </div>
 
@@ -364,26 +364,26 @@ const StudyCalendar = () => {
                     Deadline
                   </p>
                   <p className="mt-2 text-lg font-semibold text-foreground">
-                    {data?.deadlineDate || "Chua dat"}
+                    {data?.deadlineDate || "Chưa đặt"}
                   </p>
                   <p className="mt-1 text-sm text-muted-foreground">
                     {data?.deadlineDate
-                      ? `${data.daysRemainingToDeadline} ngay con lai • can ${data.recommendedMinutesPerDay} phut/ngay`
-                      : "Hay dat moc thi JLPT de he thong tinh nhiep hoc chinh xac hon."}
+                      ? `${data.daysRemainingToDeadline} ngày còn lại • cần ${data.recommendedMinutesPerDay} phút/ngày`
+                      : "Hãy đặt mốc thi JLPT để hệ thống tính nhịp học chính xác hơn."}
                   </p>
                 </div>
 
                 <div className="rounded-[20px] border border-border bg-card p-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                    Best day trong thang
+                    Ngày học tốt nhất tháng
                   </p>
                   <p className="mt-2 text-lg font-semibold text-foreground">
-                    {data?.bestDayDate ? formatDateLabel(data.bestDayDate) : "Chua co"}
+                    {data?.bestDayDate ? formatDateLabel(data.bestDayDate) : "Chưa có"}
                   </p>
                   <p className="mt-1 text-sm text-muted-foreground">
                     {data?.bestDayDate
-                      ? `${data.bestDayMinutes} phut hoc la muc cao nhat trong thang nay.`
-                      : "Khi co activity, lich se nhan ra ngay hoc sau nhat cua ban."}
+                      ? `${data.bestDayMinutes} phút học là mức cao nhất trong tháng này.`
+                      : "Khi có hoạt động, lịch sẽ nhận ra ngày học sâu nhất của bạn."}
                   </p>
                 </div>
               </div>

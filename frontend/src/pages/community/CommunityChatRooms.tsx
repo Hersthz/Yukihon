@@ -63,14 +63,16 @@ const CommunityChatRooms = ({
     <CardHeader className="pb-3">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <CardTitle className="text-lg font-semibold text-slate-900">Study rooms</CardTitle>
+          <CardTitle className="text-lg font-semibold text-slate-900">
+            Phòng học trực tiếp
+          </CardTitle>
           <p className="mt-1 text-sm text-slate-500">
-            Chuyen nhanh den dung phong hoc theo muc tieu hom nay.
+            Chuyển nhanh đến đúng phòng học theo mục tiêu hôm nay.
           </p>
         </div>
         <Badge className="border-slate-200 bg-slate-50 text-slate-600" variant="outline">
           <Sparkles className="mr-1.5 h-3.5 w-3.5" />
-          {rooms.length} rooms
+          {rooms.length} phòng
         </Badge>
       </div>
     </CardHeader>

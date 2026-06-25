@@ -288,74 +288,127 @@ const Community = () => {
               onClick={() => setShowCreatePost((prev) => !prev)}
             >
               <Plus className="mr-2 h-4 w-4" />
-              Đăng bài
+              Tạo bài viết
             </Button>
           }
         />
 
         <div className="mb-4 grid gap-3 md:grid-cols-4">
           <MetricCard
-            hint="Tong bai viet"
+            hint="Tổng bài viết"
             icon={<MessageSquare className="h-4 w-4 text-sky-500" />}
             label="Bài viết"
             value={stats?.totalPosts ?? posts.length}
           />
           <MetricCard
-            hint="Binh luan toan cong dong"
+            hint="Bình luận toàn cộng đồng"
             icon={<MessageCircle className="h-4 w-4 text-violet-500" />}
             label="Bình luận"
             value={stats?.totalComments ?? 0}
           />
           <MetricCard
-            hint="Nguoi tham gia"
+            hint="Người tham gia"
             icon={<Users className="h-4 w-4 text-emerald-500" />}
             label="Người đóng góp"
             value={stats?.totalContributors ?? 0}
           />
           <MetricCard
-            hint="Bai moi 7 ngay"
+            hint="Bài mới trong 7 ngày"
             icon={<Trophy className="h-4 w-4 text-amber-500" />}
             label="Tuần này"
             value={stats?.postsThisWeek ?? 0}
           />
         </div>
 
-        <div className="mb-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
-          <CommunityFilters
-            activeCategory={activeCategory}
-            jlptFilter={jlptFilter}
-            search={search}
-            showBookmarkedOnly={showBookmarkedOnly}
-            onActiveCategoryChange={(value) => {
-              setActiveCategory(value);
-              setPage(0);
-            }}
-            onJlptFilterChange={(value) => {
-              setJlptFilter(value);
-              setPage(0);
-            }}
-            onSearchChange={setSearch}
-            onSearchSubmit={() => {
-              setPage(0);
-              if (search === appliedSearch) {
-                void queryClient.invalidateQueries({ queryKey: ["community", "posts"] });
-              } else {
-                setAppliedSearch(search);
-              }
-            }}
-            onToggleBookmarked={() => {
-              setShowBookmarkedOnly((prev) => !prev);
-              setPage(0);
-            }}
-          />
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
+          {/* LEFT: filters + composer + feed */}
           <div className="space-y-4">
-            <CommunityLeaderboard leaderboard={leaderboard} stats={stats} />
+            <CommunityFilters
+              activeCategory={activeCategory}
+              jlptFilter={jlptFilter}
+              search={search}
+              showBookmarkedOnly={showBookmarkedOnly}
+              onActiveCategoryChange={(value) => {
+                setActiveCategory(value);
+                setPage(0);
+              }}
+              onJlptFilterChange={(value) => {
+                setJlptFilter(value);
+                setPage(0);
+              }}
+              onSearchChange={setSearch}
+              onSearchSubmit={() => {
+                setPage(0);
+                if (search === appliedSearch) {
+                  void queryClient.invalidateQueries({ queryKey: ["community", "posts"] });
+                } else {
+                  setAppliedSearch(search);
+                }
+              }}
+              onToggleBookmarked={() => {
+                setShowBookmarkedOnly((prev) => !prev);
+                setPage(0);
+              }}
+            />
+
+            <AnimatePresence>
+              {showCreatePost ? (
+                <motion.div
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  initial={{ opacity: 0, y: -10 }}
+                >
+                  <CommunityComposer
+                    newTitle={newTitle}
+                    newContent={newContent}
+                    newCategory={newCategory}
+                    newJlptLevel={newJlptLevel}
+                    newTags={newTags}
+                    posting={posting}
+                    onTitleChange={setNewTitle}
+                    onContentChange={setNewContent}
+                    onCategoryChange={setNewCategory}
+                    onJlptLevelChange={(value) => setNewJlptLevel(value === "none" ? "" : value)}
+                    onTagsChange={setNewTags}
+                    onCancel={() => setShowCreatePost(false)}
+                    onSubmit={() => void handleCreatePost()}
+                  />
+                </motion.div>
+              ) : null}
+            </AnimatePresence>
+
+            <CommunityFeed
+              loading={loading}
+              posts={posts}
+              showBookmarkedOnly={showBookmarkedOnly}
+              openComments={openComments}
+              commentsByPost={commentsByPost}
+              commentInputs={commentInputs}
+              loadingComments={loadingComments}
+              currentUserId={user?.id}
+              page={page}
+              totalPages={totalPages}
+              onLike={(postId) => likeMutation.mutate(postId)}
+              onBookmark={(postId) => bookmarkMutation.mutate(postId)}
+              onDeletePost={(postId) => deletePostMutation.mutate(postId)}
+              onToggleComments={(postId) => void loadComments(postId)}
+              onCommentInputChange={(postId, value) =>
+                setCommentInputs((prev) => ({ ...prev, [postId]: value }))
+              }
+              onSubmitComment={(postId) => handleComment(postId)}
+              onPageChange={(nextPage) => setPage(nextPage)}
+            />
+          </div>
+
+          {/* RIGHT: live rooms + leaderboard + chat */}
+          <div className="space-y-4">
             <CommunityChatRooms
               isLoading={chatRoomsLoading}
               onSelectRoom={(roomId) => setSelectedRoomId(normalizeRoomId(roomId))}
               rooms={chatRooms}
               selectedRoomId={selectedChatRoom.id}
             />
+            <CommunityLeaderboard leaderboard={leaderboard} stats={stats} />
             <CommunityRealtimeChat
               currentUserId={user?.id}
               currentUserName={user?.displayName}
@@ -363,55 +416,6 @@ const Community = () => {
             />
           </div>
         </div>
-
-        <AnimatePresence>
-          {showCreatePost ? (
-            <motion.div
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-4"
-              exit={{ opacity: 0, y: -10 }}
-              initial={{ opacity: 0, y: -10 }}
-            >
-              <CommunityComposer
-                newTitle={newTitle}
-                newContent={newContent}
-                newCategory={newCategory}
-                newJlptLevel={newJlptLevel}
-                newTags={newTags}
-                posting={posting}
-                onTitleChange={setNewTitle}
-                onContentChange={setNewContent}
-                onCategoryChange={setNewCategory}
-                onJlptLevelChange={(value) => setNewJlptLevel(value === "none" ? "" : value)}
-                onTagsChange={setNewTags}
-                onCancel={() => setShowCreatePost(false)}
-                onSubmit={() => void handleCreatePost()}
-              />
-            </motion.div>
-          ) : null}
-        </AnimatePresence>
-
-        <CommunityFeed
-          loading={loading}
-          posts={posts}
-          showBookmarkedOnly={showBookmarkedOnly}
-          openComments={openComments}
-          commentsByPost={commentsByPost}
-          commentInputs={commentInputs}
-          loadingComments={loadingComments}
-          currentUserId={user?.id}
-          page={page}
-          totalPages={totalPages}
-          onLike={(postId) => likeMutation.mutate(postId)}
-          onBookmark={(postId) => bookmarkMutation.mutate(postId)}
-          onDeletePost={(postId) => deletePostMutation.mutate(postId)}
-          onToggleComments={(postId) => void loadComments(postId)}
-          onCommentInputChange={(postId, value) =>
-            setCommentInputs((prev) => ({ ...prev, [postId]: value }))
-          }
-          onSubmitComment={(postId) => handleComment(postId)}
-          onPageChange={(nextPage) => setPage(nextPage)}
-        />
       </div>
       <FriendAndPmMessenger />
     </DashboardLayout>
