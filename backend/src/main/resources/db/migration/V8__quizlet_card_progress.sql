@@ -1,0 +1,21 @@
+CREATE TABLE `quizlet_card_progress` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `user_id` bigint NOT NULL,
+  `deck_id` bigint NOT NULL,
+  `flashcard_id` bigint NOT NULL,
+  `status` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `correct_count` int NOT NULL,
+  `wrong_count` int NOT NULL,
+  `last_answer_correct` bit(1) DEFAULT NULL,
+  `last_studied_at` datetime(6) DEFAULT NULL,
+  `is_active` bit(1) NOT NULL,
+  `is_deleted` bit(1) NOT NULL,
+  `version` bigint NOT NULL,
+  `created_at` datetime(6) NOT NULL,
+  `updated_at` datetime(6) NOT NULL,
+  `created_by` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `updated_by` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_quizlet_progress` (`user_id`,`deck_id`,`flashcard_id`),
+  KEY `idx_quizlet_progress_deck` (`user_id`,`deck_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

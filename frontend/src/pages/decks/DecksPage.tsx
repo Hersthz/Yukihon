@@ -14,6 +14,7 @@ import {
   BarChart3,
   Settings,
   Copy,
+  Sparkles,
 } from "lucide-react";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -42,6 +43,7 @@ const DeckCard = ({
   onStats,
   onSettings,
   onClone,
+  onQuizlet,
   cloning,
 }: {
   deck: Deck;
@@ -51,6 +53,7 @@ const DeckCard = ({
   onStats: (id: number) => void;
   onSettings: (id: number) => void;
   onClone: (id: number) => void;
+  onQuizlet: (id: number) => void;
   cloning: boolean;
 }) => (
   <Card className="flex flex-col border-border/70 transition hover:shadow-md">
@@ -76,7 +79,7 @@ const DeckCard = ({
     <CardContent className="mt-auto flex items-center justify-between gap-2">
       <span className="text-sm text-muted-foreground">{deck.totalCards} thẻ</span>
       {isOwn ? (
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1">
           <Button
             size="icon"
             variant="ghost"
@@ -95,8 +98,24 @@ const DeckCard = ({
           >
             <Settings className="h-4 w-4" />
           </Button>
-          <Button size="sm" variant="outline" onClick={() => onManage(deck.id)}>
-            <Pencil className="mr-1 h-4 w-4" /> Quản lý
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8"
+            title="Ôn nhanh"
+            onClick={() => onQuizlet(deck.id)}
+            disabled={deck.totalCards === 0}
+          >
+            <Sparkles className="h-4 w-4" />
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8"
+            title="Quản lý thẻ"
+            onClick={() => onManage(deck.id)}
+          >
+            <Pencil className="h-4 w-4" />
           </Button>
           <Button size="sm" onClick={() => onStudy(deck.id)} disabled={deck.totalCards === 0}>
             <Play className="mr-1 h-4 w-4" /> Học
@@ -104,6 +123,16 @@ const DeckCard = ({
         </div>
       ) : (
         <div className="flex gap-2">
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8"
+            title="Ôn nhanh"
+            onClick={() => onQuizlet(deck.id)}
+            disabled={deck.totalCards === 0}
+          >
+            <Sparkles className="h-4 w-4" />
+          </Button>
           <Button size="sm" variant="outline" onClick={() => onClone(deck.id)} disabled={cloning}>
             {cloning ? (
               <Loader2 className="mr-1 h-4 w-4 animate-spin" />
@@ -173,6 +202,7 @@ const DecksPage = () => {
   const manage = (id: number) => navigate(`/decks/${id}/cards`);
   const stats = (id: number) => navigate(`/decks/${id}/stats`);
   const settings = (id: number) => navigate(`/decks/${id}/settings`);
+  const quizlet = (id: number) => navigate(`/decks/${id}/quizlet`);
 
   const mineDecks = mine.data ?? [];
   const otherPublic = (publicDecks.data ?? []).filter((d) => !mineDecks.some((m) => m.id === d.id));
@@ -221,6 +251,7 @@ const DecksPage = () => {
                 onStats={stats}
                 onSettings={settings}
                 onClone={cloneMutation.mutate}
+                onQuizlet={quizlet}
                 cloning={false}
               />
             ))}
@@ -241,6 +272,7 @@ const DecksPage = () => {
                   onStats={stats}
                   onSettings={settings}
                   onClone={cloneMutation.mutate}
+                  onQuizlet={quizlet}
                   cloning={cloneMutation.isPending && cloneMutation.variables === deck.id}
                 />
               ))}
