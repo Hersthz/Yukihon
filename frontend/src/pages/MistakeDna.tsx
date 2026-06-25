@@ -22,12 +22,12 @@ const MistakeDna = () => {
       <div className="mx-auto max-w-[1380px]">
         <PageHeader
           eyebrow="Cá nhân hóa"
-          icon={<Brain className="h-6 w-6 text-rose-600" />}
+          icon={<Brain className="h-6 w-6 text-primary" />}
           title="Phân tích lỗi bằng AI"
           description="Một hồ sơ dễ đọc về những lỗi bạn lặp lại, các điểm áp lực đằng sau chúng, và bước tiếp theo có thể giúp ích nhất."
           action={
             <Link to="/quiz">
-              <Button className="rounded-2xl bg-rose-500 text-white hover:bg-rose-400">
+              <Button className="rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90">
                 Quay lại Quiz
               </Button>
             </Link>
@@ -37,7 +37,7 @@ const MistakeDna = () => {
         {isLoading ? (
           <div className="rounded-[28px] border border-white bg-card/70 p-10">
             <div className="flex items-center justify-center py-20">
-              <div className="h-12 w-12 animate-spin rounded-full border-4 border-rose-100 border-t-rose-500" />
+              <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary/20 border-t-primary" />
             </div>
           </div>
         ) : !data ? (
@@ -52,7 +52,7 @@ const MistakeDna = () => {
               <MetricCard
                 label="Điểm rủi ro"
                 value={`${data.overallRiskScore}%`}
-                icon={<Radar className="h-4 w-4 text-rose-500" />}
+                icon={<Radar className="h-4 w-4 text-primary" />}
                 hint="Áp lực tổng hợp từ tín hiệu quiz, bài học và SRS"
               />
               <MetricCard

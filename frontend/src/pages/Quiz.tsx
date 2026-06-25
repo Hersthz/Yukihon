@@ -410,13 +410,13 @@ const Quiz = () => {
     <DashboardLayout>
       <div className="mx-auto max-w-[1380px]">
         <PageHeader
-          icon={<Zap className="h-6 w-6 text-amber-600" />}
+          icon={<Zap className="h-6 w-6 text-primary" />}
           title="Trắc nghiệm"
           description="Chuyển về dạng danh mục gọn hơn để bạn lọc nhanh và nhìn nhiều bộ quiz trong một lượt."
           eyebrow="Luyện tập"
           action={
             <Button
-              className="rounded-2xl bg-amber-500 text-white hover:bg-amber-400"
+              className="rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90"
               disabled={filteredQuizzes.length === 0}
               onClick={() => startPracticeQueue(filteredQuizzes.slice(0, 10), "quick")}
             >
@@ -610,7 +610,7 @@ const Quiz = () => {
                   className="rounded-[18px] border border-border bg-background p-4"
                 >
                   <div className="flex items-center justify-between gap-3">
-                    <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                    <span className="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
                       {formatSessionMode(session.mode)}
                     </span>
                     <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
@@ -666,7 +666,7 @@ const Quiz = () => {
                     {activeQuiz.quizType.replaceAll("_", " ")}
                   </span>
                   {practiceQueue.length > 0 && (
-                    <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
+                    <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
                       Câu {practiceIndex + 1}/{practiceQueue.length}
                     </span>
                   )}
@@ -685,7 +685,7 @@ const Quiz = () => {
                 {activeQuiz.audioUrl && (
                   <div className="rounded-[18px] border border-border bg-card p-3">
                     <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
-                      <Headphones className="h-4 w-4 text-amber-500" />
+                      <Headphones className="h-4 w-4 text-primary" />
                       Âm thanh câu hỏi
                     </div>
                     <audio controls src={activeQuiz.audioUrl} className="w-full" />
@@ -715,7 +715,7 @@ const Quiz = () => {
                             "h-auto min-h-12 justify-start rounded-2xl border-border bg-card px-4 py-3 text-left whitespace-normal",
                             !isAnswered &&
                               optionIsSelected &&
-                              "border-amber-300 bg-amber-50 text-amber-800",
+                              "border-primary/50 bg-primary/10 text-primary",
                             isAnswered &&
                               optionIsCorrect &&
                               "border-emerald-300 bg-emerald-50 text-emerald-800",
@@ -779,7 +779,7 @@ const Quiz = () => {
 
                 <div className="flex flex-wrap gap-3">
                   <Button
-                    className="rounded-2xl bg-amber-500 text-white hover:bg-amber-400"
+                    className="rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90"
                     disabled={!answerValue.trim() || isAnswered || isSavingAttempt}
                     onClick={checkAnswer}
                   >
@@ -953,7 +953,7 @@ const Quiz = () => {
         >
           {isLoading ? (
             <div className="flex items-center justify-center py-20">
-              <div className="h-12 w-12 rounded-full border-4 border-amber-100 border-t-amber-500 animate-spin" />
+              <div className="h-12 w-12 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
             </div>
           ) : filteredQuizzes.length === 0 ? (
             <EmptyState
@@ -994,7 +994,7 @@ const Quiz = () => {
                   </p>
 
                   <Button
-                    className="mt-4 w-full rounded-2xl bg-amber-500 text-white hover:bg-amber-400"
+                    className="mt-4 w-full rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90"
                     onClick={() => startQuiz(quiz)}
                   >
                     <Zap className="mr-2 h-4 w-4" />

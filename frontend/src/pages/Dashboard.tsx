@@ -34,21 +34,21 @@ const quickActions = [
     subtitle: "Nhìn nhịp học theo từng ngày",
     icon: CalendarDays,
     to: "/calendar",
-    accent: "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400",
+    accent: "bg-sky-500/15 text-sky-600 dark:text-sky-400",
   },
   {
     title: "Tra cứu",
     subtitle: "Kanji, ví dụ, cách đọc",
     icon: Search,
     to: "/dictionary",
-    accent: "bg-sky-500/15 text-sky-600 dark:text-sky-400",
+    accent: "bg-cyan-500/15 text-cyan-600 dark:text-cyan-400",
   },
   {
     title: "Học qua truyện",
     subtitle: "Học qua truyện ngắn",
     icon: BookOpen,
     to: "/story-mode",
-    accent: "bg-rose-500/15 text-rose-600 dark:text-rose-400",
+    accent: "bg-violet-500/15 text-violet-600 dark:text-violet-400",
   },
   {
     title: "Trợ lý AI",
@@ -69,14 +69,14 @@ const quickActions = [
     subtitle: "Kiểm tra nhanh mức độ nhớ",
     icon: Trophy,
     to: "/quiz",
-    accent: "bg-rose-500/15 text-rose-600 dark:text-rose-400",
+    accent: "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400",
   },
   {
     title: "JLPT",
     subtitle: "Lộ trình theo cấp độ",
     icon: GraduationCap,
     to: "/jlpt-lessons",
-    accent: "bg-amber-500/15 text-amber-600 dark:text-amber-400",
+    accent: "bg-teal-500/15 text-teal-600 dark:text-teal-400",
   },
 ];
 

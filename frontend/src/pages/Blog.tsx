@@ -5,6 +5,7 @@ import { BookOpen, Calendar, Tag, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { EmptyState, PageHeader, PageSection } from "@/components/layout/UserPage";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 import { blogApi, type BlogPostDto } from "@/api/blogApi";
 
 const formatDate = (iso: string) =>
@@ -71,7 +72,7 @@ const Blog = () => {
   });
 
   return (
-    <div className="space-y-6">
+    <DashboardLayout>
       <PageHeader
         title="Blog"
         description="Bài viết kiến thức tiếng Nhật từ đội ngũ Yukihon"
@@ -131,7 +132,7 @@ const Blog = () => {
           </div>
         )}
       </PageSection>
-    </div>
+    </DashboardLayout>
   );
 };
 

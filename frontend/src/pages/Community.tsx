@@ -278,13 +278,13 @@ const Community = () => {
     <DashboardLayout>
       <div className="mx-auto max-w-[1480px]">
         <PageHeader
-          icon={<Users className="h-6 w-6 text-pink-600" />}
-          title="Cộng đồng 2.0"
-          description="Feed da co title, tags, bookmark, search, leaderboard va bo loc JLPT de cac cuoc tro chuyen huu ich hon."
+          icon={<Users className="h-6 w-6 text-primary" />}
+          title="Cộng đồng"
+          description="Feed có tiêu đề, thẻ, lưu bài, tìm kiếm, bảng xếp hạng và bộ lọc JLPT để các cuộc trò chuyện hữu ích hơn."
           eyebrow="Cộng đồng"
           action={
             <Button
-              className="rounded-2xl bg-pink-500 text-white hover:bg-pink-400"
+              className="rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90"
               onClick={() => setShowCreatePost((prev) => !prev)}
             >
               <Plus className="mr-2 h-4 w-4" />

@@ -169,13 +169,13 @@ const Dictionary = () => {
     <DashboardLayout>
       <div className="mx-auto max-w-[1380px]">
         <PageHeader
-          icon={<BookOpen className="h-6 w-6 text-sky-600" />}
+          icon={<BookOpen className="h-6 w-6 text-primary" />}
           title="Tra cứu"
           description="Giữ giao diện gọn, nhìn được nhiều kết quả hơn và mở nhanh phần chi tiết khi cần."
           eyebrow="Từ điển"
           action={
             <Button
-              className="rounded-2xl bg-sky-500 text-white hover:bg-sky-400"
+              className="rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90"
               onClick={handleSearch}
             >
               <Search className="mr-2 h-4 w-4" />
@@ -421,7 +421,7 @@ const Dictionary = () => {
 
                   <div className="flex flex-wrap gap-2">
                     <Button
-                      className="rounded-2xl bg-sky-500 text-white hover:bg-sky-400 disabled:bg-emerald-500"
+                      className="rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-emerald-500"
                       onClick={() => void handleSaveWord(selectedWord)}
                       disabled={!!wordSaved(selectedWord.id) || savingWordId === selectedWord.id}
                     >
