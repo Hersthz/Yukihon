@@ -2,6 +2,8 @@ package com.hoang.basis.yukihon.system.srs.controller;
 
 import com.hoang.basis.yukihon.base.security.CurrentUserId;
 import com.hoang.basis.yukihon.system.srs.dto.AnkiReviewRequest;
+import com.hoang.basis.yukihon.system.srs.dto.AnkiSrsSettingDto;
+import com.hoang.basis.yukihon.system.srs.dto.AnkiStatsDto;
 import com.hoang.basis.yukihon.system.srs.dto.AnkiStudyCardDto;
 import com.hoang.basis.yukihon.system.srs.dto.AnkiStudyQueueDto;
 import com.hoang.basis.yukihon.system.srs.service.AnkiStudyService;
@@ -11,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -33,4 +36,33 @@ public class AnkiStudyController {
             @Valid @RequestBody AnkiReviewRequest request, @CurrentUserId Long userId) {
         return ResponseEntity.ok(ankiStudyService.review(userId, request));
     }
+
+    @GetMapping("/{deckId}/stats")
+    public ResponseEntity<AnkiStatsDto> getStats(@PathVariable Long deckId, @CurrentUserId Long userId) {
+        return ResponseEntity.ok(ankiStudyService.getStats(userId, deckId));
+    }
+
+    @GetMapping("/{deckId}/settings")
+    public ResponseEntity<AnkiSrsSettingDto> getSettings(@PathVariable Long deckId, @CurrentUserId Long userId) {
+        return ResponseEntity.ok(ankiStudyService.getSettings(userId, deckId));
+    }
+
+    @PutMapping("/{deckId}/settings")
+    public ResponseEntity<AnkiSrsSettingDto> updateSettings(
+            @PathVariable Long deckId, @RequestBody AnkiSrsSettingDto dto, @CurrentUserId Long userId) {
+        return ResponseEntity.ok(ankiStudyService.updateSettings(userId, deckId, dto));
+    }
+
+    @PostMapping("/{deckId}/cards/{flashcardId}/suspend")
+    public ResponseEntity<Void> setSuspended(
+            @PathVariable Long deckId,
+            @PathVariable Long flashcardId,
+            @RequestBody SuspendRequest body,
+            @CurrentUserId Long userId) {
+        ankiStudyService.setCardSuspended(userId, deckId, flashcardId, Boolean.TRUE.equals(body.suspended()));
+        return ResponseEntity.noContent().build();
+    }
+
+    /** Body for suspend toggle. */
+    public record SuspendRequest(Boolean suspended) {}
 }

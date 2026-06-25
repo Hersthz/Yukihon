@@ -2,7 +2,19 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { BookOpen, Plus, Play, Globe2, Lock, Loader2, Layers, Pencil } from "lucide-react";
+import {
+  BookOpen,
+  Plus,
+  Play,
+  Globe2,
+  Lock,
+  Loader2,
+  Layers,
+  Pencil,
+  BarChart3,
+  Settings,
+  Copy,
+} from "lucide-react";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,17 +36,27 @@ import { deckApi, type Deck } from "@/api/deckApi";
 
 const DeckCard = ({
   deck,
+  isOwn,
   onStudy,
   onManage,
+  onStats,
+  onSettings,
+  onClone,
+  cloning,
 }: {
   deck: Deck;
+  isOwn: boolean;
   onStudy: (id: number) => void;
   onManage: (id: number) => void;
+  onStats: (id: number) => void;
+  onSettings: (id: number) => void;
+  onClone: (id: number) => void;
+  cloning: boolean;
 }) => (
   <Card className="flex flex-col border-border/70 transition hover:shadow-md">
     <CardHeader>
       <div className="flex items-start justify-between gap-2">
-        <div className="flex h-11 w-11 items-center justify-center rounded-[1rem] bg-[#d4efff] text-foreground">
+        <div className="flex h-11 w-11 items-center justify-center rounded-[1rem] bg-primary/10 text-primary">
           <Layers className="h-5 w-5" />
         </div>
         <Badge variant="secondary" className="gap-1">
@@ -53,14 +75,48 @@ const DeckCard = ({
     </CardHeader>
     <CardContent className="mt-auto flex items-center justify-between gap-2">
       <span className="text-sm text-muted-foreground">{deck.totalCards} thẻ</span>
-      <div className="flex gap-2">
-        <Button size="sm" variant="outline" onClick={() => onManage(deck.id)}>
-          <Pencil className="mr-1 h-4 w-4" /> Quản lý
-        </Button>
-        <Button size="sm" onClick={() => onStudy(deck.id)} disabled={deck.totalCards === 0}>
-          <Play className="mr-1 h-4 w-4" /> Học
-        </Button>
-      </div>
+      {isOwn ? (
+        <div className="flex items-center gap-1.5">
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8"
+            title="Thống kê"
+            onClick={() => onStats(deck.id)}
+          >
+            <BarChart3 className="h-4 w-4" />
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8"
+            title="Cài đặt SRS"
+            onClick={() => onSettings(deck.id)}
+          >
+            <Settings className="h-4 w-4" />
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => onManage(deck.id)}>
+            <Pencil className="mr-1 h-4 w-4" /> Quản lý
+          </Button>
+          <Button size="sm" onClick={() => onStudy(deck.id)} disabled={deck.totalCards === 0}>
+            <Play className="mr-1 h-4 w-4" /> Học
+          </Button>
+        </div>
+      ) : (
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => onClone(deck.id)} disabled={cloning}>
+            {cloning ? (
+              <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+            ) : (
+              <Copy className="mr-1 h-4 w-4" />
+            )}
+            Sao chép
+          </Button>
+          <Button size="sm" onClick={() => onStudy(deck.id)} disabled={deck.totalCards === 0}>
+            <Play className="mr-1 h-4 w-4" /> Học
+          </Button>
+        </div>
+      )}
     </CardContent>
   </Card>
 );
@@ -99,8 +155,24 @@ const DecksPage = () => {
       }),
   });
 
+  const cloneMutation = useMutation({
+    mutationFn: (id: number) => deckApi.clone(id),
+    onSuccess: () => {
+      toast({ title: "Đã sao chép vào thư viện của bạn" });
+      void queryClient.invalidateQueries({ queryKey: ["decks", "mine"] });
+    },
+    onError: (e: unknown) =>
+      toast({
+        title: "Sao chép thất bại",
+        description: e instanceof Error ? e.message : "Lỗi",
+        variant: "destructive",
+      }),
+  });
+
   const study = (id: number) => navigate(`/decks/${id}/study`);
   const manage = (id: number) => navigate(`/decks/${id}/cards`);
+  const stats = (id: number) => navigate(`/decks/${id}/stats`);
+  const settings = (id: number) => navigate(`/decks/${id}/settings`);
 
   const mineDecks = mine.data ?? [];
   const otherPublic = (publicDecks.data ?? []).filter((d) => !mineDecks.some((m) => m.id === d.id));
@@ -140,7 +212,17 @@ const DecksPage = () => {
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {mineDecks.map((deck) => (
-              <DeckCard key={deck.id} deck={deck} onStudy={study} onManage={manage} />
+              <DeckCard
+                key={deck.id}
+                deck={deck}
+                isOwn
+                onStudy={study}
+                onManage={manage}
+                onStats={stats}
+                onSettings={settings}
+                onClone={cloneMutation.mutate}
+                cloning={false}
+              />
             ))}
           </div>
         )}
@@ -150,7 +232,17 @@ const DecksPage = () => {
             <h2 className="text-lg font-semibold">Khám phá (công khai)</h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {otherPublic.map((deck) => (
-                <DeckCard key={deck.id} deck={deck} onStudy={study} onManage={manage} />
+                <DeckCard
+                  key={deck.id}
+                  deck={deck}
+                  isOwn={false}
+                  onStudy={study}
+                  onManage={manage}
+                  onStats={stats}
+                  onSettings={settings}
+                  onClone={cloneMutation.mutate}
+                  cloning={cloneMutation.isPending && cloneMutation.variables === deck.id}
+                />
               ))}
             </div>
           </div>

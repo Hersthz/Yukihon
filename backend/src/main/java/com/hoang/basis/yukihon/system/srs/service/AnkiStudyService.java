@@ -10,6 +10,8 @@ import com.hoang.basis.yukihon.system.library.repository.DeckItemRepository;
 import com.hoang.basis.yukihon.system.library.repository.DeckRepository;
 import com.hoang.basis.yukihon.system.library.repository.FlashcardRepository;
 import com.hoang.basis.yukihon.system.srs.dto.AnkiReviewRequest;
+import com.hoang.basis.yukihon.system.srs.dto.AnkiSrsSettingDto;
+import com.hoang.basis.yukihon.system.srs.dto.AnkiStatsDto;
 import com.hoang.basis.yukihon.system.srs.dto.AnkiStudyCardDto;
 import com.hoang.basis.yukihon.system.srs.dto.AnkiStudyQueueDto;
 import com.hoang.basis.yukihon.system.srs.entity.AnkiReviewLog;
@@ -482,6 +484,217 @@ public class AnkiStudyService {
         double retention = Math.max(0.70, Math.min(0.98, targetRetention));
         double modifier = Math.pow(0.90 / retention, 2);
         return Math.max(0.50, Math.min(1.50, modifier));
+    }
+
+    // ===================== STATS =====================
+
+    @Transactional(readOnly = true)
+    public AnkiStatsDto getStats(Long userId, Long deckId) {
+        deckRepository.findById(deckId).orElseThrow(() -> new ResourceNotFoundException("Deck not found: " + deckId));
+
+        long totalCards = deckItemRepository.countByDeckIdAndIsDeletedFalse(deckId);
+        List<AnkiSrsProgress> all = progressRepository.findByUserIdAndDeckId(userId, deckId);
+        List<AnkiSrsProgress> active =
+                all.stream().filter(p -> !Boolean.TRUE.equals(p.getSuspended())).toList();
+
+        LocalDate today = LocalDate.now();
+
+        long learning =
+                active.stream().filter(p -> "LEARNING".equals(p.getState())).count();
+        long relearning =
+                active.stream().filter(p -> "RELEARNING".equals(p.getState())).count();
+        long review = active.stream().filter(p -> "REVIEW".equals(p.getState())).count();
+        long started = all.stream().filter(p -> !"NEW".equals(p.getState())).count();
+        long newCards = Math.max(0, totalCards - started);
+        long suspended =
+                all.stream().filter(p -> Boolean.TRUE.equals(p.getSuspended())).count();
+        long leech =
+                all.stream().filter(p -> Boolean.TRUE.equals(p.getIsLeech())).count();
+
+        long studiedToday = all.stream()
+                .filter(p -> p.getLastReviewedAt() != null
+                        && today.equals(p.getLastReviewedAt().toLocalDate()))
+                .count();
+        long dueToday = active.stream()
+                .filter(p -> p.getNextReviewAt() != null
+                        && !p.getNextReviewAt().toLocalDate().isAfter(today))
+                .count();
+        long dueTomorrow = active.stream()
+                .filter(p -> p.getNextReviewAt() != null
+                        && p.getNextReviewAt().toLocalDate().equals(today.plusDays(1)))
+                .count();
+
+        long totalReviews =
+                all.stream().mapToLong(p -> nvl(p.getReviewCount(), 0)).sum();
+        long totalLapses = all.stream().mapToLong(p -> nvl(p.getLapses(), 0)).sum();
+
+        List<AnkiSrsProgress> reviewCards =
+                active.stream().filter(p -> "REVIEW".equals(p.getState())).toList();
+        double avgEase = reviewCards.stream()
+                .mapToDouble(p -> nvl(p.getEaseFactor(), 2.5))
+                .average()
+                .orElse(0);
+        double avgInterval = reviewCards.stream()
+                .mapToDouble(p -> nvl(p.getIntervalDays(), 0))
+                .average()
+                .orElse(0);
+        double avgMemory = active.stream()
+                .mapToDouble(p -> nvl(p.getMemoryScore(), 0.0))
+                .average()
+                .orElse(0);
+
+        List<AnkiStatsDto.Bucket> future = new ArrayList<>();
+        for (int d = 0; d < 14; d++) {
+            LocalDate day = today.plusDays(d);
+            long c = reviewCards.stream()
+                    .filter(p -> p.getNextReviewAt() != null
+                            && p.getNextReviewAt().toLocalDate().equals(day))
+                    .count();
+            future.add(AnkiStatsDto.Bucket.builder()
+                    .label(d == 0 ? "Hôm nay" : (d == 1 ? "Mai" : "+" + d))
+                    .count(c)
+                    .build());
+        }
+
+        List<AnkiStatsDto.Bucket> intervals = List.of(
+                bucket("1 ngày", reviewCards, p -> nvl(p.getIntervalDays(), 0) <= 1),
+                bucket("2–3 ngày", reviewCards, p -> within(nvl(p.getIntervalDays(), 0), 2, 3)),
+                bucket("4–7 ngày", reviewCards, p -> within(nvl(p.getIntervalDays(), 0), 4, 7)),
+                bucket("1–4 tuần", reviewCards, p -> within(nvl(p.getIntervalDays(), 0), 8, 30)),
+                bucket("1–3 tháng", reviewCards, p -> within(nvl(p.getIntervalDays(), 0), 31, 90)),
+                bucket("3 tháng+", reviewCards, p -> nvl(p.getIntervalDays(), 0) > 90));
+
+        List<AnkiStatsDto.Bucket> eases = List.of(
+                bucket("< 2.0", reviewCards, p -> nvl(p.getEaseFactor(), 2.5) < 2.0),
+                bucket("2.0–2.5", reviewCards, p -> withinD(nvl(p.getEaseFactor(), 2.5), 2.0, 2.5)),
+                bucket("2.5–3.0", reviewCards, p -> withinD(nvl(p.getEaseFactor(), 2.5), 2.5, 3.0)),
+                bucket("3.0+", reviewCards, p -> nvl(p.getEaseFactor(), 2.5) >= 3.0));
+
+        return AnkiStatsDto.builder()
+                .totalCards(totalCards)
+                .newCards(newCards)
+                .learningCards(learning)
+                .relearningCards(relearning)
+                .reviewCards(review)
+                .suspendedCards(suspended)
+                .leechCards(leech)
+                .studiedToday(studiedToday)
+                .dueToday(dueToday)
+                .dueTomorrow(dueTomorrow)
+                .avgMemoryScore(round1(avgMemory))
+                .avgEaseFactor(round2(avgEase))
+                .avgIntervalDays(round1(avgInterval))
+                .totalReviews(totalReviews)
+                .totalLapses(totalLapses)
+                .futureReviews(future)
+                .intervalBuckets(intervals)
+                .easeBuckets(eases)
+                .build();
+    }
+
+    private boolean within(int v, int min, int max) {
+        return v >= min && v <= max;
+    }
+
+    private boolean withinD(double v, double min, double max) {
+        return v >= min && v < max;
+    }
+
+    private AnkiStatsDto.Bucket bucket(
+            String label, List<AnkiSrsProgress> cards, java.util.function.Predicate<AnkiSrsProgress> pred) {
+        return AnkiStatsDto.Bucket.builder()
+                .label(label)
+                .count(cards.stream().filter(pred).count())
+                .build();
+    }
+
+    private double round1(double v) {
+        return Math.round(v * 10.0) / 10.0;
+    }
+
+    private double round2(double v) {
+        return Math.round(v * 100.0) / 100.0;
+    }
+
+    // ===================== SETTINGS =====================
+
+    @Transactional(readOnly = true)
+    public AnkiSrsSettingDto getSettings(Long userId, Long deckId) {
+        return settingRepository
+                .findByUserIdAndDeckId(userId, deckId)
+                .map(this::toSettingDto)
+                .orElseGet(() -> AnkiSrsSettingDto.builder()
+                        .targetRetention(0.9)
+                        .maxReviewsPerDay(200)
+                        .maxItemsPerDay(20)
+                        .maximumIntervalDays(36500)
+                        .suspendLeeches(true)
+                        .leechThreshold(8)
+                        .algorithmType("SM2")
+                        .build());
+    }
+
+    public AnkiSrsSettingDto updateSettings(Long userId, Long deckId, AnkiSrsSettingDto dto) {
+        AnkiSrsSetting s = settingRepository
+                .findByUserIdAndDeckId(userId, deckId)
+                .orElseGet(() -> {
+                    AnkiSrsSetting ns = new AnkiSrsSetting();
+                    ns.setUserId(userId);
+                    ns.setDeckId(deckId);
+                    return ns;
+                });
+        if (dto.getAlgorithmConfigId() != null) {
+            s.setAlgorithmConfigId(dto.getAlgorithmConfigId());
+        }
+        if (dto.getTargetRetention() != null) {
+            s.setTargetRetention(Math.max(0.70, Math.min(0.98, dto.getTargetRetention())));
+        }
+        if (dto.getMaxReviewsPerDay() != null) {
+            s.setMaxReviewsPerDay(Math.max(0, dto.getMaxReviewsPerDay()));
+        }
+        if (dto.getMaxItemsPerDay() != null) {
+            s.setMaxItemsPerDay(Math.max(0, dto.getMaxItemsPerDay()));
+        }
+        if (dto.getMaximumIntervalDays() != null) {
+            s.setMaximumIntervalDays(clamp(dto.getMaximumIntervalDays(), 1, 36500));
+        }
+        if (dto.getSuspendLeeches() != null) {
+            s.setSuspendLeeches(dto.getSuspendLeeches());
+        }
+        if (dto.getLeechThreshold() != null) {
+            s.setLeechThreshold(Math.max(1, dto.getLeechThreshold()));
+        }
+        return toSettingDto(settingRepository.save(s));
+    }
+
+    private AnkiSrsSettingDto toSettingDto(AnkiSrsSetting s) {
+        String algoType = "SM2";
+        if (s.getAlgorithmConfigId() != null) {
+            algoType = algorithmConfigRepository
+                    .findById(s.getAlgorithmConfigId())
+                    .map(SrsAlgorithmConfig::getAlgorithmType)
+                    .orElse("SM2");
+        }
+        return AnkiSrsSettingDto.builder()
+                .algorithmConfigId(s.getAlgorithmConfigId())
+                .algorithmType(algoType)
+                .targetRetention(s.getTargetRetention())
+                .maxReviewsPerDay(s.getMaxReviewsPerDay())
+                .maxItemsPerDay(s.getMaxItemsPerDay())
+                .maximumIntervalDays(s.getMaximumIntervalDays())
+                .suspendLeeches(s.getSuspendLeeches())
+                .leechThreshold(s.getLeechThreshold())
+                .build();
+    }
+
+    // ===================== SUSPEND =====================
+
+    public void setCardSuspended(Long userId, Long deckId, Long flashcardId, boolean suspended) {
+        AnkiSrsProgress p = progressRepository
+                .findByUserIdAndDeckIdAndFlashcardId(userId, deckId, flashcardId)
+                .orElseThrow(() -> new ResourceNotFoundException("Progress not found"));
+        p.setSuspended(suspended);
+        progressRepository.save(p);
     }
 
     private double memoryScore(Double easeFactor, SchedulingConfig config) {

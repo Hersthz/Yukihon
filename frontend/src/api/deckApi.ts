@@ -11,6 +11,7 @@ export const deckApi = {
   listPublic: () => apiClient.get<Deck[]>("/api/decks/public"),
   get: (id: number) => apiClient.get<Deck>(`/api/decks/${id}`),
   create: (payload: CreateDeckPayload) => apiClient.post<Deck>("/api/decks", payload),
+  clone: (id: number) => apiClient.post<Deck>(`/api/decks/${id}/clone`, {}),
   listCards: (deckId: number) => apiClient.get<DeckCard[]>(`/api/decks/${deckId}/cards`),
   addCard: (deckId: number, payload: AddCardPayload) =>
     apiClient.post<DeckCard>(`/api/decks/${deckId}/cards`, payload),

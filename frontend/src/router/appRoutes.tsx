@@ -16,6 +16,8 @@ const MetadataDrivenCrudPage = lazy(() => import("@/pages/admin/MetadataDrivenCr
 const DecksPage = lazy(() => import("@/pages/decks/DecksPage"));
 const DeckStudyPage = lazy(() => import("@/pages/decks/DeckStudyPage"));
 const DeckCardsPage = lazy(() => import("@/pages/decks/DeckCardsPage"));
+const DeckStatsPage = lazy(() => import("@/pages/decks/DeckStatsPage"));
+const DeckSettingsPage = lazy(() => import("@/pages/decks/DeckSettingsPage"));
 const AiChat = lazy(() => import("@/pages/AiChat"));
 const Auth = lazy(() => import("@/pages/Auth"));
 const Community = lazy(() => import("@/pages/Community"));
@@ -61,6 +63,8 @@ export const AppRoutes = () => {
         <Route path="/decks" element={withProtectedRoute(<DecksPage />)} />
         <Route path="/decks/:deckId/study" element={withProtectedRoute(<DeckStudyPage />)} />
         <Route path="/decks/:deckId/cards" element={withProtectedRoute(<DeckCardsPage />)} />
+        <Route path="/decks/:deckId/stats" element={withProtectedRoute(<DeckStatsPage />)} />
+        <Route path="/decks/:deckId/settings" element={withProtectedRoute(<DeckSettingsPage />)} />
         <Route path="/grammar" element={withProtectedRoute(<Grammar />)} />
         <Route path="/quiz" element={withProtectedRoute(<Quiz />)} />
         <Route path="/calendar" element={withProtectedRoute(<StudyCalendar />)} />
