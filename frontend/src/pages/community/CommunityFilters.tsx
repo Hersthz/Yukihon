@@ -35,8 +35,8 @@ const CommunityFilters = ({
   onToggleBookmarked,
 }: CommunityFiltersProps) => (
   <PageSection
-    title="Bo loc thong minh"
-    description="Tim bai theo topic, JLPT, tu khoa va bookmark ma khong can roi khoi feed."
+    title="Bộ lọc thông minh"
+    description="Tìm bài theo chủ đề, JLPT, từ khóa và bookmark mà không cần rời khỏi feed."
   >
     <div className="space-y-3">
       <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_180px_180px]">
@@ -46,7 +46,7 @@ const CommunityFilters = ({
             className="h-11 rounded-2xl border-border bg-card pl-11 text-foreground placeholder:text-muted-foreground"
             onChange={(event) => onSearchChange(event.target.value)}
             onKeyDown={(event) => event.key === "Enter" && onSearchSubmit()}
-            placeholder="Tim theo title, noi dung, hoac tag"
+            placeholder="Tìm theo tiêu đề, nội dung, hoặc thẻ"
             value={search}
           />
         </div>
@@ -69,7 +69,7 @@ const CommunityFilters = ({
 
         <Button className="h-11 rounded-2xl" onClick={onSearchSubmit}>
           <Search className="mr-2 h-4 w-4" />
-          Tim
+          Tìm
         </Button>
       </div>
 
@@ -105,7 +105,7 @@ const CommunityFilters = ({
           type="button"
         >
           <Bookmark className="h-4 w-4" />
-          Bookmarked
+          Đã lưu
         </button>
       </div>
     </div>

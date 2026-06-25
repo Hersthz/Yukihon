@@ -469,7 +469,7 @@ const Translation = () => {
           icon={<Languages className="h-6 w-6 text-violet-600" />}
           title="Dịch"
           description="Bố cục thấp hơn để bạn vừa dịch, vừa nhìn lịch sử và cụm mẫu mà không bị phải cuộn quá nhiều."
-          eyebrow="Translation"
+          eyebrow="Dịch thuật"
           action={
             <>
               <Button
@@ -487,7 +487,7 @@ const Translation = () => {
                 onClick={() => void handleTranslate()}
               >
                 <Languages className="mr-2 h-4 w-4" />
-                {loading ? "Dang dich..." : "Dịch ngay"}
+                {loading ? "Đang dịch..." : "Dịch ngay"}
               </Button>
             </>
           }
@@ -651,7 +651,7 @@ const Translation = () => {
 
                           <div className="mt-4 flex items-center justify-between gap-3">
                             <span className="text-xs text-muted-foreground">
-                              {word.wordType || "Vocabulary"}
+                              {word.wordType || "Từ vựng"}
                             </span>
                             <Button
                               className="rounded-xl bg-violet-50 text-violet-700 hover:bg-violet-100 disabled:bg-emerald-50 disabled:text-emerald-700"
@@ -861,7 +861,7 @@ const Translation = () => {
                   </p>
                 </div>
                 <div className="rounded-[18px] border border-sky-200 bg-sky-50/70 p-4">
-                  <p className="text-sm font-semibold text-sky-800">Swap ngôn ngữ</p>
+                  <p className="text-sm font-semibold text-sky-800">Đảo ngôn ngữ</p>
                   <p className="mt-1 text-sm text-muted-foreground">
                     Đảo chiều dịch khi cần đối chiếu nhanh hai chiều Việt - Nhật.
                   </p>

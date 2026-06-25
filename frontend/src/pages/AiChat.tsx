@@ -50,10 +50,10 @@ const MAX_CONTEXT_MESSAGES = 12;
 const EMPTY_ASSISTANT_MESSAGE = " ";
 
 const STARTER_PROMPTS = [
-  "Make me a 15-minute N5 study plan for today",
-  "Explain the difference between wa and ga",
-  "Give me a simple Japanese self-introduction",
-  "Break down this sentence: Nihongo o benkyo shiteimasu",
+  "Lập cho mình kế hoạch học N5 trong 15 phút hôm nay",
+  "Giải thích sự khác nhau giữa wa và ga",
+  "Cho mình một mẫu tự giới thiệu đơn giản bằng tiếng Nhật",
+  "Phân tích câu này: Nihongo o benkyo shiteimasu",
 ];
 
 const MODE_META: Record<
@@ -64,16 +64,16 @@ const MODE_META: Record<
   }
 > = {
   coach: {
-    label: "Study Coach",
-    description: "Plans short sessions, revision steps, and next actions.",
+    label: "Huấn luyện học tập",
+    description: "Lên kế hoạch buổi học ngắn, các bước ôn tập và việc cần làm tiếp theo.",
   },
   grammar: {
-    label: "Grammar Lab",
-    description: "Explains patterns with structure, examples, and notes.",
+    label: "Phòng ngữ pháp",
+    description: "Giải thích cấu trúc, ví dụ và ghi chú cho từng mẫu ngữ pháp.",
   },
   conversation: {
-    label: "Conversation",
-    description: "Helps you draft natural phrases and mini dialogues.",
+    label: "Hội thoại",
+    description: "Giúp bạn soạn các câu nói tự nhiên và đoạn hội thoại nhỏ.",
   },
 };
 
@@ -82,7 +82,7 @@ const INITIAL_MESSAGES: ChatMessage[] = [
     id: "welcome",
     role: "assistant",
     timestamp: new Date().toISOString(),
-    text: "Xin chao, minh la Yukihon AI. Ban co the hoi ngu phap, xin ke hoach hoc ngan, hoac nho minh viet cau tra loi tieng Nhat tu nhien hon.",
+    text: "Xin chào, mình là Yukihon AI. Bạn có thể hỏi ngữ pháp, xin kế hoạch học ngắn, hoặc nhờ mình viết câu trả lời tiếng Nhật tự nhiên hơn.",
   },
 ];
 
@@ -102,7 +102,7 @@ const formatConversationTime = (timestamp: string) =>
 
 const extractApiErrorMessage = (error: unknown) => {
   if (!(error instanceof Error)) {
-    return "AI chat is temporarily unavailable. Please try again.";
+    return "Trợ lý AI tạm thời không khả dụng. Vui lòng thử lại.";
   }
 
   try {
@@ -114,7 +114,7 @@ const extractApiErrorMessage = (error: unknown) => {
     // ignore JSON parse failures and fall back to the raw message
   }
 
-  return error.message || "AI chat is temporarily unavailable. Please try again.";
+  return error.message || "Trợ lý AI tạm thời không khả dụng. Vui lòng thử lại.";
 };
 
 const toUiMessage = (message: AiChatHistoryItem): ChatMessage => ({
@@ -382,7 +382,7 @@ const AiChat = () => {
         setActiveConversationId(null);
         setMessages(INITIAL_MESSAGES);
         toast({
-          title: "Could not load chat history",
+          title: "Không tải được lịch sử trò chuyện",
           description: extractApiErrorMessage(error),
           variant: "destructive",
         });
@@ -434,7 +434,7 @@ const AiChat = () => {
         if (cancelled) return;
         setMessages(INITIAL_MESSAGES);
         toast({
-          title: "Could not load this conversation",
+          title: "Không tải được cuộc trò chuyện này",
           description: extractApiErrorMessage(error),
           variant: "destructive",
         });
@@ -490,7 +490,7 @@ const AiChat = () => {
         : [
             {
               id: conversationId,
-              title: conversationTitle || "New chat",
+              title: conversationTitle || "Cuộc trò chuyện mới",
               createdAt: now,
               updatedAt: now,
             },
@@ -593,7 +593,7 @@ const AiChat = () => {
             streamFailed = true;
             setMessages((current) => current.filter((item) => item.id !== assistantMessageId));
             toast({
-              title: "AI chat unavailable",
+              title: "Trợ lý AI không khả dụng",
               description: message,
               variant: "destructive",
             });
@@ -624,7 +624,7 @@ const AiChat = () => {
       }
       setMessages((current) => current.filter((item) => item.id !== assistantMessageId));
       toast({
-        title: "AI chat unavailable",
+        title: "Trợ lý AI không khả dụng",
         description: extractApiErrorMessage(error),
         variant: "destructive",
       });
@@ -670,7 +670,7 @@ const AiChat = () => {
       setInput("");
     } catch (error) {
       toast({
-        title: "Could not create a new chat",
+        title: "Không thể tạo cuộc trò chuyện mới",
         description: extractApiErrorMessage(error),
         variant: "destructive",
       });
@@ -688,8 +688,8 @@ const AiChat = () => {
     const title = renameValue.trim();
     if (!title) {
       toast({
-        title: "Conversation title is required",
-        description: "Please enter a short name before saving.",
+        title: "Cần nhập tên cuộc trò chuyện",
+        description: "Vui lòng nhập một tên ngắn trước khi lưu.",
         variant: "destructive",
       });
       return;
@@ -709,7 +709,7 @@ const AiChat = () => {
       setRenameValue("");
     } catch (error) {
       toast({
-        title: "Could not rename the conversation",
+        title: "Không thể đổi tên cuộc trò chuyện",
         description: extractApiErrorMessage(error),
         variant: "destructive",
       });
@@ -723,7 +723,7 @@ const AiChat = () => {
     if (!conversation) return;
 
     const confirmed = window.confirm(
-      `Delete "${conversation.title}"? This will remove all messages in that chat.`
+      `Xóa "${conversation.title}"? Toàn bộ tin nhắn trong cuộc trò chuyện này sẽ bị xóa.`
     );
     if (!confirmed) return;
 
@@ -743,7 +743,7 @@ const AiChat = () => {
       }
     } catch (error) {
       toast({
-        title: "Could not delete the conversation",
+        title: "Không thể xóa cuộc trò chuyện",
         description: extractApiErrorMessage(error),
         variant: "destructive",
       });
@@ -797,24 +797,24 @@ const AiChat = () => {
   const assistantMessages = messages.filter(
     (message) => message.role === "assistant" && message.id !== "welcome"
   ).length;
-  const userName = user?.displayName || "Learner";
+  const userName = user?.displayName || "Người học";
 
   return (
     <DashboardLayout>
       <div className="mx-auto max-w-[1500px]">
         <PageHeader
           icon={<Bot className="h-6 w-6 text-primary" />}
-          title="AI Chat"
-          description="A focused study chat space for grammar, practice prompts, and compact JLPT coaching."
-          eyebrow="Assistant"
+          title="Trợ lý AI"
+          description="Không gian trò chuyện học tập tập trung cho ngữ pháp, câu luyện tập và huấn luyện JLPT gọn nhẹ."
+          eyebrow="Trợ lý AI"
           action={
             <>
               <Badge className="rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-primary hover:bg-primary/10">
-                Live via {activeModel}
+                Trực tiếp qua {activeModel}
               </Badge>
               <Button className="rounded-2xl" onClick={resetChat} variant="outline">
                 <RefreshCcw className="mr-2 h-4 w-4" />
-                Reset all chats
+                Xóa toàn bộ cuộc trò chuyện
               </Button>
             </>
           }
@@ -822,34 +822,34 @@ const AiChat = () => {
 
         <div className="mb-4 grid gap-3 md:grid-cols-3">
           <MetricCard
-            label="Session"
-            value={`${userMessages} turns`}
+            label="Phiên"
+            value={`${userMessages} lượt`}
             icon={<Sparkles className="h-4 w-4 text-primary" />}
             hint={
               activeConversation
-                ? `Current thread: ${activeConversation.title}`
-                : "Start a new chat to save a thread."
+                ? `Cuộc trò chuyện hiện tại: ${activeConversation.title}`
+                : "Bắt đầu cuộc trò chuyện mới để lưu lại."
             }
           />
           <MetricCard
-            label="Assistant"
-            value={`${assistantMessages} replies`}
+            label="Trợ lý AI"
+            value={`${assistantMessages} câu trả lời`}
             icon={<Bot className="h-4 w-4 text-sky-500" />}
-            hint="Replies now come from the backend OpenAI proxy."
+            hint="Câu trả lời được tạo qua máy chủ AI ở backend."
           />
           <MetricCard
-            label="Status"
-            value={isTyping ? "Thinking" : "Ready"}
+            label="Trạng thái"
+            value={isTyping ? "Đang suy nghĩ" : "Sẵn sàng"}
             icon={<Clock3 className="h-4 w-4 text-amber-500" />}
-            hint="Press Enter to send, Shift + Enter for a new line."
+            hint="Nhấn Enter để gửi, Shift + Enter để xuống dòng."
           />
         </div>
 
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
           <div className="space-y-4">
             <PageSection
-              title={activeConversation ? activeConversation.title : "Study conversation"}
-              description="Chat bubbles, starter prompts, and a live backend AI response flow."
+              title={activeConversation ? activeConversation.title : "Cuộc trò chuyện học tập"}
+              description="Khung chat, câu gợi ý mở đầu và luồng trả lời AI trực tiếp từ backend."
               className="overflow-hidden p-0"
             >
               <div className="border-b border-border bg-gradient-to-r from-primary/10 via-transparent to-secondary/10 px-4 py-4">
@@ -973,18 +973,18 @@ const AiChat = () => {
                     disabled={messageLoading}
                     onChange={(event) => setInput(event.target.value)}
                     onKeyDown={handleKeyDown}
-                    placeholder="Ask for a grammar breakdown, a JLPT study plan, or a natural Japanese reply..."
+                    placeholder="Hỏi cách phân tích ngữ pháp, kế hoạch học JLPT, hoặc một câu trả lời tiếng Nhật tự nhiên..."
                     value={input}
                   />
                   <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
                     <p className="text-xs text-muted-foreground">
-                      Current mode: {MODE_META[mode].label}
+                      Chế độ hiện tại: {MODE_META[mode].label}
                     </p>
                     <div className="flex items-center gap-2">
                       {isTyping && (
                         <Button className="rounded-2xl" onClick={stopGenerating} variant="outline">
                           <Square className="mr-2 h-4 w-4" />
-                          Stop generating
+                          Dừng tạo
                         </Button>
                       )}
                       <Button
@@ -993,7 +993,7 @@ const AiChat = () => {
                         onClick={() => void sendMessage()}
                       >
                         <SendHorizontal className="mr-2 h-4 w-4" />
-                        Send
+                        Gửi
                       </Button>
                     </div>
                   </div>
@@ -1004,8 +1004,8 @@ const AiChat = () => {
 
           <div className="space-y-4">
             <PageSection
-              title="Conversations"
-              description="Rename or remove each saved chat instead of clearing everything."
+              title="Cuộc trò chuyện"
+              description="Đổi tên hoặc xóa từng cuộc trò chuyện đã lưu thay vì xóa hết."
             >
               <Button
                 className="mb-4 w-full rounded-2xl"
@@ -1013,14 +1013,14 @@ const AiChat = () => {
                 onClick={() => void handleCreateConversation()}
               >
                 <MessageSquarePlus className="mr-2 h-4 w-4" />
-                {creatingConversation ? "Creating..." : "New chat"}
+                {creatingConversation ? "Đang tạo..." : "Cuộc trò chuyện mới"}
               </Button>
 
               <div className="mb-4">
                 <Input
                   className="rounded-2xl"
                   onChange={(event) => setSearchQuery(event.target.value)}
-                  placeholder="Search conversations..."
+                  placeholder="Tìm kiếm cuộc trò chuyện..."
                   value={searchQuery}
                 />
               </div>
@@ -1034,7 +1034,8 @@ const AiChat = () => {
 
                 {!conversationLoading && conversations.length === 0 ? (
                   <div className="rounded-[22px] border border-dashed border-border bg-muted/20 p-4 text-sm text-muted-foreground">
-                    No saved chats yet. Start a conversation and it will appear here.
+                    Chưa có cuộc trò chuyện nào được lưu. Hãy bắt đầu trò chuyện và nó sẽ xuất hiện
+                    ở đây.
                   </div>
                 ) : null}
 
@@ -1042,7 +1043,7 @@ const AiChat = () => {
                 conversations.length > 0 &&
                 filteredConversations.length === 0 ? (
                   <div className="rounded-[22px] border border-dashed border-border bg-muted/20 p-4 text-sm text-muted-foreground">
-                    No conversations match "{searchQuery.trim()}".
+                    Không có cuộc trò chuyện nào khớp với "{searchQuery.trim()}".
                   </div>
                 ) : null}
 
@@ -1116,7 +1117,7 @@ const AiChat = () => {
                                     </p>
                                     <p className="mt-1 text-xs text-muted-foreground">
                                       {isActive
-                                        ? "Current thread"
+                                        ? "Cuộc trò chuyện hiện tại"
                                         : formatConversationTime(conversation.updatedAt)}
                                     </p>
                                   </div>
@@ -1157,8 +1158,8 @@ const AiChat = () => {
             </PageSection>
 
             <PageSection
-              title="Assistant profile"
-              description="A friendly study persona inside the existing Yukihon dashboard style."
+              title="Hồ sơ trợ lý"
+              description="Một người bạn đồng hành học tập thân thiện trong phong cách dashboard Yukihon."
             >
               <div className="rounded-[28px] border border-border bg-gradient-to-br from-primary/10 via-card to-secondary/10 p-4">
                 <div className="flex items-center gap-4">
@@ -1166,28 +1167,28 @@ const AiChat = () => {
                   <div>
                     <p className="text-lg font-semibold text-foreground">Yukihon AI</p>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      Short answers, study scaffolding, and sentence support.
+                      Câu trả lời ngắn gọn, định hướng học tập và hỗ trợ đặt câu.
                     </p>
                   </div>
                 </div>
 
                 <div className="mt-4 flex flex-wrap gap-2">
                   <Badge className="rounded-full border border-sky-500/20 bg-sky-500/10 text-sky-600 hover:bg-sky-500/10">
-                    Grammar help
+                    Hỗ trợ ngữ pháp
                   </Badge>
                   <Badge className="rounded-full border border-primary/20 bg-primary/10 text-primary hover:bg-primary/10">
-                    JLPT coaching
+                    Huấn luyện JLPT
                   </Badge>
                   <Badge className="rounded-full border border-amber-500/20 bg-amber-500/10 text-amber-600 hover:bg-amber-500/10">
-                    Sentence drafts
+                    Soạn câu
                   </Badge>
                 </div>
               </div>
             </PageSection>
 
             <PageSection
-              title="Modes"
-              description="Switch the vibe of the assistant before sending your next prompt."
+              title="Chế độ"
+              description="Đổi phong cách của trợ lý trước khi gửi câu hỏi tiếp theo."
             >
               <div className="space-y-3">
                 {(
@@ -1236,37 +1237,37 @@ const AiChat = () => {
             </PageSection>
 
             <PageSection
-              title="What to ask"
-              description="Starter directions for the live AI study assistant."
+              title="Có thể hỏi gì"
+              description="Một vài gợi ý mở đầu cho trợ lý học tập AI trực tiếp."
             >
               <div className="space-y-3">
                 <div className="rounded-[20px] border border-border bg-card p-4">
                   <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
                     <BookOpenCheck className="h-4 w-4 text-primary" />
-                    Study planning
+                    Lập kế hoạch học
                   </div>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    Ask for a 10-minute or 20-minute revision flow by JLPT level.
+                    Xin một luồng ôn tập 10 phút hoặc 20 phút theo cấp độ JLPT.
                   </p>
                 </div>
 
                 <div className="rounded-[20px] border border-border bg-card p-4">
                   <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
                     <Brain className="h-4 w-4 text-sky-500" />
-                    Grammar breakdown
+                    Phân tích ngữ pháp
                   </div>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    Send a grammar form and get structure, meaning, and a contrast example.
+                    Gửi một mẫu ngữ pháp để nhận cấu trúc, ý nghĩa và ví dụ so sánh.
                   </p>
                 </div>
 
                 <div className="rounded-[20px] border border-border bg-card p-4">
                   <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
                     <Languages className="h-4 w-4 text-amber-500" />
-                    Reply drafting
+                    Soạn câu trả lời
                   </div>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    Describe a scenario and let the bot shape a clean Japanese response.
+                    Mô tả một tình huống và để trợ lý soạn một câu trả lời tiếng Nhật mạch lạc.
                   </p>
                 </div>
               </div>

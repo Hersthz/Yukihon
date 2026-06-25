@@ -256,13 +256,13 @@ const Vocabulary = () => {
       await myWordsApi.saveWord({ vocabularyId, folderName: VOCABULARY_FOLDER });
       await refetchSavedWords();
       toast({
-        title: "Saved to My Words",
-        description: "The word is now tracked in your review queue.",
+        title: "Đã lưu vào Sổ từ của tôi",
+        description: "Từ này đã được thêm vào hàng đợi ôn tập của bạn.",
       });
     } catch {
       toast({
-        title: "Could not save word",
-        description: "Please try again.",
+        title: "Không thể lưu từ",
+        description: "Vui lòng thử lại.",
         variant: "destructive",
       });
     } finally {
@@ -278,13 +278,13 @@ const Vocabulary = () => {
       await myWordsApi.removeWord(savedWordId);
       await refetchSavedWords();
       toast({
-        title: "Removed from My Words",
-        description: "The word is no longer in your personal notebook.",
+        title: "Đã xóa khỏi Sổ từ của tôi",
+        description: "Từ này không còn trong sổ tay cá nhân của bạn.",
       });
     } catch {
       toast({
-        title: "Could not remove word",
-        description: "Please try again.",
+        title: "Không thể xóa từ",
+        description: "Vui lòng thử lại.",
         variant: "destructive",
       });
     } finally {
@@ -300,13 +300,13 @@ const Vocabulary = () => {
       await myWordsApi.toggleMastered(savedWordId);
       await refetchSavedWords();
       toast({
-        title: "Learning status updated",
-        description: "Mastered state has been synced with your notebook.",
+        title: "Đã cập nhật trạng thái học",
+        description: "Trạng thái đã thuộc đã được đồng bộ với sổ tay của bạn.",
       });
     } catch {
       toast({
-        title: "Could not update status",
-        description: "Please try again.",
+        title: "Không thể cập nhật trạng thái",
+        description: "Vui lòng thử lại.",
         variant: "destructive",
       });
     } finally {
@@ -322,48 +322,48 @@ const Vocabulary = () => {
       <div className="mx-auto max-w-[1500px]">
         <PageHeader
           icon={<BookOpen className="h-5 w-5 text-sky-600" />}
-          eyebrow="Vocabulary"
-          title="Vocabulary Flow"
-          description="Search the catalog, save words into My Words, and track saved, due, and mastered states from one place."
+          eyebrow="Từ vựng"
+          title="Luồng học từ vựng"
+          description="Tra cứu danh mục, lưu từ vào Sổ từ của tôi, và theo dõi trạng thái đã lưu, đến hạn và đã thuộc tại một nơi."
         />
 
         <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <MetricCard
-            label="Catalog"
+            label="Danh mục"
             value={stats.total}
             icon={<BookOpen className="h-4 w-4 text-sky-500" />}
-            hint="All words in the current vocabulary list"
+            hint="Tất cả từ trong danh sách từ vựng hiện tại"
           />
           <MetricCard
-            label="Saved"
+            label="Đã lưu"
             value={stats.saved}
             icon={<BookmarkCheck className="h-4 w-4 text-violet-500" />}
-            hint="Words already moved into My Words"
+            hint="Những từ đã được đưa vào Sổ từ của tôi"
           />
           <MetricCard
-            label="Mastered"
+            label="Đã thuộc"
             value={stats.mastered}
             icon={<GraduationCap className="h-4 w-4 text-emerald-500" />}
-            hint="Saved words currently marked as mastered"
+            hint="Những từ đã lưu hiện được đánh dấu là đã thuộc"
           />
           <MetricCard
-            label="Due review"
+            label="Đến hạn ôn"
             value={stats.due}
             icon={<Clock3 className="h-4 w-4 text-rose-500" />}
-            hint="Saved words that need review now"
+            hint="Những từ đã lưu cần ôn tập ngay"
           />
         </div>
 
         <PageSection
           className="mb-4"
-          title="Filters"
-          description="Use deeper filters to move from a simple list into a study workflow."
+          title="Bộ lọc"
+          description="Dùng các bộ lọc chi tiết hơn để chuyển từ danh sách đơn giản sang luồng học."
         >
           <div className="space-y-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search by kanji, hiragana, romaji, meaning, or word type..."
+                placeholder="Tra cứu theo Kanji, Hiragana, Romaji, nghĩa hoặc loại từ..."
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 className="h-10 rounded-2xl border-border bg-white/85 pl-10 text-foreground placeholder:text-muted-foreground"
@@ -375,10 +375,10 @@ const Vocabulary = () => {
                 <Filter className="h-4 w-4 text-sky-500" />
                 <Select value={selectedLevel} onValueChange={setSelectedLevel}>
                   <SelectTrigger className="rounded-2xl border-border bg-white/85 text-foreground">
-                    <SelectValue placeholder="JLPT level" />
+                    <SelectValue placeholder="Cấp độ JLPT" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All levels</SelectItem>
+                    <SelectItem value="all">Tất cả cấp độ</SelectItem>
                     {levels.map((level) => (
                       <SelectItem key={level} value={level}>
                         {level}
@@ -390,10 +390,10 @@ const Vocabulary = () => {
 
               <Select value={selectedWordType} onValueChange={setSelectedWordType}>
                 <SelectTrigger className="rounded-2xl border-border bg-white/85 text-foreground">
-                  <SelectValue placeholder="Word type" />
+                  <SelectValue placeholder="Loại từ" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All word types</SelectItem>
+                  <SelectItem value="all">Tất cả loại từ</SelectItem>
                   {wordTypes.map((wordType) => (
                     <SelectItem key={wordType} value={wordType}>
                       {wordType}
@@ -407,12 +407,12 @@ const Vocabulary = () => {
                 onValueChange={(value) => setSavedFilter(value as SavedStateFilter)}
               >
                 <SelectTrigger className="rounded-2xl border-border bg-white/85 text-foreground">
-                  <SelectValue placeholder="Saved state" />
+                  <SelectValue placeholder="Trạng thái lưu" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All states</SelectItem>
-                  <SelectItem value="saved">Saved only</SelectItem>
-                  <SelectItem value="unsaved">Unsaved only</SelectItem>
+                  <SelectItem value="all">Tất cả trạng thái</SelectItem>
+                  <SelectItem value="saved">Chỉ đã lưu</SelectItem>
+                  <SelectItem value="unsaved">Chỉ chưa lưu</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -421,12 +421,12 @@ const Vocabulary = () => {
                 onValueChange={(value) => setReviewFilter(value as ReviewStateFilter)}
               >
                 <SelectTrigger className="rounded-2xl border-border bg-white/85 text-foreground">
-                  <SelectValue placeholder="Review state" />
+                  <SelectValue placeholder="Trạng thái ôn tập" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All review states</SelectItem>
-                  <SelectItem value="due">Due review</SelectItem>
-                  <SelectItem value="mastered">Mastered</SelectItem>
+                  <SelectItem value="all">Tất cả trạng thái ôn tập</SelectItem>
+                  <SelectItem value="due">Đến hạn ôn</SelectItem>
+                  <SelectItem value="mastered">Đã thuộc</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -435,14 +435,14 @@ const Vocabulary = () => {
                 onValueChange={(value) => setSourceFilter(value as VocabularySourceFilter)}
               >
                 <SelectTrigger className="rounded-2xl border-border bg-white/85 text-foreground">
-                  <SelectValue placeholder="Source" />
+                  <SelectValue placeholder="Nguồn" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All sources</SelectItem>
-                  <SelectItem value="vocabulary">Vocabulary</SelectItem>
-                  <SelectItem value="dictionary">Dictionary</SelectItem>
-                  <SelectItem value="translation">Translation</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
+                  <SelectItem value="all">Tất cả nguồn</SelectItem>
+                  <SelectItem value="vocabulary">Từ vựng</SelectItem>
+                  <SelectItem value="dictionary">Từ điển</SelectItem>
+                  <SelectItem value="translation">Dịch thuật</SelectItem>
+                  <SelectItem value="other">Khác</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -450,14 +450,14 @@ const Vocabulary = () => {
                 <ArrowUpDown className="h-4 w-4 text-violet-500" />
                 <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
                   <SelectTrigger className="rounded-2xl border-border bg-white/85 text-foreground">
-                    <SelectValue placeholder="Sort" />
+                    <SelectValue placeholder="Sắp xếp" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="due-first">Due first</SelectItem>
-                    <SelectItem value="saved-recent">Recently saved</SelectItem>
-                    <SelectItem value="jlpt-asc">JLPT N5 to N1</SelectItem>
-                    <SelectItem value="jlpt-desc">JLPT N1 to N5</SelectItem>
-                    <SelectItem value="alpha">Alphabetical</SelectItem>
+                    <SelectItem value="due-first">Đến hạn trước</SelectItem>
+                    <SelectItem value="saved-recent">Lưu gần đây</SelectItem>
+                    <SelectItem value="jlpt-asc">JLPT N5 đến N1</SelectItem>
+                    <SelectItem value="jlpt-desc">JLPT N1 đến N5</SelectItem>
+                    <SelectItem value="alpha">Theo bảng chữ cái</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -486,14 +486,14 @@ const Vocabulary = () => {
           <PageSection>
             <EmptyState
               icon={<BookOpen className="h-6 w-6" />}
-              title="No matching vocabulary"
-              description="Try adjusting your search terms or reducing the active filters."
+              title="Không tìm thấy từ vựng phù hợp"
+              description="Thử điều chỉnh từ khóa tra cứu hoặc giảm bớt bộ lọc đang áp dụng."
             />
           </PageSection>
         ) : (
           <PageSection
-            title={`Vocabulary List (${filteredVocabulary.length})`}
-            description="These cards now reflect real saved-word state instead of temporary page-only progress."
+            title={`Danh sách từ vựng (${filteredVocabulary.length})`}
+            description="Các thẻ này phản ánh trạng thái từ đã lưu thực tế thay vì tiến độ tạm thời chỉ trong trang."
           >
             <motion.div
               initial="hidden"

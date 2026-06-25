@@ -426,7 +426,7 @@ const StoryMode = () => {
   const handleResetProgress = () => {
     clearLocalSnapshot();
     applyHydratedSnapshot(null);
-    toast({ title: "Đã reset Story Mode", description: "Tiến độ đọc truyện đã quay về từ đầu." });
+    toast({ title: "Đã học lại từ đầu", description: "Tiến độ đọc truyện đã quay về từ đầu." });
   };
 
   const handleSubmitCheckpoint = () => {
@@ -578,7 +578,7 @@ const StoryMode = () => {
         <div className="mx-auto max-w-[1200px]">
           <EmptyState
             icon={<BookOpen className="h-6 w-6" />}
-            title="Story Mode chưa sẵn sàng"
+            title="Học qua truyện chưa sẵn sàng"
             description="Hiện chưa có truyện nào để mở."
           />
         </div>
@@ -591,7 +591,7 @@ const StoryMode = () => {
       <div className="mx-auto max-w-[1480px]">
         <PageHeader
           icon={<GitBranch className="h-6 w-6 text-rose-600" />}
-          eyebrow="Branching Story"
+          eyebrow="Truyện rẽ nhánh"
           title="Học qua truyện có rẽ nhánh"
           description="Đọc truyện ngắn, trả lời checkpoint, mở nhánh mới và lưu vocab vào My Words trong cùng một luồng học."
           action={
@@ -638,7 +638,7 @@ const StoryMode = () => {
             hint={`Khoảng ${activeStory.estimatedMinutes} phút`}
           />
           <MetricCard
-            label="Adaptive"
+            label="Thích ứng"
             value={difficultyLabelMap[currentDifficulty]}
             icon={adaptiveMetricIcon}
             hint={adaptiveMetricHint}
@@ -686,7 +686,7 @@ const StoryMode = () => {
                       </Badge>
                       {story.segments.some((segment) => segment.checkpoint.mode === "branch") ? (
                         <Badge className="rounded-full border border-violet-200 bg-violet-50 text-violet-700">
-                          Branching
+                          Rẽ nhánh
                         </Badge>
                       ) : null}
                     </div>
@@ -762,13 +762,13 @@ const StoryMode = () => {
                     </Badge>
                     {isBranchMode ? (
                       <Badge className="rounded-full border border-violet-200 bg-violet-50 text-violet-700">
-                        Choice point
+                        Điểm lựa chọn
                       </Badge>
                     ) : null}
                     <Badge
                       className={`rounded-full border ${difficultyToneMap[currentDifficulty]}`}
                     >
-                      Adaptive {difficultyLabelMap[currentDifficulty]}
+                      Thích ứng {difficultyLabelMap[currentDifficulty]}
                     </Badge>
                   </div>
                 </div>
@@ -880,7 +880,7 @@ const StoryMode = () => {
 
           <div className="space-y-4">
             <PageSection
-              title="Adaptive coach"
+              title="Huấn luyện thích ứng"
               description="Độ khó và lộ trình nhánh tự cân chỉnh theo checkpoint."
             >
               <div className="space-y-3">

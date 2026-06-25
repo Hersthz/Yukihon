@@ -273,7 +273,7 @@ const Profile = () => {
     <DashboardLayout>
       <div className="mx-auto max-w-[1420px]">
         <PageHeader
-          eyebrow="Account hub"
+          eyebrow="Tài khoản"
           icon={<Settings2 className="h-6 w-6 text-sky-600" />}
           title="Tai khoan va cai dat"
           description="Mot noi duy nhat de quan ly ho so, bao mat va nhung tuy chinh giup viec tu hoc muot hon."
@@ -335,7 +335,7 @@ const Profile = () => {
             icon={<GraduationCap className="h-4 w-4 text-amber-500" />}
           />
           <MetricCard
-            label="Daily goal"
+            label="Mục tiêu mỗi ngày"
             value={`${settings.dailyGoalMinutes} phut`}
             hint={`${settings.quizDifficulty} quiz • ${settings.showFurigana ? "Co furigana" : "Khong furigana"}`}
             icon={<Target className="h-4 w-4 text-emerald-500" />}
@@ -371,7 +371,7 @@ const Profile = () => {
               </Avatar>
               <div className="min-w-0">
                 <p className="truncate text-lg font-semibold text-foreground">
-                  {user?.displayName || "Learner"}
+                  {user?.displayName || "Người học"}
                 </p>
                 <p className="truncate text-sm text-muted-foreground">{user?.email}</p>
                 <div className="mt-2 flex flex-wrap gap-2">
@@ -388,7 +388,7 @@ const Profile = () => {
             </div>
             <div className="mt-4 space-y-3">
               <div className="rounded-[18px] border border-border bg-card p-4 text-sm text-muted-foreground">
-                Theme <span className="font-medium text-foreground">light</span> • hien thi{" "}
+                Giao diện <span className="font-medium text-foreground">sáng</span> • đang hiển thị{" "}
                 <span className="font-medium capitalize text-foreground">{resolvedTheme}</span>
               </div>
               <div className="rounded-[18px] border border-border bg-card p-4 text-sm text-muted-foreground">
@@ -515,20 +515,20 @@ const Profile = () => {
                     </div>
                     <div className="rounded-[18px] border border-border bg-card p-4">
                       <Label className="mb-2 block text-sm font-semibold text-foreground">
-                        Theme
+                        Giao diện
                       </Label>
                       <Select value="light" onValueChange={() => setField("theme", "light")}>
                         <SelectTrigger className="h-11 rounded-2xl border-border bg-card">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="light">Light only</SelectItem>
+                          <SelectItem value="light">Chỉ nền sáng</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="rounded-[18px] border border-border bg-card p-4">
                       <Label className="mb-2 block text-sm font-semibold text-foreground">
-                        Language
+                        Ngôn ngữ
                       </Label>
                       <Select
                         value={settings.language}
@@ -550,13 +550,13 @@ const Profile = () => {
                   {[
                     {
                       k: "emailNotifications",
-                      t: "Email notifications",
+                      t: "Thông báo qua email",
                       d: "Nhan tong ket va nhac hoc qua email.",
                       i: Bell,
                     },
                     {
                       k: "pushNotifications",
-                      t: "Push notifications",
+                      t: "Thông báo đẩy",
                       d: "Nhac nhanh tren thiet bi.",
                       i: Volume2,
                     },

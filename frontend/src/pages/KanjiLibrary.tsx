@@ -46,23 +46,30 @@ const ratingTone: Record<KanjiReviewRating, string> = {
   EASY: "bg-emerald-500 text-white hover:bg-emerald-400",
 };
 
+const ratingLabel: Record<KanjiReviewRating, string> = {
+  AGAIN: "Lại",
+  HARD: "Khó",
+  GOOD: "Tốt",
+  EASY: "Dễ",
+};
+
 const retentionChartConfig = {
   reviewCount: {
-    label: "Reviews",
+    label: "Lượt ôn",
     color: "#38bdf8",
   },
   retentionRate: {
-    label: "Retention %",
+    label: "Tỷ lệ nhớ %",
     color: "#10b981",
   },
 } satisfies ChartConfig;
 
 const formatRelativeReview = (value?: string) => {
-  if (!value) return "Review now";
+  if (!value) return "Ôn ngay";
   const diffDays = Math.ceil((new Date(value).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-  if (diffDays <= 0) return "Due today";
-  if (diffDays === 1) return "Due tomorrow";
-  return `${diffDays} days left`;
+  if (diffDays <= 0) return "Đến hạn hôm nay";
+  if (diffDays === 1) return "Đến hạn ngày mai";
+  return `Còn ${diffDays} ngày`;
 };
 
 const toShortDate = (isoDate: string) => {
@@ -128,87 +135,87 @@ const KanjiLibrary = () => {
         <PageHeader
           eyebrow="Kanji"
           icon={<BookOpen className="h-6 w-6 text-sky-600" />}
-          title="Kanji system"
-          description="Library, detail page, writing practice, and backend-backed SRS now live in one study flow."
+          title="Hệ thống Kanji"
+          description="Thư viện, trang chi tiết, luyện viết và SRS từ backend giờ nằm chung trong một luồng học."
         />
 
         <div className="mb-4 grid gap-3 md:grid-cols-4">
           <MetricCard
-            hint="Full catalog currently available"
+            hint="Toàn bộ kho Kanji hiện có"
             icon={<Layers className="h-4 w-4 text-sky-500" />}
             label="Kanji"
             value={kanjiCatalog.length}
           />
           <MetricCard
-            hint="Kanji matching the current filters"
+            hint="Kanji khớp với bộ lọc hiện tại"
             icon={<Search className="h-4 w-4 text-violet-500" />}
-            label="Visible"
+            label="Đang hiện"
             value={filteredKanji.length}
           />
           <MetricCard
-            hint="SRS cards due by the end of today"
+            hint="Thẻ SRS đến hạn trong hôm nay"
             icon={<Sparkles className="h-4 w-4 text-amber-500" />}
-            label="Due today"
+            label="Đến hạn hôm nay"
             value={dashboard.dueTodayCount || dueToday.length}
           />
           <MetricCard
-            hint="Cards in your SRS deck"
+            hint="Số thẻ trong bộ SRS của bạn"
             icon={<Brush className="h-4 w-4 text-emerald-500" />}
-            label="Deck"
-            value={`${dashboard.deckCount || deck.length} / ${dashboard.masteredCount || masteredCount} mastered`}
+            label="Bộ thẻ"
+            value={`${dashboard.deckCount || deck.length} / ${dashboard.masteredCount || masteredCount} đã thuộc`}
           />
         </div>
 
         <PageSection
           className="mb-4"
-          title="Kanji SRS dashboard"
-          description="Track due cards, mastery, weak kanji, review streak, and retention from the backend SRS data."
+          title="Bảng điều khiển SRS Kanji"
+          description="Theo dõi thẻ đến hạn, mức độ thuộc, kanji yếu, chuỗi ôn tập và tỷ lệ nhớ từ dữ liệu SRS của backend."
         >
           <div className="grid gap-3 lg:grid-cols-4">
             <div className="rounded-lg border border-border bg-background/60 p-4">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-muted-foreground">Overdue</p>
+                <p className="text-sm font-medium text-muted-foreground">Quá hạn</p>
                 <AlertTriangle className="h-4 w-4 text-rose-500" />
               </div>
               <p className="mt-2 text-2xl font-semibold text-foreground">
                 {dashboard.overdueCount}
               </p>
-              <p className="mt-1 text-xs text-muted-foreground">Cards that need attention now</p>
+              <p className="mt-1 text-xs text-muted-foreground">Thẻ cần xử lý ngay</p>
             </div>
             <div className="rounded-lg border border-border bg-background/60 p-4">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-muted-foreground">Mastered</p>
+                <p className="text-sm font-medium text-muted-foreground">Đã thuộc</p>
                 <Target className="h-4 w-4 text-emerald-500" />
               </div>
               <p className="mt-2 text-2xl font-semibold text-foreground">
                 {dashboard.masteredCount}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                {dashboard.learningCount} cards still learning
+                {dashboard.learningCount} thẻ đang học
               </p>
             </div>
             <div className="rounded-lg border border-border bg-background/60 p-4">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-muted-foreground">Review streak</p>
+                <p className="text-sm font-medium text-muted-foreground">Chuỗi ôn tập</p>
                 <Flame className="h-4 w-4 text-orange-500" />
               </div>
               <p className="mt-2 text-2xl font-semibold text-foreground">
-                {dashboard.reviewStreakDays} days
+                {dashboard.reviewStreakDays} ngày
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                {dashboard.totalReviews} recent reviews tracked
+                Đã ghi nhận {dashboard.totalReviews} lượt ôn gần đây
               </p>
             </div>
             <div className="rounded-lg border border-border bg-background/60 p-4">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-muted-foreground">Retention</p>
+                <p className="text-sm font-medium text-muted-foreground">Tỷ lệ nhớ</p>
                 <BarChart3 className="h-4 w-4 text-sky-500" />
               </div>
               <p className="mt-2 text-2xl font-semibold text-foreground">
                 {dashboard.retentionRate.toFixed(1)}%
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                {dashboard.weakCount} cards marked weak
+                {dashboard.weakCount} thẻ được đánh dấu yếu
               </p>
             </div>
           </div>
@@ -216,9 +223,9 @@ const KanjiLibrary = () => {
           <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
             <div className="rounded-lg border border-border bg-background/60 p-4">
               <div className="mb-3">
-                <p className="text-sm font-semibold text-foreground">Retention trend</p>
+                <p className="text-sm font-semibold text-foreground">Xu hướng tỷ lệ nhớ</p>
                 <p className="text-xs text-muted-foreground">
-                  Reviews that did not receive Again over the last 14 days.
+                  Các lượt ôn không bị chọn Lại trong 14 ngày qua.
                 </p>
               </div>
               <ChartContainer config={retentionChartConfig} className="h-[280px] w-full">
@@ -272,14 +279,14 @@ const KanjiLibrary = () => {
 
             <div className="rounded-lg border border-border bg-background/60 p-4">
               <div className="mb-3">
-                <p className="text-sm font-semibold text-foreground">Weak kanji</p>
+                <p className="text-sm font-semibold text-foreground">Kanji yếu</p>
                 <p className="text-xs text-muted-foreground">
-                  Prioritized by low ease, short interval, or unstable repetition.
+                  Ưu tiên theo ease thấp, interval ngắn hoặc lặp lại chưa ổn định.
                 </p>
               </div>
               {weakKanjiCatalog.length === 0 ? (
                 <div className="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
-                  No weak kanji yet. Review more cards and this list will update automatically.
+                  Chưa có kanji yếu nào. Hãy ôn thêm thẻ và danh sách này sẽ tự cập nhật.
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -298,7 +305,7 @@ const KanjiLibrary = () => {
                             {item.catalog?.meaning || item.reason}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            Ease {item.easeFactor.toFixed(2)} | {item.reviewCount} reviews
+                            Ease {item.easeFactor.toFixed(2)} | {item.reviewCount} lượt ôn
                           </p>
                         </div>
                       </div>
@@ -315,8 +322,8 @@ const KanjiLibrary = () => {
 
         <PageSection
           className="mb-4"
-          title="Search and filters"
-          description="Filter by JLPT level, meaning, reading, radical, tag, or example word."
+          title="Tìm kiếm và bộ lọc"
+          description="Lọc theo cấp JLPT, nghĩa, cách đọc, bộ thủ, thẻ tag hoặc từ ví dụ."
         >
           <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto]">
             <div className="relative">
@@ -324,7 +331,7 @@ const KanjiLibrary = () => {
               <Input
                 className="h-11 rounded-2xl border-border bg-card pl-11 text-foreground placeholder:text-muted-foreground"
                 onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="Search kanji, meaning, reading, radical, or example"
+                placeholder="Tìm kanji, nghĩa, cách đọc, bộ thủ hoặc ví dụ"
                 value={searchQuery}
               />
             </div>
@@ -339,7 +346,7 @@ const KanjiLibrary = () => {
                 onClick={() => setSelectedLevel("all")}
                 type="button"
               >
-                All
+                Tất cả
               </button>
               {KANJI_LEVELS.map((level) => (
                 <button
@@ -364,7 +371,7 @@ const KanjiLibrary = () => {
                 onClick={() => setShowDueOnly((value) => !value)}
                 type="button"
               >
-                Due only
+                Chỉ đến hạn
               </button>
             </div>
           </div>
@@ -372,13 +379,13 @@ const KanjiLibrary = () => {
 
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
           <PageSection
-            title="Kanji library"
-            description="Each card opens the detail page with readings, examples, writing practice, and SRS actions."
+            title="Thư viện Kanji"
+            description="Mỗi thẻ mở trang chi tiết với cách đọc, ví dụ, luyện viết và các thao tác SRS."
           >
             {filteredKanji.length === 0 ? (
               <EmptyState
-                title="No kanji found"
-                description="Try changing the level, turning off Due only, or using a different keyword."
+                title="Không tìm thấy kanji"
+                description="Thử đổi cấp độ, tắt Chỉ đến hạn, hoặc dùng từ khóa khác."
                 icon={<BookOpen className="h-6 w-6" />}
               />
             ) : (
@@ -408,7 +415,7 @@ const KanjiLibrary = () => {
                         </div>
                         <p className="mt-2 text-sm font-medium text-foreground">{kanji.meaning}</p>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          {kanji.strokeCount} strokes | radical {kanji.radical}
+                          {kanji.strokeCount} nét | bộ thủ {kanji.radical}
                         </p>
                         <p className="mt-2 truncate text-xs text-sky-700">
                           {kanji.exampleWords.join(" / ")}
@@ -418,7 +425,7 @@ const KanjiLibrary = () => {
                       <div className="mt-3 flex gap-2">
                         <Button asChild className="flex-1 rounded-2xl" size="sm" variant="outline">
                           <Link to={`/kanji-library/${encodeURIComponent(kanji.character)}`}>
-                            Detail
+                            Chi tiết
                           </Link>
                         </Button>
                         <Button
@@ -429,7 +436,7 @@ const KanjiLibrary = () => {
                           size="sm"
                           variant={inDeck ? "outline" : "default"}
                         >
-                          {inDeck ? "Remove" : "Add SRS"}
+                          {inDeck ? "Xóa" : "Thêm SRS"}
                         </Button>
                       </div>
                       {srsRecord && (
@@ -446,13 +453,13 @@ const KanjiLibrary = () => {
 
           <div className="space-y-4">
             <PageSection
-              title="Next review"
-              description="Review the next due kanji or the closest card in your deck."
+              title="Lần ôn kế"
+              description="Ôn kanji đến hạn kế tiếp hoặc thẻ gần nhất trong bộ của bạn."
             >
               {!nextReviewItem ? (
                 <EmptyState
-                  title="Kanji deck is empty"
-                  description="Add a kanji from the library or detail page to begin reviewing."
+                  title="Bộ Kanji đang trống"
+                  description="Thêm một kanji từ thư viện hoặc trang chi tiết để bắt đầu ôn."
                   icon={<Sparkles className="h-6 w-6" />}
                 />
               ) : (
@@ -482,14 +489,14 @@ const KanjiLibrary = () => {
                         onClick={() => review(nextReviewItem.character, rating)}
                         size="sm"
                       >
-                        {rating}
+                        {ratingLabel[rating]}
                       </Button>
                     ))}
                   </div>
 
                   <Button asChild className="mt-3 w-full rounded-2xl" variant="outline">
                     <Link to={`/kanji-library/${encodeURIComponent(nextReviewItem.character)}`}>
-                      Open detail
+                      Mở chi tiết
                     </Link>
                   </Button>
                 </div>
@@ -497,12 +504,12 @@ const KanjiLibrary = () => {
             </PageSection>
 
             <PageSection
-              title="Deck overview"
-              description="Current review status from your Kanji SRS deck."
+              title="Tổng quan bộ thẻ"
+              description="Trạng thái ôn tập hiện tại từ bộ SRS Kanji của bạn."
             >
               {deck.length === 0 ? (
                 <div className="rounded-[20px] border border-border bg-card p-4 text-sm text-muted-foreground">
-                  No kanji in your deck yet.
+                  Chưa có kanji nào trong bộ thẻ của bạn.
                 </div>
               ) : (
                 <div className="space-y-3">

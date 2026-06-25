@@ -133,7 +133,7 @@ const AdminDashboard = () => {
 
   const formatPattern = (value?: string) => {
     if (!value) {
-      return "Clean";
+      return "Không có lỗi";
     }
 
     return value
@@ -164,7 +164,7 @@ const AdminDashboard = () => {
 
   const statCards = [
     {
-      title: "Total Users",
+      title: "Tổng người dùng",
       value: stats?.totalUsers || 0,
       icon: Users,
       color: "text-blue-500",
@@ -172,42 +172,42 @@ const AdminDashboard = () => {
       link: "/admin/users",
     },
     {
-      title: "Active Users",
+      title: "Người dùng hoạt động",
       value: stats?.activeUsers || 0,
       icon: Activity,
       color: "text-green-500",
       bgColor: "bg-green-500/10",
     },
     {
-      title: "Admins",
+      title: "Quản trị viên",
       value: stats?.adminUsers || 0,
       icon: Shield,
       color: "text-purple-500",
       bgColor: "bg-purple-500/10",
     },
     {
-      title: "Lessons",
+      title: "Bài học",
       value: stats?.totalLessons || 0,
       icon: BookOpen,
       color: "text-cyan-500",
       bgColor: "bg-cyan-500/10",
     },
     {
-      title: "Vocabulary",
+      title: "Từ vựng",
       value: stats?.totalVocabulary || 0,
       icon: FileText,
       color: "text-pink-500",
       bgColor: "bg-pink-500/10",
     },
     {
-      title: "Grammar",
+      title: "Ngữ pháp",
       value: stats?.totalGrammar || 0,
       icon: MessageSquare,
       color: "text-orange-500",
       bgColor: "bg-orange-500/10",
     },
     {
-      title: "Quizzes",
+      title: "Bài kiểm tra",
       value: stats?.totalQuizzes || 0,
       icon: TrendingUp,
       color: "text-yellow-500",
@@ -229,11 +229,11 @@ const AdminDashboard = () => {
               <Shield className="w-8 h-8 text-purple-400" />
             </div>
             <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
-              Admin Dashboard
+              Bảng quản trị
             </h1>
           </div>
           <p className="text-muted-foreground ml-16">
-            Manage system resources and monitor platform statistics
+            Quản lý tài nguyên hệ thống và theo dõi thống kê nền tảng
           </p>
         </motion.div>
 
@@ -267,7 +267,7 @@ const AdminDashboard = () => {
                         to={stat.link}
                         className="text-xs text-primary hover:underline mt-1 inline-block"
                       >
-                        View all →
+                        Xem tất cả →
                       </Link>
                     )}
                   </CardContent>
@@ -287,9 +287,10 @@ const AdminDashboard = () => {
           <Card className="bg-card/40 backdrop-blur-md border-border/50">
             <CardHeader className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
               <div>
-                <CardTitle>Quiz Analytics</CardTitle>
+                <CardTitle>Phân tích bài kiểm tra</CardTitle>
                 <CardDescription>
-                  Find noisy questions, repeated mistake patterns, and accuracy by learner cohort.
+                  Tìm câu hỏi gây nhiễu, các kiểu lỗi lặp lại và độ chính xác theo từng nhóm học
+                  viên.
                 </CardDescription>
               </div>
               <Button
@@ -300,7 +301,7 @@ const AdminDashboard = () => {
                 }
               >
                 <Download className="mr-2 h-4 w-4" />
-                {exportingQuizAnalytics ? "Exporting..." : "Export CSV"}
+                {exportingQuizAnalytics ? "Đang xuất..." : "Xuất CSV"}
               </Button>
             </CardHeader>
             <CardContent>
@@ -310,20 +311,21 @@ const AdminDashboard = () => {
                 </div>
               ) : !quizAnalytics || quizAnalytics.totalAttempts === 0 ? (
                 <div className="rounded-lg border border-dashed border-border/70 p-8 text-center text-sm text-muted-foreground">
-                  No quiz attempts yet. Analytics will appear after learners submit answers.
+                  Chưa có lượt làm bài nào. Dữ liệu phân tích sẽ hiển thị sau khi học viên nộp câu
+                  trả lời.
                 </div>
               ) : (
                 <div className="space-y-6">
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
                     <div className="rounded-lg border border-border/60 bg-background/40 p-4">
                       <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                        Attempts
+                        Lượt làm
                       </p>
                       <p className="mt-1 text-2xl font-semibold">{quizAnalytics.totalAttempts}</p>
                     </div>
                     <div className="rounded-lg border border-border/60 bg-background/40 p-4">
                       <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                        Overall Accuracy
+                        Độ chính xác tổng thể
                       </p>
                       <p className="mt-1 text-2xl font-semibold text-emerald-400">
                         {formatPercent(quizAnalytics.overallAccuracy)}
@@ -331,7 +333,7 @@ const AdminDashboard = () => {
                     </div>
                     <div className="rounded-lg border border-border/60 bg-background/40 p-4">
                       <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                        Wrong Attempts
+                        Lượt sai
                       </p>
                       <p className="mt-1 text-2xl font-semibold text-amber-400">
                         {quizAnalytics.wrongAttempts}
@@ -339,7 +341,7 @@ const AdminDashboard = () => {
                     </div>
                     <div className="rounded-lg border border-border/60 bg-background/40 p-4">
                       <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                        Top Pattern
+                        Kiểu lỗi phổ biến nhất
                       </p>
                       <p className="mt-1 text-2xl font-semibold">
                         {formatPattern(quizAnalytics.mostCommonPattern)}
@@ -352,12 +354,12 @@ const AdminDashboard = () => {
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>Most Missed Question</TableHead>
-                            <TableHead>Level</TableHead>
-                            <TableHead>Difficulty</TableHead>
-                            <TableHead className="text-right">Wrong</TableHead>
-                            <TableHead className="text-right">Accuracy</TableHead>
-                            <TableHead>Pattern</TableHead>
+                            <TableHead>Câu hỏi hay sai nhất</TableHead>
+                            <TableHead>Cấp độ</TableHead>
+                            <TableHead>Độ khó</TableHead>
+                            <TableHead className="text-right">Số lần sai</TableHead>
+                            <TableHead className="text-right">Độ chính xác</TableHead>
+                            <TableHead>Kiểu lỗi</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -383,7 +385,7 @@ const AdminDashboard = () => {
 
                     <div className="grid gap-4">
                       <div className="rounded-lg border border-border/60 bg-background/30 p-4">
-                        <p className="text-sm font-semibold">Pattern Breakdown</p>
+                        <p className="text-sm font-semibold">Phân loại kiểu lỗi</p>
                         <div className="mt-3 space-y-2">
                           {quizAnalytics.patternBreakdown.slice(0, 6).map((item) => (
                             <div
@@ -403,9 +405,9 @@ const AdminDashboard = () => {
                         <Table>
                           <TableHeader>
                             <TableRow>
-                              <TableHead>Cohort</TableHead>
-                              <TableHead className="text-right">Attempts</TableHead>
-                              <TableHead className="text-right">Accuracy</TableHead>
+                              <TableHead>Nhóm</TableHead>
+                              <TableHead className="text-right">Lượt làm</TableHead>
+                              <TableHead className="text-right">Độ chính xác</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
@@ -440,17 +442,17 @@ const AdminDashboard = () => {
         >
           <Card className="bg-card/40 backdrop-blur-md border-border/50">
             <CardHeader>
-              <CardTitle>Learning Funnel</CardTitle>
+              <CardTitle>Phễu học tập</CardTitle>
               <CardDescription>
-                Track start, completion, abandonment, and quiz recovery to identify high-retention
-                lessons.
+                Theo dõi lượt bắt đầu, hoàn thành, bỏ dở và phục hồi qua bài kiểm tra để xác định
+                các bài học giữ chân học viên tốt.
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="mb-5 grid grid-cols-1 gap-3 border border-border/60 bg-background/30 p-4 md:grid-cols-4">
                 <div className="space-y-1">
                   <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                    Window
+                    Khoảng thời gian
                   </label>
                   <select
                     className="h-9 w-full rounded-md border border-border bg-background px-2 text-sm"
@@ -458,22 +460,22 @@ const AdminDashboard = () => {
                     onChange={(e) => setFunnelDays(e.target.value)}
                     disabled={hasCustomDateRange}
                   >
-                    <option value="7">Last 7 days</option>
-                    <option value="30">Last 30 days</option>
-                    <option value="90">Last 90 days</option>
+                    <option value="7">7 ngày qua</option>
+                    <option value="30">30 ngày qua</option>
+                    <option value="90">90 ngày qua</option>
                   </select>
                 </div>
 
                 <div className="space-y-1">
                   <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                    JLPT Cohort
+                    Nhóm JLPT
                   </label>
                   <select
                     className="h-9 w-full rounded-md border border-border bg-background px-2 text-sm"
                     value={funnelJlpt}
                     onChange={(e) => setFunnelJlpt(e.target.value)}
                   >
-                    <option value="ALL">All levels</option>
+                    <option value="ALL">Tất cả cấp độ</option>
                     <option value="N5">N5</option>
                     <option value="N4">N4</option>
                     <option value="N3">N3</option>
@@ -484,7 +486,7 @@ const AdminDashboard = () => {
 
                 <div className="space-y-1">
                   <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                    From date
+                    Từ ngày
                   </label>
                   <Input
                     type="date"
@@ -495,7 +497,7 @@ const AdminDashboard = () => {
 
                 <div className="space-y-1">
                   <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                    To date
+                    Đến ngày
                   </label>
                   <Input
                     type="date"
@@ -508,7 +510,7 @@ const AdminDashboard = () => {
                       onClick={clearDateFilter}
                       className="text-xs text-primary hover:underline"
                     >
-                      Clear date filter
+                      Xóa bộ lọc ngày
                     </button>
                   )}
                 </div>
@@ -520,56 +522,56 @@ const AdminDashboard = () => {
                 </div>
               ) : !funnel || funnel.contentBreakdown.length === 0 ? (
                 <div className="rounded-lg border border-dashed border-border/70 p-8 text-center text-sm text-muted-foreground">
-                  No analytics data yet. Events will appear after users start learning lessons.
+                  Chưa có dữ liệu phân tích. Sự kiện sẽ xuất hiện sau khi học viên bắt đầu học bài.
                 </div>
               ) : (
                 <div className="space-y-6">
                   <div className="rounded-lg border border-border/60 bg-background/30 p-3 text-xs text-muted-foreground">
-                    Cohort:{" "}
+                    Nhóm:{" "}
                     <span className="font-medium text-foreground">
-                      {funnel.jlptLevel ?? "All JLPT"}
+                      {funnel.jlptLevel ?? "Tất cả JLPT"}
                     </span>
                     {" • "}
-                    Range:{" "}
+                    Khoảng:{" "}
                     <span className="font-medium text-foreground">
                       {funnel.startDate && funnel.endDate
-                        ? `${funnel.startDate} to ${funnel.endDate}`
-                        : `Last ${funnel.windowDays} days`}
+                        ? `${funnel.startDate} đến ${funnel.endDate}`
+                        : `${funnel.windowDays} ngày qua`}
                     </span>
                   </div>
 
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
                     <div className="rounded-lg border border-border/60 bg-background/40 p-4">
                       <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                        Started
+                        Đã bắt đầu
                       </p>
                       <p className="mt-1 text-2xl font-semibold">{funnel.totalStarted}</p>
                     </div>
                     <div className="rounded-lg border border-border/60 bg-background/40 p-4">
                       <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                        Completed
+                        Đã hoàn thành
                       </p>
                       <p className="mt-1 text-2xl font-semibold">{funnel.totalCompleted}</p>
                       <p className="text-xs text-emerald-400">
-                        {formatPercent(funnel.overallCompletionRate)} completion rate
+                        {formatPercent(funnel.overallCompletionRate)} tỉ lệ hoàn thành
                       </p>
                     </div>
                     <div className="rounded-lg border border-border/60 bg-background/40 p-4">
                       <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                        Abandoned
+                        Đã bỏ dở
                       </p>
                       <p className="mt-1 text-2xl font-semibold">{funnel.totalAbandoned}</p>
                       <p className="text-xs text-amber-400">
-                        {formatPercent(funnel.overallAbandonmentRate)} abandonment rate
+                        {formatPercent(funnel.overallAbandonmentRate)} tỉ lệ bỏ dở
                       </p>
                     </div>
                     <div className="rounded-lg border border-border/60 bg-background/40 p-4">
                       <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                        Quiz Recovery
+                        Phục hồi qua bài kiểm tra
                       </p>
                       <p className="mt-1 text-2xl font-semibold">{funnel.totalQuizCorrected}</p>
                       <p className="text-xs text-cyan-400">
-                        {formatPercent(funnel.overallQuizRecoveryRate)} corrected after wrong
+                        {formatPercent(funnel.overallQuizRecoveryRate)} sửa đúng sau khi sai
                       </p>
                     </div>
                   </div>
@@ -580,12 +582,12 @@ const AdminDashboard = () => {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Lesson</TableHead>
-                          <TableHead className="text-right">Starts</TableHead>
-                          <TableHead className="text-right">Completion</TableHead>
-                          <TableHead className="text-right">Abandonment</TableHead>
-                          <TableHead className="text-right">Quiz Recovery</TableHead>
-                          <TableHead className="text-right">Retention Score</TableHead>
+                          <TableHead>Bài học</TableHead>
+                          <TableHead className="text-right">Lượt bắt đầu</TableHead>
+                          <TableHead className="text-right">Hoàn thành</TableHead>
+                          <TableHead className="text-right">Bỏ dở</TableHead>
+                          <TableHead className="text-right">Phục hồi qua KT</TableHead>
+                          <TableHead className="text-right">Điểm giữ chân</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -624,8 +626,8 @@ const AdminDashboard = () => {
         >
           <Card className="bg-card/40 backdrop-blur-md border-border/50">
             <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>Common administrative tasks</CardDescription>
+              <CardTitle>Thao tác nhanh</CardTitle>
+              <CardDescription>Các tác vụ quản trị thường dùng</CardDescription>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <Link
@@ -636,8 +638,8 @@ const AdminDashboard = () => {
                   <Users className="w-5 h-5 text-blue-400" />
                 </div>
                 <div>
-                  <div className="font-semibold">Manage Users</div>
-                  <div className="text-xs text-muted-foreground">View and edit users</div>
+                  <div className="font-semibold">Quản lý người dùng</div>
+                  <div className="text-xs text-muted-foreground">Xem và chỉnh sửa người dùng</div>
                 </div>
               </Link>
 
@@ -649,8 +651,8 @@ const AdminDashboard = () => {
                   <BookOpen className="w-5 h-5 text-purple-400" />
                 </div>
                 <div>
-                  <div className="font-semibold">Manage Content</div>
-                  <div className="text-xs text-muted-foreground">Add/edit lessons</div>
+                  <div className="font-semibold">Quản lý nội dung</div>
+                  <div className="text-xs text-muted-foreground">Thêm/sửa bài học</div>
                 </div>
               </Link>
 
@@ -662,9 +664,9 @@ const AdminDashboard = () => {
                   <Sparkles className="w-5 h-5 text-green-400" />
                 </div>
                 <div>
-                  <div className="font-semibold">Creator Mode</div>
+                  <div className="font-semibold">Xưởng nội dung</div>
                   <div className="text-xs text-muted-foreground">
-                    Build and review drag-drop content
+                    Dựng và duyệt nội dung kéo-thả
                   </div>
                 </div>
               </Link>

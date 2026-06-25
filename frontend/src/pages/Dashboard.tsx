@@ -44,15 +44,15 @@ const quickActions = [
     accent: "bg-sky-500/15 text-sky-600 dark:text-sky-400",
   },
   {
-    title: "Story Mode",
+    title: "Học qua truyện",
     subtitle: "Học qua truyện ngắn",
     icon: BookOpen,
     to: "/story-mode",
     accent: "bg-rose-500/15 text-rose-600 dark:text-rose-400",
   },
   {
-    title: "AI Chat",
-    subtitle: "Hoi dap va on tap cung tro ly AI",
+    title: "Trợ lý AI",
+    subtitle: "Hỏi đáp và ôn tập cùng trợ lý AI",
     icon: Bot,
     to: "/ai-chat",
     accent: "bg-primary/15 text-primary",
@@ -65,7 +65,7 @@ const quickActions = [
     accent: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
   },
   {
-    title: "Quiz",
+    title: "Trắc nghiệm",
     subtitle: "Kiểm tra nhanh mức độ nhớ",
     icon: Trophy,
     to: "/quiz",
@@ -92,7 +92,7 @@ const formatProgressStatus = (status: LearningPathLesson["progressStatus"]) => {
 };
 
 const formatCategory = (category: string | null | undefined) => {
-  if (!category) return "Lesson";
+  if (!category) return "Bài học";
   return category.charAt(0).toUpperCase() + category.slice(1).toLowerCase();
 };
 
@@ -400,8 +400,8 @@ const Dashboard = () => {
                     ))
                   ) : (
                     <div className="yukihon-card-flat px-4 py-4 text-sm text-muted-foreground">
-                      Chưa có bài gợi ý. Hãy thêm lesson đã xuất bản hoặc cập nhật mục tiêu JLPT
-                      trong Settings.
+                      Chưa có bài gợi ý. Hãy thêm bài học đã xuất bản hoặc cập nhật mục tiêu JLPT
+                      trong phần Cài đặt.
                     </div>
                   )}
                 </div>
@@ -426,9 +426,12 @@ const Dashboard = () => {
                 <div className="grid gap-3 sm:grid-cols-2">
                   {[
                     { title: "Mục tiêu JLPT", value: learningPath?.targetJlptLevel || "N5" },
-                    { title: "Daily goal", value: `${learningPath?.dailyGoalMinutes ?? 15} phút` },
                     {
-                      title: "Bài trong track",
+                      title: "Mục tiêu mỗi ngày",
+                      value: `${learningPath?.dailyGoalMinutes ?? 15} phút`,
+                    },
+                    {
+                      title: "Bài trong lộ trình",
                       value: String(learningPath?.totalLessonsInTrack ?? 0),
                     },
                     {
@@ -521,7 +524,7 @@ const Dashboard = () => {
 
               <div className="mt-4 flex flex-wrap gap-2">
                 {[
-                  `Target ${learningPath?.targetJlptLevel || "N5"}`,
+                  `Mục tiêu ${learningPath?.targetJlptLevel || "N5"}`,
                   `${learningPath?.completionRate ?? 0}% hoàn thành`,
                   `${learningPath?.currentStreak ?? 0} ngày streak`,
                   `${learningPath?.inProgressLessons ?? 0} bài đang học`,
@@ -572,7 +575,7 @@ const Dashboard = () => {
 
                 {recommendedLessons.length === 0 && (
                   <div className="yukihon-card-flat px-4 py-3 text-sm text-muted-foreground">
-                    Khi có lesson phù hợp hơn, hệ thống sẽ hiển thị các bước tiếp theo ở đây.
+                    Khi có bài học phù hợp hơn, hệ thống sẽ hiển thị các bước tiếp theo ở đây.
                   </div>
                 )}
               </div>

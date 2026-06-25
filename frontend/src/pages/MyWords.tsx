@@ -85,8 +85,8 @@ const MyWords = () => {
   useEffect(() => {
     if (wordsQuery.error) {
       toast({
-        title: "Khong tai duoc so tay",
-        description: "Vui long thu lai.",
+        title: "Không tải được sổ tay",
+        description: "Vui lòng thử lại.",
         variant: "destructive",
       });
     }
@@ -95,8 +95,8 @@ const MyWords = () => {
   useEffect(() => {
     if (reviewQueueQuery.error) {
       toast({
-        title: "Khong tai duoc hang doi review",
-        description: "Vui long thu lai.",
+        title: "Không tải được hàng đợi ôn tập",
+        description: "Vui lòng thử lại.",
         variant: "destructive",
       });
     }
@@ -112,12 +112,12 @@ const MyWords = () => {
       myWordsApi.reviewWord(wordId, rating),
     onSuccess: () => {
       invalidateAll();
-      toast({ title: "Da cap nhat nhip on", description: "Lich review da duoc tinh lai." });
+      toast({ title: "Đã cập nhật nhịp ôn", description: "Lịch ôn tập đã được tính lại." });
     },
     onError: () => {
       toast({
-        title: "Khong the review",
-        description: "Vui long thu lai.",
+        title: "Không thể ôn tập",
+        description: "Vui lòng thử lại.",
         variant: "destructive",
       });
     },
@@ -128,14 +128,14 @@ const MyWords = () => {
     mutationFn: (wordId: number) => myWordsApi.toggleMastered(wordId),
     onSuccess: () => invalidateAll(),
     onError: () =>
-      toast({ title: "Khong the cap nhat", description: "Thu lai sau.", variant: "destructive" }),
+      toast({ title: "Không thể cập nhật", description: "Thử lại sau.", variant: "destructive" }),
   });
 
   const removeMutation = useMutation({
     mutationFn: (wordId: number) => myWordsApi.removeWord(wordId),
     onSuccess: () => invalidateAll(),
     onError: () =>
-      toast({ title: "Khong the xoa tu", description: "Thu lai sau.", variant: "destructive" }),
+      toast({ title: "Không thể xóa từ", description: "Thử lại sau.", variant: "destructive" }),
   });
 
   const updateNoteMutation = useMutation({
@@ -145,12 +145,12 @@ const MyWords = () => {
       setEditingNote(null);
       setNoteText("");
       invalidateAll();
-      toast({ title: "Da luu ghi chu", description: "Ghi chu ca nhan da duoc cap nhat." });
+      toast({ title: "Đã lưu ghi chú", description: "Ghi chú cá nhân đã được cập nhật." });
     },
     onError: () => {
       toast({
-        title: "Khong luu duoc ghi chu",
-        description: "Vui long thu lai.",
+        title: "Không lưu được ghi chú",
+        description: "Vui lòng thử lại.",
         variant: "destructive",
       });
     },
@@ -177,9 +177,9 @@ const MyWords = () => {
       <div className="mx-auto max-w-[1480px]">
         <PageHeader
           icon={<BookmarkPlus className="h-6 w-6 text-emerald-600" />}
-          title="Spaced repetition"
-          description="So tay da duoc nang cap thanh hang doi on lap lai: due today, cham muc nho, va theo doi kanji focus."
-          eyebrow="My Words"
+          title="Lặp lại ngắt quãng"
+          description="Sổ tay đã được nâng cấp thành hàng đợi ôn lặp lại: đến hạn hôm nay, chấm mức nhớ và theo dõi tập trung kanji."
+          eyebrow="Sổ từ của tôi"
           action={
             <Button
               className="rounded-2xl border-border bg-card text-foreground/80 hover:bg-card"
@@ -187,34 +187,34 @@ const MyWords = () => {
               variant="outline"
             >
               <RefreshCw className="mr-2 h-4 w-4" />
-              Lam moi
+              Làm mới
             </Button>
           }
         />
 
         <div className="mb-4 grid gap-3 md:grid-cols-4">
           <MetricCard
-            hint="Tat ca muc da luu"
+            hint="Tất cả mục đã lưu"
             icon={<BookOpen className="h-4 w-4 text-sky-500" />}
-            label="Tong tu"
+            label="Tổng từ"
             value={stats.totalSaved}
           />
           <MetricCard
-            hint="Can review hom nay"
+            hint="Cần ôn tập hôm nay"
             icon={<Brain className="h-4 w-4 text-rose-500" />}
-            label="Due today"
+            label="Đến hạn hôm nay"
             value={stats.dueTodayCount}
           />
           <MetricCard
-            hint="Tap trung mat chu"
+            hint="Tập trung mặt chữ"
             icon={<KanbanSquare className="h-4 w-4 text-amber-500" />}
-            label="Kanji due"
+            label="Kanji đến hạn"
             value={stats.kanjiDueTodayCount}
           />
           <MetricCard
-            hint="Ty le da nam chac"
+            hint="Tỷ lệ đã nắm chắc"
             icon={<Sparkles className="h-4 w-4 text-emerald-500" />}
-            label="Da thuoc"
+            label="Đã thuộc"
             value={`${masteredPercent}%`}
           />
         </div>

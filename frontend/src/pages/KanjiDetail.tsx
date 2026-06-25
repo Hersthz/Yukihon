@@ -114,10 +114,10 @@ const KanjiDetail = () => {
     <DashboardLayout>
       <div className="mx-auto max-w-[1420px]">
         <PageHeader
-          eyebrow="Kanji Detail"
+          eyebrow="Chi tiết Kanji"
           icon={<BookOpen className="h-6 w-6 text-sky-600" />}
           title={`${kanji.character} • ${kanji.meaning}`}
-          description="Trang detail riêng cho bộ thủ, cách đọc, từ ví dụ, writing practice và SRS."
+          description="Trang chi tiết riêng cho bộ thủ, cách đọc, từ ví dụ, luyện viết và SRS."
           action={
             <>
               <Button
@@ -151,7 +151,7 @@ const KanjiDetail = () => {
           <MetricCard
             hint="Cấp JLPT"
             icon={<BookOpen className="h-4 w-4 text-sky-500" />}
-            label="Level"
+            label="Cấp độ"
             value={kanji.jlptLevel}
           />
           <MetricCard
@@ -169,7 +169,7 @@ const KanjiDetail = () => {
           <MetricCard
             hint="Lịch riêng cho kanji này"
             icon={<Sparkles className="h-4 w-4 text-emerald-500" />}
-            label="Next review"
+            label="Lần ôn kế"
             value={formatReviewDate(srsRecord?.nextReviewAt)}
           />
         </div>
@@ -215,9 +215,9 @@ const KanjiDetail = () => {
 
               {inDeck && (
                 <div className="rounded-[22px] border border-emerald-200 bg-emerald-50/70 p-5">
-                  <p className="text-sm font-semibold text-emerald-900">Quick review</p>
+                  <p className="text-sm font-semibold text-emerald-900">Ôn nhanh</p>
                   <p className="mt-1 text-xs text-emerald-800">
-                    {srsRecord?.reviewCount ?? 0} lần ôn • interval {srsRecord?.intervalDays ?? 0}{" "}
+                    {srsRecord?.reviewCount ?? 0} lần ôn • giãn cách {srsRecord?.intervalDays ?? 0}{" "}
                     ngày
                   </p>
                   <div className="mt-3 grid grid-cols-2 gap-2">

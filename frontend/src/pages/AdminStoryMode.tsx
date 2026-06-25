@@ -268,7 +268,7 @@ const AdminStoryMode = () => {
               <GitBranch className="h-8 w-8 text-rose-500" />
             </div>
             <div>
-              <h1 className="text-4xl font-bold text-foreground">StoryMode Admin</h1>
+              <h1 className="text-4xl font-bold text-foreground">Quản trị StoryMode</h1>
               <p className="text-muted-foreground">
                 Quản lý story, segment, checkpoint, branch option, grammar và trạng thái publish.
               </p>
@@ -282,7 +282,7 @@ const AdminStoryMode = () => {
               disabled={loading}
             >
               <RefreshCw className="mr-2 h-4 w-4" />
-              Refresh
+              Làm mới
             </Button>
             <Button
               variant="outline"
@@ -292,11 +292,11 @@ const AdminStoryMode = () => {
               }}
             >
               <Plus className="mr-2 h-4 w-4" />
-              New Story
+              Story mới
             </Button>
             <Button onClick={() => saveStory()} disabled={saving}>
               <Save className="mr-2 h-4 w-4" />
-              {saving ? "Saving..." : "Save Story"}
+              {saving ? "Đang lưu..." : "Lưu story"}
             </Button>
           </div>
         </div>
@@ -304,19 +304,19 @@ const AdminStoryMode = () => {
         <div className="mb-4 grid gap-4 md:grid-cols-3">
           <Card>
             <CardContent className="p-5">
-              <p className="text-sm text-muted-foreground">Stories</p>
+              <p className="text-sm text-muted-foreground">Story</p>
               <p className="mt-2 text-3xl font-semibold">{stories.length}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-5">
-              <p className="text-sm text-muted-foreground">Published</p>
+              <p className="text-sm text-muted-foreground">Đã xuất bản</p>
               <p className="mt-2 text-3xl font-semibold">{publishedCount}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-5">
-              <p className="text-sm text-muted-foreground">Segments in editor</p>
+              <p className="text-sm text-muted-foreground">Segment trong trình chỉnh sửa</p>
               <p className="mt-2 text-3xl font-semibold">{activeStory.segments.length}</p>
             </CardContent>
           </Card>
@@ -325,7 +325,7 @@ const AdminStoryMode = () => {
         <div className="grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Story Library</CardTitle>
+              <CardTitle className="text-base">Thư viện story</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               {stories.length === 0 && (
@@ -350,7 +350,7 @@ const AdminStoryMode = () => {
                       <p className="font-semibold text-foreground">{story.title}</p>
                       <p className="mt-1 text-xs text-muted-foreground">{story.storyKey}</p>
                     </div>
-                    <Badge variant="outline">{story.published ? "Published" : "Draft"}</Badge>
+                    <Badge variant="outline">{story.published ? "Đã xuất bản" : "Bản nháp"}</Badge>
                   </div>
                 </button>
               ))}
@@ -360,10 +360,10 @@ const AdminStoryMode = () => {
           <div className="space-y-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-base">Story Setup</CardTitle>
+                <CardTitle className="text-base">Thiết lập story</CardTitle>
                 <Button variant="destructive" size="sm" onClick={() => deleteStory(activeStory)}>
                   <Trash2 className="mr-2 h-4 w-4" />
-                  Delete
+                  Xóa
                 </Button>
               </CardHeader>
               <CardContent className="grid gap-4 md:grid-cols-2">
@@ -375,14 +375,14 @@ const AdminStoryMode = () => {
                   />
                 </div>
                 <div>
-                  <Label>Title</Label>
+                  <Label>Tiêu đề</Label>
                   <Input
                     value={activeStory.title}
                     onChange={(event) => updateStory({ title: event.target.value })}
                   />
                 </div>
                 <div>
-                  <Label>Subtitle</Label>
+                  <Label>Phụ đề</Label>
                   <Input
                     value={activeStory.subtitle}
                     onChange={(event) => updateStory({ subtitle: event.target.value })}
@@ -407,7 +407,7 @@ const AdminStoryMode = () => {
                   </Select>
                 </div>
                 <div>
-                  <Label>Estimated minutes</Label>
+                  <Label>Thời lượng ước tính (phút)</Label>
                   <Input
                     type="number"
                     value={activeStory.estimatedMinutes}
@@ -417,7 +417,7 @@ const AdminStoryMode = () => {
                   />
                 </div>
                 <div>
-                  <Label>Entry segment</Label>
+                  <Label>Segment mở đầu</Label>
                   <Select
                     value={activeStory.entrySegmentId}
                     onValueChange={(value) => updateStory({ entrySegmentId: value })}
@@ -435,21 +435,21 @@ const AdminStoryMode = () => {
                   </Select>
                 </div>
                 <div>
-                  <Label>Tone</Label>
+                  <Label>Tông giọng</Label>
                   <Input
                     value={activeStory.tone}
                     onChange={(event) => updateStory({ tone: event.target.value })}
                   />
                 </div>
                 <div>
-                  <Label>Cover label</Label>
+                  <Label>Nhãn bìa</Label>
                   <Input
                     value={activeStory.coverLabel}
                     onChange={(event) => updateStory({ coverLabel: event.target.value })}
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <Label>Description</Label>
+                  <Label>Mô tả</Label>
                   <Textarea
                     value={activeStory.description}
                     onChange={(event) => updateStory({ description: event.target.value })}
@@ -461,7 +461,7 @@ const AdminStoryMode = () => {
                     onClick={() => updateStory({ published: !activeStory.published })}
                   >
                     <Check className="mr-2 h-4 w-4" />
-                    {activeStory.published ? "Published" : "Mark as published"}
+                    {activeStory.published ? "Đã xuất bản" : "Đánh dấu xuất bản"}
                   </Button>
                 </div>
               </CardContent>
@@ -469,10 +469,10 @@ const AdminStoryMode = () => {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-base">Segments</CardTitle>
+                <CardTitle className="text-base">Segment</CardTitle>
                 <Button size="sm" onClick={addSegment}>
                   <Plus className="mr-2 h-4 w-4" />
-                  Add Segment
+                  Thêm segment
                 </Button>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -501,7 +501,7 @@ const AdminStoryMode = () => {
                       />
                     </div>
                     <div>
-                      <Label>Title</Label>
+                      <Label>Tiêu đề</Label>
                       <Input
                         value={activeSegment.title}
                         onChange={(event) =>
@@ -510,7 +510,7 @@ const AdminStoryMode = () => {
                       />
                     </div>
                     <div>
-                      <Label>Scene hint</Label>
+                      <Label>Gợi ý cảnh</Label>
                       <Input
                         value={activeSegment.sceneHint}
                         onChange={(event) =>
@@ -519,7 +519,7 @@ const AdminStoryMode = () => {
                       />
                     </div>
                     <div>
-                      <Label>Next segment</Label>
+                      <Label>Segment kế tiếp</Label>
                       <Input
                         value={activeSegment.nextSegmentId ?? ""}
                         onChange={(event) =>
@@ -530,7 +530,7 @@ const AdminStoryMode = () => {
                       />
                     </div>
                     <div className="md:col-span-2">
-                      <Label>Japanese text</Label>
+                      <Label>Văn bản tiếng Nhật</Label>
                       <Textarea
                         className="min-h-28 text-lg leading-8"
                         value={activeSegment.japaneseText}
@@ -540,7 +540,7 @@ const AdminStoryMode = () => {
                       />
                     </div>
                     <div className="md:col-span-2">
-                      <Label>Translation</Label>
+                      <Label>Bản dịch</Label>
                       <Textarea
                         value={activeSegment.translation}
                         onChange={(event) =>
@@ -550,7 +550,7 @@ const AdminStoryMode = () => {
                     </div>
                     {DIFFICULTIES.map((difficulty) => (
                       <div key={difficulty}>
-                        <Label>{difficulty} translation override</Label>
+                        <Label>Bản dịch riêng cho {difficulty}</Label>
                         <Input
                           value={activeSegment.translationByDifficulty?.[difficulty] ?? ""}
                           onChange={(event) =>
@@ -565,7 +565,7 @@ const AdminStoryMode = () => {
                       </div>
                     ))}
                     <div className="md:col-span-2">
-                      <Label>Vocab queries, one per line</Label>
+                      <Label>Truy vấn từ vựng, mỗi dòng một mục</Label>
                       <Textarea
                         value={(activeSegment.vocabQueries ?? []).join("\n")}
                         onChange={(event) =>
@@ -585,7 +585,7 @@ const AdminStoryMode = () => {
                         onClick={() => deleteSegment(activeSegmentIndex)}
                       >
                         <Trash2 className="mr-2 h-4 w-4" />
-                        Delete Segment
+                        Xóa segment
                       </Button>
                     </div>
                   </div>
@@ -597,7 +597,7 @@ const AdminStoryMode = () => {
               <div className="grid gap-4 xl:grid-cols-2">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle className="text-base">Grammar Notes</CardTitle>
+                    <CardTitle className="text-base">Ghi chú ngữ pháp</CardTitle>
                     <Button
                       size="sm"
                       onClick={() =>
@@ -607,7 +607,7 @@ const AdminStoryMode = () => {
                       }
                     >
                       <Plus className="mr-2 h-4 w-4" />
-                      Add
+                      Thêm
                     </Button>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -616,7 +616,7 @@ const AdminStoryMode = () => {
                         key={`${item.pattern}-${index}`}
                         className="rounded-xl border border-border p-3"
                       >
-                        <Label>Pattern</Label>
+                        <Label>Mẫu câu</Label>
                         <Input
                           value={item.pattern}
                           onChange={(event) =>
@@ -629,7 +629,7 @@ const AdminStoryMode = () => {
                             })
                           }
                         />
-                        <Label className="mt-3 block">Title</Label>
+                        <Label className="mt-3 block">Tiêu đề</Label>
                         <Input
                           value={item.title}
                           onChange={(event) =>
@@ -642,7 +642,7 @@ const AdminStoryMode = () => {
                             })
                           }
                         />
-                        <Label className="mt-3 block">Explanation</Label>
+                        <Label className="mt-3 block">Giải thích</Label>
                         <Textarea
                           value={item.explanation}
                           onChange={(event) =>
@@ -667,7 +667,7 @@ const AdminStoryMode = () => {
                             })
                           }
                         >
-                          Remove
+                          Gỡ
                         </Button>
                       </div>
                     ))}
@@ -687,21 +687,21 @@ const AdminStoryMode = () => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="quiz">Quiz</SelectItem>
-                        <SelectItem value="branch">Branch</SelectItem>
+                        <SelectItem value="quiz">Câu hỏi</SelectItem>
+                        <SelectItem value="branch">Phân nhánh</SelectItem>
                       </SelectContent>
                     </Select>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
-                      <Label>Question</Label>
+                      <Label>Câu hỏi</Label>
                       <Textarea
                         value={activeSegment.checkpoint.question}
                         onChange={(event) => updateCheckpoint({ question: event.target.value })}
                       />
                     </div>
                     <div>
-                      <Label>Correct option ID</Label>
+                      <Label>ID đáp án đúng</Label>
                       <Input
                         value={activeSegment.checkpoint.correctOptionId ?? ""}
                         onChange={(event) =>
@@ -710,14 +710,14 @@ const AdminStoryMode = () => {
                       />
                     </div>
                     <div>
-                      <Label>Explanation</Label>
+                      <Label>Giải thích</Label>
                       <Textarea
                         value={activeSegment.checkpoint.explanation}
                         onChange={(event) => updateCheckpoint({ explanation: event.target.value })}
                       />
                     </div>
                     <div className="flex items-center justify-between">
-                      <p className="text-sm font-semibold text-foreground">Options</p>
+                      <p className="text-sm font-semibold text-foreground">Đáp án</p>
                       <Button
                         size="sm"
                         onClick={() =>
@@ -727,7 +727,7 @@ const AdminStoryMode = () => {
                         }
                       >
                         <Plus className="mr-2 h-4 w-4" />
-                        Add Option
+                        Thêm đáp án
                       </Button>
                     </div>
                     {activeSegment.checkpoint.options.map((option, index) => (
@@ -737,14 +737,14 @@ const AdminStoryMode = () => {
                       >
                         <div className="grid gap-3 md:grid-cols-2">
                           <div>
-                            <Label>Option ID</Label>
+                            <Label>ID đáp án</Label>
                             <Input
                               value={option.id}
                               onChange={(event) => updateOption(index, { id: event.target.value })}
                             />
                           </div>
                           <div>
-                            <Label>Label</Label>
+                            <Label>Nhãn</Label>
                             <Input
                               value={option.label}
                               onChange={(event) =>
@@ -753,7 +753,7 @@ const AdminStoryMode = () => {
                             />
                           </div>
                           <div>
-                            <Label>Next segment</Label>
+                            <Label>Segment kế tiếp</Label>
                             <Input
                               value={option.nextSegmentId ?? ""}
                               onChange={(event) =>
@@ -764,7 +764,7 @@ const AdminStoryMode = () => {
                             />
                           </div>
                           <div>
-                            <Label>Difficulty impact</Label>
+                            <Label>Ảnh hưởng độ khó</Label>
                             <Select
                               value={option.difficultyImpact ?? "NEUTRAL"}
                               onValueChange={(value) =>
@@ -785,7 +785,7 @@ const AdminStoryMode = () => {
                             </Select>
                           </div>
                           <div className="md:col-span-2">
-                            <Label>Response</Label>
+                            <Label>Phản hồi</Label>
                             <Textarea
                               value={option.response ?? ""}
                               onChange={(event) =>
@@ -806,7 +806,7 @@ const AdminStoryMode = () => {
                             })
                           }
                         >
-                          Remove option
+                          Gỡ đáp án
                         </Button>
                       </div>
                     ))}

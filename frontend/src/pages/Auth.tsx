@@ -7,7 +7,7 @@ import { authApi } from "@/api";
 import { AuthFormCard, AuthHero, type AuthMode } from "@/components/auth";
 import { useAuth } from "@/hooks/use-auth";
 
-const KANJI_SEQUENCE = "Nihongo, every day.";
+const KANJI_SEQUENCE = "Tiếng Nhật, mỗi ngày.";
 
 const getSafeRedirectPath = (params: URLSearchParams) => {
   const from = params.get("from");
@@ -41,10 +41,10 @@ const Auth = () => {
       setIsSubmitting(true);
       try {
         await loginWithGoogleCode(code);
-        setSuccessMsg("Signed in with Google successfully.");
+        setSuccessMsg("Đăng nhập bằng Google thành công.");
         setTimeout(() => navigate(targetPath, { replace: true }), 500);
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Google authentication failed.";
+        const message = error instanceof Error ? error.message : "Đăng nhập bằng Google thất bại.";
         setErrorMsg(message);
         window.history.replaceState({}, document.title, window.location.pathname);
       } finally {
@@ -89,14 +89,14 @@ const Auth = () => {
     }
 
     if (reason === "session_expired") {
-      setErrorMsg("Your previous session expired. Please sign in again.");
+      setErrorMsg("Phiên đăng nhập trước đã hết hạn. Vui lòng đăng nhập lại.");
       window.history.replaceState({}, document.title, window.location.pathname);
       return;
     }
 
     if (error) {
       const description = params.get("error_description");
-      setErrorMsg(description || `Google login failed: ${error}`);
+      setErrorMsg(description || `Đăng nhập Google thất bại: ${error}`);
       window.history.replaceState({}, document.title, window.location.pathname);
       return;
     }
@@ -127,7 +127,7 @@ const Auth = () => {
 
     if (!isGoogleConfigured) {
       setErrorMsg(
-        "Google Client ID is not configured yet. Add VITE_GOOGLE_CLIENT_ID inside frontend/.env.local before using Google auth."
+        "Chưa cấu hình Google Client ID. Hãy thêm VITE_GOOGLE_CLIENT_ID vào frontend/.env.local trước khi dùng đăng nhập Google."
       );
       return;
     }
@@ -150,7 +150,7 @@ const Auth = () => {
 
     if (mode === "forgot") {
       if (!email) {
-        setErrorMsg("Please enter your email.");
+        setErrorMsg("Vui lòng nhập email.");
         return;
       }
 
@@ -159,15 +159,16 @@ const Auth = () => {
         const response = await authApi.forgotPassword(email);
         if (response.resetToken) {
           setResetToken(response.resetToken);
-          setSuccessMsg("Reset token created. You can set a new password now.");
+          setSuccessMsg("Đã tạo mã đặt lại. Bạn có thể đặt mật khẩu mới ngay bây giờ.");
           setMode("reset");
         } else {
           setSuccessMsg(
-            response.message || "If the account exists, reset instructions have been sent."
+            response.message || "Nếu tài khoản tồn tại, hướng dẫn đặt lại đã được gửi."
           );
         }
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Password reset request failed.";
+        const message =
+          error instanceof Error ? error.message : "Yêu cầu đặt lại mật khẩu thất bại.";
         setErrorMsg(message);
       } finally {
         setIsSubmitting(false);
@@ -177,12 +178,12 @@ const Auth = () => {
 
     if (mode === "reset") {
       if (!resetToken || !password || !confirmPassword) {
-        setErrorMsg("Please enter reset token and new password.");
+        setErrorMsg("Vui lòng nhập mã đặt lại và mật khẩu mới.");
         return;
       }
 
       if (password !== confirmPassword) {
-        setErrorMsg("Passwords do not match.");
+        setErrorMsg("Mật khẩu không khớp.");
         return;
       }
 
@@ -192,10 +193,10 @@ const Auth = () => {
         setPassword("");
         setConfirmPassword("");
         setResetToken("");
-        setSuccessMsg("Password reset successfully. Please sign in with your new password.");
+        setSuccessMsg("Đặt lại mật khẩu thành công. Vui lòng đăng nhập bằng mật khẩu mới.");
         setMode("login");
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Password reset failed.";
+        const message = error instanceof Error ? error.message : "Đặt lại mật khẩu thất bại.";
         setErrorMsg(message);
       } finally {
         setIsSubmitting(false);
@@ -204,12 +205,12 @@ const Auth = () => {
     }
 
     if (mode === "register" && password !== confirmPassword) {
-      setErrorMsg("Passwords do not match.");
+      setErrorMsg("Mật khẩu không khớp.");
       return;
     }
 
     if (!email || !password || (mode === "register" && !displayName)) {
-      setErrorMsg("Please fill in all required fields.");
+      setErrorMsg("Vui lòng điền đầy đủ các trường bắt buộc.");
       return;
     }
 
@@ -222,10 +223,10 @@ const Auth = () => {
         await register(email, password, displayName, jlptTarget);
       }
 
-      setSuccessMsg(mode === "login" ? "Signed in successfully." : "Account created successfully.");
+      setSuccessMsg(mode === "login" ? "Đăng nhập thành công." : "Tạo tài khoản thành công.");
       navigate(redirectPath, { replace: true });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Authentication failed.";
+      const message = error instanceof Error ? error.message : "Xác thực thất bại.";
       setErrorMsg(message);
     } finally {
       setIsSubmitting(false);
@@ -253,7 +254,7 @@ const Auth = () => {
             <div>
               <p className="text-xl font-black tracking-tight text-foreground">Yukihon</p>
               <p className="hidden text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground sm:block">
-                Light onboarding flow
+                Bắt đầu nhẹ nhàng
               </p>
             </div>
           </Link>
@@ -261,7 +262,7 @@ const Auth = () => {
           <div className="hidden items-center gap-3 rounded-full bg-[#f7f3ee] px-4 py-2 sm:flex">
             <Sparkles className="h-4 w-4 text-primary" />
             <span className="text-sm font-semibold text-foreground">
-              Dark mode is parked. Light mode only for now.
+              Chế độ tối tạm gác lại. Hiện chỉ có chế độ sáng.
             </span>
           </div>
         </div>
@@ -272,7 +273,7 @@ const Auth = () => {
           <div className="surface-panel-soft h-full p-8">
             <div className="section-kicker">
               <CheckCircle2 className="h-3.5 w-3.5" />
-              Better first-run experience
+              Trải nghiệm lần đầu mượt hơn
             </div>
             <div className="mt-8">
               <AuthHero mode={mode} typingKanji={typingKanji} />

@@ -78,7 +78,7 @@ const JLPTLessons = () => {
           icon={<GraduationCap className="h-6 w-6 text-sky-600" />}
           title="JLPT"
           description="Rút gọn bố cục để bạn nhìn được level, tiến độ và danh sách bài ngay trong một vùng gọn hơn."
-          eyebrow="JLPT Path"
+          eyebrow="Lộ trình JLPT"
           action={
             <Button
               className="rounded-2xl bg-sky-500 text-white hover:bg-sky-400"
@@ -114,7 +114,7 @@ const JLPTLessons = () => {
         <PageSection
           className="mb-4"
           title="Chọn cấp độ"
-          description="Filter ngang gọn thay cho block lớn, giúp chừa diện tích cho danh sách bài."
+          description="Bộ lọc ngang gọn thay cho khối lớn, giúp chừa diện tích cho danh sách bài."
         >
           <div className="flex flex-wrap gap-2">
             {LEVELS.map((level) => {
@@ -140,7 +140,7 @@ const JLPTLessons = () => {
         <div className="grid gap-4 xl:grid-cols-[280px_minmax(0,1fr)]">
           <PageSection
             title={`Mục tiêu ${selectedLevel}`}
-            description="Một overview nhỏ để nhắc nhịp học trước khi vào danh sách bài."
+            description="Một bản tổng quan nhỏ để nhắc nhịp học trước khi vào danh sách bài."
           >
             <div className="space-y-4">
               <div className="rounded-[20px] border border-sky-200 bg-sky-50/80 p-4">

@@ -47,8 +47,8 @@ const LessonContentPanel = ({
   onResetQuiz,
 }: LessonContentPanelProps) => (
   <PageSection
-    title="Noi dung bai hoc"
-    description="Phien ban doc nhanh cho flow hoc co the tiep tuc ngay trong du an hien tai."
+    title="Nội dung bài học"
+    description="Phiên bản đọc nhanh cho luồng học có thể tiếp tục ngay trong dự án hiện tại."
   >
     {lesson.content ? (
       <div className="space-y-4">
@@ -67,9 +67,9 @@ const LessonContentPanel = ({
         <div className="rounded-[22px] border border-amber-200 bg-amber-50/70 p-5">
           <div className="mb-4 flex items-start justify-between gap-3">
             <div>
-              <h3 className="text-lg font-semibold text-foreground">Lesson checkpoint quiz</h3>
+              <h3 className="text-lg font-semibold text-foreground">Quiz mốc kiểm tra bài học</h3>
               <p className="mt-1 text-sm text-foreground/75">
-                Hoan thanh quiz nay de he thong tu dong chot completion cho lesson.
+                Hoàn thành quiz này để hệ thống tự động chốt hoàn thành cho bài học.
               </p>
             </div>
             {quizScore != null ? (
@@ -91,8 +91,8 @@ const LessonContentPanel = ({
             </div>
           ) : relatedQuizzes.length === 0 ? (
             <EmptyState
-              title="Chua co checkpoint quiz"
-              description="Hay lien ket quiz voi lesson trong CMS de flow completion day du hon."
+              title="Chưa có quiz mốc kiểm tra"
+              description="Hãy liên kết quiz với bài học trong CMS để luồng hoàn thành đầy đủ hơn."
               icon={<Target className="h-6 w-6" />}
             />
           ) : (
@@ -107,7 +107,7 @@ const LessonContentPanel = ({
                     className="rounded-[20px] border border-amber-200 bg-white/80 p-4"
                   >
                     <p className="text-sm font-semibold text-foreground">
-                      Cau {index + 1}: {quiz.title}
+                      Câu {index + 1}: {quiz.title}
                     </p>
                     <p className="mt-2 text-sm text-foreground/80">{quiz.question}</p>
 
@@ -133,8 +133,8 @@ const LessonContentPanel = ({
 
                     {quizScore != null ? (
                       <p className="mt-3 text-xs text-muted-foreground">
-                        Dap an dung: {quiz.correctAnswer}.{" "}
-                        {quiz.explanation || "Khong co giai thich bo sung."}
+                        Đáp án đúng: {quiz.correctAnswer}.{" "}
+                        {quiz.explanation || "Không có giải thích bổ sung."}
                       </p>
                     ) : null}
                   </div>
@@ -147,7 +147,7 @@ const LessonContentPanel = ({
                   disabled={gradingQuiz}
                   onClick={onSubmitCheckpoint}
                 >
-                  Cham checkpoint
+                  Chấm mốc kiểm tra
                 </Button>
                 {quizPassed === false ? (
                   <Button
@@ -156,7 +156,7 @@ const LessonContentPanel = ({
                     onClick={onResetQuiz}
                     variant="outline"
                   >
-                    Lam lai
+                    Làm lại
                   </Button>
                 ) : null}
               </div>
@@ -166,8 +166,8 @@ const LessonContentPanel = ({
       </div>
     ) : (
       <EmptyState
-        title="Noi dung dang trong"
-        description="Lesson da ton tai nhung chua co content de hoc."
+        title="Nội dung đang trống"
+        description="Bài học đã tồn tại nhưng chưa có nội dung để học."
         icon={<BookOpen className="h-6 w-6" />}
       />
     )}

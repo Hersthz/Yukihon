@@ -55,12 +55,12 @@ export const OptionPicker = ({
         value={query}
         onChange={(event) => setQuery(event.target.value)}
         className="bg-background/60"
-        placeholder={`Search ${label.toLowerCase()}...`}
+        placeholder={`Tìm ${label.toLowerCase()}...`}
       />
 
       <div className="mt-3 flex flex-wrap gap-2">
         {selectedIds.length === 0 ? (
-          <span className="text-xs text-muted-foreground">No linked items yet.</span>
+          <span className="text-xs text-muted-foreground">Chưa có mục nào được liên kết.</span>
         ) : null}
         {selectedIds.map((id) => {
           const item = options.find((option) => option.id === id);
@@ -127,7 +127,7 @@ export const MediaField = ({
       value={value}
       onChange={(event) => onChange(event.target.value)}
       className="bg-background/60"
-      placeholder="Paste URL or upload a file"
+      placeholder="Dán URL hoặc tải lên một tệp"
     />
 
     <div className="flex items-center gap-3">
@@ -145,7 +145,7 @@ export const MediaField = ({
       />
       <Button disabled={uploading} size="sm" variant="outline" className="rounded-xl">
         <UploadCloud className="mr-2 h-4 w-4" />
-        {uploading ? "Uploading..." : "Upload"}
+        {uploading ? "Đang tải lên..." : "Tải lên"}
       </Button>
     </div>
 
@@ -164,7 +164,7 @@ export const MediaField = ({
           rel="noreferrer"
           className="text-xs text-primary underline underline-offset-4"
         >
-          Open uploaded asset
+          Mở tệp đã tải lên
         </a>
       </div>
     ) : null}

@@ -31,7 +31,7 @@ const QuizEditorForm = ({
   <div className="space-y-4">
     <div className="grid gap-4 md:grid-cols-2">
       <div>
-        <Label>Title</Label>
+        <Label>Tiêu đề</Label>
         <Input
           value={item.title}
           onChange={(event) => onChange({ ...item, title: event.target.value })}
@@ -39,7 +39,7 @@ const QuizEditorForm = ({
         />
       </div>
       <div>
-        <Label>JLPT Level</Label>
+        <Label>Cấp độ JLPT</Label>
         <Select
           value={item.jlptLevel}
           onValueChange={(value) => onChange({ ...item, jlptLevel: value })}
@@ -59,7 +59,7 @@ const QuizEditorForm = ({
     </div>
 
     <div>
-      <Label>Description</Label>
+      <Label>Mô tả</Label>
       <Textarea
         value={item.description}
         onChange={(event) => onChange({ ...item, description: event.target.value })}
@@ -71,9 +71,10 @@ const QuizEditorForm = ({
       <div className="mb-3 flex items-center gap-2">
         <Link2 className="h-4 w-4 text-primary" />
         <div>
-          <p className="text-sm font-semibold text-foreground">Linked lesson</p>
+          <p className="text-sm font-semibold text-foreground">Bài học liên kết</p>
           <p className="text-sm text-muted-foreground">
-            Attach the quiz to a lesson checkpoint or leave it as a general quiz bank item.
+            Gắn bài kiểm tra vào một checkpoint của bài học hoặc để nó là mục trong ngân hàng câu
+            hỏi chung.
           </p>
         </div>
       </div>
@@ -88,7 +89,7 @@ const QuizEditorForm = ({
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="GENERAL">General quiz bank</SelectItem>
+          <SelectItem value="GENERAL">Ngân hàng câu hỏi chung</SelectItem>
           {lessons
             .filter((lesson) => lesson.id != null)
             .map((lesson) => (
@@ -101,14 +102,14 @@ const QuizEditorForm = ({
 
       <p className="mt-3 text-xs text-muted-foreground">
         {item.lessonId != null
-          ? `Currently linked to ${lessons.find((lesson) => lesson.id === item.lessonId)?.title ?? `lesson #${item.lessonId}`}.`
-          : "This quiz stays available as a standalone assessment."}
+          ? `Hiện đang liên kết với ${lessons.find((lesson) => lesson.id === item.lessonId)?.title ?? `bài học #${item.lessonId}`}.`
+          : "Bài kiểm tra này vẫn dùng được như một bài đánh giá độc lập."}
       </p>
     </div>
 
     <div className="grid gap-4 md:grid-cols-2">
       <div>
-        <Label>Quiz Type</Label>
+        <Label>Loại bài kiểm tra</Label>
         <Select
           value={item.quizType}
           onValueChange={(value) => onChange({ ...item, quizType: value })}
@@ -126,7 +127,7 @@ const QuizEditorForm = ({
         </Select>
       </div>
       <div>
-        <Label>Difficulty</Label>
+        <Label>Độ khó</Label>
         <Select
           value={item.difficultyLevel}
           onValueChange={(value) => onChange({ ...item, difficultyLevel: value })}
@@ -146,7 +147,7 @@ const QuizEditorForm = ({
     </div>
 
     <div>
-      <Label>Question</Label>
+      <Label>Câu hỏi</Label>
       <Textarea
         value={item.question}
         onChange={(event) => onChange({ ...item, question: event.target.value })}
@@ -156,7 +157,7 @@ const QuizEditorForm = ({
 
     <div className="grid gap-4 md:grid-cols-2">
       <div>
-        <Label>Option A</Label>
+        <Label>Đáp án A</Label>
         <Input
           value={item.optionA}
           onChange={(event) => onChange({ ...item, optionA: event.target.value })}
@@ -164,7 +165,7 @@ const QuizEditorForm = ({
         />
       </div>
       <div>
-        <Label>Option B</Label>
+        <Label>Đáp án B</Label>
         <Input
           value={item.optionB}
           onChange={(event) => onChange({ ...item, optionB: event.target.value })}
@@ -172,7 +173,7 @@ const QuizEditorForm = ({
         />
       </div>
       <div>
-        <Label>Option C</Label>
+        <Label>Đáp án C</Label>
         <Input
           value={item.optionC}
           onChange={(event) => onChange({ ...item, optionC: event.target.value })}
@@ -180,7 +181,7 @@ const QuizEditorForm = ({
         />
       </div>
       <div>
-        <Label>Option D</Label>
+        <Label>Đáp án D</Label>
         <Input
           value={item.optionD}
           onChange={(event) => onChange({ ...item, optionD: event.target.value })}
@@ -190,7 +191,7 @@ const QuizEditorForm = ({
     </div>
 
     <div>
-      <Label>Correct Answer</Label>
+      <Label>Đáp án đúng</Label>
       <Select
         value={item.correctAnswer}
         onValueChange={(value) =>
@@ -211,7 +212,7 @@ const QuizEditorForm = ({
     </div>
 
     <div>
-      <Label>Explanation</Label>
+      <Label>Giải thích</Label>
       <Textarea
         value={item.explanation}
         onChange={(event) => onChange({ ...item, explanation: event.target.value })}
@@ -221,7 +222,7 @@ const QuizEditorForm = ({
 
     <div className="grid gap-4 md:grid-cols-2">
       <MediaField
-        label="Audio URL"
+        label="URL âm thanh"
         value={item.audioUrl}
         accept="audio/*"
         previewType="audio"
@@ -230,7 +231,7 @@ const QuizEditorForm = ({
         onUpload={(file) => onUploadMedia("audioUrl", file)}
       />
       <MediaField
-        label="Image URL"
+        label="URL hình ảnh"
         value={item.imageUrl}
         accept="image/*"
         previewType="image"

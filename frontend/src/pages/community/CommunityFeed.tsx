@@ -48,8 +48,8 @@ const CommunityFeed = ({
   onPageChange,
 }: CommunityFeedProps) => (
   <PageSection
-    title="Bang tin"
-    description="Feed da co title, tags va bookmark nen de scan nhanh va luu lai bai hay hon."
+    title="Bảng tin"
+    description="Feed đã có tiêu đề, thẻ và bookmark nên dễ lướt nhanh và lưu lại bài hay hơn."
   >
     {loading ? (
       <div className="flex items-center justify-center py-20">
@@ -59,11 +59,11 @@ const CommunityFeed = ({
       <EmptyState
         description={
           showBookmarkedOnly
-            ? "Ban chua bookmark bai viet nao trong trang hien tai."
-            : "Hay la nguoi dau tien mo mot cuoc tro chuyen moi."
+            ? "Bạn chưa bookmark bài viết nào trong trang hiện tại."
+            : "Hãy là người đầu tiên mở một cuộc trò chuyện mới."
         }
         icon={<MessageSquare className="h-6 w-6" />}
-        title="Chua co bai viet"
+        title="Chưa có bài viết"
       />
     ) : (
       <div className="space-y-3">
@@ -84,7 +84,7 @@ const CommunityFeed = ({
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-foreground">{post.userDisplayName}</p>
-                    <p className="text-xs text-muted-foreground">{timeAgo(post.createdAt)} truoc</p>
+                    <p className="text-xs text-muted-foreground">{timeAgo(post.createdAt)} trước</p>
                   </div>
                 </div>
 
@@ -169,7 +169,7 @@ const CommunityFeed = ({
                   <Bookmark
                     className={`mr-1 h-4 w-4 ${post.bookmarkedByCurrentUser ? "fill-amber-500 text-amber-500" : ""}`}
                   />
-                  Luu
+                  Lưu
                 </Button>
               </div>
 
@@ -187,7 +187,7 @@ const CommunityFeed = ({
                           className="h-10 rounded-xl border-border bg-card text-foreground placeholder:text-muted-foreground"
                           onChange={(event) => onCommentInputChange(post.id, event.target.value)}
                           onKeyDown={(event) => event.key === "Enter" && onSubmitComment(post.id)}
-                          placeholder="Viet binh luan..."
+                          placeholder="Viết bình luận..."
                           value={commentInputs[post.id] || ""}
                         />
                         <Button
@@ -205,7 +205,7 @@ const CommunityFeed = ({
                           <div className="h-10 w-10 animate-spin rounded-full border-4 border-sky-100 border-t-sky-500" />
                         </div>
                       ) : comments.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">Chua co binh luan nao.</p>
+                        <p className="text-sm text-muted-foreground">Chưa có bình luận nào.</p>
                       ) : (
                         comments.map((comment) => (
                           <div
@@ -241,7 +241,7 @@ const CommunityFeed = ({
               size="sm"
               variant="outline"
             >
-              Truoc
+              Trước
             </Button>
             <span className="text-xs text-muted-foreground">
               {page + 1} / {totalPages}

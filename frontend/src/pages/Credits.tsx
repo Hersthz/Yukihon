@@ -44,7 +44,7 @@ const Credits = () => {
           icon={<BookOpen className="h-6 w-6 text-sky-600" />}
           title="Nguồn dữ liệu & Giấy phép"
           description="Yukihon sử dụng các nguồn dữ liệu mở dưới đây. Xin cảm ơn các dự án đã chia sẻ."
-          eyebrow="Credits"
+          eyebrow="Ghi nhận nguồn"
         />
 
         <PageSection

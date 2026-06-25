@@ -1,11 +1,11 @@
 export const formatStatus = (status?: string | null) => {
   switch (status) {
     case "COMPLETED":
-      return "Da hoan thanh";
+      return "Đã hoàn thành";
     case "IN_PROGRESS":
-      return "Dang hoc";
+      return "Đang học";
     default:
-      return "Chua bat dau";
+      return "Chưa bắt đầu";
   }
 };
 

@@ -205,17 +205,17 @@ const LessonDetail = () => {
 
       if (!options?.silent) {
         toast({
-          title: status === "COMPLETED" ? "Da hoan thanh bai hoc" : "Da bat dau bai hoc",
+          title: status === "COMPLETED" ? "Đã hoàn thành bài học" : "Đã bắt đầu bài học",
           description:
             status === "COMPLETED"
-              ? "Tien do va goi y hoc da duoc cap nhat."
-              : "Ban co the quay lai hoc tiep bat cu luc nao.",
+              ? "Tiến độ và gợi ý học đã được cập nhật."
+              : "Bạn có thể quay lại học tiếp bất cứ lúc nào.",
         });
       }
     } catch {
       toast({
-        title: "Khong luu duoc tien do",
-        description: "Vui long thu lai.",
+        title: "Không lưu được tiến độ",
+        description: "Vui lòng thử lại.",
         variant: "destructive",
       });
     }
@@ -233,11 +233,11 @@ const LessonDetail = () => {
         notes: noteText.trim(),
       });
       await queryClient.invalidateQueries({ queryKey: ["progress", "me"] });
-      toast({ title: "Da luu ghi chu", description: "Ghi chu hoc bai da duoc cap nhat." });
+      toast({ title: "Đã lưu ghi chú", description: "Ghi chú học bài đã được cập nhật." });
     } catch {
       toast({
-        title: "Khong luu duoc ghi chu",
-        description: "Vui long thu lai.",
+        title: "Không lưu được ghi chú",
+        description: "Vui lòng thử lại.",
         variant: "destructive",
       });
     }
@@ -249,8 +249,8 @@ const LessonDetail = () => {
     const unanswered = relatedQuizzes.some((quiz) => !quizAnswers[quiz.id]);
     if (unanswered) {
       toast({
-        title: "Chua hoan thanh checkpoint",
-        description: "Hay chon dap an cho tat ca cau hoi truoc khi cham.",
+        title: "Chưa hoàn thành mốc kiểm tra",
+        description: "Hãy chọn đáp án cho tất cả câu hỏi trước khi chấm.",
       });
       return;
     }
@@ -347,15 +347,15 @@ const LessonDetail = () => {
 
       await queryClient.invalidateQueries({ queryKey: ["progress", "me"] });
       toast({
-        title: passed ? "Checkpoint dat yeu cau" : "Checkpoint chua dat",
+        title: passed ? "Mốc kiểm tra đạt yêu cầu" : "Mốc kiểm tra chưa đạt",
         description: passed
-          ? `Ban dat ${score}%. Lesson da duoc hoan thanh.`
-          : `Ban dat ${score}%. Hay doc lai bai va thu lai quiz.`,
+          ? `Bạn đạt ${score}%. Bài học đã được hoàn thành.`
+          : `Bạn đạt ${score}%. Hãy đọc lại bài và thử lại quiz.`,
       });
     } catch {
       toast({
-        title: "Khong cham duoc checkpoint",
-        description: "Vui long thu lai.",
+        title: "Không chấm được mốc kiểm tra",
+        description: "Vui lòng thử lại.",
         variant: "destructive",
       });
     } finally {
@@ -387,8 +387,8 @@ const LessonDetail = () => {
       <DashboardLayout>
         <div className="mx-auto max-w-[1200px]">
           <EmptyState
-            title="Lesson khong hop le"
-            description="Khong tim thay bai hoc ban muon mo."
+            title="Bài học không hợp lệ"
+            description="Không tìm thấy bài học bạn muốn mở."
             icon={<BookOpen className="h-6 w-6" />}
           />
         </div>
@@ -400,11 +400,11 @@ const LessonDetail = () => {
     <DashboardLayout>
       <div className="mx-auto max-w-[1240px]">
         <PageHeader
-          eyebrow="Lesson"
+          eyebrow="Bài học"
           icon={<BookOpen className="h-6 w-6 text-sky-600" />}
-          title={lesson?.title || "Dang tai bai hoc"}
+          title={lesson?.title || "Đang tải bài học"}
           description={
-            lesson?.description || "Noi dung bai hoc va tien do hoc se hien thi tai day."
+            lesson?.description || "Nội dung bài học và tiến độ học sẽ hiển thị tại đây."
           }
           action={
             <>
@@ -414,7 +414,7 @@ const LessonDetail = () => {
                 variant="outline"
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Ve danh sach
+                Về danh sách
               </Button>
               <Button
                 className="rounded-2xl bg-sky-500 text-white hover:bg-sky-400"
@@ -422,7 +422,7 @@ const LessonDetail = () => {
                 onClick={() => void saveProgress("IN_PROGRESS")}
               >
                 <PlayCircle className="mr-2 h-4 w-4" />
-                {lessonProgress?.status === "IN_PROGRESS" ? "Dang hoc" : "Bat dau"}
+                {lessonProgress?.status === "IN_PROGRESS" ? "Đang học" : "Bắt đầu"}
               </Button>
               <Button
                 className="rounded-2xl bg-emerald-500 text-white hover:bg-emerald-400"
@@ -430,7 +430,7 @@ const LessonDetail = () => {
                 onClick={() => void saveProgress("COMPLETED")}
               >
                 <CheckCircle2 className="mr-2 h-4 w-4" />
-                Danh dau xong
+                Đánh dấu xong
               </Button>
             </>
           }
@@ -438,28 +438,28 @@ const LessonDetail = () => {
 
         <div className="mb-4 grid gap-3 md:grid-cols-4">
           <MetricCard
-            label="Trang thai"
+            label="Trạng thái"
             value={isProgressLoading ? "..." : formatStatus(lessonProgress?.status)}
             icon={<Target className="h-4 w-4 text-sky-500" />}
-            hint="Theo tien do cua ban"
+            hint="Theo tiến độ của bạn"
           />
           <MetricCard
-            label="Tien do"
+            label="Tiến độ"
             value={isProgressLoading ? "..." : `${progressPercent}%`}
             icon={<CheckCircle2 className="h-4 w-4 text-emerald-500" />}
-            hint="Cap nhat sau moi lan hoc"
+            hint="Cập nhật sau mỗi lần học"
           />
           <MetricCard
-            label="Thoi luong"
-            value={lesson ? `${estimateMinutes(lesson.content)} phut` : "..."}
+            label="Thời lượng"
+            value={lesson ? `${estimateMinutes(lesson.content)} phút` : "..."}
             icon={<Clock3 className="h-4 w-4 text-amber-500" />}
-            hint="Uoc tinh theo do dai noi dung"
+            hint="Ước tính theo độ dài nội dung"
           />
           <MetricCard
             label="JLPT"
             value={lesson?.jlptLevel || "N5"}
             icon={<BookOpen className="h-4 w-4 text-violet-500" />}
-            hint={lesson?.category || "Lesson"}
+            hint={lesson?.category || "Bài học"}
           />
         </div>
 
@@ -471,8 +471,8 @@ const LessonDetail = () => {
           </div>
         ) : !lesson ? (
           <EmptyState
-            title="Khong tim thay bai hoc"
-            description="Bai hoc nay co the da bi xoa hoac chua duoc xuat ban."
+            title="Không tìm thấy bài học"
+            description="Bài học này có thể đã bị xóa hoặc chưa được xuất bản."
             icon={<BookOpen className="h-6 w-6" />}
           />
         ) : (

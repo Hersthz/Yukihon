@@ -84,7 +84,11 @@ const AdminUsers = () => {
 
   useEffect(() => {
     if (usersQuery.error) {
-      toast({ title: "Error", description: "Failed to load users", variant: "destructive" });
+      toast({
+        title: "Lỗi",
+        description: "Không tải được danh sách người dùng",
+        variant: "destructive",
+      });
     }
   }, [usersQuery.error, toast]);
 
@@ -109,16 +113,16 @@ const AdminUsers = () => {
     },
     onSuccess: (_data, { action }) => {
       const messages = {
-        promote: "User promoted to admin",
-        demote: "Admin demoted to user",
-        disable: "User disabled",
-        enable: "User enabled",
+        promote: "Đã thăng người dùng lên quản trị viên",
+        demote: "Đã hạ quản trị viên xuống người dùng",
+        disable: "Đã vô hiệu hóa người dùng",
+        enable: "Đã kích hoạt người dùng",
       };
-      toast({ title: "Success", description: messages[action] });
+      toast({ title: "Thành công", description: messages[action] });
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
     },
     onError: () => {
-      toast({ title: "Error", description: "Action failed", variant: "destructive" });
+      toast({ title: "Lỗi", description: "Thao tác thất bại", variant: "destructive" });
     },
     onSettled: () => {
       setSelectedUser(null);
@@ -159,7 +163,7 @@ const AdminUsers = () => {
               <Users className="w-8 h-8 text-blue-400" />
             </div>
             <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-400 bg-clip-text text-transparent">
-              User Management
+              Quản lý người dùng
             </h1>
           </div>
         </motion.div>
@@ -177,14 +181,14 @@ const AdminUsers = () => {
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search by email or name..."
+                    placeholder="Tìm theo email hoặc tên..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                     className="pl-10 bg-background/50"
                   />
                 </div>
-                <Button onClick={handleSearch}>Search</Button>
+                <Button onClick={handleSearch}>Tìm kiếm</Button>
                 {searchQuery && (
                   <Button
                     variant="outline"
@@ -194,7 +198,7 @@ const AdminUsers = () => {
                       setPage(0);
                     }}
                   >
-                    Clear
+                    Xóa
                   </Button>
                 )}
               </div>
@@ -215,8 +219,8 @@ const AdminUsers = () => {
           >
             <Card className="bg-card/40 backdrop-blur-md border-border/50">
               <CardHeader>
-                <CardTitle>Users ({users.length})</CardTitle>
-                <CardDescription>Manage user accounts and permissions</CardDescription>
+                <CardTitle>Người dùng ({users.length})</CardTitle>
+                <CardDescription>Quản lý tài khoản và quyền của người dùng</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -234,7 +238,7 @@ const AdminUsers = () => {
                               className="bg-purple-500/20 text-purple-400 border-purple-500/30"
                             >
                               <Shield className="w-3 h-3 mr-1" />
-                              Admin
+                              Quản trị
                             </Badge>
                           )}
                           {!user.enabled && (
@@ -242,13 +246,13 @@ const AdminUsers = () => {
                               variant="destructive"
                               className="bg-red-500/20 text-red-400 border-red-500/30"
                             >
-                              Disabled
+                              Đã vô hiệu hóa
                             </Badge>
                           )}
                         </div>
                         <div className="text-sm text-muted-foreground">{user.email}</div>
                         <div className="text-xs text-muted-foreground mt-1">
-                          Joined: {new Date(user.createdAt).toLocaleDateString()}
+                          Tham gia: {new Date(user.createdAt).toLocaleDateString()}
                         </div>
                       </div>
 
@@ -262,7 +266,7 @@ const AdminUsers = () => {
                                 onClick={() => confirmAction(user, "demote")}
                               >
                                 <ShieldOff className="w-4 h-4 mr-1" />
-                                Demote
+                                Hạ quyền
                               </Button>
                             ) : (
                               <Button
@@ -271,7 +275,7 @@ const AdminUsers = () => {
                                 onClick={() => confirmAction(user, "promote")}
                               >
                                 <Shield className="w-4 h-4 mr-1" />
-                                Promote
+                                Thăng quyền
                               </Button>
                             )}
 
@@ -282,7 +286,7 @@ const AdminUsers = () => {
                                 onClick={() => confirmAction(user, "disable")}
                               >
                                 <UserX className="w-4 h-4 mr-1" />
-                                Disable
+                                Vô hiệu hóa
                               </Button>
                             ) : (
                               <Button
@@ -291,7 +295,7 @@ const AdminUsers = () => {
                                 onClick={() => confirmAction(user, "enable")}
                               >
                                 <UserCheck className="w-4 h-4 mr-1" />
-                                Enable
+                                Kích hoạt
                               </Button>
                             )}
                           </>
@@ -313,7 +317,7 @@ const AdminUsers = () => {
                       <ChevronLeft className="w-4 h-4" />
                     </Button>
                     <span className="text-sm text-muted-foreground">
-                      Page {page + 1} of {totalPages}
+                      Trang {page + 1} / {totalPages}
                     </span>
                     <Button
                       variant="outline"
@@ -341,17 +345,19 @@ const AdminUsers = () => {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Action</AlertDialogTitle>
+            <AlertDialogTitle>Xác nhận thao tác</AlertDialogTitle>
             <AlertDialogDescription>
-              {actionType === "promote" && `Promote ${selectedUser?.displayName} to admin?`}
-              {actionType === "demote" && `Demote ${selectedUser?.displayName} from admin?`}
-              {actionType === "disable" && `Disable ${selectedUser?.displayName}'s account?`}
-              {actionType === "enable" && `Enable ${selectedUser?.displayName}'s account?`}
+              {actionType === "promote" && `Thăng ${selectedUser?.displayName} lên quản trị viên?`}
+              {actionType === "demote" &&
+                `Hạ ${selectedUser?.displayName} khỏi quyền quản trị viên?`}
+              {actionType === "disable" &&
+                `Vô hiệu hóa tài khoản của ${selectedUser?.displayName}?`}
+              {actionType === "enable" && `Kích hoạt tài khoản của ${selectedUser?.displayName}?`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleAction}>Confirm</AlertDialogAction>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction onClick={handleAction}>Xác nhận</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

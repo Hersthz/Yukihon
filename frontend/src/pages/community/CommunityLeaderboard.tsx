@@ -9,12 +9,12 @@ interface CommunityLeaderboardProps {
 
 const CommunityLeaderboard = ({ leaderboard, stats }: CommunityLeaderboardProps) => (
   <PageSection
-    title="Leaderboard"
-    description="Xep hang nho de nhin nhanh ai dang tao gia tri cho cong dong."
+    title="Bảng xếp hạng"
+    description="Xếp hạng nhỏ để nhìn nhanh ai đang tạo giá trị cho cộng đồng."
   >
     <div className="space-y-3">
       {leaderboard.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Chua du du lieu de xep hang.</p>
+        <p className="text-sm text-muted-foreground">Chưa đủ dữ liệu để xếp hạng.</p>
       ) : (
         leaderboard.map((entry, index) => (
           <div key={entry.userId} className="rounded-[18px] border border-border bg-card p-3">
@@ -24,12 +24,12 @@ const CommunityLeaderboard = ({ leaderboard, stats }: CommunityLeaderboardProps)
                   #{index + 1} {entry.userDisplayName}
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {entry.postsCount} posts · {entry.commentsCount} comments · {entry.likesReceived}{" "}
-                  likes received
+                  {entry.postsCount} bài viết · {entry.commentsCount} bình luận ·{" "}
+                  {entry.likesReceived} lượt thích
                 </p>
               </div>
               <Badge className="rounded-full border border-pink-200 bg-pink-50 text-pink-700">
-                {entry.score} pts
+                {entry.score} điểm
               </Badge>
             </div>
           </div>
@@ -38,7 +38,7 @@ const CommunityLeaderboard = ({ leaderboard, stats }: CommunityLeaderboardProps)
 
       {stats?.trendingTags?.length ? (
         <div className="pt-2">
-          <p className="mb-2 text-sm font-medium text-foreground">Trending tags</p>
+          <p className="mb-2 text-sm font-medium text-foreground">Thẻ xu hướng</p>
           <div className="flex flex-wrap gap-2">
             {stats.trendingTags.map((tag) => (
               <span

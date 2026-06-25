@@ -109,10 +109,10 @@ const StudyCalendar = () => {
     <DashboardLayout>
       <div className="mx-auto max-w-[1440px]">
         <PageHeader
-          eyebrow="Study calendar"
+          eyebrow="Lịch học"
           icon={<CalendarDays className="h-6 w-6 text-sky-600" />}
-          title="Lich hoc"
-          description="Theo doi ngay da hoc, nhiep streak va moc JLPT trong mot month view ro rang."
+          title="Lịch học"
+          description="Theo dõi ngày đã học, nhịp chuỗi ngày và mốc JLPT trong một khung tháng rõ ràng."
           action={
             <div className="flex flex-wrap items-center gap-2">
               {data?.deadlineStatus && (
@@ -123,14 +123,14 @@ const StudyCalendar = () => {
                   )}
                 >
                   {data.deadlineStatus === "OFF_TRACK"
-                    ? "Cham deadline"
+                    ? "Chậm tiến độ"
                     : data.deadlineStatus === "AT_RISK"
-                      ? "Can tang nhip"
+                      ? "Cần tăng nhịp"
                       : data.deadlineStatus === "COMPLETED"
-                        ? "Da hoan thanh"
+                        ? "Đã hoàn thành"
                         : data.deadlineStatus === "NO_DEADLINE"
-                          ? "Chua dat deadline"
-                          : "Dang on"}
+                          ? "Chưa đặt hạn"
+                          : "Đang ổn"}
                 </Badge>
               )}
               <Button
@@ -141,7 +141,7 @@ const StudyCalendar = () => {
                   setSelectedDate(new Date());
                 }}
               >
-                Hom nay
+                Hôm nay
               </Button>
             </div>
           }
@@ -149,35 +149,35 @@ const StudyCalendar = () => {
 
         <div className="mb-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <MetricCard
-            label="Current streak"
+            label="Chuỗi ngày hiện tại"
             value={data?.currentStreak ?? 0}
-            hint={`Longest ${data?.longestStreak ?? 0} ngay`}
+            hint={`Dài nhất ${data?.longestStreak ?? 0} ngày`}
             icon={<Flame className="h-4 w-4 text-amber-500" />}
           />
           <MetricCard
-            label="Ngay active"
+            label="Ngày có học"
             value={data?.activeDays ?? 0}
             hint={formatMonthLabel(month)}
             icon={<CheckCircle2 className="h-4 w-4 text-emerald-500" />}
           />
           <MetricCard
-            label="Tong phut hoc"
+            label="Tổng phút học"
             value={data?.totalStudyMinutes ?? 0}
-            hint={`${data?.totalStudyEvents ?? 0} su kien hoc tap`}
+            hint={`${data?.totalStudyEvents ?? 0} sự kiện học tập`}
             icon={<Clock3 className="h-4 w-4 text-sky-500" />}
           />
           <MetricCard
-            label="Daily target"
+            label="Mục tiêu mỗi ngày"
             value={data?.recommendedMinutesPerDay ?? 0}
-            hint={`Muc tieu hien tai ${data?.dailyGoalMinutes ?? 0} phut`}
+            hint={`Mục tiêu hiện tại ${data?.dailyGoalMinutes ?? 0} phút`}
             icon={<Target className="h-4 w-4 text-violet-500" />}
           />
         </div>
 
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
           <PageSection
-            title="Month view"
-            description={`Theo doi ${formatMonthLabel(month)} voi mau muc do hoc, ngay nen hoc va deadline JLPT.`}
+            title="Khung tháng"
+            description={`Theo dõi ${formatMonthLabel(month)} với màu mức độ học, ngày nên học và hạn JLPT.`}
             action={
               <p className="text-sm font-medium text-muted-foreground">{formatMonthLabel(month)}</p>
             }
@@ -220,28 +220,28 @@ const StudyCalendar = () => {
                 <div className="space-y-3">
                   <div className="rounded-[20px] border border-border bg-card p-4">
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                      Chu thich
+                      Chú thích
                     </p>
                     <div className="mt-3 space-y-3 text-sm text-muted-foreground">
                       <div className="flex items-center gap-3">
                         <span className="h-4 w-4 rounded bg-emerald-100 dark:bg-emerald-500/15" />
-                        Hoc nhe
+                        Học nhẹ
                       </div>
                       <div className="flex items-center gap-3">
                         <span className="h-4 w-4 rounded bg-sky-100 dark:bg-sky-500/20" />
-                        Hoc deu
+                        Học đều
                       </div>
                       <div className="flex items-center gap-3">
                         <span className="h-4 w-4 rounded bg-primary" />
-                        Hoc sau
+                        Học sâu
                       </div>
                       <div className="flex items-center gap-3">
                         <span className="h-4 w-4 rounded border border-dashed border-sky-300" />
-                        Ngay nen hoc
+                        Ngày nên học
                       </div>
                       <div className="flex items-center gap-3">
                         <span className="h-4 w-4 rounded ring-2 ring-rose-400 ring-offset-2 ring-offset-background" />
-                        Deadline JLPT
+                        Hạn JLPT
                       </div>
                     </div>
                   </div>
@@ -249,11 +249,11 @@ const StudyCalendar = () => {
                   <div className="rounded-[20px] border border-amber-200 bg-amber-50/80 p-4">
                     <div className="flex items-center gap-2">
                       <Sparkles className="h-4 w-4 text-amber-600" />
-                      <p className="text-sm font-semibold text-amber-800">Goi y nhip hoc</p>
+                      <p className="text-sm font-semibold text-amber-800">Gợi ý nhịp học</p>
                     </div>
                     <p className="mt-2 text-sm leading-6 text-foreground/80">
                       {data?.deadlineInsight ||
-                        "Hay giu it nhat 1 phien hoc ngan moi ngay de duy tri da hoc."}
+                        "Hãy giữ ít nhất 1 phiên học ngắn mỗi ngày để duy trì chuỗi ngày học."}
                     </p>
                   </div>
                 </div>
@@ -263,11 +263,11 @@ const StudyCalendar = () => {
 
           <div className="space-y-4">
             <PageSection
-              title="Chi tiet ngay"
+              title="Chi tiết ngày"
               description={
                 selectedDay
                   ? formatDateLabel(selectedDay.date)
-                  : "Chon mot ngay trong lich de xem chi tiet."
+                  : "Chọn một ngày trong lịch để xem chi tiết."
               }
             >
               {selectedDay ? (
@@ -275,23 +275,23 @@ const StudyCalendar = () => {
                   <div className="rounded-[20px] border border-border bg-card p-4">
                     <div className="flex items-center justify-between gap-3">
                       <p className="text-sm font-semibold text-foreground">
-                        {selectedDay.hasActivity ? "Da co hoc tap" : "Chua ghi nhan hoc tap"}
+                        {selectedDay.hasActivity ? "Đã có học tập" : "Chưa ghi nhận học tập"}
                       </p>
                       <Badge className="rounded-full border border-border bg-background text-foreground/80">
                         {selectedDay.intensity === "strong"
-                          ? "Sau"
+                          ? "Sâu"
                           : selectedDay.intensity === "medium"
-                            ? "Deu"
+                            ? "Đều"
                             : selectedDay.intensity === "light"
-                              ? "Nhe"
-                              : "Trong"}
+                              ? "Nhẹ"
+                              : "Trống"}
                       </Badge>
                     </div>
 
                     <div className="mt-4 grid gap-3 sm:grid-cols-3">
                       <div className="rounded-2xl border border-border bg-background px-3 py-3">
                         <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                          Su kien
+                          Sự kiện
                         </p>
                         <p className="mt-2 text-xl font-semibold text-foreground">
                           {selectedDay.totalEvents}
@@ -299,7 +299,7 @@ const StudyCalendar = () => {
                       </div>
                       <div className="rounded-2xl border border-border bg-background px-3 py-3">
                         <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                          Hoan thanh
+                          Hoàn thành
                         </p>
                         <p className="mt-2 text-xl font-semibold text-foreground">
                           {selectedDay.completedCount}
@@ -307,7 +307,7 @@ const StudyCalendar = () => {
                       </div>
                       <div className="rounded-2xl border border-border bg-background px-3 py-3">
                         <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                          Phut hoc
+                          Phút học
                         </p>
                         <p className="mt-2 text-xl font-semibold text-foreground">
                           {selectedDay.totalMinutes}

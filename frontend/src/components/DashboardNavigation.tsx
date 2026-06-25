@@ -60,66 +60,66 @@ export const TOPBAR_HEIGHT = 60;
 
 const NAV_GROUPS: NavGroup[] = [
   {
-    label: "Explore",
+    label: "Khám phá",
     items: [
-      { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
-      { label: "Calendar", path: "/calendar", icon: CalendarDays },
-      { label: "Dictionary", path: "/dictionary", icon: Search },
-      { label: "Story Mode", path: "/story-mode", icon: BookOpen, badge: "New" },
-      { label: "AI Chat", path: "/ai-chat", icon: Bot, badge: "Beta" },
-      { label: "Translation", path: "/translation", icon: Globe2 },
-      { label: "Community", path: "/community", icon: Users },
-      { label: "Mistake DNA", path: "/mistake-dna", icon: Sparkles },
-      { label: "JLPT Paths", path: "/jlpt-lessons", icon: GraduationCap },
+      { label: "Tổng quan", path: "/dashboard", icon: LayoutDashboard },
+      { label: "Lịch học", path: "/calendar", icon: CalendarDays },
+      { label: "Từ điển", path: "/dictionary", icon: Search },
+      { label: "Học qua truyện", path: "/story-mode", icon: BookOpen, badge: "Mới" },
+      { label: "Trợ lý AI", path: "/ai-chat", icon: Bot, badge: "Beta" },
+      { label: "Dịch thuật", path: "/translation", icon: Globe2 },
+      { label: "Cộng đồng", path: "/community", icon: Users },
+      { label: "Phân tích lỗi", path: "/mistake-dna", icon: Sparkles },
+      { label: "Lộ trình JLPT", path: "/jlpt-lessons", icon: GraduationCap },
     ],
   },
   {
-    label: "Practice",
+    label: "Luyện tập",
     items: [
-      { label: "Học SRS", path: "/decks", icon: Layers, badge: "New" },
-      { label: "Vocabulary", path: "/vocabulary", icon: BookOpen },
-      { label: "Grammar", path: "/grammar", icon: Brain },
-      { label: "Quiz", path: "/quiz", icon: Trophy, badge: "Hot" },
-      { label: "Courses", path: "/courses", icon: Compass },
-      { label: "My Words", path: "/my-words", icon: BookMarked },
+      { label: "Học SRS", path: "/decks", icon: Layers, badge: "Mới" },
+      { label: "Từ vựng", path: "/vocabulary", icon: BookOpen },
+      { label: "Ngữ pháp", path: "/grammar", icon: Brain },
+      { label: "Trắc nghiệm", path: "/quiz", icon: Trophy, badge: "Hot" },
+      { label: "Khóa học", path: "/courses", icon: Compass },
+      { label: "Sổ từ của tôi", path: "/my-words", icon: BookMarked },
     ],
   },
 ];
 
 const ADMIN_ITEMS: NavItem[] = [
-  { label: "Creator Studio", path: "/admin/creator-mode", icon: Wand2 },
-  { label: "Story Admin", path: "/admin/story-mode", icon: BookOpen },
-  { label: "Admin Panel", path: "/admin", icon: Shield },
+  { label: "Xưởng nội dung", path: "/admin/creator-mode", icon: Wand2 },
+  { label: "Quản lý truyện", path: "/admin/story-mode", icon: BookOpen },
+  { label: "Bảng quản trị", path: "/admin", icon: Shield },
 ];
 
-const PERSONAL_ITEMS: NavItem[] = [{ label: "Profile", path: "/profile", icon: User }];
+const PERSONAL_ITEMS: NavItem[] = [{ label: "Hồ sơ", path: "/profile", icon: User }];
 
 const PAGE_META: Record<string, { title: string }> = {
-  "/dashboard": { title: "Dashboard" },
+  "/dashboard": { title: "Tổng quan" },
   "/calendar": { title: "Lịch học" },
   "/dictionary": { title: "Từ điển" },
-  "/story-mode": { title: "Story Mode" },
-  "/ai-chat": { title: "AI Chat" },
+  "/story-mode": { title: "Học qua truyện" },
+  "/ai-chat": { title: "Trợ lý AI" },
   "/translation": { title: "Dịch thuật" },
   "/community": { title: "Cộng đồng" },
-  "/mistake-dna": { title: "Mistake DNA" },
-  "/jlpt-lessons": { title: "JLPT Paths" },
+  "/mistake-dna": { title: "Phân tích lỗi" },
+  "/jlpt-lessons": { title: "Lộ trình JLPT" },
   "/vocabulary": { title: "Từ vựng" },
   "/decks": { title: "Học SRS" },
   "/grammar": { title: "Ngữ pháp" },
-  "/quiz": { title: "Quiz" },
+  "/quiz": { title: "Trắc nghiệm" },
   "/courses": { title: "Khóa học" },
-  "/kanji-library": { title: "Kanji Library" },
+  "/kanji-library": { title: "Thư viện Kanji" },
   "/kanji": { title: "Kanji" },
-  "/my-words": { title: "My Words" },
+  "/my-words": { title: "Sổ từ của tôi" },
   "/profile": { title: "Hồ sơ" },
-  "/credits": { title: "Credits" },
-  "/admin": { title: "Admin" },
+  "/credits": { title: "Ghi nhận nguồn" },
+  "/admin": { title: "Quản trị" },
   "/admin/users": { title: "Người dùng" },
-  "/admin/content": { title: "Content CMS" },
-  "/admin/story-mode": { title: "StoryMode Admin" },
-  "/admin/creator-mode": { title: "Creator Studio" },
-  "/admin/app-settings": { title: "App Settings" },
+  "/admin/content": { title: "Quản lý nội dung" },
+  "/admin/story-mode": { title: "Quản lý truyện" },
+  "/admin/creator-mode": { title: "Xưởng nội dung" },
+  "/admin/app-settings": { title: "Cài đặt hệ thống" },
 };
 
 const AUTO_MENU_ICONS: Record<string, ElementType> = {
@@ -302,8 +302,8 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
           )
         )}
 
-        {renderGroup("Personal", PERSONAL_ITEMS, compact)}
-        {isAdmin() && renderGroup("Admin", ADMIN_ITEMS, compact)}
+        {renderGroup("Cá nhân", PERSONAL_ITEMS, compact)}
+        {isAdmin() && renderGroup("Quản trị", ADMIN_ITEMS, compact)}
       </nav>
 
       {/* Footer: user + sign out */}
@@ -315,7 +315,7 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
             </div>
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-foreground">{userName}</p>
-              <p className="truncate text-xs text-muted-foreground">Light study system</p>
+              <p className="truncate text-xs text-muted-foreground">Học tiếng Nhật mỗi ngày</p>
             </div>
           </div>
         )}

@@ -37,36 +37,36 @@ const LEVELS = ["all", "N5", "N4", "N3", "N2", "N1"];
 const courseMeta: Record<string, CourseMeta> = {
   N5: {
     id: "N5",
-    title: "N5 Foundations",
+    title: "Nền tảng N5",
     description:
       "Bắt đầu từ nền tảng: chào hỏi, mẫu câu cơ bản, từ vựng thiết yếu và nhịp học đầu tiên.",
-    skills: ["Vocab", "Grammar", "Kanji"],
+    skills: ["Từ vựng", "Ngữ pháp", "Kanji"],
   },
   N4: {
     id: "N4",
-    title: "N4 Daily Conversations",
+    title: "Giao tiếp hằng ngày N4",
     description: "Tập trung vào giao tiếp hằng ngày, hoạt động thường gặp và mẫu câu đời sống.",
-    skills: ["Speaking", "Grammar", "Listening"],
+    skills: ["Nói", "Ngữ pháp", "Nghe"],
   },
   N3: {
     id: "N3",
-    title: "N3 Building Fluency",
+    title: "Xây dựng độ trôi chảy N3",
     description: "Mở rộng vốn từ, đọc hiểu và diễn đạt ý kiến tự nhiên hơn ở trình độ trung cấp.",
-    skills: ["Reading", "Listening", "Grammar"],
+    skills: ["Đọc", "Nghe", "Ngữ pháp"],
   },
   N2: {
     id: "N2",
-    title: "N2 Professional Japanese",
+    title: "Tiếng Nhật chuyên nghiệp N2",
     description:
       "Đi sâu vào ngữ cảnh công việc, tin tức, văn bản dài và cách diễn đạt chính xác hơn.",
-    skills: ["Reading", "Kanji", "Listening"],
+    skills: ["Đọc", "Kanji", "Nghe"],
   },
   N1: {
     id: "N1",
-    title: "N1 Complete Mastery",
+    title: "Thành thạo toàn diện N1",
     description:
       "Lộ trình nâng cao cho sắc thái nghĩa, đọc hiểu chuyên sâu và năng lực ngôn ngữ tinh tế.",
-    skills: ["All skills"],
+    skills: ["Mọi kỹ năng"],
   },
 };
 
@@ -137,8 +137,8 @@ const Courses = () => {
         <PageHeader
           icon={<GraduationCap className="h-6 w-6 text-primary" />}
           title="Khóa học"
-          description="Danh mục khóa học được kết nối từ lesson đã xuất bản, giúp bạn đi từ lộ trình tổng quan vào từng bài thật."
-          eyebrow="Courses"
+          description="Danh mục khóa học được kết nối từ bài học đã xuất bản, giúp bạn đi từ lộ trình tổng quan vào từng bài thật."
+          eyebrow="Khóa học"
         />
 
         <div className="mb-4 grid gap-3 md:grid-cols-3">

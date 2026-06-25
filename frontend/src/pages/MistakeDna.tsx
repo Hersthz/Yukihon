@@ -21,14 +21,14 @@ const MistakeDna = () => {
     <DashboardLayout>
       <div className="mx-auto max-w-[1380px]">
         <PageHeader
-          eyebrow="Personalization"
+          eyebrow="Cá nhân hóa"
           icon={<Brain className="h-6 w-6 text-rose-600" />}
-          title="AI Mistake DNA"
-          description="A readable profile of the mistakes you repeat, the pressure points behind them, and the next move that should help most."
+          title="Phân tích lỗi bằng AI"
+          description="Một hồ sơ dễ đọc về những lỗi bạn lặp lại, các điểm áp lực đằng sau chúng, và bước tiếp theo có thể giúp ích nhất."
           action={
             <Link to="/quiz">
               <Button className="rounded-2xl bg-rose-500 text-white hover:bg-rose-400">
-                Back to quiz
+                Quay lại Quiz
               </Button>
             </Link>
           }
@@ -43,35 +43,35 @@ const MistakeDna = () => {
         ) : !data ? (
           <EmptyState
             icon={<Brain className="h-6 w-6" />}
-            title="Mistake DNA is not ready yet"
-            description="Finish a few quizzes or review sessions and the pattern profile will start describing your recurring slips."
+            title="Phân tích lỗi chưa sẵn sàng"
+            description="Hoàn thành vài bài quiz hoặc buổi ôn tập, hồ sơ phân tích sẽ bắt đầu mô tả những lỗi bạn hay mắc lại."
           />
         ) : (
           <>
             <div className="mb-4 grid gap-3 md:grid-cols-4">
               <MetricCard
-                label="Risk score"
+                label="Điểm rủi ro"
                 value={`${data.overallRiskScore}%`}
                 icon={<Radar className="h-4 w-4 text-rose-500" />}
-                hint="Combined pressure from quiz, lesson, and SRS signals"
+                hint="Áp lực tổng hợp từ tín hiệu quiz, bài học và SRS"
               />
               <MetricCard
-                label="Quiz accuracy"
+                label="Độ chính xác Quiz"
                 value={`${data.averageQuizAccuracy}%`}
                 icon={<Target className="h-4 w-4 text-sky-500" />}
-                hint="Average across checkpoint attempts"
+                hint="Trung bình qua các lần làm checkpoint"
               />
               <MetricCard
-                label="Due reviews"
+                label="Cần ôn tập"
                 value={data.dueReviews}
                 icon={<Brain className="h-4 w-4 text-amber-500" />}
-                hint="Cards asking to be revisited now"
+                hint="Số thẻ đang cần ôn lại ngay"
               />
               <MetricCard
-                label="Open lessons"
+                label="Bài học dở dang"
                 value={data.inProgressLessons}
                 icon={<Sparkles className="h-4 w-4 text-violet-500" />}
-                hint="Learning loops still left unfinished"
+                hint="Những vòng học vẫn còn chưa hoàn thành"
               />
             </div>
 
@@ -106,14 +106,14 @@ const MistakeDna = () => {
 
                   <div className="rounded-[24px] border border-border bg-background px-4 py-4">
                     <div className="mb-3 flex items-center justify-between">
-                      <p className="text-sm font-semibold text-foreground">Confidence</p>
+                      <p className="text-sm font-semibold text-foreground">Độ tin cậy</p>
                       <Badge className={`rounded-full border ${confidenceTone[data.confidence]}`}>
                         {data.confidence}
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      Higher confidence means the profile has enough repeated signals from your
-                      recent study activity.
+                      Độ tin cậy cao hơn nghĩa là hồ sơ đã có đủ tín hiệu lặp lại từ hoạt động học
+                      gần đây của bạn.
                     </p>
 
                     <div className="mt-4 space-y-3">
@@ -131,14 +131,14 @@ const MistakeDna = () => {
               </PageSection>
 
               <PageSection
-                title="How to read it"
-                description="Each pattern stays tied to evidence so the profile feels useful, not magical."
+                title="Cách đọc hồ sơ"
+                description="Mỗi mẫu lỗi đều gắn với bằng chứng để hồ sơ thực sự hữu ích, không mơ hồ."
               >
                 <div className="space-y-3">
                   {[
-                    "Quiz patterns come from your checkpoint scores and quiz type history.",
-                    "JLPT pressure points are inferred from where your scores or unfinished lessons cluster.",
-                    "Memory friction comes from due reviews, low ease cards, and shallow repetition history.",
+                    "Mẫu lỗi quiz đến từ điểm checkpoint và lịch sử các dạng quiz của bạn.",
+                    "Điểm áp lực JLPT được suy ra từ nơi điểm số hoặc bài học chưa xong của bạn tập trung.",
+                    "Khó khăn ghi nhớ đến từ thẻ cần ôn, thẻ có độ dễ thấp và lịch sử lặp lại còn nông.",
                   ].map((item) => (
                     <div
                       key={item}
@@ -153,14 +153,14 @@ const MistakeDna = () => {
 
             <PageSection
               className="mt-4"
-              title="Recurring patterns"
-              description="This is the concrete shape of your current mistake profile."
+              title="Các mẫu lỗi lặp lại"
+              description="Đây là hình dạng cụ thể của hồ sơ lỗi hiện tại của bạn."
             >
               {data.patterns.length === 0 ? (
                 <EmptyState
                   icon={<Brain className="h-6 w-6" />}
-                  title="No repeated pattern yet"
-                  description="Once you complete more checkpoints and SRS reviews, the cards here will describe the main places where your recall slips."
+                  title="Chưa có mẫu lỗi lặp lại"
+                  description="Khi bạn hoàn thành thêm các checkpoint và buổi ôn SRS, các thẻ ở đây sẽ mô tả những chỗ chính mà khả năng nhớ của bạn hay bị trượt."
                 />
               ) : (
                 <div className="space-y-3">

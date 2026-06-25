@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ReviewMode, ReviewRating, SavedWord } from "./types";
-import { formatRelativeReview, ratingButtonClass } from "./utils";
+import { formatRelativeReview, ratingButtonClass, ratingLabel } from "./utils";
 
 interface ReviewQueueSectionProps {
   reviewMode: ReviewMode;
@@ -31,8 +31,8 @@ const ReviewQueueSection = ({
 }: ReviewQueueSectionProps) => (
   <PageSection
     className="mb-4"
-    title="Review queue"
-    description="Hang doi uu tien nhung muc den han truoc. Chon muc do de he thong tinh lai lich on."
+    title="Hàng đợi ôn tập"
+    description="Hàng đợi ưu tiên những mục đến hạn trước. Chọn mức độ để hệ thống tính lại lịch ôn."
   >
     <div className="mb-4 grid gap-3 lg:grid-cols-[220px_minmax(0,1fr)]">
       <Select value={reviewMode} onValueChange={(value) => onReviewModeChange(value as ReviewMode)}>
@@ -40,18 +40,18 @@ const ReviewQueueSection = ({
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="ALL">Tat ca</SelectItem>
-          <SelectItem value="KANJI">Kanji focus</SelectItem>
-          <SelectItem value="VOCABULARY">Vocabulary focus</SelectItem>
+          <SelectItem value="ALL">Tất cả</SelectItem>
+          <SelectItem value="KANJI">Tập trung Kanji</SelectItem>
+          <SelectItem value="VOCABULARY">Tập trung từ vựng</SelectItem>
         </SelectContent>
       </Select>
 
       <div className="rounded-[20px] border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
         {reviewMode === "KANJI"
-          ? "Hang doi nay uu tien cac muc co kanji de ban luyen nhan dien mat chu."
+          ? "Hàng đợi này ưu tiên các mục có kanji để bạn luyện nhận diện mặt chữ."
           : reviewMode === "VOCABULARY"
-            ? "Hang doi nay uu tien cac muc vocabulary khong nghieng ve kanji."
-            : "Tat ca muc den han se xuat hien o day."}
+            ? "Hàng đợi này ưu tiên các mục từ vựng không nghiêng về kanji."
+            : "Tất cả mục đến hạn sẽ xuất hiện ở đây."}
       </div>
     </div>
 
@@ -61,9 +61,9 @@ const ReviewQueueSection = ({
       </div>
     ) : reviewQueue.length === 0 ? (
       <EmptyState
-        description="Khong co muc nao den han trong bo loc hien tai. Ban co the doi che do review hoac quay lai sau."
+        description="Không có mục nào đến hạn trong bộ lọc hiện tại. Bạn có thể đổi chế độ ôn tập hoặc quay lại sau."
         icon={<Brain className="h-6 w-6" />}
-        title="Review queue dang trong"
+        title="Hàng đợi ôn tập đang trống"
       />
     ) : (
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -96,7 +96,7 @@ const ReviewQueueSection = ({
             <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
               <div className="rounded-[16px] border border-border bg-muted/40 p-3">
                 <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
-                  Next review
+                  Lần ôn kế
                 </p>
                 <p className="mt-2 font-medium text-foreground">
                   {formatRelativeReview(word.nextReviewAt)}
@@ -106,14 +106,14 @@ const ReviewQueueSection = ({
                 <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
                   Interval
                 </p>
-                <p className="mt-2 font-medium text-foreground">{word.reviewIntervalDays} ngay</p>
+                <p className="mt-2 font-medium text-foreground">{word.reviewIntervalDays} ngày</p>
               </div>
             </div>
 
             <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground">
-              <span>Lap lai: {word.repetitionCount}</span>
+              <span>Lặp lại: {word.repetitionCount}</span>
               <span>·</span>
-              <span>Review: {word.reviewCount}</span>
+              <span>Lượt ôn: {word.reviewCount}</span>
               <span>·</span>
               <span>Ease: {word.easeFactor?.toFixed?.(2) ?? word.easeFactor}</span>
             </div>
@@ -127,7 +127,7 @@ const ReviewQueueSection = ({
                   onClick={() => onReview(word.id, rating)}
                   size="sm"
                 >
-                  {rating}
+                  {ratingLabel[rating]}
                 </Button>
               ))}
             </div>

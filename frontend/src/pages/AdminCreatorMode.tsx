@@ -178,8 +178,8 @@ const AdminCreatorMode = () => {
         }));
       } catch {
         toast({
-          title: "Audit timeline unavailable",
-          description: "Could not load the review history for this template.",
+          title: "Không có dòng thời gian kiểm duyệt",
+          description: "Không tải được lịch sử duyệt của mẫu này.",
           variant: "destructive",
         });
       } finally {
@@ -215,8 +215,8 @@ const AdminCreatorMode = () => {
       setReviewQueue(queueData);
     } catch {
       toast({
-        title: "Creator mode load failed",
-        description: "Could not load creator templates and analytics.",
+        title: "Tải Creator Mode thất bại",
+        description: "Không tải được mẫu của creator và dữ liệu phân tích.",
         variant: "destructive",
       });
     } finally {
@@ -278,8 +278,8 @@ const AdminCreatorMode = () => {
   const saveDraft = useCallback(async () => {
     if (!editorMeta.title.trim()) {
       toast({
-        title: "Missing title",
-        description: "Please enter a title before saving.",
+        title: "Thiếu tiêu đề",
+        description: "Vui lòng nhập tiêu đề trước khi lưu.",
         variant: "destructive",
       });
       return;
@@ -293,13 +293,13 @@ const AdminCreatorMode = () => {
         : await creatorModeApi.createTemplate(payload);
 
       setActiveTemplateId(saved.id);
-      toast({ title: "Draft saved", description: "Creator template has been saved." });
+      toast({ title: "Đã lưu bản nháp", description: "Mẫu của creator đã được lưu." });
       await loadData();
       await loadTemplateTimeline(saved.id);
     } catch {
       toast({
-        title: "Save failed",
-        description: "Could not save this creator draft.",
+        title: "Lưu thất bại",
+        description: "Không lưu được bản nháp này.",
         variant: "destructive",
       });
     } finally {
@@ -319,13 +319,13 @@ const AdminCreatorMode = () => {
       }
 
       await creatorModeApi.submitForReview(templateId);
-      toast({ title: "Submitted", description: "Template is now in review queue." });
+      toast({ title: "Đã gửi", description: "Mẫu đã được đưa vào hàng chờ duyệt." });
       await loadData();
       await loadTemplateTimeline(templateId);
     } catch {
       toast({
-        title: "Submit failed",
-        description: "Could not submit template for review.",
+        title: "Gửi thất bại",
+        description: "Không gửi được mẫu để duyệt.",
         variant: "destructive",
       });
     }
@@ -339,15 +339,15 @@ const AdminCreatorMode = () => {
           reviewNote: reviewNotes[templateId] ?? "",
         });
         toast({
-          title: "Admin decision saved",
-          description: `Template status changed to ${decision}.`,
+          title: "Đã lưu quyết định của quản trị viên",
+          description: `Trạng thái mẫu đã đổi thành ${decision}.`,
         });
         await loadData();
         await loadTemplateTimeline(templateId);
       } catch {
         toast({
-          title: "Admin action failed",
-          description: "Could not update admin decision.",
+          title: "Thao tác quản trị thất bại",
+          description: "Không cập nhật được quyết định của quản trị viên.",
           variant: "destructive",
         });
       }
@@ -358,8 +358,8 @@ const AdminCreatorMode = () => {
   const logPlaytest = useCallback(async () => {
     if (!activeTemplateId) {
       toast({
-        title: "No template selected",
-        description: "Save a draft first to log metrics.",
+        title: "Chưa chọn mẫu nào",
+        description: "Hãy lưu bản nháp trước khi ghi số liệu.",
         variant: "destructive",
       });
       return;
@@ -371,12 +371,12 @@ const AdminCreatorMode = () => {
         completions: 14,
         averageScore: 81,
       });
-      toast({ title: "Metrics updated", description: "Sample playtest metrics were recorded." });
+      toast({ title: "Đã cập nhật số liệu", description: "Đã ghi nhận số liệu chạy thử mẫu." });
       await loadData();
     } catch {
       toast({
-        title: "Metrics failed",
-        description: "Could not record playtest metrics.",
+        title: "Ghi số liệu thất bại",
+        description: "Không ghi được số liệu chạy thử.",
         variant: "destructive",
       });
     }
@@ -391,10 +391,10 @@ const AdminCreatorMode = () => {
               <Sparkles className="h-8 w-8 text-emerald-300" />
             </div>
             <div>
-              <h1 className="text-4xl font-bold text-foreground">Creator Mode Studio</h1>
+              <h1 className="text-4xl font-bold text-foreground">Xưởng nội dung</h1>
               <p className="text-muted-foreground">
-                Keo tha mini-lesson, quiz, story branch. Duyet noi dung va theo doi hieu qua tai mot
-                noi.
+                Kéo-thả mini-lesson, bài kiểm tra, nhánh story. Duyệt nội dung và theo dõi hiệu quả
+                tại một nơi.
               </p>
             </div>
           </div>
@@ -402,43 +402,43 @@ const AdminCreatorMode = () => {
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={resetEditor}>
               <PlusCircle className="mr-2 h-4 w-4" />
-              New Draft
+              Bản nháp mới
             </Button>
             <Button variant="outline" onClick={() => void loadData()} disabled={loading}>
               <BarChart3 className="mr-2 h-4 w-4" />
-              Refresh
+              Làm mới
             </Button>
           </div>
         </div>
 
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-3 bg-card/70">
-            <TabsTrigger value="studio">Studio</TabsTrigger>
-            <TabsTrigger value="review">Review Queue</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="studio">Xưởng</TabsTrigger>
+            <TabsTrigger value="review">Hàng chờ duyệt</TabsTrigger>
+            <TabsTrigger value="analytics">Phân tích</TabsTrigger>
           </TabsList>
 
           <TabsContent value="studio" className="space-y-6">
             <div className="grid gap-6 xl:grid-cols-[1.2fr_1fr]">
               <Card className="border-border/70 bg-card/70">
                 <CardHeader>
-                  <CardTitle className="text-base">Template Setup</CardTitle>
+                  <CardTitle className="text-base">Thiết lập mẫu</CardTitle>
                 </CardHeader>
                 <CardContent className="grid gap-4 md:grid-cols-2">
                   <div>
-                    <Label>Title</Label>
+                    <Label>Tiêu đề</Label>
                     <Input
                       value={editorMeta.title}
                       onChange={(event) =>
                         setEditorMeta((previous) => ({ ...previous, title: event.target.value }))
                       }
                       className="bg-background/60"
-                      placeholder="N4 ordering food roleplay"
+                      placeholder="Nhập vai gọi món N4"
                     />
                   </div>
 
                   <div>
-                    <Label>Content Type</Label>
+                    <Label>Loại nội dung</Label>
                     <Select
                       value={editorMeta.contentType}
                       onValueChange={(value) =>
@@ -452,15 +452,15 @@ const AdminCreatorMode = () => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="MINI_LESSON">Mini Lesson</SelectItem>
-                        <SelectItem value="QUIZ">Quiz</SelectItem>
-                        <SelectItem value="STORY_BRANCH">Story Branch</SelectItem>
+                        <SelectItem value="MINI_LESSON">Mini-lesson</SelectItem>
+                        <SelectItem value="QUIZ">Bài kiểm tra</SelectItem>
+                        <SelectItem value="STORY_BRANCH">Nhánh story</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div>
-                    <Label>JLPT Level</Label>
+                    <Label>Cấp độ JLPT</Label>
                     <Select
                       value={editorMeta.jlptLevel}
                       onValueChange={(value) =>
@@ -481,7 +481,7 @@ const AdminCreatorMode = () => {
                   </div>
 
                   <div>
-                    <Label>Estimated Minutes</Label>
+                    <Label>Thời lượng ước tính (phút)</Label>
                     <Input
                       type="number"
                       min={3}
@@ -501,19 +501,19 @@ const AdminCreatorMode = () => {
                   </div>
 
                   <div className="md:col-span-2">
-                    <Label>Summary</Label>
+                    <Label>Tóm tắt</Label>
                     <Textarea
                       value={editorMeta.summary}
                       onChange={(event) =>
                         setEditorMeta((previous) => ({ ...previous, summary: event.target.value }))
                       }
                       className="bg-background/60"
-                      placeholder="Muc tieu bai hoc va outcomes cho nguoi hoc"
+                      placeholder="Mục tiêu bài học và kết quả cho người học"
                     />
                   </div>
 
                   <div className="md:col-span-2">
-                    <Label>Tags</Label>
+                    <Label>Thẻ</Label>
                     <Input
                       value={editorMeta.tags}
                       onChange={(event) =>
@@ -528,12 +528,12 @@ const AdminCreatorMode = () => {
 
               <Card className="border-border/70 bg-card/70">
                 <CardHeader>
-                  <CardTitle className="text-base">Actions</CardTitle>
+                  <CardTitle className="text-base">Thao tác</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <Button className="w-full" onClick={() => void saveDraft()} disabled={saving}>
                     <ClipboardCheck className="mr-2 h-4 w-4" />
-                    Save Draft
+                    Lưu bản nháp
                   </Button>
                   <Button
                     variant="secondary"
@@ -541,15 +541,16 @@ const AdminCreatorMode = () => {
                     onClick={() => void submitCurrentTemplate()}
                   >
                     <CheckCircle2 className="mr-2 h-4 w-4" />
-                    Submit For Review
+                    Gửi duyệt
                   </Button>
                   <Button variant="outline" className="w-full" onClick={() => void logPlaytest()}>
                     <BarChart3 className="mr-2 h-4 w-4" />
-                    Log Sample Playtest
+                    Ghi chạy thử mẫu
                   </Button>
                   {activeTemplateId && (
                     <p className="text-xs text-muted-foreground">
-                      Active template ID: {activeTemplateId}. You can switch between drafts below.
+                      ID mẫu đang chọn: {activeTemplateId}. Bạn có thể chuyển giữa các bản nháp bên
+                      dưới.
                     </p>
                   )}
                 </CardContent>
@@ -568,7 +569,7 @@ const AdminCreatorMode = () => {
 
               <Card className="border-border/70 bg-card/70">
                 <CardHeader>
-                  <CardTitle className="text-base">Block Editor</CardTitle>
+                  <CardTitle className="text-base">Trình chỉnh sửa khối</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <CreatorBlockEditor block={selectedBlock} onUpdate={handleUpdateBlock} />
@@ -578,7 +579,7 @@ const AdminCreatorMode = () => {
 
             <Card className="border-border/70 bg-card/70">
               <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <CardTitle className="text-base">Draft Library</CardTitle>
+                <CardTitle className="text-base">Thư viện bản nháp</CardTitle>
                 <Select
                   value={templateFilter}
                   onValueChange={(value) =>
@@ -589,7 +590,7 @@ const AdminCreatorMode = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ALL">All statuses</SelectItem>
+                    <SelectItem value="ALL">Tất cả trạng thái</SelectItem>
                     {(
                       ["DRAFT", "PENDING_REVIEW", "APPROVED", "REJECTED", "PUBLISHED"] as const
                     ).map((status) => (
@@ -614,7 +615,7 @@ const AdminCreatorMode = () => {
                     <div>
                       <p className="font-medium text-foreground">{template.title}</p>
                       <p className="text-xs text-muted-foreground">
-                        {template.contentType} • {template.jlptLevel} • Updated{" "}
+                        {template.contentType} • {template.jlptLevel} • Cập nhật{" "}
                         {new Date(template.updatedAt).toLocaleDateString()}
                       </p>
                     </div>
@@ -629,21 +630,21 @@ const AdminCreatorMode = () => {
             {activeTemplateId && (
               <Card className="border-border/70 bg-card/70">
                 <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle className="text-base">Audit Timeline</CardTitle>
+                  <CardTitle className="text-base">Dòng thời gian kiểm duyệt</CardTitle>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => void loadTemplateTimeline(activeTemplateId)}
                     disabled={loadingAuditTemplateId === activeTemplateId}
                   >
-                    Refresh
+                    Làm mới
                   </Button>
                 </CardHeader>
                 <CardContent>
                   <CreatorAuditTimeline
                     events={auditTimelineByTemplate[activeTemplateId] ?? []}
                     loading={loadingAuditTemplateId === activeTemplateId}
-                    emptyMessage="No audit events for this template yet."
+                    emptyMessage="Chưa có sự kiện kiểm duyệt nào cho mẫu này."
                     stageFilter={
                       (auditFiltersByTemplate[activeTemplateId] ?? DEFAULT_AUDIT_FILTERS)
                         .stageFilter
@@ -664,11 +665,11 @@ const AdminCreatorMode = () => {
           <TabsContent value="review" className="space-y-4">
             <Card className="border-border/70 bg-card/70">
               <CardHeader>
-                <CardTitle className="text-base">Review Queue</CardTitle>
+                <CardTitle className="text-base">Hàng chờ duyệt</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {reviewQueue.length === 0 && (
-                  <p className="text-sm text-muted-foreground">No templates waiting for review.</p>
+                  <p className="text-sm text-muted-foreground">Không có mẫu nào đang chờ duyệt.</p>
                 )}
 
                 {reviewQueue.map((template) => (
@@ -680,8 +681,8 @@ const AdminCreatorMode = () => {
                       <div>
                         <p className="font-semibold text-foreground">{template.title}</p>
                         <p className="text-xs text-muted-foreground">
-                          {template.contentType} • {template.jlptLevel} • by{" "}
-                          {template.createdByDisplayName ?? "Unknown"}
+                          {template.contentType} • {template.jlptLevel} • bởi{" "}
+                          {template.createdByDisplayName ?? "Không rõ"}
                         </p>
                       </div>
                       <Badge variant="outline" className={STATUS_STYLES[template.status]}>
@@ -698,7 +699,7 @@ const AdminCreatorMode = () => {
                         }))
                       }
                       className="mb-3 bg-background/60"
-                      placeholder="Review note for creator"
+                      placeholder="Ghi chú duyệt gửi cho creator"
                     />
 
                     <div className="flex flex-wrap gap-2">
@@ -710,14 +711,14 @@ const AdminCreatorMode = () => {
                           void loadTemplateTimeline(template.id);
                         }}
                       >
-                        Audit Timeline
+                        Dòng thời gian kiểm duyệt
                       </Button>
                       <Button
                         size="sm"
                         variant="secondary"
                         onClick={() => void reviewAsAdmin(template.id, "PUBLISHED")}
                       >
-                        Publish
+                        Xuất bản
                       </Button>
                       <Button
                         size="sm"
@@ -725,7 +726,7 @@ const AdminCreatorMode = () => {
                         onClick={() => void reviewAsAdmin(template.id, "REJECTED")}
                       >
                         <XCircle className="mr-2 h-4 w-4" />
-                        Reject
+                        Từ chối
                       </Button>
                     </div>
                   </div>
@@ -741,7 +742,8 @@ const AdminCreatorMode = () => {
             <DialogContent className="max-w-2xl border-border/70 bg-card/95">
               <DialogHeader>
                 <DialogTitle>
-                  Audit Timeline{auditDialogTemplate ? ` - ${auditDialogTemplate.title}` : ""}
+                  Dòng thời gian kiểm duyệt
+                  {auditDialogTemplate ? ` - ${auditDialogTemplate.title}` : ""}
                 </DialogTitle>
               </DialogHeader>
               <CreatorAuditTimeline
@@ -751,7 +753,7 @@ const AdminCreatorMode = () => {
                 loading={
                   auditDialogTemplate ? loadingAuditTemplateId === auditDialogTemplate.id : false
                 }
-                emptyMessage="No audit history found for this template."
+                emptyMessage="Không tìm thấy lịch sử kiểm duyệt cho mẫu này."
                 stageFilter={
                   auditDialogTemplate
                     ? (auditFiltersByTemplate[auditDialogTemplate.id] ?? DEFAULT_AUDIT_FILTERS)
@@ -776,40 +778,40 @@ const AdminCreatorMode = () => {
           <TabsContent value="analytics" className="space-y-6">
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               <CreatorMetricCard
-                title="Templates"
+                title="Mẫu"
                 value={analytics?.totalTemplates ?? 0}
-                hint={`${analytics?.drafts ?? 0} draft • ${analytics?.pendingReview ?? 0} pending`}
+                hint={`${analytics?.drafts ?? 0} bản nháp • ${analytics?.pendingReview ?? 0} chờ duyệt`}
               />
               <CreatorMetricCard
-                title="Completion Rate"
+                title="Tỉ lệ hoàn thành"
                 value={`${analytics?.completionRate ?? 0}%`}
-                hint={`${analytics?.totalCompletions ?? 0} completions / ${analytics?.totalUsage ?? 0} attempts`}
+                hint={`${analytics?.totalCompletions ?? 0} lượt hoàn thành / ${analytics?.totalUsage ?? 0} lượt thử`}
               />
               <CreatorMetricCard
-                title="Average Score"
+                title="Điểm trung bình"
                 value={analytics?.averageScore ?? 0}
-                hint="Average creator-template score"
+                hint="Điểm trung bình của mẫu creator"
               />
               <CreatorMetricCard
-                title="Published"
+                title="Đã xuất bản"
                 value={analytics?.published ?? 0}
-                hint={`${analytics?.approved ?? 0} approved • ${analytics?.rejected ?? 0} rejected`}
+                hint={`${analytics?.approved ?? 0} đã duyệt • ${analytics?.rejected ?? 0} bị từ chối`}
               />
             </div>
 
             <Card className="border-border/70 bg-card/70">
               <CardHeader>
-                <CardTitle className="text-base">Top Performing Templates</CardTitle>
+                <CardTitle className="text-base">Mẫu hiệu quả nhất</CardTitle>
               </CardHeader>
               <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Title</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead className="text-right">Usage</TableHead>
-                      <TableHead className="text-right">Completion</TableHead>
-                      <TableHead className="text-right">Avg Score</TableHead>
+                      <TableHead>Tiêu đề</TableHead>
+                      <TableHead>Loại</TableHead>
+                      <TableHead className="text-right">Lượt dùng</TableHead>
+                      <TableHead className="text-right">Hoàn thành</TableHead>
+                      <TableHead className="text-right">Điểm TB</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

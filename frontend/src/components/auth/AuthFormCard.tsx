@@ -70,19 +70,19 @@ const AuthFormCard = ({
   const isForgot = mode === "forgot";
   const isReset = mode === "reset";
   const title = isLogin
-    ? "Welcome back"
+    ? "Chào mừng trở lại"
     : isRegister
-      ? "Create account"
+      ? "Tạo tài khoản"
       : isForgot
-        ? "Reset password"
-        : "Set new password";
+        ? "Đặt lại mật khẩu"
+        : "Đặt mật khẩu mới";
   const subtitle = isLogin
-    ? "Sign in to continue your journey"
+    ? "Đăng nhập để tiếp tục hành trình của bạn"
     : isRegister
-      ? "Start learning Japanese today"
+      ? "Bắt đầu học tiếng Nhật ngay hôm nay"
       : isForgot
-        ? "Enter your email to get a reset token"
-        : "Enter your reset token and new password";
+        ? "Nhập email để nhận mã đặt lại"
+        : "Nhập mã đặt lại và mật khẩu mới";
 
   return (
     <motion.div
@@ -127,7 +127,7 @@ const AuthFormCard = ({
                     : "text-muted-foreground hover:text-foreground/80"
                 }`}
               >
-                {option === "login" ? "Sign in" : "Create account"}
+                {option === "login" ? "Đăng nhập" : "Tạo tài khoản"}
               </button>
             ))}
           </div>
@@ -159,7 +159,7 @@ const AuthFormCard = ({
                     fill="#EA4335"
                   />
                 </svg>
-                Continue with Google
+                Tiếp tục với Google
               </Button>
 
               <div className="relative my-4">
@@ -168,7 +168,7 @@ const AuthFormCard = ({
                 </div>
                 <div className="relative flex justify-center">
                   <span className="px-3 text-xs text-muted-foreground bg-card/50 backdrop-blur-sm">
-                    or continue with email
+                    hoặc tiếp tục bằng email
                   </span>
                 </div>
               </div>
@@ -178,8 +178,8 @@ const AuthFormCard = ({
           {!isLogin && !isRegister && (
             <div className="mb-4 rounded-xl border border-border/70 bg-muted/40 px-3 py-2.5 text-xs text-muted-foreground">
               {isForgot
-                ? "Development mode returns a reset token directly. In production this can be sent by email."
-                : "Paste the reset token from your email or from the development response."}
+                ? "Chế độ phát triển trả mã đặt lại trực tiếp. Khi chạy thật, mã có thể được gửi qua email."
+                : "Dán mã đặt lại từ email hoặc từ phản hồi ở chế độ phát triển."}
             </div>
           )}
 
@@ -226,13 +226,13 @@ const AuthFormCard = ({
               {isRegister && (
                 <div className="space-y-1.5">
                   <Label htmlFor="name" className="text-sm font-medium">
-                    Display name
+                    Tên hiển thị
                   </Label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       id="name"
-                      placeholder="Your name"
+                      placeholder="Tên của bạn"
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
                       className="pl-10 learnhub-input h-[46px]"
@@ -265,11 +265,11 @@ const AuthFormCard = ({
               {isReset && (
                 <div className="space-y-1.5">
                   <Label htmlFor="reset-token" className="text-sm font-medium">
-                    Reset token
+                    Mã đặt lại
                   </Label>
                   <Input
                     id="reset-token"
-                    placeholder="Paste reset token"
+                    placeholder="Dán mã đặt lại"
                     value={resetToken}
                     onChange={(e) => setResetToken(e.target.value)}
                     className="learnhub-input"
@@ -281,7 +281,7 @@ const AuthFormCard = ({
               {(isLogin || isRegister || isReset) && (
                 <div className="space-y-1.5">
                   <Label htmlFor="password" className="text-sm font-medium">
-                    {isReset ? "New password" : "Password"}
+                    {isReset ? "Mật khẩu mới" : "Mật khẩu"}
                   </Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -336,7 +336,7 @@ const AuthFormCard = ({
                 <>
                   <div className="space-y-1.5">
                     <Label htmlFor="confirm" className="text-sm font-medium">
-                      Confirm password
+                      Xác nhận mật khẩu
                     </Label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -364,7 +364,7 @@ const AuthFormCard = ({
                   <div className="space-y-1.5">
                     <Label className="text-sm font-medium flex items-center gap-2">
                       <Target className="w-4 h-4" />
-                      JLPT Target
+                      Mục tiêu JLPT
                     </Label>
                     <div className="flex gap-1.5">
                       {["N5", "N4", "N3", "N2", "N1"].map((level) => (
@@ -400,12 +400,12 @@ const AuthFormCard = ({
                 ) : (
                   <>
                     {isLogin
-                      ? "Sign in"
+                      ? "Đăng nhập"
                       : isRegister
-                        ? "Start learning"
+                        ? "Bắt đầu học"
                         : isForgot
-                          ? "Send reset token"
-                          : "Reset password"}
+                          ? "Gửi mã đặt lại"
+                          : "Đặt lại mật khẩu"}
                     <Sparkles className="h-4 w-4" />
                   </>
                 )}
@@ -414,13 +414,13 @@ const AuthFormCard = ({
               <p className="text-center text-sm text-muted-foreground pt-2">
                 {isLogin ? (
                   <>
-                    New here?{" "}
+                    Lần đầu ghé thăm?{" "}
                     <button
                       type="button"
                       onClick={() => setMode("register")}
                       className="text-primary hover:underline font-semibold"
                     >
-                      Join Kaoruko&apos;s class
+                      Tham gia lớp của Kaoruko
                     </button>
                     <span className="mx-2">•</span>
                     <button
@@ -428,29 +428,29 @@ const AuthFormCard = ({
                       onClick={() => setMode("forgot")}
                       className="text-primary hover:underline font-semibold"
                     >
-                      Forgot password?
+                      Quên mật khẩu?
                     </button>
                   </>
                 ) : isRegister ? (
                   <>
-                    Already have an account?{" "}
+                    Đã có tài khoản?{" "}
                     <button
                       type="button"
                       onClick={() => setMode("login")}
                       className="text-primary hover:underline font-semibold"
                     >
-                      Sign in
+                      Đăng nhập
                     </button>
                   </>
                 ) : (
                   <>
-                    Remembered it?{" "}
+                    Đã nhớ ra rồi?{" "}
                     <button
                       type="button"
                       onClick={() => setMode("login")}
                       className="text-primary hover:underline font-semibold"
                     >
-                      Back to sign in
+                      Quay lại đăng nhập
                     </button>
                     {isForgot && (
                       <>
@@ -460,7 +460,7 @@ const AuthFormCard = ({
                           onClick={() => setMode("reset")}
                           className="text-primary hover:underline font-semibold"
                         >
-                          I have a token
+                          Tôi đã có mã
                         </button>
                       </>
                     )}

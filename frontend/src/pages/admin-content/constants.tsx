@@ -10,10 +10,10 @@ export interface TabConfig {
 }
 
 export const TABS: TabConfig[] = [
-  { value: "lessons", label: "Lessons", icon: BookOpen },
-  { value: "vocabulary", label: "Vocabulary", icon: FileText },
-  { value: "grammar", label: "Grammar", icon: PenTool },
-  { value: "quizzes", label: "Quizzes", icon: HelpCircle },
+  { value: "lessons", label: "Bài học", icon: BookOpen },
+  { value: "vocabulary", label: "Từ vựng", icon: FileText },
+  { value: "grammar", label: "Ngữ pháp", icon: PenTool },
+  { value: "quizzes", label: "Trắc nghiệm", icon: HelpCircle },
 ];
 
 export const JLPT_LEVELS = ["N5", "N4", "N3", "N2", "N1"] as const;
@@ -33,7 +33,7 @@ export const WORD_TYPES = ["noun", "verb", "adjective", "adverb", "expression", 
 export const lessonColumns: ColumnDef[] = [
   {
     key: "title",
-    label: "Title",
+    label: "Tiêu đề",
     sortable: true,
     render: (val) => <span className="font-medium">{String(val)}</span>,
   },
@@ -43,10 +43,10 @@ export const lessonColumns: ColumnDef[] = [
     type: "badge",
     badgeColor: () => "bg-cyan-500/20 text-cyan-300 border-cyan-500/30",
   },
-  { key: "category", label: "Category", sortable: true },
+  { key: "category", label: "Phân loại", sortable: true },
   {
     key: "status",
-    label: "Status",
+    label: "Trạng thái",
     type: "badge",
     badgeColor: (value) =>
       value === "PUBLISHED"
@@ -57,7 +57,7 @@ export const lessonColumns: ColumnDef[] = [
             ? "bg-amber-500/20 text-amber-300 border-amber-500/30"
             : "bg-slate-500/20 text-slate-300 border-slate-500/30",
   },
-  { key: "orderIndex", label: "Order", type: "number", sortable: true },
+  { key: "orderIndex", label: "Thứ tự", type: "number", sortable: true },
 ];
 
 export const vocabColumns: ColumnDef[] = [
@@ -72,8 +72,8 @@ export const vocabColumns: ColumnDef[] = [
     label: "Hiragana",
     render: (val) => <span className="text-cyan-300">{String(val)}</span>,
   },
-  { key: "meaning", label: "Meaning", sortable: true },
-  { key: "wordType", label: "Type", sortable: true },
+  { key: "meaning", label: "Nghĩa", sortable: true },
+  { key: "wordType", label: "Loại từ", sortable: true },
   {
     key: "jlptLevel",
     label: "JLPT",
@@ -85,13 +85,13 @@ export const vocabColumns: ColumnDef[] = [
 export const grammarColumns: ColumnDef[] = [
   {
     key: "title",
-    label: "Title",
+    label: "Tiêu đề",
     sortable: true,
     render: (val) => <span className="font-medium">{String(val)}</span>,
   },
   {
     key: "pattern",
-    label: "Pattern",
+    label: "Mẫu câu",
     sortable: true,
     render: (val) => <span className="font-bold">{String(val)}</span>,
   },
@@ -106,21 +106,21 @@ export const grammarColumns: ColumnDef[] = [
 export const quizColumns: ColumnDef[] = [
   {
     key: "title",
-    label: "Title",
+    label: "Tiêu đề",
     sortable: true,
     render: (val) => <span className="font-medium">{String(val)}</span>,
   },
   {
     key: "lessonId",
-    label: "Lesson",
+    label: "Bài học",
     sortable: true,
-    render: (val) => <span>{val ? `#${String(val)}` : "General"}</span>,
+    render: (val) => <span>{val ? `#${String(val)}` : "Chung"}</span>,
   },
-  { key: "quizType", label: "Type", sortable: true },
-  { key: "difficultyLevel", label: "Difficulty", sortable: true },
+  { key: "quizType", label: "Loại", sortable: true },
+  { key: "difficultyLevel", label: "Độ khó", sortable: true },
   {
     key: "correctAnswer",
-    label: "Correct",
+    label: "Đáp án đúng",
     type: "badge",
     badgeColor: () => "bg-green-500/20 text-green-300 border-green-500/30",
   },

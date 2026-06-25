@@ -28,18 +28,18 @@ interface LessonEditorFormProps {
 }
 
 const statusCopy: Record<Lesson["status"], { label: string; description: string }> = {
-  DRAFT: { label: "Draft", description: "Work in progress and not ready for review yet." },
+  DRAFT: { label: "Bản nháp", description: "Đang soạn và chưa sẵn sàng để duyệt." },
   REVIEW: {
-    label: "Review",
-    description: "Ready for editorial or teaching review before publishing.",
+    label: "Chờ duyệt",
+    description: "Sẵn sàng để biên tập hoặc giảng viên duyệt trước khi xuất bản.",
   },
   PUBLISHED: {
-    label: "Published",
-    description: "Visible to learners and eligible for learning path recommendations.",
+    label: "Đã xuất bản",
+    description: "Hiển thị cho học viên và đủ điều kiện gợi ý trong lộ trình học.",
   },
   ARCHIVED: {
-    label: "Archived",
-    description: "Hidden from active learning flows but preserved for history.",
+    label: "Đã lưu trữ",
+    description: "Ẩn khỏi luồng học đang hoạt động nhưng vẫn được giữ lại để lưu lịch sử.",
   },
 };
 
@@ -67,9 +67,9 @@ const LessonEditorForm = ({
         <div className="mb-4 flex items-center gap-2">
           <Workflow className="h-4 w-4 text-primary" />
           <div>
-            <p className="text-sm font-semibold text-foreground">Publishing workflow</p>
+            <p className="text-sm font-semibold text-foreground">Quy trình xuất bản</p>
             <p className="text-sm text-muted-foreground">
-              Move the lesson through draft, review, publish, and archive without losing history.
+              Đưa bài học qua các bước nháp, duyệt, xuất bản và lưu trữ mà không mất lịch sử.
             </p>
           </div>
         </div>
@@ -97,7 +97,7 @@ const LessonEditorForm = ({
 
       <div className="grid gap-4 md:grid-cols-2">
         <div>
-          <Label>Title</Label>
+          <Label>Tiêu đề</Label>
           <Input
             value={item.title}
             onChange={(event) => onChange({ ...item, title: event.target.value })}
@@ -105,7 +105,7 @@ const LessonEditorForm = ({
           />
         </div>
         <div>
-          <Label>Category</Label>
+          <Label>Danh mục</Label>
           <Input
             value={item.category}
             onChange={(event) => onChange({ ...item, category: event.target.value })}
@@ -115,7 +115,7 @@ const LessonEditorForm = ({
       </div>
 
       <div>
-        <Label>Description</Label>
+        <Label>Mô tả</Label>
         <Textarea
           value={item.description}
           onChange={(event) => onChange({ ...item, description: event.target.value })}
@@ -125,7 +125,7 @@ const LessonEditorForm = ({
 
       <div className="grid gap-4 md:grid-cols-3">
         <div>
-          <Label>JLPT Level</Label>
+          <Label>Cấp độ JLPT</Label>
           <Select
             value={item.jlptLevel}
             onValueChange={(value) => onChange({ ...item, jlptLevel: value })}
@@ -143,7 +143,7 @@ const LessonEditorForm = ({
           </Select>
         </div>
         <div>
-          <Label>Workflow Stage</Label>
+          <Label>Giai đoạn quy trình</Label>
           <Select
             value={item.status}
             onValueChange={(value) => onChange({ ...item, status: value as Lesson["status"] })}
@@ -161,7 +161,7 @@ const LessonEditorForm = ({
           </Select>
         </div>
         <div>
-          <Label>Order</Label>
+          <Label>Thứ tự</Label>
           <Input
             type="number"
             value={item.orderIndex}
@@ -174,18 +174,18 @@ const LessonEditorForm = ({
       </div>
 
       <div>
-        <Label>Lesson Content</Label>
+        <Label>Nội dung bài học</Label>
         <Textarea
           value={item.content}
           onChange={(event) => onChange({ ...item, content: event.target.value })}
           className="min-h-[220px] bg-background/50"
-          placeholder="Add the lesson body, markdown, or structured notes here."
+          placeholder="Thêm nội dung bài học, markdown hoặc ghi chú có cấu trúc tại đây."
         />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
         <MediaField
-          label="Audio URL"
+          label="URL âm thanh"
           value={item.audioUrl}
           accept="audio/*"
           previewType="audio"
@@ -194,7 +194,7 @@ const LessonEditorForm = ({
           onUpload={(file) => onUploadMedia("audioUrl", file)}
         />
         <MediaField
-          label="Video URL"
+          label="URL video"
           value={item.videoUrl}
           accept="video/*"
           previewType="video"
@@ -203,7 +203,7 @@ const LessonEditorForm = ({
           onUpload={(file) => onUploadMedia("videoUrl", file)}
         />
         <MediaField
-          label="Image URL"
+          label="URL hình ảnh"
           value={item.imageUrl}
           accept="image/*"
           previewType="image"
@@ -217,43 +217,44 @@ const LessonEditorForm = ({
         <div className="mb-4 flex items-center gap-2">
           <Link2 className="h-4 w-4 text-primary" />
           <div>
-            <p className="text-sm font-semibold text-foreground">Related content builder</p>
+            <p className="text-sm font-semibold text-foreground">Trình liên kết nội dung</p>
             <p className="text-sm text-muted-foreground">
-              Link vocabulary, grammar, and lesson-specific quizzes without typing raw IDs.
+              Liên kết từ vựng, ngữ pháp và bài kiểm tra riêng của bài học mà không cần nhập ID thủ
+              công.
             </p>
           </div>
         </div>
 
         <div className="mb-4 flex flex-wrap gap-2">
           <span className="rounded-full border border-border bg-background/40 px-3 py-1 text-xs text-muted-foreground">
-            {item.relatedVocabularyIds.length} vocab linked
+            {item.relatedVocabularyIds.length} từ vựng đã liên kết
           </span>
           <span className="rounded-full border border-border bg-background/40 px-3 py-1 text-xs text-muted-foreground">
-            {item.relatedGrammarIds.length} grammar linked
+            {item.relatedGrammarIds.length} ngữ pháp đã liên kết
           </span>
           <span className="rounded-full border border-border bg-background/40 px-3 py-1 text-xs text-muted-foreground">
-            {item.relatedQuizIds.length} quizzes linked
+            {item.relatedQuizIds.length} bài kiểm tra đã liên kết
           </span>
         </div>
 
         <div className="space-y-4">
           <OptionPicker
-            label="Vocabulary"
-            description="Pick the vocabulary set that should appear inside this lesson."
+            label="Từ vựng"
+            description="Chọn bộ từ vựng sẽ xuất hiện trong bài học này."
             options={contentOptions.vocabulary}
             selectedIds={item.relatedVocabularyIds}
             onToggle={(id) => toggleRelation("relatedVocabularyIds", id)}
           />
           <OptionPicker
-            label="Grammar"
-            description="Bundle the relevant grammar points into the lesson card."
+            label="Ngữ pháp"
+            description="Gói các điểm ngữ pháp liên quan vào thẻ bài học."
             options={contentOptions.grammar}
             selectedIds={item.relatedGrammarIds}
             onToggle={(id) => toggleRelation("relatedGrammarIds", id)}
           />
           <OptionPicker
-            label="Quizzes"
-            description="Choose which checkpoints should be shown in the lesson flow."
+            label="Bài kiểm tra"
+            description="Chọn các checkpoint sẽ hiển thị trong luồng bài học."
             options={contentOptions.quizzes}
             selectedIds={item.relatedQuizIds}
             onToggle={(id) => toggleRelation("relatedQuizIds", id)}
@@ -266,16 +267,16 @@ const LessonEditorForm = ({
           <div className="mb-4 flex items-center gap-2">
             <History className="h-4 w-4 text-primary" />
             <div>
-              <p className="text-sm font-semibold text-foreground">Lesson version history</p>
+              <p className="text-sm font-semibold text-foreground">Lịch sử phiên bản bài học</p>
               <p className="text-sm text-muted-foreground">
-                Each save creates a snapshot. Load a snapshot into the editor to review or restore
-                it before saving again.
+                Mỗi lần lưu sẽ tạo một bản lưu. Tải một bản lưu vào trình chỉnh sửa để xem lại hoặc
+                khôi phục trước khi lưu lại.
               </p>
             </div>
           </div>
 
           {lessonVersions.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No snapshots yet for this lesson.</p>
+            <p className="text-sm text-muted-foreground">Chưa có bản lưu nào cho bài học này.</p>
           ) : (
             <div className="space-y-3">
               {lessonVersions.map((version) => (
@@ -299,19 +300,19 @@ const LessonEditorForm = ({
                       onClick={() => onRestoreLessonVersion(version)}
                       className="rounded-xl border border-border px-3 py-2 text-sm transition hover:bg-background/60"
                     >
-                      Load snapshot
+                      Tải bản lưu
                     </button>
                   </div>
 
                   <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground">
                     <span className="rounded-full border border-border px-2 py-1">
-                      {version.relatedVocabularyIds.length} vocab
+                      {version.relatedVocabularyIds.length} từ vựng
                     </span>
                     <span className="rounded-full border border-border px-2 py-1">
-                      {version.relatedGrammarIds.length} grammar
+                      {version.relatedGrammarIds.length} ngữ pháp
                     </span>
                     <span className="rounded-full border border-border px-2 py-1">
-                      {version.relatedQuizIds.length} quizzes
+                      {version.relatedQuizIds.length} bài kiểm tra
                     </span>
                   </div>
                 </div>

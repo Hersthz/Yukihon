@@ -101,7 +101,7 @@ const DeckCardsPage = () => {
             <Layers className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">{deck.data?.title ?? "Deck"}</h1>
+            <h1 className="text-2xl font-bold">{deck.data?.title ?? "Bộ thẻ"}</h1>
             <p className="text-sm text-muted-foreground">{list.length} thẻ</p>
           </div>
         </div>

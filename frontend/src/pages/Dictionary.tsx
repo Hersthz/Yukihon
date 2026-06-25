@@ -113,10 +113,10 @@ const Dictionary = () => {
       setSavedOverrides((prev) => ({ ...prev, [word.id]: true }));
       toast({
         title: "Đã lưu",
-        description: `${word.kanji || word.hiragana} đã được thêm vào My Words.`,
+        description: `${word.kanji || word.hiragana} đã được thêm vào Sổ từ của tôi.`,
         action: (
-          <ToastAction altText="Mở My Words" onClick={() => navigate("/my-words")}>
-            Mở My Words
+          <ToastAction altText="Mở Sổ từ của tôi" onClick={() => navigate("/my-words")}>
+            Mở Sổ từ của tôi
           </ToastAction>
         ),
       });
@@ -134,7 +134,7 @@ const Dictionary = () => {
     if (wordSaved(word.id)) {
       toast({
         title: "Đã có trong sổ tay",
-        description: `${word.kanji || word.hiragana} đang nằm trong My Words rồi.`,
+        description: `${word.kanji || word.hiragana} đang nằm trong Sổ từ của tôi rồi.`,
       });
       return;
     }
@@ -172,7 +172,7 @@ const Dictionary = () => {
           icon={<BookOpen className="h-6 w-6 text-sky-600" />}
           title="Tra cứu"
           description="Giữ giao diện gọn, nhìn được nhiều kết quả hơn và mở nhanh phần chi tiết khi cần."
-          eyebrow="Dictionary"
+          eyebrow="Từ điển"
           action={
             <Button
               className="rounded-2xl bg-sky-500 text-white hover:bg-sky-400"

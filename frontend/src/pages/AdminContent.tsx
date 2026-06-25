@@ -152,8 +152,8 @@ const AdminContent = () => {
   useEffect(() => {
     if (contentQueries.some((query) => query.isError)) {
       toast({
-        title: "Load failed",
-        description: "Could not load content management data.",
+        title: "Tải thất bại",
+        description: "Không tải được dữ liệu quản lý nội dung.",
         variant: "destructive",
       });
     }
@@ -178,23 +178,23 @@ const AdminContent = () => {
   useEffect(() => {
     if (lessonVersionsQuery.isError) {
       toast({
-        title: "Version history unavailable",
-        description: "Could not load lesson snapshots right now.",
+        title: "Không có lịch sử phiên bản",
+        description: "Hiện không tải được các bản lưu của bài học.",
         variant: "destructive",
       });
     }
   }, [lessonVersionsQuery.isError, toast]);
 
   const currentTabLabel = useMemo(
-    () => TABS.find((tab) => tab.value === activeTab)?.label ?? "Content",
+    () => TABS.find((tab) => tab.value === activeTab)?.label ?? "Nội dung",
     [activeTab]
   );
 
   const singularLabels: Record<AdminTab, string> = {
-    lessons: "Lesson",
-    vocabulary: "Vocabulary item",
-    grammar: "Grammar item",
-    quizzes: "Quiz",
+    lessons: "Bài học",
+    vocabulary: "Mục từ vựng",
+    grammar: "Mục ngữ pháp",
+    quizzes: "Bài kiểm tra",
   };
 
   const currentData = useMemo(() => {
@@ -281,13 +281,13 @@ const AdminContent = () => {
       }
     },
     onSuccess: () => {
-      toast({ title: "Deleted", description: `${currentTabLabel} item deleted.` });
+      toast({ title: "Đã xóa", description: `Đã xóa mục ${currentTabLabel}.` });
       queryClient.invalidateQueries({ queryKey: ["admin-content"] });
     },
     onError: () => {
       toast({
-        title: "Delete failed",
-        description: "Could not delete this item.",
+        title: "Xóa thất bại",
+        description: "Không xóa được mục này.",
         variant: "destructive",
       });
     },
@@ -333,15 +333,15 @@ const AdminContent = () => {
     try {
       setSaving(true);
       await saveItem(activeTab, editItem);
-      toast({ title: "Saved", description: `${currentTabLabel} item saved successfully.` });
+      toast({ title: "Đã lưu", description: `Đã lưu mục ${currentTabLabel} thành công.` });
       setDialogOpen(false);
       setEditItem(null);
       setVersionsLessonId(null);
       await loadContent();
     } catch {
       toast({
-        title: "Save failed",
-        description: "Please review the form and try again.",
+        title: "Lưu thất bại",
+        description: "Vui lòng kiểm tra lại biểu mẫu và thử lại.",
         variant: "destructive",
       });
     } finally {
@@ -354,14 +354,14 @@ const AdminContent = () => {
       try {
         const result = await adminApi.uploadMedia(file);
         toast({
-          title: "Upload complete",
-          description: `${file.name} is now available in the CMS.`,
+          title: "Tải lên hoàn tất",
+          description: `${file.name} đã có sẵn trong CMS.`,
         });
         return result as MediaUploadResult;
       } catch {
         toast({
-          title: "Upload failed",
-          description: "Could not upload this media file.",
+          title: "Tải lên thất bại",
+          description: "Không tải lên được tệp media này.",
           variant: "destructive",
         });
         throw new Error("Upload failed");
@@ -390,8 +390,8 @@ const AdminContent = () => {
       } satisfies Lesson);
 
       toast({
-        title: "Snapshot loaded",
-        description: `Version ${version.versionNumber} is now loaded in the editor. Save to create a new revision.`,
+        title: "Đã tải bản lưu",
+        description: `Phiên bản ${version.versionNumber} đã được tải vào trình chỉnh sửa. Lưu để tạo bản sửa đổi mới.`,
       });
     },
     [toast]
@@ -425,8 +425,8 @@ const AdminContent = () => {
 
         if (items.length === 0) {
           toast({
-            title: "No rows imported",
-            description: "The CSV did not contain any valid data rows.",
+            title: "Không nhập được dòng nào",
+            description: "Tệp CSV không chứa dòng dữ liệu hợp lệ nào.",
             variant: "destructive",
           });
           return;
@@ -439,17 +439,17 @@ const AdminContent = () => {
         await loadContent();
 
         toast({
-          title: "CSV import finished",
+          title: "Hoàn tất nhập CSV",
           description:
             failedCount > 0
-              ? `${successCount} item(s) imported, ${failedCount} failed.`
-              : `${successCount} item(s) imported successfully.`,
+              ? `Đã nhập ${successCount} mục, ${failedCount} mục thất bại.`
+              : `Đã nhập thành công ${successCount} mục.`,
           variant: failedCount > 0 ? "destructive" : "default",
         });
       } catch {
         toast({
-          title: "Import failed",
-          description: "Could not parse or import this CSV file.",
+          title: "Nhập thất bại",
+          description: "Không phân tích hoặc nhập được tệp CSV này.",
           variant: "destructive",
         });
       } finally {
@@ -466,28 +466,28 @@ const AdminContent = () => {
         columns: lessonColumns,
         data: filteredData as Lesson[],
         searchFields: ["title", "category", "status"],
-        title: "Lessons",
+        title: "Bài học",
         icon: BookOpen,
       },
       vocabulary: {
         columns: vocabColumns,
         data: filteredData as VocabItem[],
         searchFields: ["kanji", "hiragana", "meaning", "wordType"],
-        title: "Vocabulary",
+        title: "Từ vựng",
         icon: PenTool,
       },
       grammar: {
         columns: grammarColumns,
         data: filteredData as GrammarItem[],
         searchFields: ["title", "pattern", "usage"],
-        title: "Grammar",
+        title: "Ngữ pháp",
         icon: PenTool,
       },
       quizzes: {
         columns: quizColumns,
         data: filteredData as QuizItem[],
         searchFields: ["title", "question", "quizType", "difficultyLevel"],
-        title: "Quizzes",
+        title: "Bài kiểm tra",
         icon: HelpCircle,
       },
     }),
@@ -517,11 +517,11 @@ const AdminContent = () => {
               </div>
               <div>
                 <h1 className="bg-gradient-to-r from-red-300 via-orange-300 to-amber-300 bg-clip-text text-4xl font-bold text-transparent">
-                  Learning Content CMS
+                  CMS nội dung học tập
                 </h1>
                 <p className="text-muted-foreground">
-                  Production-ready workflow for lesson publishing, CSV import, media upload, linked
-                  learning assets, and revision history.
+                  Quy trình sẵn sàng vận hành cho xuất bản bài học, nhập CSV, tải media, liên kết
+                  tài nguyên học tập và lịch sử sửa đổi.
                 </p>
               </div>
             </div>
@@ -533,7 +533,7 @@ const AdminContent = () => {
                 className="border-border/70 bg-card/70"
               >
                 <RefreshCw className="mr-2 h-4 w-4" />
-                Refresh
+                Làm mới
               </Button>
               <Button
                 variant="outline"
@@ -541,7 +541,7 @@ const AdminContent = () => {
                 className="border-border/70 bg-card/70"
               >
                 <Download className="mr-2 h-4 w-4" />
-                CSV Template
+                Mẫu CSV
               </Button>
               <Button
                 variant="outline"
@@ -550,11 +550,11 @@ const AdminContent = () => {
                 className="border-border/70 bg-card/70"
               >
                 <FileUp className="mr-2 h-4 w-4" />
-                {importing ? "Importing..." : "Import CSV"}
+                {importing ? "Đang nhập..." : "Nhập CSV"}
               </Button>
               <Button onClick={() => void openEditor(activeTab)}>
                 <Plus className="mr-2 h-4 w-4" />
-                New {singularLabels[activeTab]}
+                Thêm {singularLabels[activeTab]}
               </Button>
             </div>
           </div>
@@ -563,27 +563,27 @@ const AdminContent = () => {
         <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {[
             {
-              label: "Total Content",
+              label: "Tổng nội dung",
               value: overview?.totalContentItems ?? 0,
-              hint: "All content types combined",
+              hint: "Tổng hợp tất cả loại nội dung",
               icon: Layers3,
             },
             {
-              label: "Lessons",
+              label: "Bài học",
               value: overview?.totalLessons ?? 0,
-              hint: `${overview?.publishedLessons ?? 0} published · ${overview?.reviewLessons ?? 0} in review`,
+              hint: `${overview?.publishedLessons ?? 0} đã xuất bản · ${overview?.reviewLessons ?? 0} đang chờ duyệt`,
               icon: BookOpen,
             },
             {
-              label: "Vocabulary + Grammar",
+              label: "Từ vựng + Ngữ pháp",
               value: (overview?.totalVocabulary ?? 0) + (overview?.totalGrammar ?? 0),
-              hint: `${overview?.totalVocabulary ?? 0} vocab · ${overview?.totalGrammar ?? 0} grammar`,
+              hint: `${overview?.totalVocabulary ?? 0} từ vựng · ${overview?.totalGrammar ?? 0} ngữ pháp`,
               icon: PenTool,
             },
             {
-              label: "Quizzes",
+              label: "Bài kiểm tra",
               value: overview?.totalQuizzes ?? 0,
-              hint: "Lesson checkpoints and quiz bank",
+              hint: "Checkpoint bài học và ngân hàng câu hỏi",
               icon: HelpCircle,
             },
           ].map((card) => {
@@ -612,12 +612,12 @@ const AdminContent = () => {
         <div className="mb-6 rounded-3xl border border-border/50 bg-card/60 p-5 backdrop-blur">
           <div className="mb-4 flex items-center gap-2">
             <Filter className="h-4 w-4 text-primary" />
-            <h2 className="text-lg font-semibold text-foreground">CMS Filters</h2>
+            <h2 className="text-lg font-semibold text-foreground">Bộ lọc CMS</h2>
           </div>
 
           <div className="grid gap-4 lg:grid-cols-[220px_220px_minmax(0,1fr)]">
             <div>
-              <p className="mb-2 text-sm text-muted-foreground">JLPT level</p>
+              <p className="mb-2 text-sm text-muted-foreground">Cấp độ JLPT</p>
               <Select value={levelFilter} onValueChange={setLevelFilter}>
                 <SelectTrigger className="bg-background/60">
                   <SelectValue />
@@ -633,7 +633,7 @@ const AdminContent = () => {
             </div>
 
             <div>
-              <p className="mb-2 text-sm text-muted-foreground">Lesson status</p>
+              <p className="mb-2 text-sm text-muted-foreground">Trạng thái bài học</p>
               <Select
                 value={lessonStatusFilter}
                 onValueChange={setLessonStatusFilter}
@@ -643,7 +643,7 @@ const AdminContent = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ALL">ALL</SelectItem>
+                  <SelectItem value="ALL">Tất cả</SelectItem>
                   {LESSON_STATUSES.map((status) => (
                     <SelectItem key={status} value={status}>
                       {status}
@@ -688,12 +688,12 @@ const AdminContent = () => {
             <TabsContent key={tab} value={tab} className="space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-border/50 bg-card/60 p-4 backdrop-blur">
                 <div>
-                  <p className="text-sm text-muted-foreground">Current view</p>
+                  <p className="text-sm text-muted-foreground">Đang xem</p>
                   <h3 className="text-xl font-semibold text-foreground">
                     {tableConfig[tab].title}
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    Showing {tableConfig[tab].data.length} item(s) after filters.
+                    Hiển thị {tableConfig[tab].data.length} mục sau khi lọc.
                   </p>
                 </div>
 
@@ -704,7 +704,7 @@ const AdminContent = () => {
                     className="border-border/70 bg-card/70"
                   >
                     <Download className="mr-2 h-4 w-4" />
-                    Template
+                    Mẫu
                   </Button>
                   <Button
                     variant="outline"
@@ -713,11 +713,11 @@ const AdminContent = () => {
                     className="border-border/70 bg-card/70"
                   >
                     <FileUp className="mr-2 h-4 w-4" />
-                    Import CSV
+                    Nhập CSV
                   </Button>
                   <Button onClick={() => void openEditor(tab)}>
                     <Plus className="mr-2 h-4 w-4" />
-                    New {singularLabels[tab]}
+                    Thêm {singularLabels[tab]}
                   </Button>
                 </div>
               </div>
@@ -731,7 +731,7 @@ const AdminContent = () => {
                 pageSize={8}
                 searchFields={tableConfig[tab].searchFields}
                 title={tableConfig[tab].title}
-                emptyMessage="No content matches the current filters."
+                emptyMessage="Không có nội dung nào khớp với bộ lọc hiện tại."
               />
             </TabsContent>
           ))}
@@ -750,7 +750,7 @@ const AdminContent = () => {
           <DialogContent className="max-h-[90vh] max-w-5xl overflow-y-auto bg-card/95 backdrop-blur">
             <DialogHeader>
               <DialogTitle>
-                {editItem?.id ? "Edit" : "Create"} {singularLabels[activeTab]}
+                {editItem?.id ? "Sửa" : "Tạo"} {singularLabels[activeTab]}
               </DialogTitle>
             </DialogHeader>
 
@@ -775,7 +775,7 @@ const AdminContent = () => {
                   setVersionsLessonId(null);
                 }}
               >
-                Cancel
+                Hủy
               </Button>
               <Button onClick={() => void handleSave()} disabled={saving || !editItem}>
                 {saving ? (
@@ -783,7 +783,7 @@ const AdminContent = () => {
                 ) : (
                   <Save className="mr-2 h-4 w-4" />
                 )}
-                Save
+                Lưu
               </Button>
             </DialogFooter>
           </DialogContent>

@@ -65,12 +65,12 @@ const normalizeAnswer = (value?: string) => (value || "").trim().toLowerCase();
 
 const formatAttemptTime = (value?: string) => {
   if (!value) {
-    return "Just now";
+    return "Vừa xong";
   }
 
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
-    return "Just now";
+    return "Vừa xong";
   }
 
   return new Intl.DateTimeFormat("vi-VN", {
@@ -83,7 +83,7 @@ const formatAttemptTime = (value?: string) => {
 
 const formatPattern = (value?: string) => {
   if (!value) {
-    return "Clean";
+    return "Không lỗi";
   }
 
   return value
@@ -100,7 +100,7 @@ const formatSessionMode = (value?: string) => {
     case "QUICK":
       return "Luyện nhanh";
     default:
-      return value || "Session";
+      return value || "Phiên";
   }
 };
 
@@ -304,9 +304,8 @@ const Quiz = () => {
     },
     onError: () => {
       toast({
-        title: "KhÃ´ng thá»ƒ lÆ°u phiÃªn quiz",
-        description:
-          "Káº¿t quáº£ cÃ¢u váº«n Ä‘Æ°á»£c lÆ°u, nhÆ°ng summary phiÃªn chÆ°a Ä‘Æ°á»£c ghi láº¡i.",
+        title: "Không thể lưu phiên trắc nghiệm",
+        description: "Kết quả từng câu vẫn được lưu, nhưng tổng kết phiên chưa được ghi lại.",
         variant: "destructive",
       });
     },
@@ -412,9 +411,9 @@ const Quiz = () => {
       <div className="mx-auto max-w-[1380px]">
         <PageHeader
           icon={<Zap className="h-6 w-6 text-amber-600" />}
-          title="Quiz"
+          title="Trắc nghiệm"
           description="Chuyển về dạng danh mục gọn hơn để bạn lọc nhanh và nhìn nhiều bộ quiz trong một lượt."
-          eyebrow="Practice"
+          eyebrow="Luyện tập"
           action={
             <Button
               className="rounded-2xl bg-amber-500 text-white hover:bg-amber-400"
@@ -447,7 +446,7 @@ const Quiz = () => {
                 : "Bắt đầu một quiz để ghi nhận nhịp làm bài hiện tại"
             }
             icon={<Target className="h-4 w-4 text-violet-500" />}
-            label="Session accuracy"
+            label="Độ chính xác lượt này"
             value={sessionAccuracy == null ? "--" : `${sessionAccuracy}%`}
           />
         </div>
@@ -456,11 +455,11 @@ const Quiz = () => {
           <PageSection
             className="mb-4"
             title="AI Mistake DNA"
-            description="Read the repeated weak spots behind your quiz history before jumping into the next set."
+            description="Xem những điểm yếu lặp lại trong lịch sử trắc nghiệm của bạn trước khi bắt đầu bộ tiếp theo."
             action={
               <Link to="/mistake-dna">
                 <Button className="rounded-2xl bg-rose-500 text-white hover:bg-rose-400">
-                  Open profile
+                  Mở hồ sơ
                 </Button>
               </Link>
             }
@@ -474,24 +473,24 @@ const Quiz = () => {
               </div>
               <div className="rounded-[22px] border border-border bg-background px-4 py-4">
                 <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-                  Quiz accuracy
+                  Độ chính xác trắc nghiệm
                 </p>
                 <p className="mt-2 text-3xl font-semibold text-foreground">
                   {mistakeDna.averageQuizAccuracy}%
                 </p>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Average across recent checkpoint attempts
+                  Trung bình qua các lần làm gần đây
                 </p>
               </div>
               <div className="rounded-[22px] border border-border bg-background px-4 py-4">
                 <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-                  Risk score
+                  Điểm rủi ro
                 </p>
                 <p className="mt-2 text-3xl font-semibold text-foreground">
                   {mistakeDna.overallRiskScore}%
                 </p>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Mixes quiz slips, open lessons, and due reviews
+                  Tổng hợp lỗi trắc nghiệm, bài học dang dở và phần ôn đến hạn
                 </p>
               </div>
             </div>
@@ -623,7 +622,7 @@ const Quiz = () => {
                     {session.correctCount}/{session.totalQuestions}
                   </p>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    {Math.round(session.accuracyRate)}% accuracy
+                    {Math.round(session.accuracyRate)}% chính xác
                   </p>
                   <p className="mt-3 text-xs text-muted-foreground">
                     Pattern:{" "}
@@ -846,7 +845,7 @@ const Quiz = () => {
 
         <PageSection
           className="mb-4"
-          title="Quiz history"
+          title="Lịch sử trắc nghiệm"
           description="5 lần làm gần nhất, gồm đúng/sai, pattern lỗi và thời điểm làm bài."
           action={
             <div className="flex flex-wrap gap-2">
@@ -932,7 +931,7 @@ const Quiz = () => {
                       {quizTitle}
                     </p>
                     <p className="mt-2 truncate text-xs text-muted-foreground">
-                      Answer:{" "}
+                      Đáp án:{" "}
                       <span className="font-semibold text-foreground">{attempt.answer}</span>
                     </p>
                     <p className="mt-2 text-xs text-muted-foreground">

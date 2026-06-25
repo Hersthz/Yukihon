@@ -46,10 +46,10 @@ interface NotebookSectionProps {
 }
 
 const sourceOptions: Array<{ value: WordSourceFilter; label: string }> = [
-  { value: "ALL", label: "Tat ca" },
-  { value: "DICTIONARY", label: "Dictionary" },
-  { value: "TRANSLATION", label: "Translation" },
-  { value: "OTHER", label: "Khac" },
+  { value: "ALL", label: "Tất cả" },
+  { value: "DICTIONARY", label: "Từ điển" },
+  { value: "TRANSLATION", label: "Dịch" },
+  { value: "OTHER", label: "Khác" },
 ];
 
 const NotebookSection = ({
@@ -75,8 +75,8 @@ const NotebookSection = ({
   <>
     <PageSection
       className="mb-4"
-      title="Notebook filters"
-      description="Van giu so tay de ban tim nhanh, note, xoa hoac xem lich review cua tung muc."
+      title="Bộ lọc sổ tay"
+      description="Vẫn giữ sổ tay để bạn tìm nhanh, ghi chú, xóa hoặc xem lịch ôn tập của từng mục."
     >
       <div className="mb-3 flex flex-wrap gap-2">
         {sourceOptions.map((option) => (
@@ -103,7 +103,7 @@ const NotebookSection = ({
           <Input
             className="h-11 rounded-2xl border-border bg-card pl-11 text-foreground placeholder:text-muted-foreground"
             onChange={(event) => onSearchChange(event.target.value)}
-            placeholder="Tim theo kanji, hiragana, romaji hoac nghia"
+            placeholder="Tìm theo kanji, hiragana, romaji hoặc nghĩa"
             value={search}
           />
         </div>
@@ -114,10 +114,10 @@ const NotebookSection = ({
         >
           <SelectTrigger className="h-11 rounded-2xl border-border bg-card text-foreground/80">
             <Folder className="mr-2 h-4 w-4 text-muted-foreground" />
-            <SelectValue placeholder="Folder" />
+            <SelectValue placeholder="Thư mục" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Tat ca folder</SelectItem>
+            <SelectItem value="all">Tất cả thư mục</SelectItem>
             {stats.folders.map((folder) => (
               <SelectItem key={folder} value={folder}>
                 {folder}
@@ -131,20 +131,20 @@ const NotebookSection = ({
           value={filterMastered || "all"}
         >
           <SelectTrigger className="h-11 rounded-2xl border-border bg-card text-foreground/80">
-            <SelectValue placeholder="Trang thai" />
+            <SelectValue placeholder="Trạng thái" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Tat ca</SelectItem>
-            <SelectItem value="true">Da thuoc</SelectItem>
-            <SelectItem value="false">Chua thuoc</SelectItem>
+            <SelectItem value="all">Tất cả</SelectItem>
+            <SelectItem value="true">Đã thuộc</SelectItem>
+            <SelectItem value="false">Chưa thuộc</SelectItem>
           </SelectContent>
         </Select>
       </div>
     </PageSection>
 
     <PageSection
-      title="So tay ca nhan"
-      description="Moi the giu ca thong tin notebook va SRS: next review, interval, note va trang thai nho."
+      title="Sổ tay cá nhân"
+      description="Mỗi thẻ giữ cả thông tin sổ tay và SRS: lần ôn kế, interval, ghi chú và trạng thái nhớ."
     >
       {loading ? (
         <div className="flex items-center justify-center py-20">
@@ -152,14 +152,14 @@ const NotebookSection = ({
         </div>
       ) : words.length === 0 ? (
         <EmptyState
-          description="Hay luu tu tu dictionary hoac bai hoc de bat dau tao bo review."
+          description="Hãy lưu từ từ từ điển hoặc bài học để bắt đầu tạo bộ ôn tập."
           icon={<BookmarkPlus className="h-6 w-6" />}
-          title="Notebook dang trong"
+          title="Sổ tay đang trống"
         />
       ) : (
         <>
           <div className="mb-3 rounded-[18px] border border-emerald-200 bg-emerald-50/70 px-4 py-3 text-sm text-emerald-900">
-            Dang hien thi {words.length} muc trong notebook voi bo loc hien tai.
+            Đang hiển thị {words.length} mục trong sổ tay với bộ lọc hiện tại.
           </div>
 
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -201,7 +201,7 @@ const NotebookSection = ({
                   <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                     <div className="rounded-[16px] border border-border bg-muted/40 p-3">
                       <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
-                        Next review
+                        Lần ôn kế
                       </p>
                       <p className="mt-2 font-medium text-foreground">
                         {formatAbsoluteDate(word.nextReviewAt)}
@@ -212,7 +212,7 @@ const NotebookSection = ({
                         Interval
                       </p>
                       <p className="mt-2 font-medium text-foreground">
-                        {word.reviewIntervalDays} ngay
+                        {word.reviewIntervalDays} ngày
                       </p>
                     </div>
                   </div>
@@ -221,10 +221,10 @@ const NotebookSection = ({
                     <span>{word.studyFocus}</span>
                     <span>·</span>
                     <span>
-                      {word.dueForReview ? "Dang den han" : formatRelativeReview(word.nextReviewAt)}
+                      {word.dueForReview ? "Đang đến hạn" : formatRelativeReview(word.nextReviewAt)}
                     </span>
                     <span>·</span>
-                    <span>{word.mastered ? "Da thuoc" : "Dang hoc"}</span>
+                    <span>{word.mastered ? "Đã thuộc" : "Đang học"}</span>
                   </div>
 
                   {editingNote === word.id ? (
@@ -233,7 +233,7 @@ const NotebookSection = ({
                         className="h-10 rounded-xl border-border bg-card text-sm text-foreground"
                         onChange={(event) => onNoteTextChange(event.target.value)}
                         onKeyDown={(event) => event.key === "Enter" && onSaveNote(word.id)}
-                        placeholder="Them mot ghi chu ngan"
+                        placeholder="Thêm một ghi chú ngắn"
                         value={noteText}
                       />
                       <Button
@@ -241,7 +241,7 @@ const NotebookSection = ({
                         onClick={() => onSaveNote(word.id)}
                         size="sm"
                       >
-                        Luu
+                        Lưu
                       </Button>
                     </div>
                   ) : word.personalNote ? (
@@ -250,7 +250,7 @@ const NotebookSection = ({
                         <StickyNote className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
                         <div className="min-w-0 flex-1">
                           <p className="text-xs uppercase tracking-[0.18em] text-amber-700">
-                            Ghi chu
+                            Ghi chú
                           </p>
                           <p className="mt-1 text-sm text-amber-900">{word.personalNote}</p>
                         </div>
@@ -281,7 +281,7 @@ const NotebookSection = ({
                       ) : (
                         <Star className="mr-1 h-4 w-4" />
                       )}
-                      {word.mastered ? "Bo mastered" : "Mark mastered"}
+                      {word.mastered ? "Bỏ đã thuộc" : "Đánh dấu đã thuộc"}
                     </Button>
 
                     {!word.personalNote ? (
@@ -292,7 +292,7 @@ const NotebookSection = ({
                         variant="outline"
                       >
                         <StickyNote className="mr-1 h-4 w-4" />
-                        Ghi chu
+                        Ghi chú
                       </Button>
                     ) : null}
 

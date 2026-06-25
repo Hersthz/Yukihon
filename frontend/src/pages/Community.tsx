@@ -279,16 +279,16 @@ const Community = () => {
       <div className="mx-auto max-w-[1480px]">
         <PageHeader
           icon={<Users className="h-6 w-6 text-pink-600" />}
-          title="Community 2.0"
+          title="Cộng đồng 2.0"
           description="Feed da co title, tags, bookmark, search, leaderboard va bo loc JLPT de cac cuoc tro chuyen huu ich hon."
-          eyebrow="Community"
+          eyebrow="Cộng đồng"
           action={
             <Button
               className="rounded-2xl bg-pink-500 text-white hover:bg-pink-400"
               onClick={() => setShowCreatePost((prev) => !prev)}
             >
               <Plus className="mr-2 h-4 w-4" />
-              Dang bai
+              Đăng bài
             </Button>
           }
         />
@@ -297,25 +297,25 @@ const Community = () => {
           <MetricCard
             hint="Tong bai viet"
             icon={<MessageSquare className="h-4 w-4 text-sky-500" />}
-            label="Posts"
+            label="Bài viết"
             value={stats?.totalPosts ?? posts.length}
           />
           <MetricCard
             hint="Binh luan toan cong dong"
             icon={<MessageCircle className="h-4 w-4 text-violet-500" />}
-            label="Comments"
+            label="Bình luận"
             value={stats?.totalComments ?? 0}
           />
           <MetricCard
             hint="Nguoi tham gia"
             icon={<Users className="h-4 w-4 text-emerald-500" />}
-            label="Contributors"
+            label="Người đóng góp"
             value={stats?.totalContributors ?? 0}
           />
           <MetricCard
             hint="Bai moi 7 ngay"
             icon={<Trophy className="h-4 w-4 text-amber-500" />}
-            label="This week"
+            label="Tuần này"
             value={stats?.postsThisWeek ?? 0}
           />
         </div>

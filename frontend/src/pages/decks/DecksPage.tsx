@@ -116,7 +116,7 @@ const DecksPage = () => {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-              Library
+              Thư viện
             </p>
             <h1 className="flex items-center gap-2 text-2xl font-bold">
               <BookOpen className="h-6 w-6 text-primary" /> Bộ thẻ của tôi

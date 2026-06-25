@@ -44,20 +44,20 @@ const CommunityComposer = ({
   onSubmit,
 }: CommunityComposerProps) => (
   <PageSection
-    title="Tao bai viet moi"
-    description="Them title va tags de feed co cau truc hon va de tim lai hon."
+    title="Tạo bài viết mới"
+    description="Thêm tiêu đề và thẻ để feed có cấu trúc hơn và dễ tìm lại hơn."
   >
     <div className="space-y-3">
       <Input
         className="h-11 rounded-2xl border-border bg-card text-foreground placeholder:text-muted-foreground"
         onChange={(event) => onTitleChange(event.target.value)}
-        placeholder="Title ngan gon cho bai viet"
+        placeholder="Tiêu đề ngắn gọn cho bài viết"
         value={newTitle}
       />
       <Textarea
         className="min-h-[140px] rounded-[20px] border-border bg-card text-foreground placeholder:text-muted-foreground"
         onChange={(event) => onContentChange(event.target.value)}
-        placeholder="Ban dang muon chia se dieu gi ve viec hoc tieng Nhat?"
+        placeholder="Bạn đang muốn chia sẻ điều gì về việc học tiếng Nhật?"
         value={newContent}
       />
       <div className="grid gap-3 md:grid-cols-4">
@@ -79,7 +79,7 @@ const CommunityComposer = ({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="none">Khong JLPT</SelectItem>
+            <SelectItem value="none">Không JLPT</SelectItem>
             {["N5", "N4", "N3", "N2", "N1"].map((level) => (
               <SelectItem key={level} value={level}>
                 {level}
@@ -101,7 +101,7 @@ const CommunityComposer = ({
             onClick={onCancel}
             variant="outline"
           >
-            Huy
+            Hủy
           </Button>
           <Button
             className="flex-1 rounded-2xl bg-pink-500 text-white hover:bg-pink-400"

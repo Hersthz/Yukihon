@@ -26,29 +26,35 @@ const COURSE_ALIASES: Record<string, string> = {
 
 const COURSE_META: Record<string, { title: string; description: string }> = {
   N5: {
-    title: "N5 Foundations",
+    title: "Nền tảng N5",
     description:
       "Khởi động với các chủ đề nền tảng như chào hỏi, mẫu câu cơ bản và từ vựng thiết yếu.",
   },
   N4: {
-    title: "N4 Daily Conversations",
+    title: "Giao tiếp hằng ngày N4",
     description:
       "Tập trung vào các mẫu giao tiếp đời thường, giúp bạn nhìn rõ đường tiến bộ theo từng bài cụ thể.",
   },
   N3: {
-    title: "N3 Building Fluency",
+    title: "Xây dựng độ trôi chảy N3",
     description:
       "Các bài trung cấp thiên về diễn đạt tự nhiên, ý kiến cá nhân và đọc hiểu văn bản dài hơn.",
   },
   N2: {
-    title: "N2 Professional Japanese",
+    title: "Tiếng Nhật chuyên nghiệp N2",
     description: "Nội dung nâng cao hơn cho công việc, tin tức, đọc hiểu và giao tiếp chính xác.",
   },
   N1: {
-    title: "N1 Complete Mastery",
+    title: "Thành thạo toàn diện N1",
     description:
       "Lộ trình chuyên sâu cho sắc thái nghĩa, cấu trúc khó và khả năng đọc hiểu tinh tế.",
   },
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  COMPLETED: "Hoàn thành",
+  IN_PROGRESS: "Đang học",
+  NOT_STARTED: "Chưa bắt đầu",
 };
 
 const normalizeCourseLevel = (value?: string) => {
@@ -93,7 +99,7 @@ const CourseDetail = () => {
               Quay lại khóa học
             </Button>
           }
-          eyebrow="Course Detail"
+          eyebrow="Chi tiết khóa học"
           icon={<BookOpen className="h-6 w-6 text-sky-600" />}
           title={meta.title}
           description={meta.description}
@@ -195,7 +201,10 @@ const CourseDetail = () => {
                               <span>20 phút</span>
                               {lesson.category && <span>{lesson.category}</span>}
                               {progressItem?.status && (
-                                <span>{progressItem.status.replace("_", " ").toLowerCase()}</span>
+                                <span>
+                                  {STATUS_LABELS[progressItem.status] ??
+                                    progressItem.status.replace("_", " ").toLowerCase()}
+                                </span>
                               )}
                             </div>
                             {lesson.description && (

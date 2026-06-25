@@ -7,29 +7,36 @@ export const ratingButtonClass: Record<ReviewRating, string> = {
   EASY: "bg-emerald-500 text-white hover:bg-emerald-400",
 };
 
+export const ratingLabel: Record<ReviewRating, string> = {
+  AGAIN: "Lại",
+  HARD: "Khó",
+  GOOD: "Tốt",
+  EASY: "Dễ",
+};
+
 export const formatRelativeReview = (value?: string) => {
-  if (!value) return "Review ngay";
+  if (!value) return "Ôn ngay";
 
   const reviewDate = new Date(value);
   if (Number.isNaN(reviewDate.getTime())) {
-    return "Review ngay";
+    return "Ôn ngay";
   }
 
   const now = new Date();
   const diff = reviewDate.getTime() - now.getTime();
   const diffDays = Math.ceil(diff / (1000 * 60 * 60 * 24));
 
-  if (diffDays <= 0) return "Den han hom nay";
-  if (diffDays === 1) return "Den han ngay mai";
-  return `${diffDays} ngay nua`;
+  if (diffDays <= 0) return "Đến hạn hôm nay";
+  if (diffDays === 1) return "Đến hạn ngày mai";
+  return `Còn ${diffDays} ngày`;
 };
 
 export const formatAbsoluteDate = (value?: string) => {
-  if (!value) return "Ngay";
+  if (!value) return "Ngày";
 
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
-    return "Ngay";
+    return "Ngày";
   }
 
   return date.toLocaleDateString("vi-VN");

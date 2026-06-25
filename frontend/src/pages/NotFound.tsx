@@ -10,16 +10,16 @@ const NotFound = () => {
           <AlertTriangle className="h-7 w-7" />
         </div>
         <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground">404</p>
-        <h1 className="mt-2 text-3xl font-semibold text-foreground">Khong tim thay trang</h1>
+        <h1 className="mt-2 text-3xl font-semibold text-foreground">Không tìm thấy trang</h1>
         <p className="mt-3 text-sm text-muted-foreground">
-          Duong dan ban vua mo khong ton tai hoac da duoc thay doi.
+          Đường dẫn bạn vừa mở không tồn tại hoặc đã được thay đổi.
         </p>
 
         <div className="mt-6 flex items-center justify-center">
           <Link to="/dashboard">
             <Button className="rounded-2xl">
               <Home className="mr-2 h-4 w-4" />
-              Ve Dashboard
+              Về trang chính
             </Button>
           </Link>
         </div>

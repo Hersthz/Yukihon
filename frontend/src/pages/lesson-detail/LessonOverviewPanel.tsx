@@ -32,8 +32,8 @@ const LessonOverviewPanel = ({
   onSaveNote,
 }: LessonOverviewPanelProps) => (
   <PageSection
-    title="Tong quan bai hoc"
-    description="Day la noi ban co the bat dau, tiep tuc va danh dau hoan thanh bai hoc."
+    title="Tổng quan bài học"
+    description="Đây là nơi bạn có thể bắt đầu, tiếp tục và đánh dấu hoàn thành bài học."
   >
     <div className="space-y-4">
       <div className="rounded-[20px] border border-border bg-card p-4">
@@ -54,21 +54,21 @@ const LessonOverviewPanel = ({
         </div>
         <p className="mt-4 text-sm leading-6 text-foreground/80">
           {lesson.description ||
-            "Bai hoc nay chua co mo ta ngan. Ban co the vao thang noi dung ben phai de hoc ngay."}
+            "Bài học này chưa có mô tả ngắn. Bạn có thể vào thẳng nội dung bên phải để học ngay."}
         </p>
       </div>
 
       <div className="rounded-[20px] border border-emerald-200 bg-emerald-50/70 p-4">
-        <p className="text-sm font-semibold text-emerald-800">Nhip hoc goi y</p>
+        <p className="text-sm font-semibold text-emerald-800">Nhịp học gợi ý</p>
         <p className="mt-1 text-sm text-foreground/80">
-          Bat dau bai hoc de dua no vao luong ca nhan hoa, va danh dau hoan thanh khi hoc xong de
-          dashboard cap nhat bai tiep theo.
+          Bắt đầu bài học để đưa nó vào luồng cá nhân hóa, và đánh dấu hoàn thành khi học xong để
+          dashboard cập nhật bài tiếp theo.
         </p>
       </div>
 
       {lesson.audioUrl || lesson.videoUrl || lesson.imageUrl ? (
         <div className="rounded-[20px] border border-border bg-card p-4">
-          <p className="text-sm font-semibold text-foreground">Tai nguyen di kem</p>
+          <p className="text-sm font-semibold text-foreground">Tài nguyên đi kèm</p>
           <div className="mt-3 space-y-3">
             {lesson.imageUrl ? (
               <img
@@ -90,20 +90,20 @@ const LessonOverviewPanel = ({
       ) : null}
 
       <div className="rounded-[20px] border border-border bg-card p-4">
-        <p className="text-sm font-semibold text-foreground">Ghi chu ca nhan</p>
+        <p className="text-sm font-semibold text-foreground">Ghi chú cá nhân</p>
         <Textarea
           className="mt-3 min-h-[120px] rounded-[18px] border-border bg-background/60"
           disabled={!lessonProgress}
           onChange={(event) => onNoteChange(event.target.value)}
           placeholder={
             lessonProgress
-              ? "Tom tat diem can nho, tu moi, hoac cau can on lai."
-              : "Bat dau lesson truoc de luu ghi chu hoc bai."
+              ? "Tóm tắt điểm cần nhớ, từ mới, hoặc câu cần ôn lại."
+              : "Bắt đầu bài học trước để lưu ghi chú học bài."
           }
           value={noteText}
         />
         <Button className="mt-3 rounded-2xl" disabled={!lessonProgress} onClick={onSaveNote}>
-          Luu ghi chu
+          Lưu ghi chú
         </Button>
       </div>
 
@@ -111,7 +111,7 @@ const LessonOverviewPanel = ({
         to="/my-words"
         className="block rounded-[20px] border border-amber-200 bg-amber-50/70 p-4 text-sm text-foreground/80"
       >
-        Sau khi hoc xong, ban co the quay sang so tay tu vung de review bang spaced repetition.
+        Sau khi học xong, bạn có thể quay sang sổ từ vựng để ôn tập bằng lặp lại ngắt quãng.
       </Link>
 
       {upcomingLesson ? (
@@ -119,7 +119,7 @@ const LessonOverviewPanel = ({
           to={`/lessons/${upcomingLesson.id}`}
           className="block rounded-[20px] border border-sky-200 bg-sky-50/70 p-4 text-sm text-foreground/80"
         >
-          Bai tiep theo goi y:{" "}
+          Bài tiếp theo gợi ý:{" "}
           <span className="font-semibold text-sky-700">{upcomingLesson.title}</span>
         </Link>
       ) : null}

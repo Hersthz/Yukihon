@@ -24,29 +24,30 @@ import kaorukoHappy from "@/assets/kaoruko-happy.png";
 const highlightCards = [
   {
     icon: Clock3,
-    title: "Learn at your pace",
+    title: "Học theo nhịp độ của bạn",
     description:
-      "Short lessons, quick reviews, and a calm UI that keeps sessions light instead of overwhelming.",
+      "Bài học ngắn, ôn nhanh và giao diện nhẹ nhàng giúp mỗi buổi học thoải mái thay vì quá tải.",
     color: "bg-[#ffd5cd]",
   },
   {
     icon: Brain,
-    title: "Smart review loops",
-    description: "Dictionary, vocabulary, quiz, and Mistake DNA all connect into one study flow.",
+    title: "Vòng ôn tập thông minh",
+    description:
+      "Từ điển, từ vựng, bài kiểm tra và Mistake DNA gắn kết thành một luồng học duy nhất.",
     color: "bg-[#d9f1ff]",
   },
   {
     icon: GraduationCap,
-    title: "JLPT aligned",
+    title: "Bám sát JLPT",
     description:
-      "Every area of the app now supports a clearer path from N5 foundations to higher levels.",
+      "Mọi phần của ứng dụng nay đều hỗ trợ lộ trình rõ ràng từ nền tảng N5 đến các cấp độ cao hơn.",
     color: "bg-[#e6dcff]",
   },
   {
     icon: Users,
-    title: "Community support",
+    title: "Hỗ trợ cộng đồng",
     description:
-      "Study together, ask questions quickly, and keep the social layer visible without visual clutter.",
+      "Học cùng nhau, hỏi đáp nhanh và giữ lớp tương tác xã hội luôn hiển thị mà không rối mắt.",
     color: "bg-[#d7ffd9]",
   },
 ];
@@ -54,55 +55,55 @@ const highlightCards = [
 const levelCards = [
   {
     level: "N5",
-    title: "Foundations",
-    detail: "Kana, core vocab, essential patterns",
+    title: "Nền tảng",
+    detail: "Kana, từ vựng cốt lõi, mẫu câu thiết yếu",
     color: "bg-[#d8ffe0]",
   },
   {
     level: "N4",
-    title: "Daily Japanese",
-    detail: "Everyday conversation and sentence building",
+    title: "Tiếng Nhật hằng ngày",
+    detail: "Hội thoại thường ngày và dựng câu",
     color: "bg-[#dff3ff]",
   },
   {
     level: "N3",
-    title: "Mid-level flow",
-    detail: "More natural reading, listening, and nuance",
+    title: "Mạch trung cấp",
+    detail: "Đọc, nghe tự nhiên hơn và nắm sắc thái",
     color: "bg-[#fff2c8]",
   },
   {
     level: "N2",
-    title: "Professional depth",
-    detail: "Complex structures and work-ready Japanese",
+    title: "Chiều sâu chuyên môn",
+    detail: "Cấu trúc phức tạp và tiếng Nhật sẵn sàng cho công việc",
     color: "bg-[#ffe0d2]",
   },
   {
     level: "N1",
-    title: "Mastery",
-    detail: "Advanced reading, precision, and subtle expression",
+    title: "Thành thạo",
+    detail: "Đọc nâng cao, chính xác và diễn đạt tinh tế",
     color: "bg-[#eadfff]",
   },
 ];
 
 const featurePanels = [
   {
-    title: "Dictionary and My Words move together",
+    title: "Từ điển và Từ của tôi đi cùng nhau",
     description:
-      "The redesign makes saving, reviewing, and returning to words feel like one continuous action instead of a context switch.",
+      "Thiết kế mới khiến việc lưu, ôn lại và quay về với từ vựng trở thành một thao tác liền mạch thay vì phải chuyển ngữ cảnh.",
     icon: BookOpen,
     tone: "bg-[#f0fbff]",
   },
   {
-    title: "Dashboard becomes a command center",
+    title: "Tổng quan trở thành trung tâm điều khiển",
     description:
-      "Quick stats, next lesson, study signals, and shortcuts are surfaced in a single light dashboard with strong hierarchy.",
+      "Thống kê nhanh, bài học kế tiếp, tín hiệu học tập và lối tắt được hiển thị trong một trang tổng quan sáng, phân cấp rõ ràng.",
     icon: Target,
     tone: "bg-[#f5fff2]",
   },
   {
-    title: "AI and translation stay in the same language",
+    title: "AI và dịch thuật cùng một ngôn ngữ thiết kế",
     description:
-      "The assistant, translation workspace, and grammar areas now share the same visual logic, spacing, and light palette.",
+      "Trợ lý, không gian dịch và phần ngữ pháp nay dùng chung logic hiển thị, khoảng cách và bảng màu sáng.",
     icon: Languages,
     tone: "bg-[#fff8ef]",
   },
@@ -110,22 +111,20 @@ const featurePanels = [
 
 const testimonials = [
   {
-    quote:
-      "The new layout feels lighter, faster, and much easier to scan when I only have 15 minutes to study.",
+    quote: "Bố cục mới nhẹ nhàng, nhanh hơn và dễ lướt hơn nhiều khi mình chỉ có 15 phút để học.",
     author: "Mai Anh",
-    role: "JLPT N4 learner",
+    role: "Học viên JLPT N4",
   },
   {
     quote:
-      "I can jump from dictionary to saved words to quiz review without feeling like I entered another product.",
+      "Mình có thể nhảy từ từ điển sang từ đã lưu rồi sang ôn bài kiểm tra mà không thấy như đang vào một sản phẩm khác.",
     author: "Khanh Linh",
-    role: "Self-study user",
+    role: "Người tự học",
   },
   {
-    quote:
-      "The dashboard finally feels like a real study cockpit instead of a collection of disconnected widgets.",
+    quote: "Trang tổng quan giờ thực sự như một buồng lái học tập thay vì một mớ tiện ích rời rạc.",
     author: "Tuan Hoang",
-    role: "Daily streak user",
+    role: "Người duy trì chuỗi học mỗi ngày",
   },
 ];
 
@@ -145,27 +144,27 @@ const Index = () => {
             <div>
               <div className="section-kicker mb-5">
                 <span className="h-2.5 w-2.5 rounded-full bg-primary" />
-                New light-first study experience
+                Trải nghiệm học ưu tiên giao diện sáng mới
               </div>
 
               <h1 className="display-font max-w-3xl text-[3.4rem] leading-[0.95] text-foreground sm:text-[4.6rem] lg:text-[6.2rem]">
-                Learn Japanese,
+                Học tiếng Nhật,
                 <br />
-                <span className="text-primary">Anytime,</span>
+                <span className="text-primary">Mọi lúc,</span>
                 <br />
-                Anywhere.
+                Mọi nơi.
               </h1>
 
               <p className="mt-5 max-w-2xl text-lg leading-8 text-muted-foreground">
-                Yukihon is now redesigned around a warmer, clearer light theme inspired by bold
-                educational layouts and modern productivity dashboards. Every key page follows one
-                visual language now.
+                Yukihon nay được thiết kế lại quanh một giao diện sáng ấm áp, rõ ràng hơn, lấy cảm
+                hứng từ các bố cục giáo dục nổi bật và những trang tổng quan năng suất hiện đại. Mọi
+                trang quan trọng giờ đều tuân theo một ngôn ngữ thiết kế chung.
               </p>
 
               <div className="mt-8 flex flex-col gap-4 sm:flex-row">
                 <Link to={ctaLink}>
                   <Button className="min-w-[210px] text-base">
-                    {isAuthenticated ? "Open dashboard" : "Start learning free"}
+                    {isAuthenticated ? "Mở trang tổng quan" : "Bắt đầu học miễn phí"}
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Link>
@@ -174,16 +173,16 @@ const Index = () => {
                     className="min-w-[210px] bg-secondary text-secondary-foreground hover:bg-secondary"
                     variant="secondary"
                   >
-                    Browse course paths
+                    Khám phá lộ trình khóa học
                   </Button>
                 </Link>
               </div>
 
               <div className="mt-9 flex flex-wrap gap-8">
                 {[
-                  { value: "10K+", label: "Words and lessons" },
-                  { value: "2M+", label: "Study actions" },
-                  { value: "500+", label: "Guided activities" },
+                  { value: "10K+", label: "Từ vựng và bài học" },
+                  { value: "2M+", label: "Lượt học" },
+                  { value: "500+", label: "Hoạt động có hướng dẫn" },
                 ].map((item) => (
                   <div key={item.label}>
                     <p className="text-4xl font-black tracking-tight text-foreground">
@@ -209,10 +208,10 @@ const Index = () => {
                       className="mx-auto h-56 object-contain sm:h-64"
                     />
                     <div className="mt-3 rounded-[1.2rem] bg-white/90 p-4">
-                      <p className="text-sm font-semibold text-foreground">Kaoruko is ready</p>
+                      <p className="text-sm font-semibold text-foreground">Kaoruko đã sẵn sàng</p>
                       <p className="mt-1 text-sm text-muted-foreground">
-                        Your dictionary, practice flow, and AI hints all share the same light
-                        interface now.
+                        Từ điển, luồng luyện tập và gợi ý AI của bạn nay đều dùng chung một giao
+                        diện sáng.
                       </p>
                     </div>
                   </div>
@@ -220,23 +219,23 @@ const Index = () => {
                   <div className="space-y-4">
                     <div className="rounded-[1.5rem] border border-border bg-[#f8fbf7] p-5">
                       <p className="text-sm font-bold uppercase tracking-[0.18em] text-muted-foreground">
-                        Current focus
+                        Trọng tâm hiện tại
                       </p>
                       <div className="mt-4 flex items-center gap-4">
                         <div className="flex h-14 w-14 items-center justify-center rounded-[1.2rem] bg-[#d9eff9]">
                           <BookOpen className="h-6 w-6 text-foreground" />
                         </div>
                         <div>
-                          <p className="text-2xl font-bold text-foreground">Web-style dashboard</p>
+                          <p className="text-2xl font-bold text-foreground">Tổng quan kiểu web</p>
                           <p className="text-sm text-muted-foreground">
-                            12 blocks, 4h 30m of interactive study flow
+                            12 khối, 4h 30m luồng học tương tác
                           </p>
                         </div>
                       </div>
 
                       <div className="mt-5">
                         <div className="mb-2 flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">Progress</span>
+                          <span className="text-muted-foreground">Tiến độ</span>
                           <span className="font-semibold text-primary">65%</span>
                         </div>
                         <div className="h-3 rounded-full bg-white">
@@ -244,24 +243,24 @@ const Index = () => {
                         </div>
                       </div>
 
-                      <Button className="mt-5 w-full">Continue learning</Button>
+                      <Button className="mt-5 w-full">Tiếp tục học</Button>
                     </div>
 
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div className="rounded-[1.4rem] border border-border bg-[#fff5ec] p-4">
                         <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
-                          Design system
+                          Hệ thống thiết kế
                         </p>
                         <p className="mt-3 text-lg font-semibold text-foreground">
-                          Cream, mint, peach, sky
+                          Kem, bạc hà, đào, xanh trời
                         </p>
                       </div>
                       <div className="rounded-[1.4rem] border border-border bg-[#f4f0ff] p-4">
                         <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
-                          Dashboard UI
+                          Giao diện tổng quan
                         </p>
                         <p className="mt-3 text-lg font-semibold text-foreground">
-                          Cleaner admin and creator space
+                          Không gian quản trị và sáng tạo gọn gàng hơn
                         </p>
                       </div>
                     </div>
@@ -273,7 +272,7 @@ const Index = () => {
                 <div className="flex items-center gap-2">
                   <Star className="h-4 w-4 text-[#ffb11a]" />
                   <span className="text-sm font-semibold text-foreground">
-                    Better hierarchy, less visual noise
+                    Phân cấp tốt hơn, ít nhiễu thị giác hơn
                   </span>
                 </div>
               </div>
@@ -284,12 +283,12 @@ const Index = () => {
         <section id="how-it-works" className="mx-auto mt-16 max-w-[1440px] px-4 sm:px-6">
           <div className="surface-panel-soft px-6 py-8 sm:px-8">
             <div className="text-center">
-              <span className="section-kicker">How it works</span>
-              <h2 className="section-title mt-6">One style system across every page</h2>
+              <span className="section-kicker">Cách hoạt động</span>
+              <h2 className="section-title mt-6">Một hệ thống thiết kế cho mọi trang</h2>
               <p className="mx-auto mt-4 max-w-3xl text-base leading-8 text-muted-foreground">
-                The redesign does not stop at the home page. Dashboard, dictionary, vocabulary,
-                profile, admin, and creator mode now share the same spacing rhythm, border logic,
-                and pastel accent language.
+                Việc thiết kế lại không dừng ở trang chủ. Tổng quan, từ điển, từ vựng, hồ sơ, quản
+                trị và xưởng nội dung nay đều dùng chung nhịp khoảng cách, logic viền và bảng màu
+                pastel nhấn.
               </p>
             </div>
 
@@ -312,17 +311,17 @@ const Index = () => {
         <section id="jlpt" className="mx-auto mt-16 max-w-[1440px] px-4 sm:px-6">
           <div className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
             <div className="surface-panel-soft p-6 sm:p-8">
-              <span className="section-kicker">JLPT path</span>
-              <h2 className="section-title mt-6">Clear visual steps from N5 to N1</h2>
+              <span className="section-kicker">Lộ trình JLPT</span>
+              <h2 className="section-title mt-6">Các bước trực quan rõ ràng từ N5 đến N1</h2>
               <p className="mt-4 text-base leading-8 text-muted-foreground">
-                The new UI groups lessons, progress, and recommendations so users always know what
-                to do next at their current level.
+                Giao diện mới nhóm bài học, tiến độ và gợi ý lại để người dùng luôn biết cần làm gì
+                tiếp theo ở cấp độ hiện tại.
               </p>
               <div className="mt-6 space-y-3">
                 {[
-                  "Dashboard highlights the next lesson and today's goal.",
-                  "Course pages use lighter cards with faster scanning.",
-                  "Vocabulary, grammar, quiz, and kanji follow one hierarchy.",
+                  "Trang tổng quan làm nổi bật bài học kế tiếp và mục tiêu hôm nay.",
+                  "Các trang khóa học dùng thẻ nhẹ hơn, dễ lướt nhanh hơn.",
+                  "Từ vựng, ngữ pháp, bài kiểm tra và Kanji theo cùng một phân cấp.",
                 ].map((item) => (
                   <div
                     key={item}
@@ -356,22 +355,22 @@ const Index = () => {
             <div className="surface-panel overflow-hidden p-6 sm:p-8">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <span className="section-kicker">Product system</span>
+                  <span className="section-kicker">Hệ thống sản phẩm</span>
                   <h2 className="section-title mt-6">
-                    Dashboard inspiration from modern command centers
+                    Tổng quan lấy cảm hứng từ các trung tâm điều khiển hiện đại
                   </h2>
                 </div>
                 <Badge className="rounded-full border border-primary/20 bg-[#eef9ee] px-4 py-2 text-primary hover:bg-[#eef9ee]">
-                  Light theme only
+                  Chỉ giao diện sáng
                 </Badge>
               </div>
 
               <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 {[
-                  { label: "Saved prompts", value: "150+" },
-                  { label: "AI helpers", value: "12+" },
-                  { label: "Uploaded docs", value: "89" },
-                  { label: "Study flows", value: "1.2K" },
+                  { label: "Prompt đã lưu", value: "150+" },
+                  { label: "Trợ lý AI", value: "12+" },
+                  { label: "Tài liệu đã tải lên", value: "89" },
+                  { label: "Luồng học", value: "1.2K" },
                 ].map((metric, index) => (
                   <div
                     key={metric.label}
@@ -392,29 +391,30 @@ const Index = () => {
 
               <div className="mt-6 grid gap-4 xl:grid-cols-2">
                 <div className="rounded-[1.7rem] border border-border bg-[#fbfcff] p-5">
-                  <p className="text-lg font-semibold text-foreground">Quick launch agents</p>
+                  <p className="text-lg font-semibold text-foreground">Khởi chạy nhanh trợ lý</p>
                   <div className="mt-4 rounded-[1.4rem] border border-border bg-white p-4">
                     <p className="text-sm font-semibold text-foreground">
-                      Smart Email Reply Assistant
+                      Trợ lý trả lời email thông minh
                     </p>
                     <p className="mt-2 text-sm leading-7 text-muted-foreground">
-                      A calmer card system makes dense admin and creator workflows easier to scan.
+                      Hệ thống thẻ nhẹ nhàng hơn giúp các luồng quản trị và sáng tạo dày đặc dễ lướt
+                      hơn.
                     </p>
                   </div>
                 </div>
                 <div className="rounded-[1.7rem] border border-border bg-[#fcfff7] p-5">
-                  <p className="text-lg font-semibold text-foreground">Recent activity</p>
+                  <p className="text-lg font-semibold text-foreground">Hoạt động gần đây</p>
                   <div className="mt-4 space-y-3">
                     <div className="rounded-[1.3rem] bg-[#e7efff] p-4">
-                      <p className="font-semibold text-foreground">Marketing Trends 2025</p>
+                      <p className="font-semibold text-foreground">Xu hướng Marketing 2025</p>
                       <p className="mt-2 text-sm text-muted-foreground">
-                        Readable cards, clearer tabs, and lighter spacing.
+                        Thẻ dễ đọc, tab rõ ràng và khoảng cách nhẹ hơn.
                       </p>
                     </div>
                     <div className="rounded-[1.3rem] bg-[#e8f7df] p-4">
-                      <p className="font-semibold text-foreground">Vocabulary review queue</p>
+                      <p className="font-semibold text-foreground">Hàng chờ ôn từ vựng</p>
                       <p className="mt-2 text-sm text-muted-foreground">
-                        States and actions are now visually consistent.
+                        Trạng thái và thao tác nay nhất quán về mặt hình ảnh.
                       </p>
                     </div>
                   </div>
@@ -442,10 +442,10 @@ const Index = () => {
                   </div>
                   <div>
                     <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
-                      Community signal
+                      Tín hiệu cộng đồng
                     </p>
                     <p className="text-2xl font-bold text-foreground">
-                      Chat, feed, and leaderboard feel connected now
+                      Trò chuyện, bảng tin và bảng xếp hạng nay gắn kết với nhau
                     </p>
                   </div>
                 </div>
@@ -456,8 +456,8 @@ const Index = () => {
 
         <section id="testimonials" className="mx-auto mt-16 max-w-[1440px] px-4 sm:px-6">
           <div className="text-center">
-            <span className="section-kicker">Student stories</span>
-            <h2 className="section-title mt-6">What learners notice first</h2>
+            <span className="section-kicker">Câu chuyện học viên</span>
+            <h2 className="section-title mt-6">Điều học viên cảm nhận đầu tiên</h2>
           </div>
 
           <div className="mt-10 grid gap-4 xl:grid-cols-3">
@@ -484,21 +484,21 @@ const Index = () => {
               <div>
                 <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-white/80">
                   <Sparkles className="h-3.5 w-3.5" />
-                  Ready to ship the redesign
+                  Sẵn sàng ra mắt thiết kế mới
                 </span>
                 <h2 className="display-font mt-6 text-[3rem] leading-none sm:text-[4rem]">
-                  A calmer, brighter Yukihon.
+                  Một Yukihon nhẹ nhàng và tươi sáng hơn.
                 </h2>
                 <p className="mt-4 max-w-3xl text-base leading-8 text-white/72">
-                  The visual system is now oriented around light mode, strong information hierarchy,
-                  and playful cards inspired by the references you liked.
+                  Hệ thống hình ảnh nay hướng quanh chế độ sáng, phân cấp thông tin mạnh mẽ và những
+                  thẻ vui mắt lấy cảm hứng từ các tham chiếu bạn thích.
                 </p>
               </div>
 
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Link to={ctaLink}>
                   <Button className="bg-white text-foreground hover:bg-white/92">
-                    {isAuthenticated ? "Go to dashboard" : "Create account"}
+                    {isAuthenticated ? "Đến trang tổng quan" : "Tạo tài khoản"}
                   </Button>
                 </Link>
                 <Link to="/courses">
@@ -506,7 +506,7 @@ const Index = () => {
                     className="border-white/25 bg-white/10 text-white hover:bg-white/16"
                     variant="outline"
                   >
-                    Explore course structure
+                    Khám phá cấu trúc khóa học
                   </Button>
                 </Link>
               </div>

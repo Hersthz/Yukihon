@@ -49,10 +49,10 @@ const AuthHero = ({ mode, typingKanji }: AuthHeroProps) => {
                 className="text-foreground/90 font-medium inline-block"
               >
                 {mode === "login"
-                  ? "Welcome back! I missed our study sessions together."
+                  ? "Chào mừng trở lại! Mình nhớ những buổi học cùng nhau lắm đó."
                   : mode === "register"
-                    ? "So happy to meet you. Let's start our journey to mastery."
-                    : "No worries. We will get your account access cleaned up."}
+                    ? "Rất vui được gặp bạn. Cùng bắt đầu hành trình chinh phục tiếng Nhật nào."
+                    : "Đừng lo. Mình sẽ giúp bạn lấy lại quyền truy cập tài khoản."}
               </motion.span>
             </AnimatePresence>
           </p>
@@ -75,15 +75,15 @@ const AuthHero = ({ mode, typingKanji }: AuthHeroProps) => {
 
       <div className="space-y-4">
         <h1 className="text-4xl xl:text-5xl font-extrabold leading-[1.15] tracking-tight">
-          Master Japanese
+          Chinh phục tiếng Nhật
           <br />
           <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            with Kaoruko
+            cùng Kaoruko
           </span>
         </h1>
         <p className="text-muted-foreground text-lg max-w-md leading-relaxed">
-          Your personal guide to Japanese fluency - comprehensive dictionary, JLPT practice,
-          vocabulary quizzes, and immersive exercises.
+          Người bạn đồng hành giúp bạn thành thạo tiếng Nhật — từ điển đầy đủ, luyện JLPT, trắc
+          nghiệm từ vựng và bài tập nhập vai.
         </p>
       </div>
 
@@ -102,7 +102,7 @@ const AuthHero = ({ mode, typingKanji }: AuthHeroProps) => {
           ))}
         </div>
         <span>
-          <span className="font-semibold text-foreground">50,000+</span> learners already joined
+          <span className="font-semibold text-foreground">50,000+</span> người học đã tham gia
         </span>
       </div>
     </motion.div>

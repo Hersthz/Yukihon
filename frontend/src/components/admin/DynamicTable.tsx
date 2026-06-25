@@ -54,7 +54,7 @@ const DynamicTable = ({
   searchFields = [],
   idField = "id",
   title = "Data Table",
-  emptyMessage = "No data available",
+  emptyMessage = "Chưa có dữ liệu",
 }: DynamicTableProps) => {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
@@ -152,7 +152,7 @@ const DynamicTable = ({
           <div className="relative flex-1 max-w-xs">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Search..."
+              placeholder="Tìm kiếm..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
@@ -163,7 +163,9 @@ const DynamicTable = ({
           </div>
         )}
         <span className="text-xs text-muted-foreground">
-          {total > 0 ? `${start + 1}-${Math.min(start + pageSize, total)} of ${total}` : "No data"}
+          {total > 0
+            ? `${start + 1}-${Math.min(start + pageSize, total)} trên ${total}`
+            : "Không có dữ liệu"}
         </span>
       </div>
 
@@ -199,7 +201,7 @@ const DynamicTable = ({
                     </div>
                   </TableHead>
                 ))}
-                <TableHead className="w-24 text-right">Actions</TableHead>
+                <TableHead className="w-24 text-right">Thao tác</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -256,7 +258,7 @@ const DynamicTable = ({
             <ChevronLeft className="w-4 h-4" />
           </Button>
           <span className="text-sm text-muted-foreground">
-            Page {page + 1} / {pageCount}
+            Trang {page + 1} / {pageCount}
           </span>
           <Button
             variant="outline"
@@ -274,15 +276,15 @@ const DynamicTable = ({
       <Dialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete item?</DialogTitle>
-            <DialogDescription>This action cannot be undone.</DialogDescription>
+            <DialogTitle>Xóa mục này?</DialogTitle>
+            <DialogDescription>Hành động này không thể hoàn tác.</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setDeleting(null)}>
-              Cancel
+              Hủy
             </Button>
             <Button onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
-              Delete
+              Xóa
             </Button>
           </DialogFooter>
         </DialogContent>

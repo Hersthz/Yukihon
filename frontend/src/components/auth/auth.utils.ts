@@ -25,7 +25,7 @@ export const getPasswordStrength = (password: string) => {
   return Math.min(score, 4);
 };
 
-export const strengthLabels = ["", "Weak", "Fair", "Good", "Strong"];
+export const strengthLabels = ["", "Yếu", "Trung bình", "Khá", "Mạnh"];
 export const strengthColors = [
   "",
   "bg-red-500",

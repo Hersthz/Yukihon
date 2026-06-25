@@ -53,7 +53,7 @@ const Grammar = () => {
       <div className="mx-auto max-w-[1400px]">
         <PageHeader
           icon={<Brain className="h-5 w-5 text-violet-600" />}
-          eyebrow="Grammar"
+          eyebrow="Ngữ pháp"
           title="Ngữ pháp"
           description="Quét nhanh mẫu câu theo cấp độ, ví dụ và cách dùng thực tế."
         />
