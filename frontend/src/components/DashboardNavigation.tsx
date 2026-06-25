@@ -281,8 +281,8 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
             className="flex min-w-0 items-center gap-2"
             onClick={() => setMobileOpen(false)}
           >
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#ffcdc4]">
-              <span className="display-font text-lg font-bold text-foreground">Y</span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+              <span className="display-font text-lg font-bold text-primary-foreground">Y</span>
             </div>
             <span className="display-font truncate text-lg font-bold tracking-tight text-foreground">
               Yukihon
@@ -315,7 +315,7 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
       <div className={cn("border-t border-border/70 p-2", compact && "px-2")}>
         {!compact && (
           <div className="mb-1 flex items-center gap-2.5 rounded-lg px-2 py-2">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#e6f7ff] text-sm font-bold text-foreground">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-sm font-bold text-primary">
               {userInitial}
             </div>
             <div className="min-w-0">
@@ -502,7 +502,7 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
             </Popover>
 
             <div className="flex items-center gap-2 rounded-lg border border-border/70 bg-white px-2 py-1.5">
-              <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#ffded8] text-xs font-bold text-foreground">
+              <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-xs font-bold text-primary">
                 {userInitial}
               </div>
               <span className="hidden max-w-[120px] truncate text-sm font-semibold text-foreground sm:block">
@@ -516,8 +516,8 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
       {/* Mobile top bar */}
       <div className="fixed inset-x-0 top-0 z-30 flex h-[56px] items-center justify-between border-b border-border/70 bg-white/90 px-4 backdrop-blur-xl lg:hidden">
         <div className="flex min-w-0 items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#ffcdc4]">
-            <span className="display-font text-base font-bold text-foreground">Y</span>
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary">
+            <span className="display-font text-base font-bold text-primary-foreground">Y</span>
           </div>
           <p className="truncate text-base font-semibold text-foreground">{currentTitle}</p>
         </div>

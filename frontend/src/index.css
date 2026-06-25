@@ -18,38 +18,38 @@ html {
   :root,
   .light,
   .dark {
-    --background: 34 56% 96%;
-    --foreground: 221 29% 20%;
+    --background: 210 40% 98%;
+    --foreground: 215 40% 18%;
 
     --card: 0 0% 100%;
-    --card-foreground: 221 29% 20%;
+    --card-foreground: 215 40% 18%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 221 29% 20%;
+    --popover-foreground: 215 40% 18%;
 
-    --primary: 140 63% 47%;
+    --primary: 213 88% 54%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 197 61% 84%;
-    --secondary-foreground: 221 29% 20%;
+    --secondary: 205 70% 88%;
+    --secondary-foreground: 215 40% 18%;
 
     --accent-warm: 10 88% 84%;
     --accent-warm-deep: 12 77% 62%;
 
-    --hair: 262 24% 64%;
+    --hair: 213 28% 70%;
 
-    --muted: 34 35% 92%;
-    --muted-foreground: 220 16% 44%;
+    --muted: 210 32% 94%;
+    --muted-foreground: 214 16% 46%;
 
-    --accent: 34 40% 91%;
-    --accent-foreground: 221 29% 20%;
+    --accent: 210 38% 93%;
+    --accent-foreground: 215 40% 18%;
 
     --destructive: 0 74% 56%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 219 24% 82%;
-    --input: 34 25% 90%;
-    --ring: 140 63% 47%;
+    --border: 213 28% 88%;
+    --input: 210 30% 91%;
+    --ring: 213 88% 54%;
 
     --success: 145 58% 41%;
     --success-foreground: 0 0% 100%;
@@ -60,7 +60,7 @@ html {
     --radius: 0.85rem;
 
     --card-border-width: 1px;
-    --card-border-color: 220 22% 90%;
+    --card-border-color: 213 28% 90%;
     --card-shadow-offset: 0 1px 2px rgba(32, 48, 74, 0.05);
     --card-shadow-full: 0 1px 2px rgba(32, 48, 74, 0.04), 0 10px 28px -20px rgba(32, 48, 74, 0.22);
 
@@ -72,13 +72,13 @@ html {
     --shadow-deep: 0 22px 60px rgba(41, 59, 90, 0.14);
 
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 221 29% 20%;
-    --sidebar-primary: 140 63% 47%;
+    --sidebar-foreground: 215 40% 18%;
+    --sidebar-primary: 213 88% 54%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 34 42% 94%;
-    --sidebar-accent-foreground: 221 29% 20%;
-    --sidebar-border: 219 24% 82%;
-    --sidebar-ring: 140 63% 47%;
+    --sidebar-accent: 210 40% 95%;
+    --sidebar-accent-foreground: 215 40% 18%;
+    --sidebar-border: 213 28% 88%;
+    --sidebar-ring: 213 88% 54%;
   }
 
   * {
@@ -92,7 +92,7 @@ html {
       "kern" 1,
       "liga" 1,
       "calt" 1;
-    background-image: linear-gradient(180deg, #fdfaf6 0%, #fbf7f2 100%);
+    background-image: linear-gradient(180deg, #f7fafd 0%, #eef4fb 100%);
     min-height: 100vh;
   }
 
@@ -115,9 +115,9 @@ html {
 
   .section-kicker {
     @apply inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em];
-    background: rgba(34, 197, 94, 0.08);
+    background: rgba(59, 130, 246, 0.09);
     color: hsl(var(--primary));
-    border: 1px solid rgba(34, 197, 94, 0.18);
+    border: 1px solid rgba(59, 130, 246, 0.2);
   }
 
   .section-title {
@@ -126,20 +126,28 @@ html {
   }
 
   .surface-panel {
-    @apply rounded-[1.1rem] bg-card;
+    @apply rounded-[1.1rem];
+    background-color: hsl(var(--card) / 0.86);
+    backdrop-filter: blur(9px);
+    -webkit-backdrop-filter: blur(9px);
     border: 1px solid hsl(var(--card-border-color));
     box-shadow: var(--card-shadow-full);
   }
 
   .surface-panel-soft {
     @apply rounded-[1rem];
-    background-color: hsl(var(--card));
+    background-color: hsl(var(--card) / 0.88);
+    backdrop-filter: blur(7px);
+    -webkit-backdrop-filter: blur(7px);
     border: 1px solid hsl(var(--card-border-color));
     box-shadow: 0 1px 2px rgba(32, 48, 74, 0.04);
   }
 
   .yukihon-card {
-    @apply rounded-[1.1rem] bg-card transition-all duration-200;
+    @apply rounded-[1.1rem] transition-all duration-200;
+    background-color: hsl(var(--card) / 0.86);
+    backdrop-filter: blur(9px);
+    -webkit-backdrop-filter: blur(9px);
     border: 1px solid hsl(var(--card-border-color));
     box-shadow: var(--card-shadow-full);
   }
@@ -152,7 +160,10 @@ html {
   }
 
   .yukihon-card-sm {
-    @apply rounded-[1rem] bg-card transition-all duration-200;
+    @apply rounded-[1rem] transition-all duration-200;
+    background-color: hsl(var(--card) / 0.88);
+    backdrop-filter: blur(7px);
+    -webkit-backdrop-filter: blur(7px);
     border: 1px solid hsl(var(--card-border-color));
     box-shadow: 0 1px 2px rgba(32, 48, 74, 0.04);
   }
@@ -163,7 +174,9 @@ html {
 
   .yukihon-card-flat {
     @apply rounded-[0.85rem] transition-all duration-200;
-    background-color: hsl(var(--card));
+    background-color: hsl(var(--card) / 0.82);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     border: 1px solid hsl(var(--card-border-color));
     box-shadow: 0 1px 2px rgba(32, 48, 74, 0.04);
   }
@@ -224,7 +237,9 @@ html {
 
   .learnhub-card {
     @apply rounded-[1.1rem] transition-all duration-200;
-    background-color: hsl(var(--card));
+    background-color: hsl(var(--card) / 0.86);
+    backdrop-filter: blur(9px);
+    -webkit-backdrop-filter: blur(9px);
     border: 1px solid hsl(var(--card-border-color));
     box-shadow: var(--card-shadow-full);
   }
@@ -240,7 +255,7 @@ html {
 
   .learnhub-input:focus {
     border-color: hsl(var(--primary));
-    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.08);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
   }
 
   .gradient-text {

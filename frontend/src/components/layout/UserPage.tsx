@@ -40,7 +40,7 @@ export const PageHeader = ({ icon, title, description, eyebrow, action }: PageHe
     className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between"
   >
     <div className="flex items-center gap-3">
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border bg-[#fff1ec] text-primary">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary">
         {icon}
       </div>
 
@@ -97,7 +97,7 @@ export const MetricCard = ({ label, value, icon, hint, className }: MetricCardPr
         </p>
         <div className="mt-1.5 text-2xl font-bold leading-none text-foreground">{value}</div>
       </div>
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#e9f7ff] text-primary">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
         {icon}
       </div>
     </div>
@@ -107,7 +107,7 @@ export const MetricCard = ({ label, value, icon, hint, className }: MetricCardPr
 
 export const EmptyState = ({ icon, title, description }: EmptyStateProps) => (
   <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-white/60 px-6 py-12 text-center">
-    <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-[#eef8ff] text-primary">
+    <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
       {icon}
     </div>
     <p className="text-base font-semibold text-foreground">{title}</p>

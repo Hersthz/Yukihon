@@ -5,6 +5,7 @@ import DashboardNavigation, {
   SIDEBAR_EXPANDED,
   TOPBAR_HEIGHT,
 } from "@/components/DashboardNavigation";
+import AppWinterBackground from "@/components/layout/AppWinterBackground";
 import { cn } from "@/lib/utils";
 
 interface DashboardLayoutProps {
@@ -30,7 +31,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-transparent text-foreground">
+      <AppWinterBackground />
       <DashboardNavigation collapsed={collapsed} onToggleCollapse={handleToggleCollapse} />
 
       <main
