@@ -9,44 +9,11 @@ export type StudyQueue = Schema<"AnkiStudyQueueDto">;
 
 export type ReviewPayload = Schema<"AnkiReviewRequest">;
 
-// NOTE: hand-written until backend is rebuilt + `npm run gen:api` regenerates schema.d.ts,
-// then switch to Schema<"AnkiStatsDto"> / Schema<"AnkiSrsSettingDto">.
-export interface AnkiStatsBucket {
-  label: string;
-  count: number;
-}
+export type AnkiStatsBucket = Schema<"Bucket">;
 
-export interface AnkiStats {
-  totalCards: number;
-  newCards: number;
-  learningCards: number;
-  relearningCards: number;
-  reviewCards: number;
-  suspendedCards: number;
-  leechCards: number;
-  studiedToday: number;
-  dueToday: number;
-  dueTomorrow: number;
-  avgMemoryScore: number;
-  avgEaseFactor: number;
-  avgIntervalDays: number;
-  totalReviews: number;
-  totalLapses: number;
-  futureReviews: AnkiStatsBucket[];
-  intervalBuckets: AnkiStatsBucket[];
-  easeBuckets: AnkiStatsBucket[];
-}
+export type AnkiStats = Schema<"AnkiStatsDto">;
 
-export interface AnkiSrsSetting {
-  algorithmConfigId?: number | null;
-  algorithmType?: string;
-  targetRetention?: number;
-  maxReviewsPerDay?: number;
-  maxItemsPerDay?: number;
-  maximumIntervalDays?: number;
-  suspendLeeches?: boolean;
-  leechThreshold?: number;
-}
+export type AnkiSrsSetting = Schema<"AnkiSrsSettingDto">;
 
 export const srsApi = {
   getQueue: (deckId: number) => apiClient.get<StudyQueue>(`/api/anki/study/${deckId}`),

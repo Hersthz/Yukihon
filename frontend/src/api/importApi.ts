@@ -1,35 +1,16 @@
 import apiClient from "@/lib/apiClient";
+import type { Schema } from "@/api/types";
 
-// NOTE: hand-written until backend rebuild + `npm run gen:api`, then switch to Schema<>.
+/** FE-side union for the column-mapping dropdown (DTO mapping is a plain string[]). */
 export type ImportField = "FRONT" | "BACK" | "HINT" | "EXAMPLE" | "IGNORE";
 
-export interface ImportColumn {
-  header: string;
-  sample: string;
-}
+export type ImportColumn = Schema<"Column">;
 
-export interface ImportPreview {
-  delimiter: string;
-  headerDetected: boolean;
-  totalRows: number;
-  columns: ImportColumn[];
-  rows: string[][];
-  suggestedMapping: ImportField[];
-}
+export type ImportPreview = Schema<"ImportPreviewResponse">;
 
-export interface ImportConfirm {
-  deckTitle?: string;
-  deckDescription?: string;
-  visibility?: string;
-  mapping: string[];
-  rows: string[][];
-}
+export type ImportConfirm = Schema<"ImportConfirmRequest">;
 
-export interface ImportResult {
-  deckId: number;
-  created: number;
-  skipped: number;
-}
+export type ImportResult = Schema<"ImportResultResponse">;
 
 export const importApi = {
   preview: async (file: File, delimiter = "AUTO"): Promise<ImportPreview> => {

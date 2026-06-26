@@ -260,6 +260,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/anki/study/{deckId}/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getSettings_1"];
+        put: operations["updateSettings_1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/users/{userId}/status": {
         parameters: {
             query?: never;
@@ -430,6 +446,22 @@ export interface paths {
         get: operations["getAllQuizzes"];
         put?: never;
         post: operations["createQuiz"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/quizlet/study/answer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["answer"];
         delete?: never;
         options?: never;
         head?: never;
@@ -612,6 +644,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/import/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["preview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/import/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["confirm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/grammar": {
         parameters: {
             query?: never;
@@ -670,6 +734,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["create_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/decks/{id}/clone": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["clone"];
         delete?: never;
         options?: never;
         head?: never;
@@ -878,6 +958,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["forgotPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/anki/study/{deckId}/cards/{flashcardId}/suspend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["setSuspended"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1444,6 +1540,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/quizlet/study/{deckId}/progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getProgress"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/progress": {
         parameters: {
             query?: never;
@@ -1828,6 +1940,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/import/sample": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sample"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/health": {
         parameters: {
             query?: never;
@@ -2124,6 +2252,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getQueue"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/anki/study/{deckId}/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getStats_4"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2748,6 +2892,22 @@ export interface components {
             currentPassword: string;
             newPassword: string;
         };
+        AnkiSrsSettingDto: {
+            /** Format: int64 */
+            algorithmConfigId?: number;
+            algorithmType?: string;
+            /** Format: double */
+            targetRetention?: number;
+            /** Format: int32 */
+            maxReviewsPerDay?: number;
+            /** Format: int32 */
+            maxItemsPerDay?: number;
+            /** Format: int32 */
+            maximumIntervalDays?: number;
+            suspendLeeches?: boolean;
+            /** Format: int32 */
+            leechThreshold?: number;
+        };
         UpdateUserStatusRequest: {
             enabled: boolean;
         };
@@ -2934,6 +3094,22 @@ export interface components {
             /** Format: date-time */
             createdAt?: string;
         };
+        QuizletAnswerRequest: {
+            /** Format: int64 */
+            deckId: number;
+            /** Format: int64 */
+            flashcardId: number;
+            correct: boolean;
+        };
+        QuizletCardProgressDto: {
+            /** Format: int64 */
+            flashcardId?: number;
+            status?: string;
+            /** Format: int32 */
+            correctCount?: number;
+            /** Format: int32 */
+            wrongCount?: number;
+        };
         QuizSessionRequest: {
             mode: string;
             /** Format: int32 */
@@ -3032,6 +3208,34 @@ export interface components {
             lastReviewedAt?: string;
             /** Format: date-time */
             nextReviewAt?: string;
+        };
+        Column: {
+            header?: string;
+            sample?: string;
+        };
+        ImportPreviewResponse: {
+            delimiter?: string;
+            headerDetected?: boolean;
+            /** Format: int32 */
+            totalRows?: number;
+            columns?: components["schemas"]["Column"][];
+            rows?: string[][];
+            suggestedMapping?: string[];
+        };
+        ImportConfirmRequest: {
+            deckTitle?: string;
+            deckDescription?: string;
+            visibility?: string;
+            mapping: string[];
+            rows: string[][];
+        };
+        ImportResultResponse: {
+            /** Format: int64 */
+            deckId?: number;
+            /** Format: int32 */
+            created?: number;
+            /** Format: int32 */
+            skipped?: number;
         };
         CreateDeckRequest: {
             title: string;
@@ -3151,6 +3355,9 @@ export interface components {
             message?: string;
             resetToken?: string;
         };
+        SuspendRequest: {
+            suspended?: boolean;
+        };
         AnkiReviewRequest: {
             /** Format: int64 */
             deckId: number;
@@ -3262,6 +3469,8 @@ export interface components {
             totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
+            first?: boolean;
+            last?: boolean;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["PrivateMessageDto"][];
@@ -3271,20 +3480,18 @@ export interface components {
             numberOfElements?: number;
             sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
-            first?: boolean;
-            last?: boolean;
             empty?: boolean;
         };
         PageableObject: {
             /** Format: int64 */
             offset?: number;
             sort?: components["schemas"]["SortObject"];
-            /** Format: int32 */
-            pageSize?: number;
+            paged?: boolean;
             /** Format: int32 */
             pageNumber?: number;
+            /** Format: int32 */
+            pageSize?: number;
             unpaged?: boolean;
-            paged?: boolean;
         };
         PrivateMessageDto: {
             /** Format: int64 */
@@ -3298,8 +3505,8 @@ export interface components {
         };
         SortObject: {
             empty?: boolean;
-            unsorted?: boolean;
             sorted?: boolean;
+            unsorted?: boolean;
         };
         Pageable: {
             /** Format: int32 */
@@ -3313,6 +3520,8 @@ export interface components {
             totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
+            first?: boolean;
+            last?: boolean;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["TranslationHistoryDto"][];
@@ -3322,8 +3531,6 @@ export interface components {
             numberOfElements?: number;
             sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
-            first?: boolean;
-            last?: boolean;
             empty?: boolean;
         };
         ReminderDto: {
@@ -3349,6 +3556,8 @@ export interface components {
             totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
+            first?: boolean;
+            last?: boolean;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["NotificationDto"][];
@@ -3358,8 +3567,6 @@ export interface components {
             numberOfElements?: number;
             sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
-            first?: boolean;
-            last?: boolean;
             empty?: boolean;
         };
         SavedWordStatsDto: {
@@ -3614,6 +3821,8 @@ export interface components {
             totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
+            first?: boolean;
+            last?: boolean;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["PostDto"][];
@@ -3623,8 +3832,6 @@ export interface components {
             numberOfElements?: number;
             sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
-            first?: boolean;
-            last?: boolean;
             empty?: boolean;
         };
         PageCommentDto: {
@@ -3632,6 +3839,8 @@ export interface components {
             totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
+            first?: boolean;
+            last?: boolean;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["CommentDto"][];
@@ -3641,8 +3850,6 @@ export interface components {
             numberOfElements?: number;
             sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
-            first?: boolean;
-            last?: boolean;
             empty?: boolean;
         };
         CommunityLeaderboardEntryDto: {
@@ -3682,6 +3889,8 @@ export interface components {
             totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
+            first?: boolean;
+            last?: boolean;
             /** Format: int32 */
             size?: number;
             content?: unknown[];
@@ -3691,8 +3900,6 @@ export interface components {
             numberOfElements?: number;
             sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
-            first?: boolean;
-            last?: boolean;
             empty?: boolean;
         };
         AuditLog: {
@@ -3712,6 +3919,8 @@ export interface components {
             totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
+            first?: boolean;
+            last?: boolean;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["AuditLog"][];
@@ -3721,8 +3930,6 @@ export interface components {
             numberOfElements?: number;
             sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
-            first?: boolean;
-            last?: boolean;
             empty?: boolean;
         };
         AnkiStudyQueueDto: {
@@ -3735,6 +3942,46 @@ export interface components {
             totalReview?: number;
             /** Format: int32 */
             dueReviewCards?: number;
+        };
+        AnkiStatsDto: {
+            /** Format: int64 */
+            totalCards?: number;
+            /** Format: int64 */
+            newCards?: number;
+            /** Format: int64 */
+            learningCards?: number;
+            /** Format: int64 */
+            relearningCards?: number;
+            /** Format: int64 */
+            reviewCards?: number;
+            /** Format: int64 */
+            suspendedCards?: number;
+            /** Format: int64 */
+            leechCards?: number;
+            /** Format: int64 */
+            studiedToday?: number;
+            /** Format: int64 */
+            dueToday?: number;
+            /** Format: int64 */
+            dueTomorrow?: number;
+            /** Format: double */
+            avgMemoryScore?: number;
+            /** Format: double */
+            avgEaseFactor?: number;
+            /** Format: double */
+            avgIntervalDays?: number;
+            /** Format: int64 */
+            totalReviews?: number;
+            /** Format: int64 */
+            totalLapses?: number;
+            futureReviews?: components["schemas"]["Bucket"][];
+            intervalBuckets?: components["schemas"]["Bucket"][];
+            easeBuckets?: components["schemas"]["Bucket"][];
+        };
+        Bucket: {
+            label?: string;
+            /** Format: int64 */
+            count?: number;
         };
         StudyCalendarDayDto: {
             /** Format: date */
@@ -3749,8 +3996,8 @@ export interface components {
             /** Format: int64 */
             totalMinutes?: number;
             intensity?: string;
-            deadlineDay?: boolean;
             recommendedStudyDay?: boolean;
+            deadlineDay?: boolean;
             today?: boolean;
         };
         StudyCalendarDto: {
@@ -3811,6 +4058,8 @@ export interface components {
             totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
+            first?: boolean;
+            last?: boolean;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["UserManagementDto"][];
@@ -3820,8 +4069,6 @@ export interface components {
             numberOfElements?: number;
             sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
-            first?: boolean;
-            last?: boolean;
             empty?: boolean;
         };
         SystemStatsDto: {
@@ -4751,6 +4998,54 @@ export interface operations {
             };
         };
     };
+    getSettings_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                deckId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AnkiSrsSettingDto"];
+                };
+            };
+        };
+    };
+    updateSettings_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                deckId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnkiSrsSettingDto"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AnkiSrsSettingDto"];
+                };
+            };
+        };
+    };
     updateUserStatus: {
         parameters: {
             query?: never;
@@ -5137,6 +5432,30 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["QuizDto"];
+                };
+            };
+        };
+    };
+    answer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuizletAnswerRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["QuizletCardProgressDto"];
                 };
             };
         };
@@ -5558,6 +5877,59 @@ export interface operations {
             };
         };
     };
+    preview: {
+        parameters: {
+            query?: {
+                delimiter?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ImportPreviewResponse"];
+                };
+            };
+        };
+    };
+    confirm: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportConfirmRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ImportResultResponse"];
+                };
+            };
+        };
+    };
     getAllGrammar: {
         parameters: {
             query?: never;
@@ -5660,6 +6032,28 @@ export interface operations {
                 "application/json": components["schemas"]["CreateDeckRequest"];
             };
         };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DeckDto"];
+                };
+            };
+        };
+    };
+    clone: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description OK */
             200: {
@@ -6078,6 +6472,31 @@ export interface operations {
                 content: {
                     "*/*": components["schemas"]["ForgotPasswordResponse"];
                 };
+            };
+        };
+    };
+    setSuspended: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                deckId: number;
+                flashcardId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SuspendRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -6970,6 +7389,28 @@ export interface operations {
             };
         };
     };
+    getProgress: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                deckId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["QuizletCardProgressDto"][];
+                };
+            };
+        };
+    };
     getUserProgress: {
         parameters: {
             query?: never;
@@ -7486,6 +7927,27 @@ export interface operations {
             };
         };
     };
+    sample: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv;charset=UTF-8": string;
+                    "text/csv; charset=UTF-8": string;
+                };
+            };
+        };
+    };
     health: {
         parameters: {
             query?: never;
@@ -7910,6 +8372,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["AnkiStudyQueueDto"];
+                };
+            };
+        };
+    };
+    getStats_4: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                deckId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AnkiStatsDto"];
                 };
             };
         };

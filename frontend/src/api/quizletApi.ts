@@ -1,21 +1,12 @@
 import apiClient from "@/lib/apiClient";
+import type { Schema } from "@/api/types";
 
-// NOTE: hand-written until backend rebuild + `npm run gen:api`, then switch to
-// Schema<"QuizletCardProgressDto"> / Schema<"QuizletAnswerRequest">.
+/** FE-side union (DTO field is a plain string in the schema). */
 export type QuizletStatus = "NOT_STUDIED" | "STUDYING" | "MASTERED";
 
-export interface QuizletCardProgress {
-  flashcardId: number;
-  status: QuizletStatus;
-  correctCount: number;
-  wrongCount: number;
-}
+export type QuizletCardProgress = Schema<"QuizletCardProgressDto">;
 
-export interface QuizletAnswer {
-  deckId: number;
-  flashcardId: number;
-  correct: boolean;
-}
+export type QuizletAnswer = Schema<"QuizletAnswerRequest">;
 
 export const quizletApi = {
   getProgress: (deckId: number) =>
