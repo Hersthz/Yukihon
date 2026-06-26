@@ -100,7 +100,7 @@ const strength = (value: string) => {
   if (/[^A-Za-z0-9]/.test(value)) score += 20;
   return {
     score,
-    label: score >= 80 ? "Manh" : score >= 50 ? "Kha on" : value ? "Con yeu" : "Chua nhap",
+    label: score >= 80 ? "Mạnh" : score >= 50 ? "Khá ổn" : value ? "Còn yếu" : "Chưa nhập",
     tone: score >= 80 ? "text-emerald-600" : score >= 50 ? "text-amber-600" : "text-rose-600",
   };
 };
@@ -127,8 +127,8 @@ const Profile = () => {
       setOriginalSettings(next);
     } catch {
       toast({
-        title: "Khong tai duoc cai dat",
-        description: "Trang van mo duoc, nhung mot so du lieu co the chua moi nhat.",
+        title: "Không tải được cài đặt",
+        description: "Trang vẫn mở được, nhưng một số dữ liệu có thể chưa mới nhất.",
         variant: "destructive",
       });
     } finally {
@@ -151,11 +151,11 @@ const Profile = () => {
     setSettings((prev) => ({ ...prev, [key]: value }));
   const name = displayName.trim();
   const nameError = !name
-    ? "Ten hien thi khong duoc de trong."
+    ? "Tên hiển thị không được để trống."
     : name.length < 2
-      ? "Ten hien thi nen tu 2 ky tu tro len."
+      ? "Tên hiển thị nên từ 2 ký tự trở lên."
       : name.length > 50
-        ? "Ten hien thi nen duoi 50 ky tu."
+        ? "Tên hiển thị nên dưới 50 ký tự."
         : null;
   const hasProfileChanges = name !== (user?.displayName ?? "").trim();
   const settingsChanges = diffCount(settings, originalSettings);
@@ -165,41 +165,41 @@ const Profile = () => {
     !passwordForm.currentPassword && !passwordForm.newPassword && !passwordForm.confirmPassword
       ? null
       : !passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword
-        ? "Can dien day du 3 truong mat khau."
+        ? "Cần điền đầy đủ 3 trường mật khẩu."
         : passwordForm.newPassword.length < 8
-          ? "Mat khau moi can it nhat 8 ky tu."
+          ? "Mật khẩu mới cần ít nhất 8 ký tự."
           : passwordForm.newPassword === passwordForm.currentPassword
-            ? "Mat khau moi can khac mat khau hien tai."
+            ? "Mật khẩu mới cần khác mật khẩu hiện tại."
             : passwordForm.newPassword !== passwordForm.confirmPassword
-              ? "Xac nhan mat khau chua khop."
+              ? "Xác nhận mật khẩu chưa khớp."
               : null;
   const deadlineText = useMemo(() => {
-    if (!settings.jlptDeadlineDate) return "Chua dat deadline.";
+    if (!settings.jlptDeadlineDate) return "Chưa đặt deadline.";
     const today = new Date();
     const base = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     const deadline = new Date(`${settings.jlptDeadlineDate}T00:00:00`);
     const diff = Math.round((deadline.getTime() - base.getTime()) / 86400000);
-    if (Number.isNaN(diff)) return "Deadline chua hop le.";
-    if (diff < 0) return "Deadline da qua.";
-    if (diff === 0) return "Hom nay la deadline.";
-    return `Con ${diff} ngay den han.`;
+    if (Number.isNaN(diff)) return "Deadline chưa hợp lệ.";
+    if (diff < 0) return "Deadline đã qua.";
+    if (diff === 0) return "Hôm nay là deadline.";
+    return `Còn ${diff} ngày đến hạn.`;
   }, [settings.jlptDeadlineDate]);
 
   const saveProfile = async () => {
     if (nameError || !hasProfileChanges) {
       if (nameError)
-        toast({ title: "Thong tin chua hop le", description: nameError, variant: "destructive" });
+        toast({ title: "Thông tin chưa hợp lệ", description: nameError, variant: "destructive" });
       return;
     }
     setProfileSaving(true);
     try {
       await authApi.updateProfile({ displayName: name });
       await refreshUser();
-      toast({ title: "Da cap nhat ho so", description: "Ten hien thi da duoc luu." });
+      toast({ title: "Đã cập nhật hồ sơ", description: "Tên hiển thị đã được lưu." });
     } catch (error) {
       toast({
-        title: "Khong the cap nhat ho so",
-        description: error instanceof Error ? error.message : "Vui long thu lai.",
+        title: "Không thể cập nhật hồ sơ",
+        description: error instanceof Error ? error.message : "Vui lòng thử lại.",
         variant: "destructive",
       });
     } finally {
@@ -218,13 +218,13 @@ const Profile = () => {
       setSettings(next);
       setOriginalSettings(next);
       toast({
-        title: "Da luu cai dat",
-        description: "Trai nghiem hoc tap cua ban da duoc cap nhat.",
+        title: "Đã lưu cài đặt",
+        description: "Trải nghiệm học tập của bạn đã được cập nhật.",
       });
     } catch (error) {
       toast({
-        title: "Khong the luu cai dat",
-        description: error instanceof Error ? error.message : "Vui long thu lai.",
+        title: "Không thể lưu cài đặt",
+        description: error instanceof Error ? error.message : "Vui lòng thử lại.",
         variant: "destructive",
       });
     } finally {
@@ -235,7 +235,7 @@ const Profile = () => {
   const savePassword = async () => {
     if (passwordError) {
       toast({
-        title: "Khong the doi mat khau",
+        title: "Không thể đổi mật khẩu",
         description: passwordError,
         variant: "destructive",
       });
@@ -248,11 +248,11 @@ const Profile = () => {
         newPassword: passwordForm.newPassword,
       });
       setPasswordForm(EMPTY_PASSWORD_FORM);
-      toast({ title: "Doi mat khau thanh cong", description: "Mat khau moi da co hieu luc ngay." });
+      toast({ title: "Đổi mật khẩu thành công", description: "Mật khẩu mới đã có hiệu lực ngay." });
     } catch (error) {
       toast({
-        title: "Khong the doi mat khau",
-        description: error instanceof Error ? error.message : "Vui long thu lai.",
+        title: "Không thể đổi mật khẩu",
+        description: error instanceof Error ? error.message : "Vui lòng thử lại.",
         variant: "destructive",
       });
     } finally {
@@ -264,67 +264,42 @@ const Profile = () => {
     return (
       <DashboardLayout>
         <div className="flex min-h-[60vh] items-center justify-center">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-sky-100 border-t-sky-500" />
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary/20 border-t-primary" />
         </div>
       </DashboardLayout>
     );
+
+  const dirty = hasProfileChanges || hasSettingsChanges;
 
   return (
     <DashboardLayout>
       <div className="mx-auto max-w-[1420px]">
         <PageHeader
           eyebrow="Tài khoản"
-          icon={<Settings2 className="h-6 w-6 text-sky-600" />}
-          title="Tai khoan va cai dat"
-          description="Mot noi duy nhat de quan ly ho so, bao mat va nhung tuy chinh giup viec tu hoc muot hon."
+          icon={<Settings2 className="h-6 w-6 text-primary" />}
+          title="Tài khoản và cài đặt"
+          description="Một nơi duy nhất để quản lý hồ sơ, bảo mật và những tùy chỉnh giúp việc tự học mượt hơn."
           action={
-            <div className="flex flex-wrap gap-2">
-              <Badge
-                className={cn(
-                  "rounded-full border px-3 py-1",
-                  hasProfileChanges || hasSettingsChanges
-                    ? "border-amber-200 bg-amber-50 text-amber-700"
-                    : "border-emerald-200 bg-emerald-50 text-emerald-700"
-                )}
-              >
-                {hasProfileChanges || hasSettingsChanges
-                  ? "Dang co thay doi chua luu"
-                  : "Tat ca da duoc luu"}
-              </Badge>
-              <Button
-                variant="outline"
-                className="rounded-2xl border-border bg-card text-foreground/80 hover:bg-card"
-                onClick={() => setSettings(originalSettings)}
-              >
-                <RotateCcw className="mr-2 h-4 w-4" />
-                Hoan tac
-              </Button>
-              <Button
-                className="rounded-2xl bg-sky-500 text-white hover:bg-sky-400"
-                disabled={!hasSettingsChanges || settingsSaving}
-                onClick={saveSettings}
-              >
-                <Save className="mr-2 h-4 w-4" />
-                {settingsSaving ? "Dang luu..." : "Luu cai dat"}
-              </Button>
-            </div>
+            <Badge
+              className={cn(
+                "rounded-full border px-3 py-1.5",
+                dirty
+                  ? "border-amber-200 bg-amber-50 text-amber-700"
+                  : "border-emerald-200 bg-emerald-50 text-emerald-700"
+              )}
+            >
+              {dirty ? "Đang có thay đổi chưa lưu" : "Tất cả đã được lưu"}
+            </Badge>
           }
         />
         <div className="mb-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <MetricCard
-            label="Trang thai"
-            value={hasProfileChanges || hasSettingsChanges ? "Can luu" : "Da dong bo"}
-            hint={
-              hasProfileChanges || hasSettingsChanges
-                ? "Co thay doi dang cho xu ly."
-                : "Khong co thay doi nao dang cho."
-            }
+            label="Trạng thái"
+            value={dirty ? "Cần lưu" : "Đã đồng bộ"}
+            hint={dirty ? "Có thay đổi đang chờ xử lý." : "Không có thay đổi nào đang chờ."}
             icon={
               <CheckCircle2
-                className={cn(
-                  "h-4 w-4",
-                  hasProfileChanges || hasSettingsChanges ? "text-amber-500" : "text-emerald-500"
-                )}
+                className={cn("h-4 w-4", dirty ? "text-amber-500" : "text-emerald-500")}
               />
             }
           />
@@ -332,40 +307,46 @@ const Profile = () => {
             label="JLPT"
             value={settings.targetJlptLevel}
             hint={deadlineText}
-            icon={<GraduationCap className="h-4 w-4 text-amber-500" />}
+            icon={<GraduationCap className="h-4 w-4 text-primary" />}
           />
           <MetricCard
             label="Mục tiêu mỗi ngày"
-            value={`${settings.dailyGoalMinutes} phut`}
-            hint={`${settings.quizDifficulty} quiz • ${settings.showFurigana ? "Co furigana" : "Khong furigana"}`}
+            value={`${settings.dailyGoalMinutes} phút`}
+            hint={`Quiz ${settings.quizDifficulty} • ${settings.showFurigana ? "Có furigana" : "Không furigana"}`}
             icon={<Target className="h-4 w-4 text-emerald-500" />}
           />
           <MetricCard
-            label="Thong bao"
+            label="Thông báo"
             value={
-              settings.emailNotifications || settings.pushNotifications ? "Dang bat" : "Dang tat"
+              settings.emailNotifications || settings.pushNotifications ? "Đang bật" : "Đang tắt"
             }
             hint={
               settings.emailNotifications && settings.pushNotifications
-                ? "Email va push"
+                ? "Email và push"
                 : settings.emailNotifications
-                  ? "Chi email"
+                  ? "Chỉ email"
                   : settings.pushNotifications
-                    ? "Chi push"
-                    : "Tat het"
+                    ? "Chỉ push"
+                    : "Tắt hết"
             }
             icon={<Bell className="h-4 w-4 text-violet-500" />}
           />
         </div>
         <div className="grid gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
           <PageSection
-            title="Tong quan"
-            description="Nhin nhanh tinh trang account va trai nghiem hien tai."
+            title="Tổng quan"
+            description="Nhìn nhanh tình trạng tài khoản và trải nghiệm hiện tại."
             className="xl:sticky xl:top-[92px] xl:self-start"
           >
             <div className="flex items-center gap-4">
-              <Avatar className="h-20 w-20 bg-[linear-gradient(135deg,#7dd3fc,#86efac)]">
-                <AvatarFallback className="bg-transparent text-xl font-semibold text-foreground">
+              <Avatar className="h-20 w-20">
+                <AvatarFallback
+                  className="text-xl font-semibold text-primary-foreground"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.6))",
+                  }}
+                >
                   {(user?.displayName?.[0] || user?.email?.[0] || "U").toUpperCase()}
                 </AvatarFallback>
               </Avatar>
@@ -378,7 +359,7 @@ const Profile = () => {
                   {(user?.roles || ["USER"]).map((role) => (
                     <Badge
                       key={role}
-                      className="rounded-full border border-sky-200 bg-sky-50 text-sky-700"
+                      className="rounded-full border border-primary/20 bg-primary/10 text-primary"
                     >
                       {role}
                     </Badge>
@@ -387,18 +368,18 @@ const Profile = () => {
               </div>
             </div>
             <div className="mt-4 space-y-3">
-              <div className="rounded-[18px] border border-border bg-card p-4 text-sm text-muted-foreground">
+              <div className="rounded-2xl border border-border bg-card/60 p-4 text-sm text-muted-foreground">
                 Giao diện <span className="font-medium text-foreground">sáng</span> • đang hiển thị{" "}
                 <span className="font-medium capitalize text-foreground">{resolvedTheme}</span>
               </div>
-              <div className="rounded-[18px] border border-border bg-card p-4 text-sm text-muted-foreground">
-                Ngon ngu <span className="font-medium text-foreground">{settings.language}</span> •
-                muc tieu{" "}
+              <div className="rounded-2xl border border-border bg-card/60 p-4 text-sm text-muted-foreground">
+                Ngôn ngữ <span className="font-medium text-foreground">{settings.language}</span> •
+                mục tiêu{" "}
                 <span className="font-medium text-foreground">{settings.targetJlptLevel}</span>
               </div>
-              <div className="rounded-[18px] border border-emerald-200 bg-emerald-50/80 p-4 text-sm leading-6 text-foreground/80">
-                Ban dang huong toi {settings.targetJlptLevel} voi muc tieu{" "}
-                {settings.dailyGoalMinutes} phut moi ngay va {settings.quizDifficulty} quiz.
+              <div className="rounded-2xl border border-primary/20 bg-primary/[0.06] p-4 text-sm leading-6 text-foreground/80">
+                Bạn đang hướng tới {settings.targetJlptLevel} với mục tiêu{" "}
+                {settings.dailyGoalMinutes} phút mỗi ngày và quiz {settings.quizDifficulty}.
               </div>
             </div>
             <Button
@@ -410,27 +391,27 @@ const Profile = () => {
               }}
             >
               <LogOut className="mr-2 h-4 w-4" />
-              Dang xuat
+              Đăng xuất
             </Button>
           </PageSection>
           <div className="space-y-4">
             <PageSection
-              title="Ho so ca nhan"
-              description="Cap nhat ten hien thi va giu thong tin account gon gang."
+              title="Hồ sơ cá nhân"
+              description="Cập nhật tên hiển thị và giữ thông tin tài khoản gọn gàng."
               action={
                 <Button
-                  className="rounded-2xl bg-sky-500 text-white hover:bg-sky-400"
+                  className="rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90"
                   disabled={!hasProfileChanges || !!nameError || profileSaving}
                   onClick={saveProfile}
                 >
                   <Save className="mr-2 h-4 w-4" />
-                  {profileSaving ? "Dang luu..." : "Luu ho so"}
+                  {profileSaving ? "Đang lưu..." : "Lưu hồ sơ"}
                 </Button>
               }
             >
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="displayName">Ten hien thi</Label>
+                  <Label htmlFor="displayName">Tên hiển thị</Label>
                   <Input
                     id="displayName"
                     className={cn(
@@ -439,12 +420,12 @@ const Profile = () => {
                     )}
                     value={displayName}
                     onChange={(event) => setDisplayName(event.target.value)}
-                    placeholder="Nhap ten hien thi cua ban"
+                    placeholder="Nhập tên hiển thị của bạn"
                   />
                   <p
                     className={cn("text-xs", nameError ? "text-rose-600" : "text-muted-foreground")}
                   >
-                    {nameError || "Ten nay se hien o dashboard va cac khu vuc hoc tap."}
+                    {nameError || "Tên này sẽ hiện ở trang tổng quan và các khu vực học tập."}
                   </p>
                 </div>
                 <div className="space-y-2">
@@ -456,32 +437,32 @@ const Profile = () => {
                     disabled
                   />
                   <p className="text-xs text-muted-foreground">
-                    Email hien chua doi trong man nay de tranh tac dong den dang nhap.
+                    Email hiện chưa đổi trong màn này để tránh tác động đến đăng nhập.
                   </p>
                 </div>
               </div>
             </PageSection>
             <PageSection
-              title="Hoc tap va trai nghiem"
-              description="Tat ca preference hoc tap, thong bao va giao dien o cung mot cho."
+              title="Học tập và trải nghiệm"
+              description="Tất cả tùy chỉnh học tập, thông báo và giao diện ở cùng một chỗ."
             >
               <div className="grid gap-4 xl:grid-cols-2">
                 <div className="space-y-4">
-                  <div className="rounded-[18px] border border-border bg-card p-4">
+                  <div className="rounded-2xl border border-border bg-card p-4">
                     <div className="mb-3 flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <Target className="h-5 w-5 text-amber-500" />
+                        <Target className="h-5 w-5 text-primary" />
                         <div>
                           <p className="text-sm font-semibold text-foreground">
-                            Muc tieu hang ngay
+                            Mục tiêu hằng ngày
                           </p>
                           <p className="text-sm text-muted-foreground">
-                            Dieu chinh nhip hoc theo muc tieu ca nhan.
+                            Điều chỉnh nhịp học theo mục tiêu cá nhân.
                           </p>
                         </div>
                       </div>
-                      <span className="text-sm font-semibold text-amber-700">
-                        {settings.dailyGoalMinutes} phut
+                      <span className="text-sm font-semibold text-primary">
+                        {settings.dailyGoalMinutes} phút
                       </span>
                     </div>
                     <Slider
@@ -493,7 +474,7 @@ const Profile = () => {
                     />
                   </div>
                   <div className="grid gap-4 md:grid-cols-3">
-                    <div className="rounded-[18px] border border-border bg-card p-4">
+                    <div className="rounded-2xl border border-border bg-card p-4">
                       <Label className="mb-2 block text-sm font-semibold text-foreground">
                         JLPT
                       </Label>
@@ -513,7 +494,7 @@ const Profile = () => {
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="rounded-[18px] border border-border bg-card p-4">
+                    <div className="rounded-2xl border border-border bg-card p-4">
                       <Label className="mb-2 block text-sm font-semibold text-foreground">
                         Giao diện
                       </Label>
@@ -526,7 +507,7 @@ const Profile = () => {
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="rounded-[18px] border border-border bg-card p-4">
+                    <div className="rounded-2xl border border-border bg-card p-4">
                       <Label className="mb-2 block text-sm font-semibold text-foreground">
                         Ngôn ngữ
                       </Label>
@@ -538,7 +519,7 @@ const Profile = () => {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="vi">Tieng Viet</SelectItem>
+                          <SelectItem value="vi">Tiếng Việt</SelectItem>
                           <SelectItem value="en">English</SelectItem>
                           <SelectItem value="ja">Nihongo</SelectItem>
                         </SelectContent>
@@ -551,31 +532,31 @@ const Profile = () => {
                     {
                       k: "emailNotifications",
                       t: "Thông báo qua email",
-                      d: "Nhan tong ket va nhac hoc qua email.",
+                      d: "Nhận tổng kết và nhắc học qua email.",
                       i: Bell,
                     },
                     {
                       k: "pushNotifications",
                       t: "Thông báo đẩy",
-                      d: "Nhac nhanh tren thiet bi.",
+                      d: "Nhắc nhanh trên thiết bị.",
                       i: Volume2,
                     },
                     {
                       k: "showFurigana",
-                      t: "Hien furigana",
-                      d: "Bat goi y doc tren kanji.",
+                      t: "Hiện furigana",
+                      d: "Bật gợi ý đọc trên kanji.",
                       i: UserRound,
                     },
                     {
                       k: "showRomaji",
-                      t: "Hien romaji",
-                      d: "Them phien am Latin khi can.",
+                      t: "Hiện romaji",
+                      d: "Thêm phiên âm Latin khi cần.",
                       i: UserRound,
                     },
                     {
                       k: "autoPlayAudio",
-                      t: "Tu phat audio",
-                      d: "Phat am thanh khi mo the tu vung.",
+                      t: "Tự phát audio",
+                      d: "Phát âm thanh khi mở thẻ từ vựng.",
                       i: Palette,
                     },
                   ].map((item) => {
@@ -583,10 +564,10 @@ const Profile = () => {
                     return (
                       <div
                         key={item.k}
-                        className="flex items-center justify-between rounded-[18px] border border-border bg-card p-4"
+                        className="flex items-center justify-between rounded-2xl border border-border bg-card p-4"
                       >
                         <div className="flex items-start gap-3">
-                          <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+                          <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                             <Icon className="h-4 w-4" />
                           </div>
                           <div>
@@ -607,16 +588,16 @@ const Profile = () => {
               </div>
             </PageSection>
             <PageSection
-              title="Bao mat"
-              description="Doi mat khau ngay tai day voi huong dan ro rang."
+              title="Bảo mật"
+              description="Đổi mật khẩu ngay tại đây với hướng dẫn rõ ràng."
               action={
                 <Button
-                  className="rounded-2xl bg-emerald-500 text-white hover:bg-emerald-400"
+                  className="rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90"
                   disabled={!!passwordError || passwordSaving}
                   onClick={savePassword}
                 >
                   <KeyRound className="mr-2 h-4 w-4" />
-                  {passwordSaving ? "Dang cap nhat..." : "Doi mat khau"}
+                  {passwordSaving ? "Đang cập nhật..." : "Đổi mật khẩu"}
                 </Button>
               }
             >
@@ -624,7 +605,7 @@ const Profile = () => {
                 <div className="space-y-4">
                   <div className="grid gap-4 md:grid-cols-3">
                     <div className="space-y-2">
-                      <Label htmlFor="currentPassword">Mat khau hien tai</Label>
+                      <Label htmlFor="currentPassword">Mật khẩu hiện tại</Label>
                       <Input
                         id="currentPassword"
                         type="password"
@@ -639,7 +620,7 @@ const Profile = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="newPassword">Mat khau moi</Label>
+                      <Label htmlFor="newPassword">Mật khẩu mới</Label>
                       <Input
                         id="newPassword"
                         type="password"
@@ -651,7 +632,7 @@ const Profile = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="confirmPassword">Xac nhan mat khau</Label>
+                      <Label htmlFor="confirmPassword">Xác nhận mật khẩu</Label>
                       <Input
                         id="confirmPassword"
                         type="password"
@@ -666,9 +647,9 @@ const Profile = () => {
                       />
                     </div>
                   </div>
-                  <div className="rounded-[18px] border border-border bg-card p-4">
+                  <div className="rounded-2xl border border-border bg-card p-4">
                     <div className="mb-3 flex items-center justify-between">
-                      <p className="text-sm font-semibold text-foreground">Do manh mat khau</p>
+                      <p className="text-sm font-semibold text-foreground">Độ mạnh mật khẩu</p>
                       <span className={cn("text-sm font-semibold", pwd.tone)}>{pwd.label}</span>
                     </div>
                     <Progress value={pwd.score} className="h-2.5 bg-muted" />
@@ -679,43 +660,43 @@ const Profile = () => {
                       )}
                     >
                       {passwordError ||
-                        "Uu tien mat khau du dai, co chu hoa, so va ky tu dac biet."}
+                        "Ưu tiên mật khẩu đủ dài, có chữ hoa, số và ký tự đặc biệt."}
                     </p>
                   </div>
                 </div>
                 <div className="space-y-3">
-                  <div className="rounded-[18px] border border-emerald-200 bg-emerald-50/80 p-4">
+                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 p-4">
                     <div className="flex items-center gap-2">
                       <ShieldCheck className="h-5 w-5 text-emerald-600" />
-                      <p className="text-sm font-semibold text-emerald-800">Tinh trang bao mat</p>
+                      <p className="text-sm font-semibold text-emerald-800">Tình trạng bảo mật</p>
                     </div>
                     <p className="mt-2 text-sm leading-6 text-foreground/80">
                       {passwordError
-                        ? "Form doi mat khau can chinh lai truoc khi luu."
-                        : "Moi thu da san sang, ban co the doi mat khau bat cu luc nao."}
+                        ? "Form đổi mật khẩu cần chỉnh lại trước khi lưu."
+                        : "Mọi thứ đã sẵn sàng, bạn có thể đổi mật khẩu bất cứ lúc nào."}
                     </p>
                   </div>
-                  <div className="rounded-[18px] border border-border bg-card p-4 text-sm leading-6 text-muted-foreground">
-                    Mat khau moi co hieu luc ngay. Neu ban dang hoc tren nhieu thiet bi, co the can
-                    dang nhap lai de dong bo phien.
+                  <div className="rounded-2xl border border-border bg-card p-4 text-sm leading-6 text-muted-foreground">
+                    Mật khẩu mới có hiệu lực ngay. Nếu bạn đang học trên nhiều thiết bị, có thể cần
+                    đăng nhập lại để đồng bộ phiên.
                   </div>
                 </div>
               </div>
             </PageSection>
           </div>
         </div>
-        {(hasProfileChanges || hasSettingsChanges) && (
-          <div className="sticky bottom-4 z-20 mt-4 rounded-[24px] border border-sky-200 bg-white/90 p-4 shadow-[0_18px_50px_rgba(15,23,42,0.12)] backdrop-blur">
+        {dirty && (
+          <div className="sticky bottom-4 z-20 mt-4 rounded-3xl border border-primary/20 bg-white/90 p-4 shadow-[0_18px_50px_rgba(15,23,42,0.12)] backdrop-blur">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <p className="text-sm font-semibold text-foreground">
-                  Ban dang co thay doi chua luu
+                  Bạn đang có thay đổi chưa lưu
                 </p>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  {hasProfileChanges ? "Ho so dang cho luu." : "Ho so da xong."}{" "}
+                  {hasProfileChanges ? "Hồ sơ đang chờ lưu." : "Hồ sơ đã xong."}{" "}
                   {hasSettingsChanges
-                    ? `${settingsChanges} cai dat dang cho dong bo.`
-                    : "Khong co cai dat nao dang cho."}
+                    ? `${settingsChanges} cài đặt đang chờ đồng bộ.`
+                    : "Không có cài đặt nào đang chờ."}
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -724,24 +705,25 @@ const Profile = () => {
                   className="rounded-2xl border-border bg-card text-foreground/80 hover:bg-card"
                   onClick={() => setSettings(originalSettings)}
                 >
-                  Hoan tac
+                  <RotateCcw className="mr-2 h-4 w-4" />
+                  Hoàn tác
                 </Button>
                 <Button
                   variant="outline"
-                  className="rounded-2xl border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100"
+                  className="rounded-2xl border-primary/20 bg-primary/10 text-primary hover:bg-primary/15"
                   disabled={!hasProfileChanges || !!nameError || profileSaving}
                   onClick={saveProfile}
                 >
                   <Save className="mr-2 h-4 w-4" />
-                  Luu ho so
+                  Lưu hồ sơ
                 </Button>
                 <Button
-                  className="rounded-2xl bg-sky-500 text-white hover:bg-sky-400"
+                  className="rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90"
                   disabled={!hasSettingsChanges || settingsSaving}
                   onClick={saveSettings}
                 >
                   <Save className="mr-2 h-4 w-4" />
-                  Luu cai dat
+                  Lưu cài đặt
                 </Button>
               </div>
             </div>
