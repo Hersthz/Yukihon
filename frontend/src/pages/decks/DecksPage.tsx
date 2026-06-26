@@ -15,6 +15,7 @@ import {
   Settings,
   Copy,
   Sparkles,
+  FileUp,
 } from "lucide-react";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -224,9 +225,14 @@ const DecksPage = () => {
               <BookOpen className="h-6 w-6 text-primary" /> Bộ thẻ của tôi
             </h1>
           </div>
-          <Button onClick={() => setDialogOpen(true)}>
-            <Plus className="mr-1 h-4 w-4" /> Tạo deck
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate("/decks/import")}>
+              <FileUp className="mr-1 h-4 w-4" /> Nhập từ file
+            </Button>
+            <Button onClick={() => setDialogOpen(true)}>
+              <Plus className="mr-1 h-4 w-4" /> Tạo deck
+            </Button>
+          </div>
         </div>
 
         {mine.isLoading ? (
