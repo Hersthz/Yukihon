@@ -16,6 +16,7 @@ import {
   Copy,
   Sparkles,
   FileUp,
+  TrendingUp,
 } from "lucide-react";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -226,6 +227,9 @@ const DecksPage = () => {
             </h1>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate("/decks/explore")}>
+              <TrendingUp className="mr-1 h-4 w-4" /> Khám phá
+            </Button>
             <Button variant="outline" onClick={() => navigate("/decks/import")}>
               <FileUp className="mr-1 h-4 w-4" /> Nhập từ file
             </Button>

@@ -6,13 +6,17 @@ import com.hoang.basis.yukihon.system.library.dto.CreateDeckRequest;
 import com.hoang.basis.yukihon.system.library.dto.DeckDto;
 import com.hoang.basis.yukihon.system.library.entity.Deck;
 import com.hoang.basis.yukihon.system.library.entity.DeckItem;
+import com.hoang.basis.yukihon.system.library.entity.FavoriteDeck;
 import com.hoang.basis.yukihon.system.library.entity.Flashcard;
 import com.hoang.basis.yukihon.system.library.repository.DeckItemRepository;
 import com.hoang.basis.yukihon.system.library.repository.DeckRepository;
+import com.hoang.basis.yukihon.system.library.repository.FavoriteDeckRepository;
 import com.hoang.basis.yukihon.system.library.repository.FlashcardRepository;
 import jakarta.validation.Valid;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -23,6 +27,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /** User-facing deck library: list/own/public decks and create a deck scoped to the current user. */
@@ -34,6 +39,7 @@ public class DeckController {
     private final DeckRepository deckRepository;
     private final DeckItemRepository deckItemRepository;
     private final FlashcardRepository flashcardRepository;
+    private final FavoriteDeckRepository favoriteDeckRepository;
 
     @GetMapping("/mine")
     public ResponseEntity<List<DeckDto>> myDecks(@CurrentUserId Long userId) {
@@ -44,12 +50,74 @@ public class DeckController {
     }
 
     @GetMapping("/public")
-    public ResponseEntity<List<DeckDto>> publicDecks() {
+    public ResponseEntity<List<DeckDto>> publicDecks(
+            @RequestParam(required = false) String search, @RequestParam(defaultValue = "trending") String sort) {
+        String q = search == null ? "" : search.trim().toLowerCase();
+        Comparator<Deck> comparator =
+                switch (sort) {
+                    case "newest" -> Comparator.comparing(Deck::getUpdatedAt).reversed();
+                    case "cards" -> Comparator.comparing(Deck::getTotalCards, Comparator.reverseOrder());
+                    default -> Comparator.comparingInt(
+                                    (Deck d) -> nvl(d.getCloneCount()) * 2 + nvl(d.getFavoriteCount()))
+                            .reversed();
+                };
+
         List<DeckDto> decks = deckRepository.findByVisibilityAndIsDeletedFalseOrderByUpdatedAtDesc("PUBLIC").stream()
+                .filter(d -> q.isEmpty()
+                        || (d.getTitle() != null && d.getTitle().toLowerCase().contains(q))
+                        || (d.getDescription() != null
+                                && d.getDescription().toLowerCase().contains(q)))
+                .sorted(comparator)
                 .map(DeckDto::fromEntity)
                 .toList();
         return ResponseEntity.ok(decks);
     }
+
+    @GetMapping("/favorites")
+    public ResponseEntity<List<DeckDto>> favorites(@CurrentUserId Long userId) {
+        Set<Long> ids = favoriteDeckRepository.findByUserId(userId).stream()
+                .map(FavoriteDeck::getDeckId)
+                .collect(Collectors.toSet());
+        List<DeckDto> decks = deckRepository.findAllById(ids).stream()
+                .filter(d -> !Boolean.TRUE.equals(d.getIsDeleted()))
+                .map(DeckDto::fromEntity)
+                .toList();
+        return ResponseEntity.ok(decks);
+    }
+
+    /** Toggle favorite for a deck; returns the new state + updated count. */
+    @PostMapping("/{id}/favorite")
+    @Transactional
+    public ResponseEntity<FavoriteToggleResult> toggleFavorite(@PathVariable Long id, @CurrentUserId Long userId) {
+        Deck deck = deckRepository
+                .findById(id)
+                .filter(d -> !Boolean.TRUE.equals(d.getIsDeleted()))
+                .orElseThrow(() -> new ResourceNotFoundException("Deck not found: " + id));
+
+        var existing = favoriteDeckRepository.findByUserIdAndDeckId(userId, id);
+        boolean favorited;
+        if (existing.isPresent()) {
+            favoriteDeckRepository.delete(existing.get());
+            deck.setFavoriteCount(Math.max(0, nvl(deck.getFavoriteCount()) - 1));
+            favorited = false;
+        } else {
+            FavoriteDeck fav = new FavoriteDeck();
+            fav.setUserId(userId);
+            fav.setDeckId(id);
+            favoriteDeckRepository.save(fav);
+            deck.setFavoriteCount(nvl(deck.getFavoriteCount()) + 1);
+            favorited = true;
+        }
+        deckRepository.save(deck);
+        return ResponseEntity.ok(new FavoriteToggleResult(favorited, deck.getFavoriteCount()));
+    }
+
+    private int nvl(Integer v) {
+        return v != null ? v : 0;
+    }
+
+    /** Result of a favorite toggle. */
+    public record FavoriteToggleResult(boolean favorited, Integer favoriteCount) {}
 
     @GetMapping("/{id}")
     public ResponseEntity<DeckDto> getDeck(@PathVariable Long id, @CurrentUserId Long userId) {

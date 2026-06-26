@@ -14,6 +14,7 @@ public record DeckDto(
         String targetLanguage,
         Integer totalCards,
         Integer favoriteCount,
+        Integer cloneCount,
         Instant updatedAt) {
     public static DeckDto fromEntity(Deck d) {
         return new DeckDto(
@@ -26,6 +27,7 @@ public record DeckDto(
                 d.getTargetLanguage(),
                 d.getTotalCards(),
                 d.getFavoriteCount(),
+                d.getCloneCount(),
                 d.getUpdatedAt());
     }
 }

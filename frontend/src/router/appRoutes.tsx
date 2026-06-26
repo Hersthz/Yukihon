@@ -20,6 +20,8 @@ const DeckStatsPage = lazy(() => import("@/pages/decks/DeckStatsPage"));
 const DeckSettingsPage = lazy(() => import("@/pages/decks/DeckSettingsPage"));
 const DeckQuizletPage = lazy(() => import("@/pages/decks/DeckQuizletPage"));
 const ImportDeckPage = lazy(() => import("@/pages/decks/ImportDeckPage"));
+const DeckExplorePage = lazy(() => import("@/pages/decks/DeckExplorePage"));
+const DeckPreviewPage = lazy(() => import("@/pages/decks/DeckPreviewPage"));
 const AiChat = lazy(() => import("@/pages/AiChat"));
 const Auth = lazy(() => import("@/pages/Auth"));
 const Community = lazy(() => import("@/pages/Community"));
@@ -69,6 +71,8 @@ export const AppRoutes = () => {
         <Route path="/decks/:deckId/settings" element={withProtectedRoute(<DeckSettingsPage />)} />
         <Route path="/decks/:deckId/quizlet" element={withProtectedRoute(<DeckQuizletPage />)} />
         <Route path="/decks/import" element={withProtectedRoute(<ImportDeckPage />)} />
+        <Route path="/decks/explore" element={withProtectedRoute(<DeckExplorePage />)} />
+        <Route path="/decks/:deckId/preview" element={withProtectedRoute(<DeckPreviewPage />)} />
         <Route path="/grammar" element={withProtectedRoute(<Grammar />)} />
         <Route path="/quiz" element={withProtectedRoute(<Quiz />)} />
         <Route path="/calendar" element={withProtectedRoute(<StudyCalendar />)} />

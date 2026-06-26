@@ -740,6 +740,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/decks/{id}/favorite": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["toggleFavorite"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/decks/{id}/clone": {
         parameters: {
             query?: never;
@@ -2116,6 +2132,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/decks/favorites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["favorites"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/community/stats": {
         parameters: {
             query?: never;
@@ -3258,8 +3290,15 @@ export interface components {
             totalCards?: number;
             /** Format: int32 */
             favoriteCount?: number;
+            /** Format: int32 */
+            cloneCount?: number;
             /** Format: date-time */
             updatedAt?: string;
+        };
+        FavoriteToggleResult: {
+            favorited?: boolean;
+            /** Format: int32 */
+            favoriteCount?: number;
         };
         AddCardRequest: {
             front: string;
@@ -6044,6 +6083,28 @@ export interface operations {
             };
         };
     };
+    toggleFavorite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["FavoriteToggleResult"];
+                };
+            };
+        };
+    };
     clone: {
         parameters: {
             query?: never;
@@ -8124,7 +8185,10 @@ export interface operations {
     };
     publicDecks: {
         parameters: {
-            query?: never;
+            query?: {
+                search?: string;
+                sort?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -8143,6 +8207,26 @@ export interface operations {
         };
     };
     myDecks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DeckDto"][];
+                };
+            };
+        };
+    };
+    favorites: {
         parameters: {
             query?: never;
             header?: never;
