@@ -9,6 +9,7 @@ import com.hoang.basis.yukihon.system.library.entity.Flashcard;
 import com.hoang.basis.yukihon.system.library.repository.DeckItemRepository;
 import com.hoang.basis.yukihon.system.library.repository.DeckRepository;
 import com.hoang.basis.yukihon.system.library.repository.FlashcardRepository;
+import com.hoang.basis.yukihon.system.srs.dto.AlgorithmConfigDto;
 import com.hoang.basis.yukihon.system.srs.dto.AnkiReviewRequest;
 import com.hoang.basis.yukihon.system.srs.dto.AnkiSrsSettingDto;
 import com.hoang.basis.yukihon.system.srs.dto.AnkiStatsDto;
@@ -56,7 +57,41 @@ public class AnkiStudyService {
     private final AnkiSrsSettingRepository settingRepository;
     private final SrsAlgorithmConfigRepository algorithmConfigRepository;
     private final AnkiReviewLogRepository reviewLogRepository;
+    private final FsrsScheduler fsrsScheduler;
     private final ObjectMapper objectMapper;
+
+    /** Resolve the scheduler algorithm for a deck setting ("SM2" default). */
+    private String resolveAlgorithmType(AnkiSrsSetting setting) {
+        if (setting != null && setting.getAlgorithmConfigId() != null) {
+            return algorithmConfigRepository
+                    .findById(setting.getAlgorithmConfigId())
+                    .map(SrsAlgorithmConfig::getAlgorithmType)
+                    .filter(t -> t != null && !t.isBlank())
+                    .orElse("SM2");
+        }
+        return "SM2";
+    }
+
+    /** Dispatch one rating to the right scheduler (FSRS vs SM-2). */
+    private void applySchedule(
+            AnkiSrsProgress progress,
+            String rating,
+            SchedulingConfig config,
+            String algorithmType,
+            AnkiSrsSetting setting,
+            LocalDateTime now) {
+        if ("FSRS".equals(algorithmType)) {
+            double retention = setting != null && setting.getTargetRetention() != null
+                    ? setting.getTargetRetention()
+                    : config.targetRetention;
+            int maxInterval = setting != null && setting.getMaximumIntervalDays() != null
+                    ? setting.getMaximumIntervalDays()
+                    : config.maxIntervalDays;
+            fsrsScheduler.apply(progress, rating, retention, maxInterval, now);
+        } else {
+            applyAnkiSm2(progress, rating, config, now);
+        }
+    }
 
     // ===================== LOAD QUEUE =====================
 
@@ -78,6 +113,7 @@ public class AnkiStudyService {
         AnkiSrsSetting setting =
                 settingRepository.findByUserIdAndDeckId(userId, deckId).orElse(null);
         SchedulingConfig config = resolveConfig(setting);
+        String algorithmType = resolveAlgorithmType(setting);
         LocalDateTime now = LocalDateTime.now();
 
         LocalDate today = now.toLocalDate();
@@ -149,7 +185,7 @@ public class AnkiStudyService {
                 }
             }
 
-            studyCards.add(buildCardDto(fc, progress, config));
+            studyCards.add(buildCardDto(fc, progress, config, algorithmType, setting));
         }
 
         return AnkiStudyQueueDto.builder()
@@ -199,7 +235,8 @@ public class AnkiStudyService {
         int oldInterval = nvl(progress.getIntervalDays(), 0);
         int oldLapses = nvl(progress.getLapses(), 0);
 
-        applyAnkiSm2(progress, request.getRating(), config, now);
+        String algorithmType = resolveAlgorithmType(setting);
+        applySchedule(progress, request.getRating(), config, algorithmType, setting, now);
 
         // leech detection (algorithm-agnostic)
         if (setting != null
@@ -234,7 +271,7 @@ public class AnkiStudyService {
         reviewLog.setSourceType(request.getSourceType() != null ? request.getSourceType() : "ANKI_REVIEW");
         reviewLogRepository.save(reviewLog);
 
-        return buildCardDto(flashcard, progress, config);
+        return buildCardDto(flashcard, progress, config, algorithmType, setting);
     }
 
     // ===================== SM-2 CORE =====================
@@ -400,7 +437,12 @@ public class AnkiStudyService {
 
     // ===================== PREVIEW =====================
 
-    private AnkiStudyCardDto buildCardDto(Flashcard fc, AnkiSrsProgress progress, SchedulingConfig config) {
+    private AnkiStudyCardDto buildCardDto(
+            Flashcard fc,
+            AnkiSrsProgress progress,
+            SchedulingConfig config,
+            String algorithmType,
+            AnkiSrsSetting setting) {
         AnkiStudyCardDto.AnkiStudyCardDtoBuilder b = AnkiStudyCardDto.builder()
                 .flashcardId(fc.getId())
                 .front(fc.getFront())
@@ -428,17 +470,23 @@ public class AnkiStudyService {
                     .memoryScore(0.0);
         }
 
-        b.againPreview(previewLabel(progress, fc, "AGAIN", config));
-        b.hardPreview(previewLabel(progress, fc, "HARD", config));
-        b.goodPreview(previewLabel(progress, fc, "GOOD", config));
-        b.easyPreview(previewLabel(progress, fc, "EASY", config));
+        b.againPreview(previewLabel(progress, fc, "AGAIN", config, algorithmType, setting));
+        b.hardPreview(previewLabel(progress, fc, "HARD", config, algorithmType, setting));
+        b.goodPreview(previewLabel(progress, fc, "GOOD", config, algorithmType, setting));
+        b.easyPreview(previewLabel(progress, fc, "EASY", config, algorithmType, setting));
         return b.build();
     }
 
-    private String previewLabel(AnkiSrsProgress source, Flashcard fc, String rating, SchedulingConfig config) {
+    private String previewLabel(
+            AnkiSrsProgress source,
+            Flashcard fc,
+            String rating,
+            SchedulingConfig config,
+            String algorithmType,
+            AnkiSrsSetting setting) {
         AnkiSrsProgress copy = copyProgress(source, fc, config);
         LocalDateTime now = LocalDateTime.now();
-        applyAnkiSm2(copy, rating, config, now);
+        applySchedule(copy, rating, config, algorithmType, setting, now);
         LocalDateTime next = copy.getNextReviewAt();
         if (next == null) {
             return "-";
@@ -466,7 +514,11 @@ public class AnkiStudyService {
             copy.setLearningStepIndex(source.getLearningStepIndex());
             copy.setLapses(source.getLapses());
             copy.setFirstLearnedAt(source.getFirstLearnedAt());
+            copy.setLastReviewedAt(source.getLastReviewedAt());
             copy.setNextReviewAt(source.getNextReviewAt());
+            copy.setStability(source.getStability());
+            copy.setDifficulty(source.getDifficulty());
+            copy.setAlgorithmType(source.getAlgorithmType());
         } else {
             copy.setState("NEW");
             copy.setEaseFactor(config.startingEase);
@@ -665,6 +717,61 @@ public class AnkiStudyService {
             s.setLeechThreshold(Math.max(1, dto.getLeechThreshold()));
         }
         return toSettingDto(settingRepository.save(s));
+    }
+
+    // ===================== ALGORITHMS =====================
+
+    /** List the enabled SRS algorithm presets a deck can be switched to. */
+    @Transactional(readOnly = true)
+    public List<AlgorithmConfigDto> listAlgorithms() {
+        return algorithmConfigRepository.findAll().stream()
+                .filter(c -> Boolean.TRUE.equals(c.getEnabled()))
+                .map(c -> new AlgorithmConfigDto(c.getId(), c.getCode(), c.getName(), c.getAlgorithmType()))
+                .toList();
+    }
+
+    /**
+     * Switch a deck to SM-2 or FSRS and reschedule existing cards. When moving to FSRS, seed each
+     * card's stability/difficulty from its current interval and ease so review history is preserved.
+     */
+    public AnkiSrsSettingDto switchAlgorithm(Long userId, Long deckId, String algorithmType) {
+        boolean toFsrs = "FSRS".equalsIgnoreCase(algorithmType);
+        String code = toFsrs ? "FSRS_DEFAULT" : DEFAULT_CONFIG_CODE;
+        SrsAlgorithmConfig cfg = algorithmConfigRepository
+                .findByCode(code)
+                .orElseThrow(() -> new ResourceNotFoundException("Algorithm config not found: " + code));
+
+        AnkiSrsSetting s = settingRepository
+                .findByUserIdAndDeckId(userId, deckId)
+                .orElseGet(() -> {
+                    AnkiSrsSetting ns = new AnkiSrsSetting();
+                    ns.setUserId(userId);
+                    ns.setDeckId(deckId);
+                    return ns;
+                });
+        s.setAlgorithmConfigId(cfg.getId());
+        settingRepository.save(s);
+
+        List<AnkiSrsProgress> progressList = progressRepository.findByUserIdAndDeckId(userId, deckId);
+        for (AnkiSrsProgress p : progressList) {
+            if (toFsrs) {
+                if (p.getStability() == null || p.getDifficulty() == null) {
+                    int interval = p.getIntervalDays() != null && p.getIntervalDays() > 0 ? p.getIntervalDays() : 1;
+                    double stability = Math.max(0.1, interval);
+                    // Map ease (1.3 hardest … 3.5 easiest) onto difficulty (10 hardest … 1 easiest).
+                    double ease = p.getEaseFactor() != null ? p.getEaseFactor() : 2.5;
+                    double difficulty = Math.max(1.0, Math.min(10.0, 11.0 - (ease - 1.3) / (3.5 - 1.3) * 9.0));
+                    p.setStability(stability);
+                    p.setDifficulty(difficulty);
+                    p.setMemoryScore(Math.round(1000.0 * (stability / (stability + 15.0))) / 10.0);
+                }
+                p.setAlgorithmType("FSRS");
+            } else {
+                p.setAlgorithmType("SM2");
+            }
+        }
+        progressRepository.saveAll(progressList);
+        return toSettingDto(s);
     }
 
     private AnkiSrsSettingDto toSettingDto(AnkiSrsSetting s) {

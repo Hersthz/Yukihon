@@ -2924,6 +2924,13 @@ export interface components {
             currentPassword: string;
             newPassword: string;
         };
+        AlgorithmConfigDto: {
+            /** Format: int64 */
+            id?: number;
+            code?: string;
+            name?: string;
+            algorithmType?: string;
+        };
         AnkiSrsSettingDto: {
             /** Format: int64 */
             algorithmConfigId?: number;

@@ -96,6 +96,17 @@ public class DataInitializer implements CommandLineRunner {
             srsAlgorithmConfigRepository.save(sm2);
             log.info("Initialized SRS algorithm config: SM2_DEFAULT");
         }
+
+        if (srsAlgorithmConfigRepository.findByCode("FSRS_DEFAULT").isEmpty()) {
+            SrsAlgorithmConfig fsrs = new SrsAlgorithmConfig();
+            fsrs.setCode("FSRS_DEFAULT");
+            fsrs.setName("FSRS-5 (py-fsrs)");
+            fsrs.setAlgorithmType("FSRS");
+            fsrs.setEnabled(true);
+            fsrs.setConfigJson("{\"weights\":\"py-fsrs v4.1.2\",\"maxIntervalDays\":36500}");
+            srsAlgorithmConfigRepository.save(fsrs);
+            log.info("Initialized SRS algorithm config: FSRS_DEFAULT");
+        }
     }
 
     private void initializeDemoDeck() {

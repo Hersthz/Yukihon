@@ -15,6 +15,8 @@ export type AnkiStats = Schema<"AnkiStatsDto">;
 
 export type AnkiSrsSetting = Schema<"AnkiSrsSettingDto">;
 
+export type AlgorithmConfig = Schema<"AlgorithmConfigDto">;
+
 export const srsApi = {
   getQueue: (deckId: number) => apiClient.get<StudyQueue>(`/api/anki/study/${deckId}`),
   review: (payload: ReviewPayload) => apiClient.post<StudyCard>("/api/anki/study/review", payload),
@@ -25,6 +27,9 @@ export const srsApi = {
     apiClient.put<AnkiSrsSetting>(`/api/anki/study/${deckId}/settings`, body),
   setSuspended: (deckId: number, flashcardId: number, suspended: boolean) =>
     apiClient.post<void>(`/api/anki/study/${deckId}/cards/${flashcardId}/suspend`, { suspended }),
+  getAlgorithms: () => apiClient.get<AlgorithmConfig[]>("/api/anki/study/algorithms"),
+  switchAlgorithm: (deckId: number, algorithmType: string) =>
+    apiClient.post<AnkiSrsSetting>(`/api/anki/study/${deckId}/algorithm`, { algorithmType }),
 };
 
 export default srsApi;

@@ -75,6 +75,7 @@ class AnkiStudyServiceTest {
                 settingRepository,
                 algorithmConfigRepository,
                 reviewLogRepository,
+                new FsrsScheduler(),
                 new ObjectMapper());
 
         Flashcard flashcard = mock(Flashcard.class);

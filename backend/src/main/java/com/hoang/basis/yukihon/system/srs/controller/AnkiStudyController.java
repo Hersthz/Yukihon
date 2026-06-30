@@ -1,6 +1,7 @@
 package com.hoang.basis.yukihon.system.srs.controller;
 
 import com.hoang.basis.yukihon.base.security.CurrentUserId;
+import com.hoang.basis.yukihon.system.srs.dto.AlgorithmConfigDto;
 import com.hoang.basis.yukihon.system.srs.dto.AnkiReviewRequest;
 import com.hoang.basis.yukihon.system.srs.dto.AnkiSrsSettingDto;
 import com.hoang.basis.yukihon.system.srs.dto.AnkiStatsDto;
@@ -53,6 +54,17 @@ public class AnkiStudyController {
         return ResponseEntity.ok(ankiStudyService.updateSettings(userId, deckId, dto));
     }
 
+    @GetMapping("/algorithms")
+    public ResponseEntity<java.util.List<AlgorithmConfigDto>> listAlgorithms() {
+        return ResponseEntity.ok(ankiStudyService.listAlgorithms());
+    }
+
+    @PostMapping("/{deckId}/algorithm")
+    public ResponseEntity<AnkiSrsSettingDto> switchAlgorithm(
+            @PathVariable Long deckId, @RequestBody SwitchAlgorithmRequest body, @CurrentUserId Long userId) {
+        return ResponseEntity.ok(ankiStudyService.switchAlgorithm(userId, deckId, body.algorithmType()));
+    }
+
     @PostMapping("/{deckId}/cards/{flashcardId}/suspend")
     public ResponseEntity<Void> setSuspended(
             @PathVariable Long deckId,
@@ -65,4 +77,7 @@ public class AnkiStudyController {
 
     /** Body for suspend toggle. */
     public record SuspendRequest(Boolean suspended) {}
+
+    /** Body for switching a deck's scheduling algorithm. */
+    public record SwitchAlgorithmRequest(String algorithmType) {}
 }
