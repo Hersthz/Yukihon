@@ -73,7 +73,12 @@ public class DeckCardController {
                     return fc == null
                             ? null
                             : new DeckCardDto(
-                                    fc.getId(), fc.getFront(), fc.getBack(), fc.getHint(), item.getOrderIndex());
+                                    fc.getId(),
+                                    fc.getFront(),
+                                    fc.getBack(),
+                                    fc.getHint(),
+                                    fc.getTemplate(),
+                                    item.getOrderIndex());
                 })
                 .filter(c -> c != null)
                 .toList();
@@ -92,6 +97,7 @@ public class DeckCardController {
         fc.setFront(request.getFront());
         fc.setBack(request.getBack());
         fc.setHint(request.getHint());
+        fc.setTemplate("FORWARD_REVERSE".equals(request.getTemplate()) ? "FORWARD_REVERSE" : "FORWARD");
         Flashcard savedFc = flashcardRepository.save(fc);
 
         int nextOrder = (int) deckItemRepository.countByDeckIdAndIsDeletedFalse(deckId);
@@ -106,7 +112,12 @@ public class DeckCardController {
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new DeckCardDto(
-                        savedFc.getId(), savedFc.getFront(), savedFc.getBack(), savedFc.getHint(), nextOrder));
+                        savedFc.getId(),
+                        savedFc.getFront(),
+                        savedFc.getBack(),
+                        savedFc.getHint(),
+                        savedFc.getTemplate(),
+                        nextOrder));
     }
 
     @DeleteMapping("/{flashcardId}")

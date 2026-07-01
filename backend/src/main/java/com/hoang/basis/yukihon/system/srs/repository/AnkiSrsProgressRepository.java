@@ -9,5 +9,8 @@ public interface AnkiSrsProgressRepository extends JpaRepository<AnkiSrsProgress
 
     List<AnkiSrsProgress> findByUserIdAndDeckId(Long userId, Long deckId);
 
-    Optional<AnkiSrsProgress> findByUserIdAndDeckIdAndFlashcardId(Long userId, Long deckId, Long flashcardId);
+    Optional<AnkiSrsProgress> findByUserIdAndDeckIdAndFlashcardIdAndSide(
+            Long userId, Long deckId, Long flashcardId, String side);
+
+    List<AnkiSrsProgress> findByUserIdAndDeckIdAndFlashcardId(Long userId, Long deckId, Long flashcardId);
 }

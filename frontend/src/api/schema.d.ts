@@ -3311,6 +3311,7 @@ export interface components {
             front: string;
             back: string;
             hint?: string;
+            template?: string;
         };
         DeckCardDto: {
             /** Format: int64 */
@@ -3318,6 +3319,7 @@ export interface components {
             front?: string;
             back?: string;
             hint?: string;
+            template?: string;
             /** Format: int32 */
             orderIndex?: number;
         };
@@ -3409,6 +3411,7 @@ export interface components {
             deckId: number;
             /** Format: int64 */
             flashcardId: number;
+            side?: string;
             rating: string;
             /** Format: double */
             score?: number;
@@ -3419,6 +3422,7 @@ export interface components {
         AnkiStudyCardDto: {
             /** Format: int64 */
             flashcardId?: number;
+            side?: string;
             front?: string;
             back?: string;
             hint?: string;

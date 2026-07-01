@@ -10,6 +10,7 @@ import lombok.Data;
 public class AnkiStudyCardDto {
 
     private Long flashcardId;
+    private String side; // FORWARD | REVERSE
     private String front;
     private String back;
     private String hint;

@@ -13,4 +13,7 @@ public class AddCardRequest {
     private String back;
 
     private String hint;
+
+    /** FORWARD (default) | FORWARD_REVERSE — study template for the new card. */
+    private String template;
 }

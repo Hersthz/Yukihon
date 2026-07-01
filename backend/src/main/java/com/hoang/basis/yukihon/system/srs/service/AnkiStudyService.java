@@ -93,6 +93,21 @@ public class AnkiStudyService {
         }
     }
 
+    /** The study card sides a flashcard produces, driven by its template. */
+    private List<String> sidesFor(Flashcard fc) {
+        return "FORWARD_REVERSE".equals(fc.getTemplate()) ? List.of("FORWARD", "REVERSE") : List.of("FORWARD");
+    }
+
+    /** Composite key for the per-(flashcard, side) progress map. */
+    private String progressKey(Long flashcardId, String side) {
+        return flashcardId + "|" + (side != null ? side : "FORWARD");
+    }
+
+    /** Clamp a requested side to what the flashcard's template actually supports. */
+    private String normalizeSide(String side, Flashcard fc) {
+        return "REVERSE".equalsIgnoreCase(side) && "FORWARD_REVERSE".equals(fc.getTemplate()) ? "REVERSE" : "FORWARD";
+    }
+
     // ===================== LOAD QUEUE =====================
 
     @Transactional(readOnly = true)
@@ -107,8 +122,8 @@ public class AnkiStudyService {
                 .collect(Collectors.toMap(Flashcard::getId, f -> f));
 
         List<AnkiSrsProgress> progressList = progressRepository.findByUserIdAndDeckId(userId, deckId);
-        Map<Long, AnkiSrsProgress> progressMap =
-                progressList.stream().collect(Collectors.toMap(AnkiSrsProgress::getFlashcardId, p -> p));
+        Map<String, AnkiSrsProgress> progressMap = progressList.stream()
+                .collect(Collectors.toMap(p -> progressKey(p.getFlashcardId(), p.getSide()), p -> p, (a, b) -> a));
 
         AnkiSrsSetting setting =
                 settingRepository.findByUserIdAndDeckId(userId, deckId).orElse(null);
@@ -148,44 +163,46 @@ public class AnkiStudyService {
             if (fc == null) {
                 continue;
             }
-            AnkiSrsProgress progress = progressMap.get(fc.getId());
+            for (String side : sidesFor(fc)) {
+                AnkiSrsProgress progress = progressMap.get(progressKey(fc.getId(), side));
 
-            if (Boolean.TRUE.equals(progress != null ? progress.getSuspended() : Boolean.FALSE)) {
-                continue;
+                if (Boolean.TRUE.equals(progress != null ? progress.getSuspended() : Boolean.FALSE)) {
+                    continue;
+                }
+
+                boolean isNew = progress == null || "NEW".equals(progress.getState());
+
+                if (isNew) {
+                    totalNew++;
+                    if (queuedNew >= newLimit) {
+                        continue;
+                    }
+                    queuedNew++;
+                } else if ("LEARNING".equals(progress.getState()) || "RELEARNING".equals(progress.getState())) {
+                    totalLearning++;
+                    boolean dueSoon = progress.getNextReviewAt() == null
+                            || !progress.getNextReviewAt().isAfter(now.plusMinutes(LEARN_AHEAD_MINUTES));
+                    if (!dueSoon) {
+                        continue;
+                    }
+                } else if ("REVIEW".equals(progress.getState())) {
+                    totalReview++;
+                    if (!isDue(progress, now)) {
+                        continue;
+                    }
+                    dueReviewCards++;
+                    if (queuedDue >= dueLimit) {
+                        continue;
+                    }
+                    queuedDue++;
+                } else {
+                    if (!isDue(progress, now)) {
+                        continue;
+                    }
+                }
+
+                studyCards.add(buildCardDto(fc, progress, config, algorithmType, setting, side));
             }
-
-            boolean isNew = progress == null || "NEW".equals(progress.getState());
-
-            if (isNew) {
-                totalNew++;
-                if (queuedNew >= newLimit) {
-                    continue;
-                }
-                queuedNew++;
-            } else if ("LEARNING".equals(progress.getState()) || "RELEARNING".equals(progress.getState())) {
-                totalLearning++;
-                boolean dueSoon = progress.getNextReviewAt() == null
-                        || !progress.getNextReviewAt().isAfter(now.plusMinutes(LEARN_AHEAD_MINUTES));
-                if (!dueSoon) {
-                    continue;
-                }
-            } else if ("REVIEW".equals(progress.getState())) {
-                totalReview++;
-                if (!isDue(progress, now)) {
-                    continue;
-                }
-                dueReviewCards++;
-                if (queuedDue >= dueLimit) {
-                    continue;
-                }
-                queuedDue++;
-            } else {
-                if (!isDue(progress, now)) {
-                    continue;
-                }
-            }
-
-            studyCards.add(buildCardDto(fc, progress, config, algorithmType, setting));
         }
 
         return AnkiStudyQueueDto.builder()
@@ -212,13 +229,15 @@ public class AnkiStudyService {
         SchedulingConfig config = resolveConfig(setting);
         LocalDateTime now = LocalDateTime.now();
 
+        String side = normalizeSide(request.getSide(), flashcard);
         AnkiSrsProgress progress = progressRepository
-                .findByUserIdAndDeckIdAndFlashcardId(userId, deck.getId(), flashcard.getId())
+                .findByUserIdAndDeckIdAndFlashcardIdAndSide(userId, deck.getId(), flashcard.getId(), side)
                 .orElseGet(() -> {
                     AnkiSrsProgress p = new AnkiSrsProgress();
                     p.setUserId(userId);
                     p.setDeckId(deck.getId());
                     p.setFlashcardId(flashcard.getId());
+                    p.setSide(side);
                     p.setState("NEW");
                     p.setEaseFactor(config.startingEase);
                     p.setIntervalDays(0);
@@ -271,7 +290,7 @@ public class AnkiStudyService {
         reviewLog.setSourceType(request.getSourceType() != null ? request.getSourceType() : "ANKI_REVIEW");
         reviewLogRepository.save(reviewLog);
 
-        return buildCardDto(flashcard, progress, config, algorithmType, setting);
+        return buildCardDto(flashcard, progress, config, algorithmType, setting, side);
     }
 
     // ===================== SM-2 CORE =====================
@@ -442,11 +461,15 @@ public class AnkiStudyService {
             AnkiSrsProgress progress,
             SchedulingConfig config,
             String algorithmType,
-            AnkiSrsSetting setting) {
+            AnkiSrsSetting setting,
+            String side) {
+        boolean reverse = "REVERSE".equals(side);
         AnkiStudyCardDto.AnkiStudyCardDtoBuilder b = AnkiStudyCardDto.builder()
                 .flashcardId(fc.getId())
-                .front(fc.getFront())
-                .back(fc.getBack())
+                .side(reverse ? "REVERSE" : "FORWARD")
+                // On the reverse card the prompt is the back and the answer is the front.
+                .front(reverse ? fc.getBack() : fc.getFront())
+                .back(reverse ? fc.getFront() : fc.getBack())
                 .hint(fc.getHint())
                 .explanation(fc.getExplanation())
                 .imageUrl(fc.getImageUrl())
@@ -544,7 +567,14 @@ public class AnkiStudyService {
     public AnkiStatsDto getStats(Long userId, Long deckId) {
         deckRepository.findById(deckId).orElseThrow(() -> new ResourceNotFoundException("Deck not found: " + deckId));
 
-        long totalCards = deckItemRepository.countByDeckIdAndIsDeletedFalse(deckId);
+        // Count generated study cards (a FORWARD_REVERSE note yields two), not just notes.
+        List<Long> deckFlashcardIds =
+                deckItemRepository.findByDeckIdAndIsDeletedFalseOrderByOrderIndexAsc(deckId).stream()
+                        .map(DeckItem::getFlashcardId)
+                        .toList();
+        long totalCards = flashcardRepository.findAllById(deckFlashcardIds).stream()
+                .mapToLong(fc -> sidesFor(fc).size())
+                .sum();
         List<AnkiSrsProgress> all = progressRepository.findByUserIdAndDeckId(userId, deckId);
         List<AnkiSrsProgress> active =
                 all.stream().filter(p -> !Boolean.TRUE.equals(p.getSuspended())).toList();
@@ -797,11 +827,13 @@ public class AnkiStudyService {
     // ===================== SUSPEND =====================
 
     public void setCardSuspended(Long userId, Long deckId, Long flashcardId, boolean suspended) {
-        AnkiSrsProgress p = progressRepository
-                .findByUserIdAndDeckIdAndFlashcardId(userId, deckId, flashcardId)
-                .orElseThrow(() -> new ResourceNotFoundException("Progress not found"));
-        p.setSuspended(suspended);
-        progressRepository.save(p);
+        List<AnkiSrsProgress> rows =
+                progressRepository.findByUserIdAndDeckIdAndFlashcardId(userId, deckId, flashcardId);
+        if (rows.isEmpty()) {
+            throw new ResourceNotFoundException("Progress not found");
+        }
+        rows.forEach(p -> p.setSuspended(suspended));
+        progressRepository.saveAll(rows);
     }
 
     private double memoryScore(Double easeFactor, SchedulingConfig config) {

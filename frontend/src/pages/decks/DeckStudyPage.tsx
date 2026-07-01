@@ -97,7 +97,12 @@ const DeckStudyPage = () => {
 
   const reviewMutation = useMutation({
     mutationFn: (rating: SrsRating) =>
-      srsApi.review({ deckId: id, flashcardId: current!.flashcardId, rating }),
+      srsApi.review({
+        deckId: id,
+        flashcardId: current!.flashcardId,
+        side: current!.side,
+        rating,
+      }),
     onSuccess: () => {
       setReviewed((r) => r + 1);
       if (index + 1 >= cards.length) {
@@ -196,7 +201,14 @@ const DeckStudyPage = () => {
                 <span>
                   {index + 1} / {cards.length}
                 </span>
-                <span className="uppercase tracking-wide">{current?.state}</span>
+                <span className="flex items-center gap-2 uppercase tracking-wide">
+                  {current?.side === "REVERSE" && (
+                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium normal-case text-primary">
+                      ⇄ chiều ngược
+                    </span>
+                  )}
+                  {current?.state}
+                </span>
               </div>
               <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
                 <div
@@ -210,7 +222,7 @@ const DeckStudyPage = () => {
               <CardContent className="flex flex-1 flex-col items-center justify-center gap-6 py-12 text-center">
                 <AnimatePresence mode="wait">
                   <motion.div
-                    key={`${current?.flashcardId}-front`}
+                    key={`${current?.flashcardId}-${current?.side}-front`}
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="text-4xl font-bold"

@@ -45,6 +45,18 @@ public class Flashcard extends BaseEntity {
             enumValues = {"BASIC", "IMAGE", "AUDIO", "CLOZE"})
     private String cardType = "BASIC";
 
+    /**
+     * Study template: how many cards this note produces. FORWARD = front→back only;
+     * FORWARD_REVERSE = both front→back and back→front (each with its own SRS progress).
+     */
+    @Column(name = "template", nullable = false, length = 20)
+    @FieldMeta(
+            label = "Template",
+            type = "select",
+            order = 10,
+            enumValues = {"FORWARD", "FORWARD_REVERSE"})
+    private String template = "FORWARD";
+
     @Column(name = "item_type", length = 30)
     @FieldMeta(
             label = "Item Type",

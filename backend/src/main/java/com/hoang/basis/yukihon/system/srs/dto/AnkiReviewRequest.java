@@ -13,6 +13,9 @@ public class AnkiReviewRequest {
     @NotNull
     private Long flashcardId;
 
+    /** FORWARD (default) | REVERSE — which generated card is being rated. */
+    private String side;
+
     /** AGAIN | HARD | GOOD | EASY */
     @NotNull
     private String rating;

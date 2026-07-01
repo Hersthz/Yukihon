@@ -14,6 +14,7 @@ import com.hoang.basis.yukihon.system.library.repository.DeckItemRepository;
 import com.hoang.basis.yukihon.system.library.repository.DeckRepository;
 import com.hoang.basis.yukihon.system.library.repository.FlashcardRepository;
 import com.hoang.basis.yukihon.system.srs.dto.AnkiReviewRequest;
+import com.hoang.basis.yukihon.system.srs.dto.AnkiStudyCardDto;
 import com.hoang.basis.yukihon.system.srs.entity.AnkiSrsProgress;
 import com.hoang.basis.yukihon.system.srs.repository.AnkiReviewLogRepository;
 import com.hoang.basis.yukihon.system.srs.repository.AnkiSrsProgressRepository;
@@ -64,6 +65,7 @@ class AnkiStudyServiceTest {
     private AnkiReviewLogRepository reviewLogRepository;
 
     private AnkiStudyService service;
+    private Flashcard flashcard;
 
     @BeforeEach
     void setUp() {
@@ -78,7 +80,7 @@ class AnkiStudyServiceTest {
                 new FsrsScheduler(),
                 new ObjectMapper());
 
-        Flashcard flashcard = mock(Flashcard.class);
+        flashcard = mock(Flashcard.class);
         when(flashcard.getId()).thenReturn(FC_ID);
         Deck deck = mock(Deck.class);
         when(deck.getId()).thenReturn(DECK_ID);
@@ -110,13 +112,13 @@ class AnkiStudyServiceTest {
         p.setEaseFactor(ease);
         p.setLapses(0);
         p.setReviewCount(3);
-        when(progressRepository.findByUserIdAndDeckIdAndFlashcardId(USER_ID, DECK_ID, FC_ID))
+        when(progressRepository.findByUserIdAndDeckIdAndFlashcardIdAndSide(USER_ID, DECK_ID, FC_ID, "FORWARD"))
                 .thenReturn(Optional.of(p));
         return p;
     }
 
     private void newCard() {
-        when(progressRepository.findByUserIdAndDeckIdAndFlashcardId(USER_ID, DECK_ID, FC_ID))
+        when(progressRepository.findByUserIdAndDeckIdAndFlashcardIdAndSide(USER_ID, DECK_ID, FC_ID, "FORWARD"))
                 .thenReturn(Optional.empty());
     }
 
@@ -254,5 +256,42 @@ class AnkiStudyServiceTest {
         assertThat(saved.getState()).isEqualTo("LEARNING");
         assertThat(saved.getLearningStepIndex()).isEqualTo(1);
         assertThat(saved.getLastRating()).isEqualTo("GOOD");
+    }
+
+    @Test
+    @DisplayName("REVERSE side on a FORWARD_REVERSE card creates REVERSE progress and swaps prompt/answer")
+    void reverseSideReview() {
+        when(flashcard.getTemplate()).thenReturn("FORWARD_REVERSE");
+        when(flashcard.getFront()).thenReturn("表");
+        when(flashcard.getBack()).thenReturn("裏");
+        when(progressRepository.findByUserIdAndDeckIdAndFlashcardIdAndSide(USER_ID, DECK_ID, FC_ID, "REVERSE"))
+                .thenReturn(Optional.empty());
+
+        AnkiReviewRequest req = request("GOOD");
+        req.setSide("REVERSE");
+        AnkiStudyCardDto dto = service.review(USER_ID, req);
+
+        assertThat(dto.getSide()).isEqualTo("REVERSE");
+        assertThat(dto.getFront()).isEqualTo("裏"); // prompt = back
+        assertThat(dto.getBack()).isEqualTo("表"); // answer = front
+
+        AnkiSrsProgress saved = capturePersisted();
+        assertThat(saved.getSide()).isEqualTo("REVERSE");
+    }
+
+    @Test
+    @DisplayName("REVERSE requested on a FORWARD-only card falls back to FORWARD")
+    void reverseIgnoredWhenTemplateForwardOnly() {
+        when(flashcard.getTemplate()).thenReturn("FORWARD");
+        when(progressRepository.findByUserIdAndDeckIdAndFlashcardIdAndSide(USER_ID, DECK_ID, FC_ID, "FORWARD"))
+                .thenReturn(Optional.empty());
+
+        AnkiReviewRequest req = request("GOOD");
+        req.setSide("REVERSE");
+        AnkiStudyCardDto dto = service.review(USER_ID, req);
+
+        assertThat(dto.getSide()).isEqualTo("FORWARD");
+        AnkiSrsProgress saved = capturePersisted();
+        assertThat(saved.getSide()).isEqualTo("FORWARD");
     }
 }

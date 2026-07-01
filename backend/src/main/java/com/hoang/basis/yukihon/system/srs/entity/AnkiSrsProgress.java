@@ -22,7 +22,7 @@ import lombok.Setter;
         uniqueConstraints =
                 @UniqueConstraint(
                         name = "uk_anki_progress",
-                        columnNames = {"user_id", "deck_id", "flashcard_id"}),
+                        columnNames = {"user_id", "deck_id", "flashcard_id", "side"}),
         indexes = {
             @Index(name = "idx_anki_progress_due", columnList = "user_id, next_review_at"),
             @Index(name = "idx_anki_progress_flashcard", columnList = "flashcard_id")
@@ -40,6 +40,10 @@ public class AnkiSrsProgress extends BaseEntity {
 
     @Column(name = "flashcard_id", nullable = false)
     private Long flashcardId;
+
+    /** Which generated card this progress tracks: FORWARD (front→back) or REVERSE (back→front). */
+    @Column(name = "side", nullable = false, length = 10)
+    private String side = "FORWARD";
 
     @Column(name = "state", nullable = false, length = 30)
     private String state = "NEW"; // NEW, LEARNING, REVIEW, RELEARNING

@@ -6,6 +6,7 @@ import { ArrowLeft, Plus, Trash2, Play, Loader2, Layers } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -28,6 +29,7 @@ const DeckCardsPage = () => {
   const [front, setFront] = useState("");
   const [back, setBack] = useState("");
   const [hint, setHint] = useState("");
+  const [reverse, setReverse] = useState(false);
 
   const deck = useQuery({
     queryKey: ["deck", id],
@@ -52,6 +54,7 @@ const DeckCardsPage = () => {
         front: front.trim(),
         back: back.trim(),
         hint: hint.trim() || undefined,
+        template: reverse ? "FORWARD_REVERSE" : "FORWARD",
       }),
     onSuccess: () => {
       setFront("");
@@ -138,6 +141,15 @@ const DeckCardsPage = () => {
                 )}
               </Button>
             </div>
+            <label className="mt-3 flex w-fit cursor-pointer items-center gap-2 text-sm text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={reverse}
+                onChange={(e) => setReverse(e.target.checked)}
+                className="h-4 w-4 accent-primary"
+              />
+              Học 2 chiều (tạo thêm thẻ ngược: mặt sau → mặt trước)
+            </label>
           </CardContent>
         </Card>
 
@@ -150,19 +162,20 @@ const DeckCardsPage = () => {
                   <TableHead>Mặt trước</TableHead>
                   <TableHead>Mặt sau</TableHead>
                   <TableHead>Gợi ý</TableHead>
+                  <TableHead className="w-24">Kiểu</TableHead>
                   <TableHead className="w-16 text-right" />
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {cards.isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="py-10 text-center">
+                    <TableCell colSpan={6} className="py-10 text-center">
                       <Loader2 className="mx-auto h-5 w-5 animate-spin text-muted-foreground" />
                     </TableCell>
                   </TableRow>
                 ) : list.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
+                    <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
                       Chưa có thẻ. Thêm thẻ đầu tiên ở trên.
                     </TableCell>
                   </TableRow>
@@ -173,6 +186,15 @@ const DeckCardsPage = () => {
                       <TableCell className="font-medium">{c.front}</TableCell>
                       <TableCell>{c.back}</TableCell>
                       <TableCell className="text-muted-foreground">{c.hint}</TableCell>
+                      <TableCell>
+                        {c.template === "FORWARD_REVERSE" ? (
+                          <Badge variant="secondary" className="rounded-full text-xs">
+                            2 chiều
+                          </Badge>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">1 chiều</span>
+                        )}
+                      </TableCell>
                       <TableCell className="text-right">
                         <Button
                           variant="ghost"
