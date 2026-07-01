@@ -26,28 +26,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { adminApi } from "@/api";
+import { adminApi, type UserManagement, type PagedUsers } from "@/api";
 import { useAuth } from "@/hooks/use-auth";
 import { Navigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-
-interface UserManagement {
-  id: number;
-  email: string;
-  displayName: string;
-  enabled: boolean;
-  roles: string[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface PagedResponse {
-  content: UserManagement[];
-  totalElements: number;
-  totalPages: number;
-  number: number;
-  size: number;
-}
 
 const AdminUsers = () => {
   const { isAdmin, user: currentUser } = useAuth();
@@ -63,7 +45,7 @@ const AdminUsers = () => {
 
   const usersQuery = useQuery({
     queryKey: ["admin-users", appliedSearch, page],
-    queryFn: async (): Promise<PagedResponse> => {
+    queryFn: async (): Promise<PagedUsers> => {
       if (appliedSearch) {
         const found = (await adminApi.searchUsers(appliedSearch)) as UserManagement[];
         return {
@@ -74,7 +56,7 @@ const AdminUsers = () => {
           size: found.length,
         };
       }
-      return (await adminApi.getUsers(page, 20)) as PagedResponse;
+      return await adminApi.getUsers(page, 20);
     },
   });
 

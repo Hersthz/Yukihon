@@ -1,5 +1,6 @@
 package com.hoang.basis.yukihon.system.blog.service;
 
+import com.hoang.basis.yukihon.exception.ResourceNotFoundException;
 import com.hoang.basis.yukihon.system.blog.dto.BlogPostDto;
 import com.hoang.basis.yukihon.system.blog.dto.BlogPostRequest;
 import com.hoang.basis.yukihon.system.blog.entity.BlogPost;
@@ -82,7 +83,7 @@ public class BlogPostService {
         if (req.getSlug() != null && !req.getSlug().isBlank()) {
             String newSlug = slugify(req.getSlug());
             if (!newSlug.equals(post.getSlug()) && blogPostRepository.existsBySlug(newSlug)) {
-                throw new RuntimeException("Slug already in use: " + newSlug);
+                throw new IllegalArgumentException("Slug already in use: " + newSlug);
             }
             post.setSlug(newSlug);
         }
@@ -105,7 +106,7 @@ public class BlogPostService {
 
     public void delete(Long id) {
         if (!blogPostRepository.existsById(id)) {
-            throw new RuntimeException("Blog post not found: " + id);
+            throw new ResourceNotFoundException("Blog post not found: " + id);
         }
         blogPostRepository.deleteById(id);
         log.info("Deleted blog post id={}", id);

@@ -1,5 +1,6 @@
 package com.hoang.basis.yukihon.system.grammar.service;
 
+import com.hoang.basis.yukihon.exception.ResourceNotFoundException;
 import com.hoang.basis.yukihon.system.grammar.dto.GrammarDto;
 import com.hoang.basis.yukihon.system.grammar.dto.GrammarRequest;
 import com.hoang.basis.yukihon.system.grammar.entity.Grammar;
@@ -61,7 +62,7 @@ public class GrammarService {
 
     public GrammarDto createGrammar(GrammarRequest request) {
         if (grammarRepository.findByPattern(request.getPattern()).isPresent()) {
-            throw new RuntimeException("Grammar with pattern '" + request.getPattern() + "' already exists");
+            throw new IllegalArgumentException("Grammar with pattern '" + request.getPattern() + "' already exists");
         }
 
         Grammar grammar = Grammar.builder()
@@ -88,7 +89,7 @@ public class GrammarService {
 
         if (!grammar.getPattern().equals(request.getPattern())
                 && grammarRepository.findByPattern(request.getPattern()).isPresent()) {
-            throw new RuntimeException("Grammar with pattern '" + request.getPattern() + "' already exists");
+            throw new IllegalArgumentException("Grammar with pattern '" + request.getPattern() + "' already exists");
         }
 
         grammar.setTitle(request.getTitle());
@@ -108,7 +109,7 @@ public class GrammarService {
 
     public void deleteGrammar(Long id) {
         if (!grammarRepository.existsById(id)) {
-            throw new RuntimeException("Grammar not found with id: " + id);
+            throw new ResourceNotFoundException("Grammar not found with id: " + id);
         }
         grammarRepository.deleteById(id);
         log.info("Deleted grammar with id: {}", id);

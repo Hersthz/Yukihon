@@ -3,6 +3,7 @@ package com.hoang.basis.yukihon.system.translation.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hoang.basis.yukihon.exception.ResourceNotFoundException;
+import com.hoang.basis.yukihon.exception.ServiceUnavailableException;
 import com.hoang.basis.yukihon.system.translation.dto.TranslateRequest;
 import com.hoang.basis.yukihon.system.translation.dto.TranslateResponse;
 import com.hoang.basis.yukihon.system.translation.dto.TranslationHistoryDto;
@@ -165,7 +166,7 @@ public class TranslationService {
             return FALLBACK_TRANSLATION;
         } catch (Exception exception) {
             log.error("Translation API error: {}", exception.getMessage(), exception);
-            throw new RuntimeException("Translation service unavailable. Please try again later.");
+            throw new ServiceUnavailableException("Translation service unavailable. Please try again later.");
         }
     }
 

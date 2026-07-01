@@ -123,7 +123,7 @@ public class UserProgressService {
 
     public void deleteProgress(Long id) {
         if (!userProgressRepository.existsById(id)) {
-            throw new RuntimeException("Progress not found with id: " + id);
+            throw new ResourceNotFoundException("Progress not found with id: " + id);
         }
         userProgressRepository.deleteById(id);
         log.info("Deleted progress with id: {}", id);

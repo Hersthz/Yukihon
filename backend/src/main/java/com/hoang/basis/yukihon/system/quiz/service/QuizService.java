@@ -1,5 +1,6 @@
 package com.hoang.basis.yukihon.system.quiz.service;
 
+import com.hoang.basis.yukihon.exception.ResourceNotFoundException;
 import com.hoang.basis.yukihon.system.quiz.dto.QuizDto;
 import com.hoang.basis.yukihon.system.quiz.dto.QuizRequest;
 import com.hoang.basis.yukihon.system.quiz.entity.Quiz;
@@ -117,7 +118,7 @@ public class QuizService {
 
     public void deleteQuiz(Long id) {
         if (!quizRepository.existsById(id)) {
-            throw new RuntimeException("Quiz not found with id: " + id);
+            throw new ResourceNotFoundException("Quiz not found with id: " + id);
         }
         quizRepository.deleteById(id);
         log.info("Deleted quiz with id: {}", id);

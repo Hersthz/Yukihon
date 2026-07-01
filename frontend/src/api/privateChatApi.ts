@@ -7,7 +7,7 @@ export type MessagePage<T> = Schema<"PagePrivateMessageDto">;
 
 export const privateChatApi = {
   getHistory: (otherUserId: number, page = 0, size = 50) =>
-    apiClient.get<MessagePage<PrivateMessage>>(`/api/v1/private-chat/history/${otherUserId}`, {
+    apiClient.get<MessagePage<PrivateMessage>>(`/api/private-chat/history/${otherUserId}`, {
       page,
       size,
     }),

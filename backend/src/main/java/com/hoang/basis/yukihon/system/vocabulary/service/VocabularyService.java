@@ -1,5 +1,6 @@
 package com.hoang.basis.yukihon.system.vocabulary.service;
 
+import com.hoang.basis.yukihon.exception.ResourceNotFoundException;
 import com.hoang.basis.yukihon.system.vocabulary.dto.VocabularyDto;
 import com.hoang.basis.yukihon.system.vocabulary.dto.VocabularyRequest;
 import com.hoang.basis.yukihon.system.vocabulary.entity.Vocabulary;
@@ -68,7 +69,7 @@ public class VocabularyService {
 
     public VocabularyDto createVocabulary(VocabularyRequest request) {
         if (vocabularyRepository.findByKanji(request.getKanji()).isPresent()) {
-            throw new RuntimeException("Vocabulary with kanji '" + request.getKanji() + "' already exists");
+            throw new IllegalArgumentException("Vocabulary with kanji '" + request.getKanji() + "' already exists");
         }
 
         Vocabulary vocabulary = Vocabulary.builder()
@@ -95,7 +96,7 @@ public class VocabularyService {
 
         if (!vocabulary.getKanji().equals(request.getKanji())
                 && vocabularyRepository.findByKanji(request.getKanji()).isPresent()) {
-            throw new RuntimeException("Vocabulary with kanji '" + request.getKanji() + "' already exists");
+            throw new IllegalArgumentException("Vocabulary with kanji '" + request.getKanji() + "' already exists");
         }
 
         vocabulary.setKanji(request.getKanji());
@@ -115,7 +116,7 @@ public class VocabularyService {
 
     public void deleteVocabulary(Long id) {
         if (!vocabularyRepository.existsById(id)) {
-            throw new RuntimeException("Vocabulary not found with id: " + id);
+            throw new ResourceNotFoundException("Vocabulary not found with id: " + id);
         }
         vocabularyRepository.deleteById(id);
         log.info("Deleted vocabulary with id: {}", id);

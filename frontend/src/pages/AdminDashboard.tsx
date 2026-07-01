@@ -1,4 +1,5 @@
-﻿import { useCallback, useEffect, useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import {
@@ -25,33 +26,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import {
-  adminApi,
-  learningAnalyticsApi,
-  type LearningFunnelResponse,
-  type QuizAnalytics,
-} from "@/api";
+import { adminApi, learningAnalyticsApi } from "@/api";
 import { useAuth } from "@/hooks/use-auth";
 import { Navigate } from "react-router-dom";
 
-interface SystemStats {
-  totalUsers: number;
-  activeUsers: number;
-  adminUsers: number;
-  totalLessons: number;
-  totalVocabulary: number;
-  totalGrammar: number;
-  totalQuizzes: number;
-}
-
 const AdminDashboard = () => {
   const { isAdmin } = useAuth();
-  const [stats, setStats] = useState<SystemStats | null>(null);
-  const [funnel, setFunnel] = useState<LearningFunnelResponse | null>(null);
-  const [quizAnalytics, setQuizAnalytics] = useState<QuizAnalytics | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [funnelLoading, setFunnelLoading] = useState(true);
-  const [quizAnalyticsLoading, setQuizAnalyticsLoading] = useState(true);
   const [exportingQuizAnalytics, setExportingQuizAnalytics] = useState(false);
   const [funnelDays, setFunnelDays] = useState("30");
   const [funnelJlpt, setFunnelJlpt] = useState("ALL");
@@ -78,52 +58,26 @@ const AdminDashboard = () => {
     setFunnelEndDate("");
   };
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const statsResult = (await adminApi.getSystemStats()) as SystemStats;
-        setStats(statsResult);
-      } catch (error) {
-        console.error("Failed to fetch system stats:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const statsQuery = useQuery({
+    queryKey: ["admin", "system-stats"],
+    queryFn: () => adminApi.getSystemStats(),
+  });
+  const stats = statsQuery.data ?? null;
+  const loading = statsQuery.isLoading;
 
-    fetchStats();
-  }, []);
+  const funnelQueryResult = useQuery({
+    queryKey: ["admin", "learning-funnel", funnelQuery],
+    queryFn: () => learningAnalyticsApi.getFunnel(funnelQuery),
+  });
+  const funnel = funnelQueryResult.data ?? null;
+  const funnelLoading = funnelQueryResult.isLoading;
 
-  const fetchFunnel = useCallback(async () => {
-    setFunnelLoading(true);
-    try {
-      const result = await learningAnalyticsApi.getFunnel(funnelQuery);
-      setFunnel(result);
-    } catch (error) {
-      console.error("Failed to fetch learning funnel:", error);
-    } finally {
-      setFunnelLoading(false);
-    }
-  }, [funnelQuery]);
-
-  useEffect(() => {
-    void fetchFunnel();
-  }, [fetchFunnel]);
-
-  useEffect(() => {
-    const fetchQuizAnalytics = async () => {
-      setQuizAnalyticsLoading(true);
-      try {
-        const result = await adminApi.getQuizAnalytics();
-        setQuizAnalytics(result);
-      } catch (error) {
-        console.error("Failed to fetch quiz analytics:", error);
-      } finally {
-        setQuizAnalyticsLoading(false);
-      }
-    };
-
-    void fetchQuizAnalytics();
-  }, []);
+  const quizAnalyticsQuery = useQuery({
+    queryKey: ["admin", "quiz-analytics"],
+    queryFn: () => adminApi.getQuizAnalytics(),
+  });
+  const quizAnalytics = quizAnalyticsQuery.data ?? null;
+  const quizAnalyticsLoading = quizAnalyticsQuery.isLoading;
 
   if (!isAdmin()) {
     return <Navigate to="/dashboard" replace />;

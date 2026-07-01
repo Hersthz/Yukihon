@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Plus, Pencil, Trash2, Search, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 
@@ -44,7 +45,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { metaApi, type EntityMetadata, type FieldMetadata } from "@/api/metaApi";
+import { metaApi, type FieldMetadata } from "@/api/metaApi";
 import { createAutoCrudApi, type AutoCrudRow } from "@/api/autoCrudApi";
 import { createAutoCrudHooks } from "@/lib/createAutoCrudHooks";
 
@@ -83,7 +84,11 @@ const MetadataDrivenCrudPage = ({ entityName }: MetadataDrivenCrudPageProps) => 
   const { toast } = useToast();
   const { hasPermission } = useAuth();
 
-  const [meta, setMeta] = useState<EntityMetadata | null>(null);
+  const metaQuery = useQuery({
+    queryKey: ["admin-meta", entityName],
+    queryFn: () => metaApi.getEntity(entityName),
+  });
+  const meta = metaQuery.data ?? null;
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
@@ -127,25 +132,16 @@ const MetadataDrivenCrudPage = ({ entityName }: MetadataDrivenCrudPageProps) => 
   const canUpdate = can("UPDATE");
   const canDelete = can("DELETE");
 
-  // Load metadata once per entity.
   useEffect(() => {
-    let active = true;
-    metaApi
-      .getEntity(entityName)
-      .then((data) => {
-        if (active) setMeta(data);
-      })
-      .catch((error: unknown) => {
-        toast({
-          title: "Không tải được metadata",
-          description: error instanceof Error ? error.message : "Lỗi không xác định",
-          variant: "destructive",
-        });
+    if (metaQuery.error) {
+      toast({
+        title: "Không tải được metadata",
+        description:
+          metaQuery.error instanceof Error ? metaQuery.error.message : "Lỗi không xác định",
+        variant: "destructive",
       });
-    return () => {
-      active = false;
-    };
-  }, [entityName, toast]);
+    }
+  }, [metaQuery.error, toast]);
 
   useEffect(() => {
     if (listQuery.error) {

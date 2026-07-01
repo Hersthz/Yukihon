@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { MessageSquare, UserPlus, Users, Check, X, Search } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 import {
   friendApi,
   privateChatApi,
@@ -26,47 +28,63 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 export const FriendAndPmMessenger = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [friends, setFriends] = useState<UserConnection[]>([]);
-  const [pending, setPending] = useState<UserConnection[]>([]);
   const [selectedFriendId, setSelectedFriendId] = useState<number | null>(null);
   const [selectedFriendName, setSelectedFriendName] = useState("");
   const [findUserId, setFindUserId] = useState("");
 
-  const loadFriends = async () => {
-    try {
-      setFriends(await friendApi.getFriends());
-      setPending(await friendApi.getPendingRequests());
-    } catch (e) {
-      console.error("Failed to load friends", e);
-    }
+  const enabled = open && !!user;
+  const friendsQuery = useQuery({
+    queryKey: ["friends", "list"],
+    queryFn: () => friendApi.getFriends(),
+    enabled,
+  });
+  const pendingQuery = useQuery({
+    queryKey: ["friends", "pending"],
+    queryFn: () => friendApi.getPendingRequests(),
+    enabled,
+  });
+  const friends: UserConnection[] = friendsQuery.data ?? [];
+  const pending: UserConnection[] = pendingQuery.data ?? [];
+
+  const invalidateFriends = () => {
+    void queryClient.invalidateQueries({ queryKey: ["friends"] });
   };
 
-  useEffect(() => {
-    if (open && user) {
-      loadFriends();
-    }
-  }, [open, user]);
-
-  const handleSendRequest = async () => {
-    if (!findUserId) return;
-    try {
-      await friendApi.sendRequest(Number(findUserId));
+  const sendRequestMutation = useMutation({
+    mutationFn: (receiverId: number) => friendApi.sendRequest(receiverId),
+    onSuccess: () => {
       setFindUserId("");
-      alert("Friend request sent!");
-    } catch (e) {
-      alert(e instanceof Error ? e.message : "Failed to send request");
-    }
+      toast({ title: "Đã gửi lời mời kết bạn" });
+      invalidateFriends();
+    },
+    onError: (e: unknown) =>
+      toast({
+        title: "Gửi lời mời thất bại",
+        description: e instanceof Error ? e.message : "Lỗi",
+        variant: "destructive",
+      }),
+  });
+
+  const acceptMutation = useMutation({
+    mutationFn: (id: number) => friendApi.acceptRequest(id),
+    onSuccess: invalidateFriends,
+    onError: (e: unknown) =>
+      toast({
+        title: "Chấp nhận thất bại",
+        description: e instanceof Error ? e.message : "Lỗi",
+        variant: "destructive",
+      }),
+  });
+
+  const handleSendRequest = () => {
+    if (!findUserId) return;
+    sendRequestMutation.mutate(Number(findUserId));
   };
 
-  const handleAccept = async (id: number) => {
-    try {
-      await friendApi.acceptRequest(id);
-      loadFriends();
-    } catch (e) {
-      console.error("Failed to accept request", e);
-    }
-  };
+  const handleAccept = (id: number) => acceptMutation.mutate(id);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

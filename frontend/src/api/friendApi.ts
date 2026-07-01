@@ -14,21 +14,21 @@ export enum ConnectionStatus {
 export type UserConnection = Schema<"UserConnectionDto">;
 
 export const friendApi = {
-  getFriends: () => apiClient.get<UserConnection[]>("/api/v1/connections/friends"),
+  getFriends: () => apiClient.get<UserConnection[]>("/api/connections/friends"),
 
-  getFollowing: () => apiClient.get<UserConnection[]>("/api/v1/connections/following"),
+  getFollowing: () => apiClient.get<UserConnection[]>("/api/connections/following"),
 
   getPendingRequests: (type: ConnectionType = ConnectionType.FRIEND) =>
-    apiClient.get<UserConnection[]>("/api/v1/connections/pending", { type }),
+    apiClient.get<UserConnection[]>("/api/connections/pending", { type }),
 
   sendRequest: (receiverId: number, type: ConnectionType = ConnectionType.FRIEND) =>
-    apiClient.post<UserConnection>(`/api/v1/connections/request/${receiverId}?type=${type}`),
+    apiClient.post<UserConnection>(`/api/connections/request/${receiverId}?type=${type}`),
 
   acceptRequest: (connectionId: number) =>
-    apiClient.post<UserConnection>(`/api/v1/connections/accept/${connectionId}`),
+    apiClient.post<UserConnection>(`/api/connections/accept/${connectionId}`),
 
   removeConnection: (connectionId: number) =>
-    apiClient.del<void>(`/api/v1/connections/${connectionId}`),
+    apiClient.del<void>(`/api/connections/${connectionId}`),
 };
 
 export default friendApi;

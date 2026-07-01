@@ -1,5 +1,6 @@
 package com.hoang.basis.yukihon.system.lesson.service;
 
+import com.hoang.basis.yukihon.exception.ResourceNotFoundException;
 import com.hoang.basis.yukihon.system.lesson.dto.LessonDto;
 import com.hoang.basis.yukihon.system.lesson.dto.LessonRequest;
 import com.hoang.basis.yukihon.system.lesson.dto.LessonVersionDto;
@@ -76,7 +77,7 @@ public class LessonService {
     @Transactional(readOnly = true)
     public List<LessonVersionDto> getLessonVersions(Long lessonId) {
         if (!lessonRepository.existsById(lessonId)) {
-            throw new RuntimeException("Lesson not found with id: " + lessonId);
+            throw new ResourceNotFoundException("Lesson not found with id: " + lessonId);
         }
 
         return lessonVersionRepository.findByLessonIdOrderByVersionNumberDesc(lessonId).stream()
@@ -136,7 +137,7 @@ public class LessonService {
 
     public void deleteLesson(Long id) {
         if (!lessonRepository.existsById(id)) {
-            throw new RuntimeException("Lesson not found with id: " + id);
+            throw new ResourceNotFoundException("Lesson not found with id: " + id);
         }
         lessonRepository.deleteById(id);
         log.info("Deleted lesson with id: {}", id);
