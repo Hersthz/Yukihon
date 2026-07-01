@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarDays, CheckCircle2, Clock3, Flame, Sparkles, Target } from "lucide-react";
+import { CalendarDays, Sparkles } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
+import { PageHeader, PageSection, StatStrip } from "@/components/layout/UserPage";
 import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -147,32 +147,15 @@ const StudyCalendar = () => {
           }
         />
 
-        <div className="mb-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <MetricCard
-            label="Chuỗi ngày hiện tại"
-            value={data?.currentStreak ?? 0}
-            hint={`Dài nhất ${data?.longestStreak ?? 0} ngày`}
-            icon={<Flame className="h-4 w-4 text-amber-500" />}
-          />
-          <MetricCard
-            label="Ngày có học"
-            value={data?.activeDays ?? 0}
-            hint={formatMonthLabel(month)}
-            icon={<CheckCircle2 className="h-4 w-4 text-emerald-500" />}
-          />
-          <MetricCard
-            label="Tổng phút học"
-            value={data?.totalStudyMinutes ?? 0}
-            hint={`${data?.totalStudyEvents ?? 0} sự kiện học tập`}
-            icon={<Clock3 className="h-4 w-4 text-sky-500" />}
-          />
-          <MetricCard
-            label="Mục tiêu mỗi ngày"
-            value={data?.recommendedMinutesPerDay ?? 0}
-            hint={`Mục tiêu hiện tại ${data?.dailyGoalMinutes ?? 0} phút`}
-            icon={<Target className="h-4 w-4 text-violet-500" />}
-          />
-        </div>
+        <StatStrip
+          className="mb-4"
+          items={[
+            { label: "chuỗi ngày", value: data?.currentStreak ?? 0 },
+            { label: "ngày có học", value: data?.activeDays ?? 0 },
+            { label: "phút học", value: data?.totalStudyMinutes ?? 0 },
+            { label: "mục tiêu/ngày", value: data?.recommendedMinutesPerDay ?? 0 },
+          ]}
+        />
 
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
           <PageSection

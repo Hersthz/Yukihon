@@ -1,7 +1,7 @@
-import { Brain, Radar, Sparkles, Target } from "lucide-react";
+import { Brain } from "lucide-react";
 import { Link } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
+import { EmptyState, PageHeader, PageSection, StatStrip } from "@/components/layout/UserPage";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useMistakeDna } from "@/hooks/learning/useMistakeDna";
@@ -48,32 +48,15 @@ const MistakeDna = () => {
           />
         ) : (
           <>
-            <div className="mb-4 grid gap-3 md:grid-cols-4">
-              <MetricCard
-                label="Điểm rủi ro"
-                value={`${data.overallRiskScore}%`}
-                icon={<Radar className="h-4 w-4 text-primary" />}
-                hint="Áp lực tổng hợp từ tín hiệu quiz, bài học và SRS"
-              />
-              <MetricCard
-                label="Độ chính xác Quiz"
-                value={`${data.averageQuizAccuracy}%`}
-                icon={<Target className="h-4 w-4 text-sky-500" />}
-                hint="Trung bình qua các lần làm checkpoint"
-              />
-              <MetricCard
-                label="Cần ôn tập"
-                value={data.dueReviews}
-                icon={<Brain className="h-4 w-4 text-amber-500" />}
-                hint="Số thẻ đang cần ôn lại ngay"
-              />
-              <MetricCard
-                label="Bài học dở dang"
-                value={data.inProgressLessons}
-                icon={<Sparkles className="h-4 w-4 text-violet-500" />}
-                hint="Những vòng học vẫn còn chưa hoàn thành"
-              />
-            </div>
+            <StatStrip
+              className="mb-4"
+              items={[
+                { label: "điểm rủi ro", value: `${data.overallRiskScore}%` },
+                { label: "chính xác quiz", value: `${data.averageQuizAccuracy}%` },
+                { label: "cần ôn tập", value: data.dueReviews },
+                { label: "bài học dở dang", value: data.inProgressLessons },
+              ]}
+            />
 
             <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
               <PageSection

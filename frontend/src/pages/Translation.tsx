@@ -24,7 +24,7 @@ import {
 } from "@/api";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
+import { EmptyState, PageHeader, PageSection, StatStrip } from "@/components/layout/UserPage";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -493,26 +493,14 @@ const Translation = () => {
           }
         />
 
-        <div className="mb-4 grid gap-3 md:grid-cols-3">
-          <MetricCard
-            hint="Tổng số lần đã dịch"
-            icon={<Languages className="h-4 w-4 text-sky-500" />}
-            label="Lượt dịch"
-            value={stats?.totalTranslations ?? "-"}
-          />
-          <MetricCard
-            hint="Bookmark đang lưu"
-            icon={<BookmarkCheck className="h-4 w-4 text-amber-500" />}
-            label="Đã lưu"
-            value={stats?.totalBookmarks ?? "-"}
-          />
-          <MetricCard
-            hint="Phím tắt Ctrl/Cmd + Enter"
-            icon={<Clock className="h-4 w-4 text-violet-500" />}
-            label="Tốc độ"
-            value="Nhanh"
-          />
-        </div>
+        <StatStrip
+          className="mb-4"
+          items={[
+            { label: "lượt dịch", value: stats?.totalTranslations ?? "-" },
+            { label: "đã lưu", value: stats?.totalBookmarks ?? "-" },
+            { label: "tốc độ", value: "Nhanh" },
+          ]}
+        />
 
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
           <div className="space-y-4">

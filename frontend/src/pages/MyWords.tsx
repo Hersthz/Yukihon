@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BookOpen, BookmarkPlus, Brain, KanbanSquare, RefreshCw, Sparkles } from "lucide-react";
+import { BookmarkPlus, RefreshCw } from "lucide-react";
 import { myWordsApi } from "@/api";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { MetricCard, PageHeader } from "@/components/layout/UserPage";
+import { PageHeader, StatStrip } from "@/components/layout/UserPage";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import NotebookSection from "@/pages/my-words/NotebookSection";
@@ -192,32 +192,15 @@ const MyWords = () => {
           }
         />
 
-        <div className="mb-4 grid gap-3 md:grid-cols-4">
-          <MetricCard
-            hint="Tất cả mục đã lưu"
-            icon={<BookOpen className="h-4 w-4 text-sky-500" />}
-            label="Tổng từ"
-            value={stats.totalSaved}
-          />
-          <MetricCard
-            hint="Cần ôn tập hôm nay"
-            icon={<Brain className="h-4 w-4 text-rose-500" />}
-            label="Đến hạn hôm nay"
-            value={stats.dueTodayCount}
-          />
-          <MetricCard
-            hint="Tập trung mặt chữ"
-            icon={<KanbanSquare className="h-4 w-4 text-amber-500" />}
-            label="Kanji đến hạn"
-            value={stats.kanjiDueTodayCount}
-          />
-          <MetricCard
-            hint="Tỷ lệ đã nắm chắc"
-            icon={<Sparkles className="h-4 w-4 text-emerald-500" />}
-            label="Đã thuộc"
-            value={`${masteredPercent}%`}
-          />
-        </div>
+        <StatStrip
+          className="mb-4"
+          items={[
+            { label: "tổng từ", value: stats.totalSaved },
+            { label: "đến hạn hôm nay", value: stats.dueTodayCount },
+            { label: "kanji đến hạn", value: stats.kanjiDueTodayCount },
+            { label: "đã thuộc", value: `${masteredPercent}%` },
+          ]}
+        />
 
         <ReviewQueueSection
           reviewMode={reviewMode}

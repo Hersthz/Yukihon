@@ -1,17 +1,9 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  BookOpen,
-  ChevronRight,
-  Clock,
-  Compass,
-  GraduationCap,
-  Layers,
-  Sparkles,
-} from "lucide-react";
+import { BookOpen, ChevronRight, Clock, Compass, GraduationCap } from "lucide-react";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
+import { EmptyState, PageHeader, PageSection, StatStrip } from "@/components/layout/UserPage";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { usePublishedLessons } from "@/hooks/learning/useLessons";
@@ -141,54 +133,36 @@ const Courses = () => {
           eyebrow="Khóa học"
         />
 
-        <div className="mb-4 grid gap-3 md:grid-cols-3">
-          <MetricCard
-            hint="Theo các cấp JLPT có trong hệ thống"
-            icon={<BookOpen className="h-4 w-4 text-sky-500" />}
-            label="Khóa học"
-            value={courses.length}
-          />
-          <MetricCard
-            hint="Bộ lọc đang mở"
-            icon={<Layers className="h-4 w-4 text-primary" />}
-            label="Mức JLPT"
-            value={selectedLevel === "all" ? "Tất cả" : selectedLevel}
-          />
-          <MetricCard
-            hint="Có tiến độ học từ backend"
-            icon={<Sparkles className="h-4 w-4 text-emerald-500" />}
-            label="Đang theo học"
-            value={activeCourses}
-          />
-        </div>
-
-        <PageSection
+        <StatStrip
           className="mb-4"
-          title="Bộ lọc level"
-          description="Chọn cấp JLPT để lọc danh sách khóa học."
-        >
-          <div className="flex flex-wrap gap-2">
-            {LEVELS.map((level) => {
-              const active = selectedLevel === level;
-              return (
-                <button
-                  key={level}
-                  className={`rounded-2xl border-2 px-4 py-2 text-sm font-medium transition cursor-pointer ${
-                    active
-                      ? level === "all"
-                        ? "border-primary bg-primary/10 text-primary"
-                        : levelTone[level]
-                      : "border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground"
-                  }`}
-                  onClick={() => setSelectedLevel(level)}
-                  type="button"
-                >
-                  {level === "all" ? "Tất cả" : level}
-                </button>
-              );
-            })}
-          </div>
-        </PageSection>
+          items={[
+            { label: "khóa học", value: courses.length },
+            { label: "mức jlpt", value: selectedLevel === "all" ? "Tất cả" : selectedLevel },
+            { label: "đang theo học", value: activeCourses },
+          ]}
+        />
+
+        <div className="mb-4 flex flex-wrap gap-2">
+          {LEVELS.map((level) => {
+            const active = selectedLevel === level;
+            return (
+              <button
+                key={level}
+                className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition cursor-pointer ${
+                  active
+                    ? level === "all"
+                      ? "border-primary bg-primary/10 text-primary"
+                      : levelTone[level]
+                    : "border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground"
+                }`}
+                onClick={() => setSelectedLevel(level)}
+                type="button"
+              >
+                {level === "all" ? "Tất cả" : level}
+              </button>
+            );
+          })}
+        </div>
 
         <PageSection
           title="Danh sách khóa học"

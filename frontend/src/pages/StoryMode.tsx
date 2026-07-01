@@ -3,21 +3,17 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   BookOpen,
   BookmarkPlus,
-  Brain,
   Check,
   ChevronRight,
   GitBranch,
   Lock,
   RotateCcw,
-  Sparkles,
-  TrendingDown,
-  TrendingUp,
 } from "lucide-react";
 
 import { dictionaryApi, myWordsApi, storyModeApi, type DictionaryEntry } from "@/api";
 import StoryInfoCard from "@/components/learning/StoryInfoCard";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
+import { EmptyState, PageHeader, PageSection, StatStrip } from "@/components/layout/UserPage";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -245,19 +241,6 @@ const StoryMode = () => {
     (story) => getStoryProgress(story, unlockedSegmentIdsByStory) >= 100
   ).length;
 
-  const adaptiveMetricHint =
-    activePerformance.answeredCount === 0
-      ? "Hoàn thành checkpoint để hệ thống tự chỉnh độ khó"
-      : `${adaptiveAccuracy}% đúng • streak ${activePerformance.streak}`;
-  const adaptiveMetricIcon =
-    currentDifficulty === "HARD" ? (
-      <TrendingUp className="h-4 w-4 text-emerald-500" />
-    ) : currentDifficulty === "EASY" ? (
-      <TrendingDown className="h-4 w-4 text-amber-500" />
-    ) : (
-      <Brain className="h-4 w-4 text-sky-500" />
-    );
-
   const submissionMessage = useMemo(() => {
     if (!isSubmitted || !activeSegment) return "";
     if (isBranchMode) {
@@ -362,7 +345,7 @@ const StoryMode = () => {
     [stories]
   );
 
-  const { clearLocalSnapshot, hasHydratedProgress } = useStoryModePersistence({
+  const { clearLocalSnapshot } = useStoryModePersistence({
     userId: user?.id,
     storageKey: progressStorageKey,
     snapshot: snapshotForPersistence,
@@ -618,38 +601,19 @@ const StoryMode = () => {
           }
         />
 
-        <div className="mb-4 grid gap-3 md:grid-cols-5">
-          <MetricCard
-            label="Truyện hiện tại"
-            value={activeStory.title}
-            icon={<BookOpen className="h-4 w-4 text-rose-500" />}
-            hint={activeStory.subtitle}
-          />
-          <MetricCard
-            label="Tiến độ"
-            value={`${storyProgress}%`}
-            icon={<Sparkles className="h-4 w-4 text-emerald-500" />}
-            hint={`${unlockedSegmentIds.length}/${activeStory.segments.length} đoạn đã mở`}
-          />
-          <MetricCard
-            label="JLPT"
-            value={activeStory.jlptLevel}
-            icon={<Brain className="h-4 w-4 text-sky-500" />}
-            hint={`Khoảng ${activeStory.estimatedMinutes} phút`}
-          />
-          <MetricCard
-            label="Thích ứng"
-            value={difficultyLabelMap[currentDifficulty]}
-            icon={adaptiveMetricIcon}
-            hint={adaptiveMetricHint}
-          />
-          <MetricCard
-            label="Tổng quan"
-            value={`${completedStoryCount}/${stories.length}`}
-            icon={<GitBranch className="h-4 w-4 text-amber-500" />}
-            hint={hasHydratedProgress ? "Đã sẵn sàng lưu tiến độ" : "Đang tải tiến độ"}
-          />
-        </div>
+        <StatStrip
+          className="mb-4"
+          items={[
+            { label: "Tiến độ", value: `${storyProgress}%` },
+            {
+              label: "đoạn đã mở",
+              value: `${unlockedSegmentIds.length}/${activeStory.segments.length}`,
+            },
+            { label: "JLPT", value: activeStory.jlptLevel },
+            { label: "Thích ứng", value: difficultyLabelMap[currentDifficulty] },
+            { label: "hoàn thành", value: `${completedStoryCount}/${stories.length}` },
+          ]}
+        />
 
         <PageSection
           className="mb-4"

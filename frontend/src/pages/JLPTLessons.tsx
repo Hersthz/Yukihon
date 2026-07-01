@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Award, BookOpen, GraduationCap, PlayCircle, Target, TrendingUp } from "lucide-react";
+import { GraduationCap, PlayCircle, Target } from "lucide-react";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import LessonCard2 from "@/components/learning/LessonCard2";
-import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
+import { EmptyState, PageHeader, PageSection, StatStrip } from "@/components/layout/UserPage";
 import { Button } from "@/components/ui/button";
 import { useLearningPath } from "@/hooks/learning/useLearningPath";
 import { usePublishedLessons } from "@/hooks/learning/useLessons";
@@ -90,52 +90,34 @@ const JLPTLessons = () => {
           }
         />
 
-        <div className="mb-4 grid gap-3 md:grid-cols-3">
-          <MetricCard
-            hint="Theo level hiện tại"
-            icon={<BookOpen className="h-4 w-4 text-sky-500" />}
-            label="Bài học"
-            value={currentLevelLessons.length}
-          />
-          <MetricCard
-            hint="Khi bắt đầu hoàn thành"
-            icon={<Award className="h-4 w-4 text-emerald-500" />}
-            label="Đã xong"
-            value={completedCount}
-          />
-          <MetricCard
-            hint="Tổng quan nhanh"
-            icon={<TrendingUp className="h-4 w-4 text-violet-500" />}
-            label="Tiến độ"
-            value={`${progress}%`}
-          />
-        </div>
-
-        <PageSection
+        <StatStrip
           className="mb-4"
-          title="Chọn cấp độ"
-          description="Bộ lọc ngang gọn thay cho khối lớn, giúp chừa diện tích cho danh sách bài."
-        >
-          <div className="flex flex-wrap gap-2">
-            {LEVELS.map((level) => {
-              const active = selectedLevel === level;
-              return (
-                <button
-                  key={level}
-                  className={`rounded-2xl border px-4 py-2 text-sm font-medium transition ${
-                    active
-                      ? `${levelTone[level]} shadow-[0_10px_20px_rgba(148,163,184,0.10)]`
-                      : "border-border bg-card text-muted-foreground hover:bg-muted"
-                  }`}
-                  onClick={() => setSelectedLevel(level)}
-                  type="button"
-                >
-                  {level}
-                </button>
-              );
-            })}
-          </div>
-        </PageSection>
+          items={[
+            { label: "bài học", value: currentLevelLessons.length },
+            { label: "đã xong", value: completedCount },
+            { label: "tiến độ", value: `${progress}%` },
+          ]}
+        />
+
+        <div className="mb-4 flex flex-wrap gap-2">
+          {LEVELS.map((level) => {
+            const active = selectedLevel === level;
+            return (
+              <button
+                key={level}
+                className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
+                  active
+                    ? levelTone[level]
+                    : "border-border bg-card text-muted-foreground hover:bg-muted"
+                }`}
+                onClick={() => setSelectedLevel(level)}
+                type="button"
+              >
+                {level}
+              </button>
+            );
+          })}
+        </div>
 
         <div className="grid gap-4 xl:grid-cols-[280px_minmax(0,1fr)]">
           <PageSection

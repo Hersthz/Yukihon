@@ -4,10 +4,8 @@ import {
   AlertTriangle,
   BarChart3,
   BookOpen,
-  Brush,
   CheckCircle2,
   Flame,
-  Layers,
   Search,
   Sparkles,
   Target,
@@ -139,32 +137,18 @@ const KanjiLibrary = () => {
           description="Thư viện, trang chi tiết, luyện viết và SRS từ backend giờ nằm chung trong một luồng học."
         />
 
-        <div className="mb-4 grid gap-3 md:grid-cols-4">
-          <MetricCard
-            hint="Toàn bộ kho Kanji hiện có"
-            icon={<Layers className="h-4 w-4 text-sky-500" />}
-            label="Kanji"
-            value={kanjiCatalog.length}
-          />
-          <MetricCard
-            hint="Kanji khớp với bộ lọc hiện tại"
-            icon={<Search className="h-4 w-4 text-violet-500" />}
-            label="Đang hiện"
-            value={filteredKanji.length}
-          />
-          <MetricCard
-            hint="Thẻ SRS đến hạn trong hôm nay"
-            icon={<Sparkles className="h-4 w-4 text-amber-500" />}
-            label="Đến hạn hôm nay"
-            value={dashboard.dueTodayCount || dueToday.length}
-          />
-          <MetricCard
-            hint="Số thẻ trong bộ SRS của bạn"
-            icon={<Brush className="h-4 w-4 text-emerald-500" />}
-            label="Bộ thẻ"
-            value={`${dashboard.deckCount || deck.length} / ${dashboard.masteredCount || masteredCount} đã thuộc`}
-          />
-        </div>
+        <StatStrip
+          className="mb-4"
+          items={[
+            { label: "kanji", value: kanjiCatalog.length },
+            { label: "đang hiện", value: filteredKanji.length },
+            { label: "đến hạn hôm nay", value: dashboard.dueTodayCount || dueToday.length },
+            {
+              label: "bộ thẻ",
+              value: `${dashboard.deckCount || deck.length} / ${dashboard.masteredCount || masteredCount} đã thuộc`,
+            },
+          ]}
+        />
 
         <PageSection
           className="mb-4"
@@ -320,62 +304,56 @@ const KanjiLibrary = () => {
           </div>
         </PageSection>
 
-        <PageSection
-          className="mb-4"
-          title="Tìm kiếm và bộ lọc"
-          description="Lọc theo cấp JLPT, nghĩa, cách đọc, bộ thủ, thẻ tag hoặc từ ví dụ."
-        >
-          <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto]">
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                className="h-11 rounded-2xl border-border bg-card pl-11 text-foreground placeholder:text-muted-foreground"
-                onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="Tìm kanji, nghĩa, cách đọc, bộ thủ hoặc ví dụ"
-                value={searchQuery}
-              />
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              <button
-                className={`rounded-2xl border px-4 py-2 text-sm font-medium transition ${
-                  selectedLevel === "all"
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "border-border bg-card text-muted-foreground hover:bg-muted"
-                }`}
-                onClick={() => setSelectedLevel("all")}
-                type="button"
-              >
-                Tất cả
-              </button>
-              {KANJI_LEVELS.map((level) => (
-                <button
-                  key={level}
-                  className={`rounded-2xl border px-4 py-2 text-sm font-medium transition ${
-                    selectedLevel === level
-                      ? levelTone[level]
-                      : "border-border bg-card text-muted-foreground hover:bg-muted"
-                  }`}
-                  onClick={() => setSelectedLevel(level)}
-                  type="button"
-                >
-                  {level} <span className="ml-1 text-xs opacity-70">{levelCounts[level]}</span>
-                </button>
-              ))}
-              <button
-                className={`rounded-2xl border px-4 py-2 text-sm font-medium transition ${
-                  showDueOnly
-                    ? "border-amber-200 bg-amber-50 text-amber-700"
-                    : "border-border bg-card text-muted-foreground hover:bg-muted"
-                }`}
-                onClick={() => setShowDueOnly((value) => !value)}
-                type="button"
-              >
-                Chỉ đến hạn
-              </button>
-            </div>
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <div className="relative min-w-[240px] flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              className="h-10 rounded-xl border-border bg-card pl-10 text-foreground placeholder:text-muted-foreground"
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Tìm kanji, nghĩa, cách đọc, bộ thủ hoặc ví dụ"
+              value={searchQuery}
+            />
           </div>
-        </PageSection>
+
+          <div className="flex flex-wrap gap-1.5">
+            <button
+              className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
+                selectedLevel === "all"
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border bg-card text-muted-foreground hover:bg-muted"
+              }`}
+              onClick={() => setSelectedLevel("all")}
+              type="button"
+            >
+              Tất cả
+            </button>
+            {KANJI_LEVELS.map((level) => (
+              <button
+                key={level}
+                className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
+                  selectedLevel === level
+                    ? levelTone[level]
+                    : "border-border bg-card text-muted-foreground hover:bg-muted"
+                }`}
+                onClick={() => setSelectedLevel(level)}
+                type="button"
+              >
+                {level} <span className="ml-1 opacity-70">{levelCounts[level]}</span>
+              </button>
+            ))}
+            <button
+              className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
+                showDueOnly
+                  ? "border-amber-200 bg-amber-50 text-amber-700"
+                  : "border-border bg-card text-muted-foreground hover:bg-muted"
+              }`}
+              onClick={() => setShowDueOnly((value) => !value)}
+              type="button"
+            >
+              Chỉ đến hạn
+            </button>
+          </div>
+        </div>
 
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
           <PageSection

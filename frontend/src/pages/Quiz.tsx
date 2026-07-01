@@ -3,19 +3,16 @@ import { motion } from "framer-motion";
 import {
   CheckCircle2,
   Clock3,
-  Filter,
   Headphones,
   Image as ImageIcon,
   RotateCcw,
-  Target,
-  Trophy,
   XCircle,
   Zap,
 } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
+import { EmptyState, PageHeader, PageSection, StatStrip } from "@/components/layout/UserPage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -426,30 +423,17 @@ const Quiz = () => {
           }
         />
 
-        <div className="mb-4 grid gap-3 md:grid-cols-3">
-          <MetricCard
-            hint="Toàn bộ ngân hàng quiz"
-            icon={<Zap className="h-4 w-4 text-sky-500" />}
-            label="Tổng quiz"
-            value={stats.total}
-          />
-          <MetricCard
-            hint="Theo bộ lọc hiện tại"
-            icon={<Trophy className="h-4 w-4 text-emerald-500" />}
-            label="Đang hiển thị"
-            value={stats.visible}
-          />
-          <MetricCard
-            hint={
-              sessionResults.total
-                ? `${sessionResults.correct}/${sessionResults.total} câu đúng trong lượt này`
-                : "Bắt đầu một quiz để ghi nhận nhịp làm bài hiện tại"
-            }
-            icon={<Target className="h-4 w-4 text-violet-500" />}
-            label="Độ chính xác lượt này"
-            value={sessionAccuracy == null ? "--" : `${sessionAccuracy}%`}
-          />
-        </div>
+        <StatStrip
+          className="mb-4"
+          items={[
+            { label: "tổng quiz", value: stats.total },
+            { label: "đang hiển thị", value: stats.visible },
+            {
+              label: "độ chính xác",
+              value: sessionAccuracy == null ? "--" : `${sessionAccuracy}%`,
+            },
+          ]}
+        />
 
         {mistakeDna && (
           <PageSection
@@ -497,46 +481,33 @@ const Quiz = () => {
           </PageSection>
         )}
 
-        <PageSection
-          className="mb-4"
-          title="Bộ lọc"
-          description="Ưu tiên quét nhanh thay vì đẩy người dùng vào một hero quá cao."
-        >
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_240px_240px]">
-            <div className="flex items-center gap-2 rounded-2xl border border-border bg-card px-4">
-              <Filter className="h-4 w-4 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">
-                Chọn level và độ khó để giữ vùng kết quả cô đọng hơn.
-              </p>
-            </div>
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <Select onValueChange={setSelectedLevel} value={selectedLevel}>
+            <SelectTrigger className="h-10 w-40 rounded-xl border-border bg-card text-foreground/80">
+              <SelectValue placeholder="Chọn level" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tất cả level</SelectItem>
+              {["N5", "N4", "N3", "N2", "N1"].map((level) => (
+                <SelectItem key={level} value={level}>
+                  {level}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-            <Select onValueChange={setSelectedLevel} value={selectedLevel}>
-              <SelectTrigger className="h-11 rounded-2xl border-border bg-card text-foreground/80">
-                <SelectValue placeholder="Chọn level" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tất cả level</SelectItem>
-                {["N5", "N4", "N3", "N2", "N1"].map((level) => (
-                  <SelectItem key={level} value={level}>
-                    {level}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select onValueChange={setSelectedDifficulty} value={selectedDifficulty}>
-              <SelectTrigger className="h-11 rounded-2xl border-border bg-card text-foreground/80">
-                <SelectValue placeholder="Chọn độ khó" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tất cả độ khó</SelectItem>
-                <SelectItem value="BEGINNER">Beginner</SelectItem>
-                <SelectItem value="INTERMEDIATE">Intermediate</SelectItem>
-                <SelectItem value="ADVANCED">Advanced</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </PageSection>
+          <Select onValueChange={setSelectedDifficulty} value={selectedDifficulty}>
+            <SelectTrigger className="h-10 w-44 rounded-xl border-border bg-card text-foreground/80">
+              <SelectValue placeholder="Chọn độ khó" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tất cả độ khó</SelectItem>
+              <SelectItem value="BEGINNER">Beginner</SelectItem>
+              <SelectItem value="INTERMEDIATE">Intermediate</SelectItem>
+              <SelectItem value="ADVANCED">Advanced</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
         {practiceSummary && (
           <PageSection

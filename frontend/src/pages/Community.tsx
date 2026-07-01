@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
-import { MessageCircle, MessageSquare, Plus, Trophy, Users } from "lucide-react";
+import { Plus, Users } from "lucide-react";
 import { communityApi } from "@/api";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { MetricCard, PageHeader } from "@/components/layout/UserPage";
+import { PageHeader, StatStrip } from "@/components/layout/UserPage";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -293,32 +293,15 @@ const Community = () => {
           }
         />
 
-        <div className="mb-4 grid gap-3 md:grid-cols-4">
-          <MetricCard
-            hint="Tổng bài viết"
-            icon={<MessageSquare className="h-4 w-4 text-sky-500" />}
-            label="Bài viết"
-            value={stats?.totalPosts ?? posts.length}
-          />
-          <MetricCard
-            hint="Bình luận toàn cộng đồng"
-            icon={<MessageCircle className="h-4 w-4 text-violet-500" />}
-            label="Bình luận"
-            value={stats?.totalComments ?? 0}
-          />
-          <MetricCard
-            hint="Người tham gia"
-            icon={<Users className="h-4 w-4 text-emerald-500" />}
-            label="Người đóng góp"
-            value={stats?.totalContributors ?? 0}
-          />
-          <MetricCard
-            hint="Bài mới trong 7 ngày"
-            icon={<Trophy className="h-4 w-4 text-amber-500" />}
-            label="Tuần này"
-            value={stats?.postsThisWeek ?? 0}
-          />
-        </div>
+        <StatStrip
+          className="mb-4"
+          items={[
+            { label: "bài viết", value: stats?.totalPosts ?? posts.length },
+            { label: "bình luận", value: stats?.totalComments ?? 0 },
+            { label: "người đóng góp", value: stats?.totalContributors ?? 0 },
+            { label: "tuần này", value: stats?.postsThisWeek ?? 0 },
+          ]}
+        />
 
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
           {/* LEFT: filters + composer + feed */}

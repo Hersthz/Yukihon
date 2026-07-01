@@ -1,19 +1,11 @@
 import { useMemo, useState } from "react";
 import { motion, Variants } from "framer-motion";
-import {
-  ArrowUpDown,
-  BookOpen,
-  BookmarkCheck,
-  Clock3,
-  Filter,
-  GraduationCap,
-  Search,
-} from "lucide-react";
+import { ArrowUpDown, BookOpen, Filter, Search } from "lucide-react";
 
 import { myWordsApi } from "@/api";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import VocabularyCard from "@/components/learning/VocabularyCard";
-import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
+import { EmptyState, PageHeader, PageSection, StatStrip } from "@/components/layout/UserPage";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -327,143 +319,118 @@ const Vocabulary = () => {
           description="Tra cứu danh mục, lưu từ vào Sổ từ của tôi, và theo dõi trạng thái đã lưu, đến hạn và đã thuộc tại một nơi."
         />
 
-        <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <MetricCard
-            label="Danh mục"
-            value={stats.total}
-            icon={<BookOpen className="h-4 w-4 text-sky-500" />}
-            hint="Tất cả từ trong danh sách từ vựng hiện tại"
-          />
-          <MetricCard
-            label="Đã lưu"
-            value={stats.saved}
-            icon={<BookmarkCheck className="h-4 w-4 text-violet-500" />}
-            hint="Những từ đã được đưa vào Sổ từ của tôi"
-          />
-          <MetricCard
-            label="Đã thuộc"
-            value={stats.mastered}
-            icon={<GraduationCap className="h-4 w-4 text-emerald-500" />}
-            hint="Những từ đã lưu hiện được đánh dấu là đã thuộc"
-          />
-          <MetricCard
-            label="Đến hạn ôn"
-            value={stats.due}
-            icon={<Clock3 className="h-4 w-4 text-rose-500" />}
-            hint="Những từ đã lưu cần ôn tập ngay"
-          />
-        </div>
-
-        <PageSection
+        <StatStrip
           className="mb-4"
-          title="Bộ lọc"
-          description="Dùng các bộ lọc chi tiết hơn để chuyển từ danh sách đơn giản sang luồng học."
-        >
-          <div className="space-y-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Tra cứu theo Kanji, Hiragana, Romaji, nghĩa hoặc loại từ..."
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                className="h-10 rounded-2xl border-border bg-white/85 pl-10 text-foreground placeholder:text-muted-foreground"
-              />
-            </div>
+          items={[
+            { label: "danh mục", value: stats.total },
+            { label: "đã lưu", value: stats.saved },
+            { label: "đã thuộc", value: stats.mastered },
+            { label: "đến hạn", value: stats.due },
+          ]}
+        />
 
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
-              <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-sky-500" />
-                <Select value={selectedLevel} onValueChange={setSelectedLevel}>
-                  <SelectTrigger className="rounded-2xl border-border bg-white/85 text-foreground">
-                    <SelectValue placeholder="Cấp độ JLPT" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Tất cả cấp độ</SelectItem>
-                    {levels.map((level) => (
-                      <SelectItem key={level} value={level}>
-                        {level}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <Select value={selectedWordType} onValueChange={setSelectedWordType}>
-                <SelectTrigger className="rounded-2xl border-border bg-white/85 text-foreground">
-                  <SelectValue placeholder="Loại từ" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tất cả loại từ</SelectItem>
-                  {wordTypes.map((wordType) => (
-                    <SelectItem key={wordType} value={wordType}>
-                      {wordType}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select
-                value={savedFilter}
-                onValueChange={(value) => setSavedFilter(value as SavedStateFilter)}
-              >
-                <SelectTrigger className="rounded-2xl border-border bg-white/85 text-foreground">
-                  <SelectValue placeholder="Trạng thái lưu" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tất cả trạng thái</SelectItem>
-                  <SelectItem value="saved">Chỉ đã lưu</SelectItem>
-                  <SelectItem value="unsaved">Chỉ chưa lưu</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select
-                value={reviewFilter}
-                onValueChange={(value) => setReviewFilter(value as ReviewStateFilter)}
-              >
-                <SelectTrigger className="rounded-2xl border-border bg-white/85 text-foreground">
-                  <SelectValue placeholder="Trạng thái ôn tập" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tất cả trạng thái ôn tập</SelectItem>
-                  <SelectItem value="due">Đến hạn ôn</SelectItem>
-                  <SelectItem value="mastered">Đã thuộc</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select
-                value={sourceFilter}
-                onValueChange={(value) => setSourceFilter(value as VocabularySourceFilter)}
-              >
-                <SelectTrigger className="rounded-2xl border-border bg-white/85 text-foreground">
-                  <SelectValue placeholder="Nguồn" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tất cả nguồn</SelectItem>
-                  <SelectItem value="vocabulary">Từ vựng</SelectItem>
-                  <SelectItem value="dictionary">Từ điển</SelectItem>
-                  <SelectItem value="translation">Dịch thuật</SelectItem>
-                  <SelectItem value="other">Khác</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <div className="flex items-center gap-2">
-                <ArrowUpDown className="h-4 w-4 text-violet-500" />
-                <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
-                  <SelectTrigger className="rounded-2xl border-border bg-white/85 text-foreground">
-                    <SelectValue placeholder="Sắp xếp" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="due-first">Đến hạn trước</SelectItem>
-                    <SelectItem value="saved-recent">Lưu gần đây</SelectItem>
-                    <SelectItem value="jlpt-asc">JLPT N5 đến N1</SelectItem>
-                    <SelectItem value="jlpt-desc">JLPT N1 đến N5</SelectItem>
-                    <SelectItem value="alpha">Theo bảng chữ cái</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <div className="relative min-w-[220px] flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Tra cứu theo Kanji, Hiragana, Romaji, nghĩa hoặc loại từ..."
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              className="h-10 rounded-xl border-border bg-white/85 pl-10 text-foreground placeholder:text-muted-foreground"
+            />
           </div>
-        </PageSection>
+
+          <div className="flex items-center gap-1.5">
+            <Filter className="h-4 w-4 text-sky-500" />
+            <Select value={selectedLevel} onValueChange={setSelectedLevel}>
+              <SelectTrigger className="h-10 rounded-xl border-border bg-white/85 text-foreground">
+                <SelectValue placeholder="Cấp độ JLPT" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tất cả cấp độ</SelectItem>
+                {levels.map((level) => (
+                  <SelectItem key={level} value={level}>
+                    {level}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Select value={selectedWordType} onValueChange={setSelectedWordType}>
+            <SelectTrigger className="h-10 rounded-xl border-border bg-white/85 text-foreground">
+              <SelectValue placeholder="Loại từ" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tất cả loại từ</SelectItem>
+              {wordTypes.map((wordType) => (
+                <SelectItem key={wordType} value={wordType}>
+                  {wordType}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={savedFilter}
+            onValueChange={(value) => setSavedFilter(value as SavedStateFilter)}
+          >
+            <SelectTrigger className="h-10 rounded-xl border-border bg-white/85 text-foreground">
+              <SelectValue placeholder="Trạng thái lưu" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tất cả trạng thái</SelectItem>
+              <SelectItem value="saved">Chỉ đã lưu</SelectItem>
+              <SelectItem value="unsaved">Chỉ chưa lưu</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={reviewFilter}
+            onValueChange={(value) => setReviewFilter(value as ReviewStateFilter)}
+          >
+            <SelectTrigger className="h-10 rounded-xl border-border bg-white/85 text-foreground">
+              <SelectValue placeholder="Trạng thái ôn tập" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tất cả trạng thái ôn tập</SelectItem>
+              <SelectItem value="due">Đến hạn ôn</SelectItem>
+              <SelectItem value="mastered">Đã thuộc</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={sourceFilter}
+            onValueChange={(value) => setSourceFilter(value as VocabularySourceFilter)}
+          >
+            <SelectTrigger className="h-10 rounded-xl border-border bg-white/85 text-foreground">
+              <SelectValue placeholder="Nguồn" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tất cả nguồn</SelectItem>
+              <SelectItem value="vocabulary">Từ vựng</SelectItem>
+              <SelectItem value="dictionary">Từ điển</SelectItem>
+              <SelectItem value="translation">Dịch thuật</SelectItem>
+              <SelectItem value="other">Khác</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <div className="flex items-center gap-1.5">
+            <ArrowUpDown className="h-4 w-4 text-violet-500" />
+            <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
+              <SelectTrigger className="h-10 rounded-xl border-border bg-white/85 text-foreground">
+                <SelectValue placeholder="Sắp xếp" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="due-first">Đến hạn trước</SelectItem>
+                <SelectItem value="saved-recent">Lưu gần đây</SelectItem>
+                <SelectItem value="jlpt-asc">JLPT N5 đến N1</SelectItem>
+                <SelectItem value="jlpt-desc">JLPT N1 đến N5</SelectItem>
+                <SelectItem value="alpha">Theo bảng chữ cái</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
 
         {isLoading ? (
           <PageSection>
