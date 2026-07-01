@@ -61,7 +61,7 @@ const DeckStudyPage = () => {
   const [finished, setFinished] = useState(false);
 
   const studyQuery = useQuery({
-    queryKey: ["deck-study-queue", id],
+    queryKey: ["deck", id, "study-queue"],
     queryFn: async (): Promise<{ queue: StudyQueue; deckTitle: string }> => {
       const [q, deck] = await Promise.all([srsApi.getQueue(id), deckApi.get(id).catch(() => null)]);
       return { queue: q, deckTitle: deck ? deck.title : "" };
