@@ -1,0 +1,7 @@
+#!/bin/sh
+# Auto-refresh frontend/src/api/schema.d.ts from the backend's live OpenAPI docs whenever a
+# commit touches backend Java sources, so nobody has to remember `npm run gen:api` by hand.
+# No-op (never blocks the commit) if the backend isn't running locally right now.
+if git diff --cached --name-only | grep -qE '^backend/src/main/java/.*\.java$'; then
+  node frontend/scripts/sync-schema.mjs
+fi

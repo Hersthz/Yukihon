@@ -1,0 +1,2 @@
+.husky/* text eol=lf
+frontend/scripts/*.mjs text eol=lf
