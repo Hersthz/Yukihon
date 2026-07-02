@@ -26,6 +26,7 @@ import {
 } from "@/api";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import FuriganaText from "@/components/dictionary/FuriganaText";
+import WordContributions from "@/components/dictionary/WordContributions";
 import { EmptyState, PageHeader, PageSection } from "@/components/layout/UserPage";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -917,6 +918,8 @@ const Dictionary = () => {
                       )}
                     </div>
                   )}
+
+                  <WordContributions headword={selectedWord.kanji || selectedWord.hiragana || ""} />
 
                   <div className="flex flex-wrap gap-2">
                     <Button

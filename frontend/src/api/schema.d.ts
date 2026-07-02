@@ -3859,6 +3859,26 @@ export interface components {
             text?: string;
             ruby?: string;
         };
+        DictContributionDto: {
+            /** Format: int64 */
+            id?: number;
+            headword?: string;
+            type?: string;
+            content?: string;
+            translation?: string;
+            /** Format: int64 */
+            userId?: number;
+            userDisplayName?: string;
+            /** Format: int32 */
+            upvotes?: number;
+            /** Format: int32 */
+            downvotes?: number;
+            /** Format: int32 */
+            myVote?: number;
+            mine?: boolean;
+            /** Format: date-time */
+            createdAt?: string;
+        };
         CommunityStatsDto: {
             /** Format: int64 */
             totalPosts?: number;

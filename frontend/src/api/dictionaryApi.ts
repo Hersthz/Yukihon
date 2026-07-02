@@ -10,6 +10,8 @@ export type ExampleSentence = Required<Pick<Schema<"ExampleSentenceDto">, "tatoe
 
 export type FuriganaToken = Schema<"FuriganaToken">;
 
+export type DictContribution = Schema<"DictContributionDto">;
+
 export const dictionaryApi = {
   search: (query: string) =>
     apiClient.get<DictionaryEntry[]>(`/api/dictionary/search`, { q: query }),
@@ -33,4 +35,16 @@ export const dictionaryApi = {
   /** Translate a JMdict word's English meaning to Vietnamese (cached server-side). */
   translateMeaning: (dictWordId: number) =>
     apiClient.post<{ vi: string }>(`/api/dictionary/words/${dictWordId}/translate`),
+  /** Community contributions (meanings/examples) for a headword. */
+  getContributions: (word: string) =>
+    apiClient.get<DictContribution[]>(`/api/dictionary/contributions`, { word }),
+  addContribution: (payload: {
+    headword: string;
+    type: "MEANING" | "EXAMPLE";
+    content: string;
+    translation?: string;
+  }) => apiClient.post<DictContribution>(`/api/dictionary/contributions`, payload),
+  voteContribution: (id: number, value: number) =>
+    apiClient.post<DictContribution>(`/api/dictionary/contributions/${id}/vote`, { value }),
+  deleteContribution: (id: number) => apiClient.del<void>(`/api/dictionary/contributions/${id}`),
 };
