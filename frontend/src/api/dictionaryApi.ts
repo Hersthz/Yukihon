@@ -8,6 +8,8 @@ export type DictionaryEntry = Required<Schema<"VocabularyDto">>;
 export type ExampleSentence = Required<Pick<Schema<"ExampleSentenceDto">, "tatoebaId" | "jp">> &
   Pick<Schema<"ExampleSentenceDto">, "vi" | "en">;
 
+export type FuriganaToken = Schema<"FuriganaToken">;
+
 export const dictionaryApi = {
   search: (query: string) =>
     apiClient.get<DictionaryEntry[]>(`/api/dictionary/search`, { q: query }),
@@ -17,6 +19,9 @@ export const dictionaryApi = {
   /** Related / compound words that contain the headword (e.g. 手を結ぶ for 結ぶ). */
   getRelated: (query: string) =>
     apiClient.get<DictionaryEntry[]>(`/api/dictionary/related`, { q: query }),
+  /** Annotate a batch of Japanese texts with furigana (ruby over kanji). */
+  furigana: (texts: string[]) =>
+    apiClient.post<FuriganaToken[][]>(`/api/dictionary/furigana`, { texts }),
   /** Promote a JMdict word into vocabulary (so it can be saved). Returns the curated entry. */
   materialize: (dictWordId: number) =>
     apiClient.post<DictionaryEntry>(`/api/dictionary/words/${dictWordId}/materialize`),

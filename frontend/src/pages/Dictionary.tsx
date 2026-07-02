@@ -14,6 +14,7 @@ import {
   type KanjiInfo,
 } from "@/api";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import FuriganaText from "@/components/dictionary/FuriganaText";
 import { EmptyState, PageHeader, PageSection } from "@/components/layout/UserPage";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -103,6 +104,15 @@ const Dictionary = () => {
     queryFn: () => dictionaryApi.getExamples(committedQuery),
     enabled: activeTab === "examples" && searched,
   });
+  const exampleTabTexts = useMemo(
+    () => (examplesTabQuery.data ?? []).map((e) => e.jp),
+    [examplesTabQuery.data]
+  );
+  const furiganaTabQuery = useQuery({
+    queryKey: ["furigana", exampleTabTexts],
+    queryFn: () => dictionaryApi.furigana(exampleTabTexts),
+    enabled: exampleTabTexts.length > 0,
+  });
 
   // ---- Ngữ pháp ----
   const grammarAllQuery = useQuery({
@@ -138,6 +148,15 @@ const Dictionary = () => {
   });
   const examples = examplesQuery.data ?? [];
   const examplesLoading = examplesQuery.isFetching;
+  const modalExampleTexts = useMemo(
+    () => (examplesQuery.data ?? []).map((e) => e.jp),
+    [examplesQuery.data]
+  );
+  const furiganaModalQuery = useQuery({
+    queryKey: ["furigana", modalExampleTexts],
+    queryFn: () => dictionaryApi.furigana(modalExampleTexts),
+    enabled: modalExampleTexts.length > 0,
+  });
 
   // ---- Detail: constituent-kanji breakdown + related/compound words ----
   const detailKanjiChars = useMemo(() => extractKanji(selectedWord?.kanji || ""), [selectedWord]);
@@ -432,10 +451,17 @@ const Dictionary = () => {
                 />
               ) : (
                 <div className="space-y-2.5">
-                  {(examplesTabQuery.data ?? []).map((ex) => (
+                  {(examplesTabQuery.data ?? []).map((ex, i) => (
                     <div key={ex.tatoebaId} className="yukihon-card-flat p-4">
                       <div className="flex items-start justify-between gap-3">
-                        <p className="text-base text-foreground">{ex.jp}</p>
+                        {furiganaTabQuery.data?.[i] ? (
+                          <FuriganaText
+                            className="text-base text-foreground"
+                            tokens={furiganaTabQuery.data[i]}
+                          />
+                        ) : (
+                          <p className="text-base text-foreground">{ex.jp}</p>
+                        )}
                         <button
                           type="button"
                           onClick={() => speak(ex.jp)}
@@ -697,9 +723,16 @@ const Dictionary = () => {
                         <p className="text-sm text-muted-foreground">Đang tải ví dụ…</p>
                       ) : (
                         <ul className="space-y-3">
-                          {examples.map((ex) => (
+                          {examples.map((ex, i) => (
                             <li key={ex.tatoebaId} className="border-l-2 border-sky-200 pl-3">
-                              <p className="text-sm text-foreground">{ex.jp}</p>
+                              {furiganaModalQuery.data?.[i] ? (
+                                <FuriganaText
+                                  className="text-sm text-foreground"
+                                  tokens={furiganaModalQuery.data[i]}
+                                />
+                              ) : (
+                                <p className="text-sm text-foreground">{ex.jp}</p>
+                              )}
                               {ex.vi && <p className="mt-0.5 text-sm text-sky-700">{ex.vi}</p>}
                               {!ex.vi && ex.en && (
                                 <p className="mt-0.5 text-sm text-muted-foreground">{ex.en}</p>

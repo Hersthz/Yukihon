@@ -3855,6 +3855,10 @@ export interface components {
             vi?: string;
             en?: string;
         };
+        FuriganaToken: {
+            text?: string;
+            ruby?: string;
+        };
         CommunityStatsDto: {
             /** Format: int64 */
             totalPosts?: number;

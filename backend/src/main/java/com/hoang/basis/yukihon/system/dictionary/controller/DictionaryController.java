@@ -1,7 +1,10 @@
 package com.hoang.basis.yukihon.system.dictionary.controller;
 
 import com.hoang.basis.yukihon.system.dictionary.dto.ExampleSentenceDto;
+import com.hoang.basis.yukihon.system.dictionary.dto.FuriganaRequest;
+import com.hoang.basis.yukihon.system.dictionary.dto.FuriganaToken;
 import com.hoang.basis.yukihon.system.dictionary.service.DictionaryService;
+import com.hoang.basis.yukihon.system.dictionary.service.FuriganaService;
 import com.hoang.basis.yukihon.system.vocabulary.dto.VocabularyDto;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 public class DictionaryController {
 
     private final DictionaryService dictionaryService;
+    private final FuriganaService furiganaService;
 
     @GetMapping("/search")
     public ResponseEntity<List<VocabularyDto>> search(@RequestParam String q) {
@@ -43,6 +47,12 @@ public class DictionaryController {
     @GetMapping("/related")
     public ResponseEntity<List<VocabularyDto>> related(@RequestParam String q) {
         return ResponseEntity.ok(dictionaryService.getRelated(q));
+    }
+
+    /** Annotate a batch of Japanese texts with furigana (kuromoji). */
+    @PostMapping("/furigana")
+    public ResponseEntity<List<List<FuriganaToken>>> furigana(@RequestBody FuriganaRequest request) {
+        return ResponseEntity.ok(furiganaService.annotateAll(request.texts()));
     }
 
     @GetMapping("/{id}")

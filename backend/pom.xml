@@ -151,6 +151,13 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Japanese morphological analyzer for furigana annotation -->
+        <dependency>
+            <groupId>com.atilika.kuromoji</groupId>
+            <artifactId>kuromoji-ipadic</artifactId>
+            <version>0.9.0</version>
+        </dependency>
+
         <!-- Test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
