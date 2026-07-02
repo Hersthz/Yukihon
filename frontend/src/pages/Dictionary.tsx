@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
-import { BookOpen, Check, Leaf, Plus, Search, Star, Volume2, X } from "lucide-react";
+import { BookOpen, Check, Leaf, Mic, Plus, Search, Star, Volume2, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import {
@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { ToastAction } from "@/components/ui/toast";
 import { useToast } from "@/hooks/use-toast";
 import { speakJapanese } from "@/lib/speech";
+import { createRecognition, firstTranscript, type RecognitionLike } from "@/lib/speechRecognition";
 import type { SavedWord } from "@/pages/my-words/types";
 
 type DictTab = "vocab" | "kanji" | "examples" | "grammar";
@@ -181,6 +182,38 @@ const Dictionary = () => {
     setCommittedQuery(query.trim());
   };
 
+  // ---- Voice search (Web Speech API, Chrome/Edge) ----
+  const [listening, setListening] = useState(false);
+  const recognitionRef = useRef<RecognitionLike | null>(null);
+
+  const handleVoiceSearch = () => {
+    if (listening) {
+      recognitionRef.current?.stop();
+      return;
+    }
+    const recognition = createRecognition("ja-JP");
+    if (!recognition) {
+      toast({
+        title: "Trình duyệt không hỗ trợ nhập giọng nói",
+        description: "Hãy thử Chrome hoặc Edge để tìm bằng giọng nói.",
+        variant: "destructive",
+      });
+      return;
+    }
+    recognitionRef.current = recognition;
+    recognition.onresult = (event) => {
+      const transcript = firstTranscript(event).trim();
+      if (transcript) {
+        setQuery(transcript);
+        setCommittedQuery(transcript);
+      }
+    };
+    recognition.onerror = () => setListening(false);
+    recognition.onend = () => setListening(false);
+    recognition.start();
+    setListening(true);
+  };
+
   const translateMutation = useMutation({
     mutationFn: (dictWordId: number) => dictionaryApi.translateMeaning(dictWordId),
     onSuccess: ({ vi }, dictWordId) => {
@@ -275,12 +308,24 @@ const Dictionary = () => {
           <div className="relative">
             <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary" />
             <input
-              className="h-14 w-full rounded-2xl border border-primary/25 bg-card pl-12 pr-4 text-base text-foreground outline-none transition-shadow placeholder:text-muted-foreground focus:shadow-[0_0_0_4px_hsl(var(--primary)/0.1)]"
+              className="h-14 w-full rounded-2xl border border-primary/25 bg-card pl-12 pr-14 text-base text-foreground outline-none transition-shadow placeholder:text-muted-foreground focus:shadow-[0_0_0_4px_hsl(var(--primary)/0.1)]"
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
               placeholder="Ví dụ: 勉強, benkyou, học tập…"
               value={query}
             />
+            <button
+              type="button"
+              onClick={handleVoiceSearch}
+              aria-label="Tìm bằng giọng nói"
+              className={`absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl transition ${
+                listening
+                  ? "animate-pulse bg-rose-500 text-white"
+                  : "text-muted-foreground hover:bg-muted hover:text-primary"
+              }`}
+            >
+              <Mic className="h-5 w-5" />
+            </button>
           </div>
 
           <div className="mt-3 flex flex-wrap gap-1.5">
