@@ -1,9 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
-import { BookOpen, Check, Plus, Search, Star, Volume2, X } from "lucide-react";
-import { dictionaryApi, myWordsApi, type DictionaryEntry } from "@/api";
+import { BookOpen, Check, Leaf, Plus, Search, Star, Volume2, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+
+import {
+  dictionaryApi,
+  grammarApi,
+  kanjiApi,
+  myWordsApi,
+  type DictionaryEntry,
+  type GrammarDto,
+  type KanjiInfo,
+} from "@/api";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { EmptyState, PageHeader, PageSection } from "@/components/layout/UserPage";
 import { Badge } from "@/components/ui/badge";
@@ -11,8 +20,16 @@ import { Button } from "@/components/ui/button";
 import { ToastAction } from "@/components/ui/toast";
 import { useToast } from "@/hooks/use-toast";
 import { speakJapanese } from "@/lib/speech";
-import { Leaf } from "lucide-react";
 import type { SavedWord } from "@/pages/my-words/types";
+
+type DictTab = "vocab" | "kanji" | "examples" | "grammar";
+
+const TABS: { key: DictTab; label: string }[] = [
+  { key: "vocab", label: "Từ vựng" },
+  { key: "kanji", label: "Hán tự" },
+  { key: "examples", label: "Mẫu câu" },
+  { key: "grammar", label: "Ngữ pháp" },
+];
 
 const levelClass: Record<string, string> = {
   N5: "border-emerald-200 bg-emerald-50 text-emerald-700",
@@ -22,11 +39,18 @@ const levelClass: Record<string, string> = {
   N1: "border-rose-200 bg-rose-50 text-rose-700",
 };
 
+const levelBadge = (level?: string) =>
+  `rounded-full border ${level && levelClass[level] ? levelClass[level] : "border-border bg-muted text-foreground/80"}`;
+
 const normalizeSavedStatuses = (statuses: Record<string, boolean>) =>
   Object.fromEntries(Object.entries(statuses).map(([id, saved]) => [Number(id), saved])) as Record<
     number,
     boolean
   >;
+
+/** Unique CJK characters in a query, for the "Hán tự" tab. */
+const extractKanji = (text: string) =>
+  Array.from(new Set(Array.from(text))).filter((ch) => /[㐀-鿿]/.test(ch));
 
 const Dictionary = () => {
   const { toast } = useToast();
@@ -34,19 +58,21 @@ const Dictionary = () => {
   const queryClient = useQueryClient();
   const [query, setQuery] = useState("");
   const [committedQuery, setCommittedQuery] = useState("");
+  const [activeTab, setActiveTab] = useState<DictTab>("vocab");
   const [selectedWord, setSelectedWord] = useState<DictionaryEntry | null>(null);
   // Optimistic "saved" flags for words saved this session (keyed by displayed id, incl. JMdict).
   const [savedOverrides, setSavedOverrides] = useState<Record<number, boolean>>({});
 
+  const searched = committedQuery.trim().length > 0;
+
+  // ---- Từ vựng ----
   const searchKey = ["dictionary", "search", committedQuery] as const;
   const searchQuery = useQuery({
     queryKey: searchKey,
     queryFn: () => dictionaryApi.search(committedQuery),
-    enabled: committedQuery.trim().length > 0,
+    enabled: searched,
   });
   const results = useMemo(() => searchQuery.data ?? [], [searchQuery.data]);
-  const loading = searchQuery.isFetching;
-  const searched = committedQuery.trim().length > 0;
 
   useEffect(() => {
     if (searchQuery.error) {
@@ -58,7 +84,43 @@ const Dictionary = () => {
     }
   }, [searchQuery.error, toast]);
 
-  // Initial saved state for curated (positive-id) results; session saves tracked in savedOverrides.
+  // ---- Hán tự ----
+  const kanjiChars = useMemo(() => extractKanji(committedQuery), [committedQuery]);
+  const kanjiResults = useQueries({
+    queries: kanjiChars.map((ch) => ({
+      queryKey: ["kanji", ch],
+      queryFn: () => kanjiApi.get(ch),
+      enabled: activeTab === "kanji" && searched,
+      retry: false,
+    })),
+  });
+  const kanjiLoading = kanjiResults.some((r) => r.isLoading);
+  const kanjiList = kanjiResults.map((r) => r.data).filter((k): k is KanjiInfo => !!k);
+
+  // ---- Mẫu câu ----
+  const examplesTabQuery = useQuery({
+    queryKey: ["dictionary", "examples", committedQuery],
+    queryFn: () => dictionaryApi.getExamples(committedQuery),
+    enabled: activeTab === "examples" && searched,
+  });
+
+  // ---- Ngữ pháp ----
+  const grammarAllQuery = useQuery({
+    queryKey: ["grammar"],
+    queryFn: () => grammarApi.getAll(),
+    enabled: activeTab === "grammar",
+  });
+  const grammarMatches = useMemo(() => {
+    const q = committedQuery.trim().toLowerCase();
+    if (!q) return [] as GrammarDto[];
+    return (grammarAllQuery.data ?? []).filter((g) =>
+      [g.pattern, g.title, g.explanation, g.usage, g.exampleJP]
+        .filter(Boolean)
+        .some((field) => field!.toLowerCase().includes(q))
+    );
+  }, [grammarAllQuery.data, committedQuery]);
+
+  // ---- Từ vựng: saved state ----
   const savedIds = useMemo(() => results.filter((w) => w.id > 0).map((w) => w.id), [results]);
   const savedQuery = useQuery({
     queryKey: ["dictionary", "saved", savedIds],
@@ -77,7 +139,9 @@ const Dictionary = () => {
   const examples = examplesQuery.data ?? [];
   const examplesLoading = examplesQuery.isFetching;
 
-  const handleSearch = () => setCommittedQuery(query.trim());
+  const handleSearch = () => {
+    setCommittedQuery(query.trim());
+  };
 
   const translateMutation = useMutation({
     mutationFn: (dictWordId: number) => dictionaryApi.translateMeaning(dictWordId),
@@ -148,163 +212,324 @@ const Dictionary = () => {
   });
   const savedWords = savedWordsQuery.data ?? [];
 
+  const speak = (text: string) => {
+    if (!speakJapanese(text)) {
+      toast({
+        title: "Trình duyệt không hỗ trợ phát âm",
+        description: "Hãy thử Chrome hoặc Edge để nghe phát âm tiếng Nhật.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="mx-auto max-w-[1380px]">
         <PageHeader
-          icon={<BookOpen className="h-6 w-6 text-primary" />}
+          icon={<BookOpen className="h-5 w-5 text-primary" />}
           title="Từ điển"
-          description="Tra kanji, hiragana, romaji hoặc nghĩa tiếng Việt — kết quả gọn, mở nhanh phần chi tiết."
-          eyebrow="Tra cứu Nhật – Việt"
+          description="Một ô tìm — tra từ vựng, Hán tự, mẫu câu và ngữ pháp."
+          eyebrow="Nhật – Việt"
         />
 
-        {/* Big centered search */}
-        <div className="mx-auto mb-8 max-w-2xl">
+        {/* Search + tabs */}
+        <div className="mb-6">
           <div className="relative">
-            <Search className="pointer-events-none absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-primary" />
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary" />
             <input
-              className="h-16 w-full rounded-full border border-primary/25 bg-card pl-14 pr-5 text-lg text-foreground outline-none transition-shadow placeholder:text-muted-foreground"
-              style={{
-                boxShadow:
-                  "0 0 0 6px hsl(var(--primary) / 0.08), 0 16px 36px -16px hsl(var(--primary) / 0.45)",
-              }}
+              className="h-14 w-full rounded-2xl border border-primary/25 bg-card pl-12 pr-4 text-base text-foreground outline-none transition-shadow placeholder:text-muted-foreground focus:shadow-[0_0_0_4px_hsl(var(--primary)/0.1)]"
               onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && void handleSearch()}
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
               placeholder="Ví dụ: 勉強, benkyou, học tập…"
               value={query}
             />
           </div>
+
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {TABS.map((tab) => (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => setActiveTab(tab.key)}
+                className={`rounded-lg px-3.5 py-1.5 text-sm font-medium transition ${
+                  activeTab === tab.key
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-muted"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Results */}
-        {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary/20 border-t-primary" />
-          </div>
-        ) : searched && results.length === 0 ? (
+        {!searched ? (
           <EmptyState
-            description={`Không tìm thấy mục phù hợp với "${query}". Thử romaji, nghĩa tiếng Việt hoặc từ ngắn hơn.`}
             icon={<Search className="h-6 w-6" />}
-            title="Chưa có kết quả"
+            title="Nhập từ để bắt đầu"
+            description="Tra bằng kanji, hiragana, romaji hoặc nghĩa tiếng Việt."
           />
-        ) : results.length > 0 ? (
-          <div className="mb-8 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            <AnimatePresence>
-              {results.map((word, index) => {
-                const isSaved = wordSaved(word.id);
-                const isSaving = savingWordId === word.id;
-
-                return (
-                  <motion.button
-                    key={word.id}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="yukihon-card flex items-center gap-4 p-4 text-left"
-                    exit={{ opacity: 0, y: -10 }}
-                    initial={{ opacity: 0, y: 10 }}
-                    onClick={() => setSelectedWord(word)}
-                    transition={{ delay: index * 0.03 }}
-                    type="button"
-                  >
-                    <span className="shrink-0 text-[2.6rem] font-semibold leading-none text-foreground">
-                      {word.kanji || word.hiragana}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-primary">
-                        {word.hiragana} · {word.romaji}
-                      </p>
-                      <p className="line-clamp-2 text-sm text-foreground/80">{word.meaning}</p>
-                    </div>
-                    <div className="flex shrink-0 flex-col items-end gap-2">
-                      {word.jlptLevel && (
-                        <Badge
-                          className={`rounded-full border ${levelClass[word.jlptLevel] || "border-border bg-muted text-foreground/80"}`}
+        ) : (
+          <div className="mb-8">
+            {/* ===== TỪ VỰNG ===== */}
+            {activeTab === "vocab" &&
+              (searchQuery.isFetching ? (
+                <Loader />
+              ) : results.length === 0 ? (
+                <EmptyState
+                  icon={<Search className="h-6 w-6" />}
+                  title="Chưa có kết quả"
+                  description={`Không tìm thấy từ phù hợp với "${committedQuery}". Thử romaji hoặc nghĩa tiếng Việt.`}
+                />
+              ) : (
+                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                  <AnimatePresence>
+                    {results.map((word, index) => {
+                      const isSaved = wordSaved(word.id);
+                      const isSaving = savingWordId === word.id;
+                      return (
+                        <motion.button
+                          key={word.id}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="yukihon-card flex items-center gap-4 p-4 text-left"
+                          exit={{ opacity: 0, y: -10 }}
+                          initial={{ opacity: 0, y: 10 }}
+                          onClick={() => setSelectedWord(word)}
+                          transition={{ delay: index * 0.02 }}
+                          type="button"
                         >
-                          {word.jlptLevel}
-                        </Badge>
-                      )}
-                      <span
-                        role="button"
-                        tabIndex={0}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          void handleSaveWord(word);
-                        }}
-                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${
-                          isSaved
-                            ? "bg-emerald-50 text-emerald-700"
-                            : "bg-primary/10 text-primary hover:bg-primary/15"
-                        }`}
-                      >
-                        {isSaved ? (
-                          <Check className="h-3.5 w-3.5" />
-                        ) : (
-                          <Plus className="h-3.5 w-3.5" />
-                        )}
-                        {isSaved ? "Đã lưu" : isSaving ? "Đang lưu" : "Lưu"}
-                      </span>
-                    </div>
-                  </motion.button>
-                );
-              })}
-            </AnimatePresence>
-          </div>
-        ) : null}
-
-        {/* Saved words */}
-        <PageSection
-          title="Từ đã lưu"
-          description="Những từ bạn đã thêm vào Sổ từ của tôi."
-          action={
-            <Button
-              variant="ghost"
-              className="rounded-full text-primary hover:bg-primary/10"
-              onClick={() => navigate("/my-words")}
-            >
-              Xem tất cả
-            </Button>
-          }
-        >
-          {savedWordsQuery.isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary/20 border-t-primary" />
-            </div>
-          ) : savedWords.length === 0 ? (
-            <EmptyState
-              icon={<Star className="h-6 w-6" />}
-              title="Chưa có từ nào được lưu"
-              description="Tra một từ rồi nhấn Lưu để thêm vào sổ tay của bạn."
-            />
-          ) : (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {savedWords.slice(0, 12).map((word) => (
-                <div key={word.id} className="yukihon-card-flat p-4">
-                  <span
-                    className={`mb-2 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
-                      word.mastered
-                        ? "bg-amber-50 text-amber-700"
-                        : "bg-emerald-50 text-emerald-700"
-                    }`}
-                  >
-                    {word.mastered ? (
-                      <Star className="h-3 w-3 fill-current" />
-                    ) : (
-                      <Leaf className="h-3 w-3" />
-                    )}
-                    {word.mastered ? "Đã thuộc" : "Đang học"}
-                  </span>
-                  <p className="text-2xl font-semibold text-foreground">
-                    {word.kanji || word.hiragana}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {word.hiragana}
-                    {word.romaji ? ` · ${word.romaji}` : ""}
-                  </p>
-                  <p className="mt-1 line-clamp-2 text-sm text-foreground/80">{word.meaning}</p>
+                          <span className="shrink-0 text-[2.4rem] font-semibold leading-none text-foreground">
+                            {word.kanji || word.hiragana}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-semibold text-primary">
+                              {word.hiragana} · {word.romaji}
+                            </p>
+                            <p className="line-clamp-2 text-sm text-foreground/80">
+                              {word.meaning}
+                            </p>
+                          </div>
+                          <div className="flex shrink-0 flex-col items-end gap-2">
+                            {word.jlptLevel && (
+                              <Badge className={levelBadge(word.jlptLevel)}>{word.jlptLevel}</Badge>
+                            )}
+                            <span
+                              role="button"
+                              tabIndex={0}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                handleSaveWord(word);
+                              }}
+                              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                                isSaved
+                                  ? "bg-emerald-50 text-emerald-700"
+                                  : "bg-primary/10 text-primary hover:bg-primary/15"
+                              }`}
+                            >
+                              {isSaved ? (
+                                <Check className="h-3.5 w-3.5" />
+                              ) : (
+                                <Plus className="h-3.5 w-3.5" />
+                              )}
+                              {isSaved ? "Đã lưu" : isSaving ? "Đang lưu" : "Lưu"}
+                            </span>
+                          </div>
+                        </motion.button>
+                      );
+                    })}
+                  </AnimatePresence>
                 </div>
               ))}
-            </div>
-          )}
-        </PageSection>
+
+            {/* ===== HÁN TỰ ===== */}
+            {activeTab === "kanji" &&
+              (kanjiChars.length === 0 ? (
+                <EmptyState
+                  icon={<BookOpen className="h-6 w-6" />}
+                  title="Không có Hán tự trong từ khoá"
+                  description="Nhập một từ có chứa kanji để xem chi tiết chữ Hán."
+                />
+              ) : kanjiLoading ? (
+                <Loader />
+              ) : kanjiList.length === 0 ? (
+                <EmptyState
+                  icon={<BookOpen className="h-6 w-6" />}
+                  title="Chưa có dữ liệu Hán tự"
+                  description="Không tìm thấy thông tin cho các chữ Hán trong từ khoá."
+                />
+              ) : (
+                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                  {kanjiList.map((kanji) => (
+                    <button
+                      key={kanji.character}
+                      type="button"
+                      onClick={() => navigate(`/kanji/${encodeURIComponent(kanji.character)}`)}
+                      className="yukihon-card flex items-start gap-4 p-4 text-left"
+                    >
+                      <span className="shrink-0 text-[2.8rem] font-semibold leading-none text-foreground">
+                        {kanji.character}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="line-clamp-1 text-sm font-semibold text-foreground">
+                          {kanji.meaning}
+                        </p>
+                        {kanji.kunReadings?.length > 0 && (
+                          <p className="mt-1 line-clamp-1 text-xs text-sky-700">
+                            Kun: {kanji.kunReadings.join("、")}
+                          </p>
+                        )}
+                        {kanji.onReadings?.length > 0 && (
+                          <p className="line-clamp-1 text-xs text-rose-600">
+                            On: {kanji.onReadings.join("、")}
+                          </p>
+                        )}
+                        <div className="mt-2 flex items-center gap-2">
+                          {kanji.jlptLevel && (
+                            <Badge className={levelBadge(`N${kanji.jlptLevel}`)}>
+                              N{kanji.jlptLevel}
+                            </Badge>
+                          )}
+                          {kanji.strokeCount ? (
+                            <span className="text-xs text-muted-foreground">
+                              {kanji.strokeCount} nét
+                            </span>
+                          ) : null}
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              ))}
+
+            {/* ===== MẪU CÂU ===== */}
+            {activeTab === "examples" &&
+              (examplesTabQuery.isFetching ? (
+                <Loader />
+              ) : (examplesTabQuery.data ?? []).length === 0 ? (
+                <EmptyState
+                  icon={<Search className="h-6 w-6" />}
+                  title="Chưa có mẫu câu"
+                  description={`Không tìm thấy câu ví dụ chứa "${committedQuery}".`}
+                />
+              ) : (
+                <div className="space-y-2.5">
+                  {(examplesTabQuery.data ?? []).map((ex) => (
+                    <div key={ex.tatoebaId} className="yukihon-card-flat p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <p className="text-base text-foreground">{ex.jp}</p>
+                        <button
+                          type="button"
+                          onClick={() => speak(ex.jp)}
+                          className="shrink-0 rounded-lg p-1.5 text-primary hover:bg-primary/10"
+                        >
+                          <Volume2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                      {ex.vi && <p className="mt-1 text-sm text-sky-700">{ex.vi}</p>}
+                      {!ex.vi && ex.en && (
+                        <p className="mt-1 text-sm text-muted-foreground">{ex.en}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ))}
+
+            {/* ===== NGỮ PHÁP ===== */}
+            {activeTab === "grammar" &&
+              (grammarAllQuery.isFetching ? (
+                <Loader />
+              ) : grammarMatches.length === 0 ? (
+                <EmptyState
+                  icon={<BookOpen className="h-6 w-6" />}
+                  title="Chưa có mẫu ngữ pháp"
+                  description={`Không tìm thấy mẫu ngữ pháp khớp với "${committedQuery}".`}
+                />
+              ) : (
+                <div className="space-y-3">
+                  {grammarMatches.map((g) => (
+                    <div key={g.id} className="yukihon-card-flat p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-lg font-semibold text-foreground">{g.pattern}</p>
+                          {g.title && <p className="text-sm text-primary">{g.title}</p>}
+                        </div>
+                        {g.jlptLevel && (
+                          <Badge className={levelBadge(g.jlptLevel)}>{g.jlptLevel}</Badge>
+                        )}
+                      </div>
+                      {g.explanation && (
+                        <p className="mt-2 text-sm leading-6 text-foreground/80">{g.explanation}</p>
+                      )}
+                      {g.exampleJP && (
+                        <div className="mt-2 border-l-2 border-primary/30 pl-3">
+                          <p className="text-sm text-foreground">{g.exampleJP}</p>
+                          {g.exampleEN && (
+                            <p className="mt-0.5 text-sm text-muted-foreground">{g.exampleEN}</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ))}
+          </div>
+        )}
+
+        {/* Saved words (vocab context) */}
+        {activeTab === "vocab" && (
+          <PageSection
+            title="Từ đã lưu"
+            description="Những từ bạn đã thêm vào Sổ từ của tôi."
+            action={
+              <Button
+                variant="ghost"
+                className="rounded-full text-primary hover:bg-primary/10"
+                onClick={() => navigate("/my-words")}
+              >
+                Xem tất cả
+              </Button>
+            }
+          >
+            {savedWordsQuery.isLoading ? (
+              <Loader />
+            ) : savedWords.length === 0 ? (
+              <EmptyState
+                icon={<Star className="h-6 w-6" />}
+                title="Chưa có từ nào được lưu"
+                description="Tra một từ rồi nhấn Lưu để thêm vào sổ tay của bạn."
+              />
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {savedWords.slice(0, 12).map((word) => (
+                  <div key={word.id} className="yukihon-card-flat p-4">
+                    <span
+                      className={`mb-2 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
+                        word.mastered
+                          ? "bg-amber-50 text-amber-700"
+                          : "bg-emerald-50 text-emerald-700"
+                      }`}
+                    >
+                      {word.mastered ? (
+                        <Star className="h-3 w-3 fill-current" />
+                      ) : (
+                        <Leaf className="h-3 w-3" />
+                      )}
+                      {word.mastered ? "Đã thuộc" : "Đang học"}
+                    </span>
+                    <p className="text-2xl font-semibold text-foreground">
+                      {word.kanji || word.hiragana}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {word.hiragana}
+                      {word.romaji ? ` · ${word.romaji}` : ""}
+                    </p>
+                    <p className="mt-1 line-clamp-2 text-sm text-foreground/80">{word.meaning}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </PageSection>
+        )}
 
         <p className="mt-4 text-center text-xs text-muted-foreground">
           Dữ liệu từ JMdict &amp; Tatoeba —{" "}
@@ -317,6 +542,7 @@ const Dictionary = () => {
           </button>
         </p>
 
+        {/* Word detail modal */}
         <AnimatePresence>
           {selectedWord && (
             <motion.div
@@ -328,7 +554,7 @@ const Dictionary = () => {
             >
               <motion.div
                 animate={{ opacity: 1, scale: 1 }}
-                className="w-full max-w-xl rounded-[28px] border border-border bg-card p-6 shadow-[0_24px_60px_rgba(15,23,42,0.18)]"
+                className="max-h-[85vh] w-full max-w-xl overflow-y-auto rounded-[28px] border border-border bg-card p-6 shadow-[0_24px_60px_rgba(15,23,42,0.18)]"
                 exit={{ opacity: 0, scale: 0.96 }}
                 initial={{ opacity: 0, scale: 0.96 }}
                 onClick={(event) => event.stopPropagation()}
@@ -362,7 +588,7 @@ const Dictionary = () => {
                       <Button
                         className="mt-2 h-auto p-0 text-sm text-sky-700"
                         variant="link"
-                        onClick={() => void handleTranslate(selectedWord)}
+                        onClick={() => handleTranslate(selectedWord)}
                         disabled={translating}
                       >
                         {translating ? "Đang dịch…" : "Dịch nghĩa sang tiếng Việt"}
@@ -370,17 +596,19 @@ const Dictionary = () => {
                     )}
                   </div>
 
-                  {selectedWord.exampleSentenceJP && (
-                    <div className="rounded-[20px] border border-border bg-card p-4">
-                      <p className="mb-1 text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                        Ví dụ
-                      </p>
-                      <p className="text-sm text-foreground">{selectedWord.exampleSentenceJP}</p>
-                      {selectedWord.exampleSentenceEN && (
-                        <p className="mt-2 text-sm text-muted-foreground">
-                          {selectedWord.exampleSentenceEN}
-                        </p>
-                      )}
+                  {/* Constituent kanji chips */}
+                  {extractKanji(selectedWord.kanji || "").length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {extractKanji(selectedWord.kanji || "").map((ch) => (
+                        <button
+                          key={ch}
+                          type="button"
+                          onClick={() => navigate(`/kanji/${encodeURIComponent(ch)}`)}
+                          className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-xl font-semibold text-foreground transition hover:border-primary/40 hover:bg-primary/5"
+                        >
+                          {ch}
+                        </button>
+                      ))}
                     </div>
                   )}
 
@@ -419,7 +647,7 @@ const Dictionary = () => {
                   <div className="flex flex-wrap gap-2">
                     <Button
                       className="rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-emerald-500"
-                      onClick={() => void handleSaveWord(selectedWord)}
+                      onClick={() => handleSaveWord(selectedWord)}
                       disabled={!!wordSaved(selectedWord.id) || savingWordId === selectedWord.id}
                     >
                       {wordSaved(selectedWord.id) ? (
@@ -436,18 +664,9 @@ const Dictionary = () => {
                     <Button
                       className="rounded-2xl border-border bg-white text-foreground/80"
                       variant="outline"
-                      onClick={() => {
-                        const spoken = speakJapanese(
-                          selectedWord.hiragana || selectedWord.kanji || selectedWord.romaji
-                        );
-                        if (!spoken) {
-                          toast({
-                            title: "Trình duyệt không hỗ trợ phát âm",
-                            description: "Hãy thử Chrome hoặc Edge để nghe phát âm tiếng Nhật.",
-                            variant: "destructive",
-                          });
-                        }
-                      }}
+                      onClick={() =>
+                        speak(selectedWord.hiragana || selectedWord.kanji || selectedWord.romaji)
+                      }
                     >
                       <Volume2 className="mr-2 h-4 w-4" />
                       Phát âm
@@ -462,5 +681,11 @@ const Dictionary = () => {
     </DashboardLayout>
   );
 };
+
+const Loader = () => (
+  <div className="flex items-center justify-center py-16">
+    <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary/20 border-t-primary" />
+  </div>
+);
 
 export default Dictionary;
