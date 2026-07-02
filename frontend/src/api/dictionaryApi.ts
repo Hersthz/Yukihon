@@ -22,6 +22,11 @@ export const dictionaryApi = {
   /** Annotate a batch of Japanese texts with furigana (ruby over kanji). */
   furigana: (texts: string[]) =>
     apiClient.post<FuriganaToken[][]>(`/api/dictionary/furigana`, { texts }),
+  /** All radicals available for the radical picker. */
+  getRadicals: () => apiClient.get<string[]>(`/api/dictionary/radicals`),
+  /** Kanji containing ALL of the given radicals. */
+  getKanjiByRadicals: (radicals: string[]) =>
+    apiClient.get<string[]>(`/api/dictionary/kanji-by-radicals`, { radicals: radicals.join(",") }),
   /** Promote a JMdict word into vocabulary (so it can be saved). Returns the curated entry. */
   materialize: (dictWordId: number) =>
     apiClient.post<DictionaryEntry>(`/api/dictionary/words/${dictWordId}/materialize`),

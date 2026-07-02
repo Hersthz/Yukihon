@@ -1,7 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
-import { BookOpen, Check, Leaf, Mic, Plus, Search, Star, Volume2, X } from "lucide-react";
+import {
+  BookOpen,
+  Check,
+  Leaf,
+  LayoutGrid,
+  Mic,
+  Plus,
+  Search,
+  Star,
+  Volume2,
+  X,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import {
@@ -214,6 +225,28 @@ const Dictionary = () => {
     setListening(true);
   };
 
+  // ---- Radical picker ----
+  const [showRadicals, setShowRadicals] = useState(false);
+  const [selectedRadicals, setSelectedRadicals] = useState<string[]>([]);
+  const radicalsQuery = useQuery({
+    queryKey: ["dictionary", "radicals"],
+    queryFn: () => dictionaryApi.getRadicals(),
+    enabled: showRadicals,
+  });
+  const radicalKanjiQuery = useQuery({
+    queryKey: ["dictionary", "kanji-by-radicals", selectedRadicals],
+    queryFn: () => dictionaryApi.getKanjiByRadicals(selectedRadicals),
+    enabled: showRadicals && selectedRadicals.length > 0,
+  });
+  const toggleRadical = (r: string) =>
+    setSelectedRadicals((prev) => (prev.includes(r) ? prev.filter((x) => x !== r) : [...prev, r]));
+  const pickKanji = (k: string) => {
+    setQuery(k);
+    setCommittedQuery(k);
+    setActiveTab("kanji");
+    setShowRadicals(false);
+  };
+
   const translateMutation = useMutation({
     mutationFn: (dictWordId: number) => dictionaryApi.translateMeaning(dictWordId),
     onSuccess: ({ vi }, dictWordId) => {
@@ -328,22 +361,118 @@ const Dictionary = () => {
             </button>
           </div>
 
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {TABS.map((tab) => (
-              <button
-                key={tab.key}
-                type="button"
-                onClick={() => setActiveTab(tab.key)}
-                className={`rounded-lg px-3.5 py-1.5 text-sm font-medium transition ${
-                  activeTab === tab.key
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-muted"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap gap-1.5">
+              {TABS.map((tab) => (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`rounded-lg px-3.5 py-1.5 text-sm font-medium transition ${
+                    activeTab === tab.key
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowRadicals((v) => !v)}
+              className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
+                showRadicals
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border text-muted-foreground hover:bg-muted"
+              }`}
+            >
+              <LayoutGrid className="h-4 w-4" />
+              Bộ thủ
+            </button>
           </div>
+
+          {showRadicals && (
+            <div className="yukihon-card-flat mt-3 space-y-3 p-3">
+              {selectedRadicals.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2 border-b border-border pb-3">
+                  <span className="text-xs text-muted-foreground">Đã chọn:</span>
+                  {selectedRadicals.map((r) => (
+                    <button
+                      key={r}
+                      type="button"
+                      onClick={() => toggleRadical(r)}
+                      className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-0.5 text-sm text-primary"
+                    >
+                      {r}
+                      <X className="h-3 w-3" />
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedRadicals([])}
+                    className="ml-auto text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    Xoá hết
+                  </button>
+                </div>
+              )}
+
+              {radicalsQuery.isLoading ? (
+                <p className="py-4 text-center text-sm text-muted-foreground">Đang tải bộ thủ…</p>
+              ) : (radicalsQuery.data ?? []).length === 0 ? (
+                <p className="py-4 text-center text-sm text-muted-foreground">
+                  Chưa có dữ liệu bộ thủ. Quản trị viên cần nhập KRADFILE trước.
+                </p>
+              ) : (
+                <div className="flex max-h-52 flex-wrap gap-1 overflow-y-auto">
+                  {(radicalsQuery.data ?? []).map((r) => {
+                    const active = selectedRadicals.includes(r);
+                    return (
+                      <button
+                        key={r}
+                        type="button"
+                        onClick={() => toggleRadical(r)}
+                        className={`flex h-8 w-8 items-center justify-center rounded-md border text-base transition ${
+                          active
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border bg-card text-foreground hover:border-primary/40 hover:bg-primary/5"
+                        }`}
+                      >
+                        {r}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {selectedRadicals.length > 0 && (
+                <div className="border-t border-border pt-3">
+                  <p className="mb-2 text-xs text-muted-foreground">Kanji khớp</p>
+                  {radicalKanjiQuery.isFetching ? (
+                    <p className="text-sm text-muted-foreground">Đang tìm…</p>
+                  ) : (radicalKanjiQuery.data ?? []).length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      Không có kanji khớp bộ thủ đã chọn.
+                    </p>
+                  ) : (
+                    <div className="flex max-h-40 flex-wrap gap-1 overflow-y-auto">
+                      {(radicalKanjiQuery.data ?? []).map((k) => (
+                        <button
+                          key={k}
+                          type="button"
+                          onClick={() => pickKanji(k)}
+                          className="flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card text-lg font-semibold text-foreground transition hover:border-primary/40 hover:bg-primary/5"
+                        >
+                          {k}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {!searched ? (

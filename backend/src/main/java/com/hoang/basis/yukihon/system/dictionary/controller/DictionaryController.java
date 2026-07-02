@@ -5,6 +5,7 @@ import com.hoang.basis.yukihon.system.dictionary.dto.FuriganaRequest;
 import com.hoang.basis.yukihon.system.dictionary.dto.FuriganaToken;
 import com.hoang.basis.yukihon.system.dictionary.service.DictionaryService;
 import com.hoang.basis.yukihon.system.dictionary.service.FuriganaService;
+import com.hoang.basis.yukihon.system.dictionary.service.RadicalService;
 import com.hoang.basis.yukihon.system.vocabulary.dto.VocabularyDto;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +20,7 @@ public class DictionaryController {
 
     private final DictionaryService dictionaryService;
     private final FuriganaService furiganaService;
+    private final RadicalService radicalService;
 
     @GetMapping("/search")
     public ResponseEntity<List<VocabularyDto>> search(@RequestParam String q) {
@@ -53,6 +55,18 @@ public class DictionaryController {
     @PostMapping("/furigana")
     public ResponseEntity<List<List<FuriganaToken>>> furigana(@RequestBody FuriganaRequest request) {
         return ResponseEntity.ok(furiganaService.annotateAll(request.texts()));
+    }
+
+    /** All radicals available for the radical picker. */
+    @GetMapping("/radicals")
+    public ResponseEntity<List<String>> radicals() {
+        return ResponseEntity.ok(radicalService.listRadicals());
+    }
+
+    /** Kanji that contain ALL of the given radicals (comma-separated). */
+    @GetMapping("/kanji-by-radicals")
+    public ResponseEntity<List<String>> kanjiByRadicals(@RequestParam List<String> radicals) {
+        return ResponseEntity.ok(radicalService.kanjiByRadicals(radicals));
     }
 
     @GetMapping("/{id}")
