@@ -162,7 +162,10 @@ const DecksPage = () => {
   const [description, setDescription] = useState("");
 
   const mine = useQuery({ queryKey: ["decks", "mine"], queryFn: deckApi.listMine });
-  const publicDecks = useQuery({ queryKey: ["decks", "public"], queryFn: deckApi.listPublic });
+  const publicDecks = useQuery({
+    queryKey: ["decks", "public"],
+    queryFn: () => deckApi.listPublic(),
+  });
 
   const createMutation = useMutation({
     mutationFn: () =>

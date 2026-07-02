@@ -13,7 +13,7 @@ import {
 import { Bar, CartesianGrid, ComposedChart, Line, XAxis, YAxis } from "recharts";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
+import { EmptyState, PageHeader, PageSection, StatStrip } from "@/components/layout/UserPage";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
