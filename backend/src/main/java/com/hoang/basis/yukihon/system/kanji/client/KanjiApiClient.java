@@ -63,6 +63,10 @@ public class KanjiApiClient {
                                     ? root.path("stroke_count").asInt()
                                     : null)
                     .jlptLevel(mapJlpt(root.path("jlpt")))
+                    .frequency(
+                            root.path("freq_mainichi_shinbun").isInt()
+                                    ? root.path("freq_mainichi_shinbun").asInt()
+                                    : null)
                     .build();
         } catch (Exception e) {
             log.warn("Failed to parse kanjiapi.dev response: {}", e.getMessage());

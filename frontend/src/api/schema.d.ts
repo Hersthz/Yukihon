@@ -3796,6 +3796,10 @@ export interface components {
             /** Format: int32 */
             strokeCount?: number;
             jlptLevel?: string;
+            /** Format: int32 */
+            frequency?: number;
+            strokeSvg?: string;
+            components?: string[];
         };
         KanjiSrsDashboardDto: {
             /** Format: int32 */

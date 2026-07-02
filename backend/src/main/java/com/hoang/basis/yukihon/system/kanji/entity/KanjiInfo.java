@@ -42,6 +42,18 @@ public class KanjiInfo {
     @Column(name = "jlpt_level", length = 5)
     private String jlptLevel;
 
+    /** Newspaper frequency rank (kanjiapi.dev freq_mainichi_shinbun); lower = more common. */
+    @Column(name = "frequency")
+    private Integer frequency;
+
+    /** Raw KanjiVG SVG with per-stroke paths, for stroke-order animation. */
+    @Column(name = "stroke_svg", columnDefinition = "LONGTEXT")
+    private String strokeSvg;
+
+    /** Comma-joined component/radical characters parsed from KanjiVG (e.g. "吉,糸"). */
+    @Column(name = "components", length = 500)
+    private String components;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

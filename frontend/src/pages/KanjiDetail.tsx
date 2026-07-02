@@ -1,12 +1,13 @@
 import { useMemo } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, BookOpen, Languages, Sparkles, WandSparkles } from "lucide-react";
+import { ArrowLeft, BookOpen } from "lucide-react";
 
 import { kanjiApi, vocabularyApi, type KanjiInfo } from "@/api";
 import KanjiPracticeCanvas from "@/components/kanji/KanjiPracticeCanvas";
+import KanjiStrokeOrder from "@/components/kanji/KanjiStrokeOrder";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { EmptyState, MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
+import { EmptyState, PageHeader, PageSection, StatStrip } from "@/components/layout/UserPage";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getKanjiByCharacter, kanjiCatalog, type KanjiEntry } from "@/data/kanji";
@@ -61,13 +62,15 @@ const KanjiDetail = () => {
   const staticKanji = getKanjiByCharacter(decodedCharacter);
   const { recordMap, addToSrs, removeFromSrs, review } = useKanjiSrs(kanjiCatalog);
 
-  // Fall back to the live kanji API (kanjiapi.dev, cached) for characters not in the curated catalog.
+  // Always pull the live kanji API (kanjiapi.dev + KanjiVG, cached) — it provides the stroke-order
+  // SVG, frequency and components even for characters already in the curated catalog.
   const kanjiInfoQuery = useQuery({
     queryKey: ["kanji-info", decodedCharacter],
     queryFn: () => kanjiApi.get(decodedCharacter),
-    enabled: !staticKanji && decodedCharacter.length > 0,
+    enabled: decodedCharacter.length > 0,
     retry: false,
   });
+  const apiInfo = kanjiInfoQuery.data;
   const kanji = useMemo(
     () => staticKanji ?? apiToEntry(kanjiInfoQuery.data),
     [staticKanji, kanjiInfoQuery.data]
@@ -147,32 +150,15 @@ const KanjiDetail = () => {
           }
         />
 
-        <div className="mb-4 grid gap-3 md:grid-cols-4">
-          <MetricCard
-            hint="Cấp JLPT"
-            icon={<BookOpen className="h-4 w-4 text-sky-500" />}
-            label="Cấp độ"
-            value={kanji.jlptLevel}
-          />
-          <MetricCard
-            hint="Tổng số nét"
-            icon={<WandSparkles className="h-4 w-4 text-violet-500" />}
-            label="Số nét"
-            value={kanji.strokeCount}
-          />
-          <MetricCard
-            hint="Bộ thủ chính"
-            icon={<Languages className="h-4 w-4 text-amber-500" />}
-            label="Bộ thủ"
-            value={`${kanji.radical} • ${kanji.radicalMeaning}`}
-          />
-          <MetricCard
-            hint="Lịch riêng cho kanji này"
-            icon={<Sparkles className="h-4 w-4 text-emerald-500" />}
-            label="Lần ôn kế"
-            value={formatReviewDate(srsRecord?.nextReviewAt)}
-          />
-        </div>
+        <StatStrip
+          className="mb-4"
+          items={[
+            { label: "JLPT", value: kanji.jlptLevel || "—" },
+            { label: "số nét", value: kanji.strokeCount || "—" },
+            { label: "tần suất", value: apiInfo?.frequency ? `#${apiInfo.frequency}` : "—" },
+            { label: "lần ôn kế", value: formatReviewDate(srsRecord?.nextReviewAt) },
+          ]}
+        />
 
         <div className="grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
           <PageSection
@@ -196,6 +182,31 @@ const KanjiDetail = () => {
                   ))}
                 </div>
               </div>
+
+              {apiInfo?.strokeSvg && (
+                <div className="rounded-[22px] border border-border bg-card p-5">
+                  <p className="mb-3 text-sm font-semibold text-foreground">Thứ tự nét</p>
+                  <KanjiStrokeOrder svg={apiInfo.strokeSvg} />
+                </div>
+              )}
+
+              {apiInfo?.components && apiInfo.components.length > 0 && (
+                <div className="rounded-[22px] border border-border bg-card p-5">
+                  <p className="mb-3 text-sm font-semibold text-foreground">Thành phần / bộ thủ</p>
+                  <div className="flex flex-wrap gap-2">
+                    {apiInfo.components.map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => navigate(`/kanji/${encodeURIComponent(c)}`)}
+                        className="flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-card text-2xl font-semibold text-foreground transition hover:border-primary/40 hover:bg-primary/5"
+                      >
+                        {c}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="rounded-[22px] border border-border bg-card p-5">
                 <p className="text-sm font-semibold text-foreground">Onyomi</p>

@@ -9,4 +9,7 @@ public record KanjiInfoDto(
         List<String> onReadings,
         List<String> kunReadings,
         Integer strokeCount,
-        String jlptLevel) {}
+        String jlptLevel,
+        Integer frequency,
+        String strokeSvg,
+        List<String> components) {}
