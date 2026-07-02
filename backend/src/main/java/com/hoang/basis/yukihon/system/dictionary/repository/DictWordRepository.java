@@ -23,4 +23,17 @@ public interface DictWordRepository extends JpaRepository<DictWord, Long> {
             ORDER BY w.common DESC, w.id ASC
             """)
     List<DictWord> search(@Param("q") String query, Pageable pageable);
+
+    /**
+     * Compound / related words that CONTAIN the given form (e.g. 手を結ぶ for 結ぶ), excluding the
+     * word itself. Common words first.
+     */
+    @Query(
+            """
+            SELECT w FROM DictWord w
+            WHERE (w.kanji LIKE CONCAT('%', :q, '%') OR w.kana LIKE CONCAT('%', :q, '%'))
+              AND NOT (w.kanji = :q OR w.kana = :q)
+            ORDER BY w.common DESC, w.id ASC
+            """)
+    List<DictWord> findRelated(@Param("q") String query, Pageable pageable);
 }

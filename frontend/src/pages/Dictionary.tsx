@@ -139,6 +139,25 @@ const Dictionary = () => {
   const examples = examplesQuery.data ?? [];
   const examplesLoading = examplesQuery.isFetching;
 
+  // ---- Detail: constituent-kanji breakdown + related/compound words ----
+  const detailKanjiChars = useMemo(() => extractKanji(selectedWord?.kanji || ""), [selectedWord]);
+  const detailKanjiQueries = useQueries({
+    queries: detailKanjiChars.map((ch) => ({
+      queryKey: ["kanji", ch],
+      queryFn: () => kanjiApi.get(ch),
+      enabled: !!selectedWord,
+      retry: false,
+    })),
+  });
+
+  const relatedWord = selectedWord?.kanji || selectedWord?.hiragana || "";
+  const relatedQuery = useQuery({
+    queryKey: ["dictionary", "related", relatedWord],
+    queryFn: () => dictionaryApi.getRelated(relatedWord),
+    enabled: !!relatedWord,
+  });
+  const relatedWords = relatedQuery.data ?? [];
+
   const handleSearch = () => {
     setCommittedQuery(query.trim());
   };
@@ -596,19 +615,67 @@ const Dictionary = () => {
                     )}
                   </div>
 
-                  {/* Constituent kanji chips */}
-                  {extractKanji(selectedWord.kanji || "").length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {extractKanji(selectedWord.kanji || "").map((ch) => (
-                        <button
-                          key={ch}
-                          type="button"
-                          onClick={() => navigate(`/kanji/${encodeURIComponent(ch)}`)}
-                          className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-xl font-semibold text-foreground transition hover:border-primary/40 hover:bg-primary/5"
-                        >
-                          {ch}
-                        </button>
-                      ))}
+                  {/* Constituent kanji breakdown */}
+                  {detailKanjiChars.length > 0 && (
+                    <div>
+                      <p className="mb-2 text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                        Chữ Hán cấu thành
+                      </p>
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        {detailKanjiChars.map((ch, i) => {
+                          const info = detailKanjiQueries[i]?.data;
+                          return (
+                            <button
+                              key={ch}
+                              type="button"
+                              onClick={() => navigate(`/kanji/${encodeURIComponent(ch)}`)}
+                              className="flex items-center gap-3 rounded-xl border border-border bg-card p-2.5 text-left transition hover:border-primary/40 hover:bg-primary/5"
+                            >
+                              <span className="shrink-0 text-2xl font-semibold text-foreground">
+                                {ch}
+                              </span>
+                              <div className="min-w-0">
+                                <p className="line-clamp-1 text-sm text-foreground">
+                                  {info?.meaning || "…"}
+                                </p>
+                                {(info?.kunReadings?.length || info?.onReadings?.length) && (
+                                  <p className="line-clamp-1 text-xs text-muted-foreground">
+                                    {[...(info?.kunReadings ?? []), ...(info?.onReadings ?? [])]
+                                      .slice(0, 3)
+                                      .join("、")}
+                                  </p>
+                                )}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Related / compound words */}
+                  {relatedWords.length > 0 && (
+                    <div>
+                      <p className="mb-2 text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                        Từ liên quan
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {relatedWords.map((rw) => (
+                          <button
+                            key={rw.id}
+                            type="button"
+                            onClick={() => setSelectedWord(rw)}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1.5 text-left transition hover:border-primary/40 hover:bg-primary/5"
+                          >
+                            <span className="text-sm font-semibold text-foreground">
+                              {rw.kanji || rw.hiragana}
+                            </span>
+                            {rw.hiragana && rw.kanji && (
+                              <span className="text-xs text-muted-foreground">{rw.hiragana}</span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
 

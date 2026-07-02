@@ -39,6 +39,12 @@ public class DictionaryController {
         return ResponseEntity.ok(dictionaryService.materialize(dictWordId));
     }
 
+    /** Related / compound words that contain the given headword (e.g. 手を結ぶ for 結ぶ). */
+    @GetMapping("/related")
+    public ResponseEntity<List<VocabularyDto>> related(@RequestParam String q) {
+        return ResponseEntity.ok(dictionaryService.getRelated(q));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<VocabularyDto> getDetail(@PathVariable Long id) {
         return ResponseEntity.ok(dictionaryService.getById(id));

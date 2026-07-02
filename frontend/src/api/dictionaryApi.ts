@@ -14,6 +14,9 @@ export const dictionaryApi = {
   getDetail: (id: number) => apiClient.get<DictionaryEntry>(`/api/dictionary/${id}`),
   getExamples: (query: string) =>
     apiClient.get<ExampleSentence[]>(`/api/dictionary/examples`, { q: query }),
+  /** Related / compound words that contain the headword (e.g. 手を結ぶ for 結ぶ). */
+  getRelated: (query: string) =>
+    apiClient.get<DictionaryEntry[]>(`/api/dictionary/related`, { q: query }),
   /** Promote a JMdict word into vocabulary (so it can be saved). Returns the curated entry. */
   materialize: (dictWordId: number) =>
     apiClient.post<DictionaryEntry>(`/api/dictionary/words/${dictWordId}/materialize`),

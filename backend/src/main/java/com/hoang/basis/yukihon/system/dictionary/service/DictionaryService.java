@@ -11,6 +11,7 @@ import com.hoang.basis.yukihon.system.translation.service.TranslationService;
 import com.hoang.basis.yukihon.system.vocabulary.dto.VocabularyDto;
 import com.hoang.basis.yukihon.system.vocabulary.entity.Vocabulary;
 import com.hoang.basis.yukihon.system.vocabulary.repository.VocabularyRepository;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -62,6 +63,23 @@ public class DictionaryService {
         for (DictWord w : dictWordRepository.search(q, PageRequest.of(0, 50))) {
             VocabularyDto dto = toDto(w);
             if (seen.add(dedupeKey(dto)) && result.size() < 50) {
+                result.add(dto);
+            }
+        }
+        return result;
+    }
+
+    /** Related / compound words that contain the given headword (e.g. 手を結ぶ for 結ぶ). */
+    public List<VocabularyDto> getRelated(String word) {
+        String q = word == null ? "" : word.trim();
+        if (q.isEmpty()) {
+            return List.of();
+        }
+        List<VocabularyDto> result = new ArrayList<>();
+        Set<String> seen = new HashSet<>();
+        for (DictWord w : dictWordRepository.findRelated(q, PageRequest.of(0, 20))) {
+            VocabularyDto dto = toDto(w);
+            if (seen.add(dedupeKey(dto)) && result.size() < 15) {
                 result.add(dto);
             }
         }
