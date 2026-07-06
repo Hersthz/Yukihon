@@ -8,6 +8,13 @@ export type AddCardPayload = Schema<"AddCardRequest">;
 export type CardDetail = Schema<"CardDetailDto">;
 export type FlashcardSide = Schema<"FlashcardSideDto">;
 export type RenderedCard = Schema<"RenderedCardDto">;
+
+export interface CardBlockInput {
+  side: "FRONT" | "BACK" | "HINT";
+  label?: string;
+  contentType: string;
+  contentValue: string;
+}
 export type FavoriteToggle = Schema<"FavoriteToggleResult">;
 
 export const deckApi = {
@@ -31,6 +38,8 @@ export const deckApi = {
     apiClient.get<RenderedCard>(`/api/decks/${deckId}/cards/${flashcardId}/render`),
   setTemplate: (deckId: number, templateId: number | null) =>
     apiClient.put<Deck>(`/api/decks/${deckId}/template`, { templateId }),
+  saveCardSides: (deckId: number, flashcardId: number, blocks: CardBlockInput[]) =>
+    apiClient.put<CardDetail>(`/api/decks/${deckId}/cards/${flashcardId}/sides`, { blocks }),
   addCard: (deckId: number, payload: AddCardPayload) =>
     apiClient.post<DeckCard>(`/api/decks/${deckId}/cards`, payload),
   deleteCard: (deckId: number, flashcardId: number) =>

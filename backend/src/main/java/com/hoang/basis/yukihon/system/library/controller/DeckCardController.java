@@ -5,6 +5,7 @@ import com.hoang.basis.yukihon.system.library.dto.AddCardRequest;
 import com.hoang.basis.yukihon.system.library.dto.CardDetailDto;
 import com.hoang.basis.yukihon.system.library.dto.DeckCardDto;
 import com.hoang.basis.yukihon.system.library.dto.RenderedCardDto;
+import com.hoang.basis.yukihon.system.library.dto.SaveCardSidesRequest;
 import com.hoang.basis.yukihon.system.library.service.DeckService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -42,6 +44,15 @@ public class DeckCardController {
     public ResponseEntity<RenderedCardDto> render(
             @PathVariable Long deckId, @PathVariable Long flashcardId, @CurrentUserId Long userId) {
         return ResponseEntity.ok(deckService.renderCard(userId, deckId, flashcardId));
+    }
+
+    @PutMapping("/{flashcardId}/sides")
+    public ResponseEntity<CardDetailDto> saveSides(
+            @PathVariable Long deckId,
+            @PathVariable Long flashcardId,
+            @RequestBody SaveCardSidesRequest request,
+            @CurrentUserId Long userId) {
+        return ResponseEntity.ok(deckService.saveCardSides(userId, deckId, flashcardId, request.blocks()));
     }
 
     @PostMapping

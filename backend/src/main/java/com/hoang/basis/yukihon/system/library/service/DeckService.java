@@ -8,6 +8,7 @@ import com.hoang.basis.yukihon.system.library.dto.DeckCardDto;
 import com.hoang.basis.yukihon.system.library.dto.DeckDto;
 import com.hoang.basis.yukihon.system.library.dto.FavoriteToggleResult;
 import com.hoang.basis.yukihon.system.library.dto.RenderedCardDto;
+import com.hoang.basis.yukihon.system.library.dto.SaveCardSidesRequest.CardBlockInput;
 import com.hoang.basis.yukihon.system.library.entity.Deck;
 import com.hoang.basis.yukihon.system.library.entity.DeckItem;
 import com.hoang.basis.yukihon.system.library.entity.FavoriteDeck;
@@ -285,6 +286,60 @@ public class DeckService {
     public RenderedCardDto renderCard(Long userId, Long deckId, Long flashcardId) {
         requireVisible(deckId, userId);
         return flashcardTemplateService.renderCard(flashcardId, deckId);
+    }
+
+    /** Replace a card's sides/contents from the block editor; keeps flat front/back in sync. */
+    public CardDetailDto saveCardSides(Long userId, Long deckId, Long flashcardId, List<CardBlockInput> blocks) {
+        requireOwner(deckId, userId);
+        deckItemRepository
+                .findByDeckIdAndFlashcardIdAndIsDeletedFalse(deckId, flashcardId)
+                .orElseThrow(() -> new ResourceNotFoundException("Card not in deck"));
+        Flashcard fc = flashcardRepository
+                .findById(flashcardId)
+                .orElseThrow(() -> new ResourceNotFoundException("Card not found: " + flashcardId));
+
+        flashcardContentService.replaceSides(flashcardId, blocks);
+
+        // Keep the flat summary fields in sync (used by SRS/Quizlet), falling back to old values.
+        fc.setFront(nz(firstText(blocks, "FRONT", null), fc.getFront()));
+        fc.setBack(nz(firstBack(blocks), fc.getBack()));
+        fc.setHint(firstText(blocks, "HINT", null));
+        fc.setImageUrl(firstOfType(blocks, "IMAGE"));
+        fc.setAudioUrl(firstOfType(blocks, "AUDIO"));
+        flashcardRepository.save(fc);
+
+        return getCardDetail(userId, deckId, flashcardId);
+    }
+
+    private String nz(String v, String fallback) {
+        return v != null && !v.isBlank() ? v : fallback;
+    }
+
+    private String firstText(List<CardBlockInput> blocks, String side, String label) {
+        return blocks.stream()
+                .filter(b -> side.equals(b.side())
+                        && "TEXT".equals(b.contentType())
+                        && b.contentValue() != null
+                        && !b.contentValue().isBlank()
+                        && (label == null || label.equals(b.label())))
+                .map(CardBlockInput::contentValue)
+                .findFirst()
+                .orElse(null);
+    }
+
+    private String firstBack(List<CardBlockInput> blocks) {
+        String labelled = firstText(blocks, "BACK", "Nghĩa");
+        return labelled != null ? labelled : firstText(blocks, "BACK", null);
+    }
+
+    private String firstOfType(List<CardBlockInput> blocks, String type) {
+        return blocks.stream()
+                .filter(b -> type.equals(b.contentType())
+                        && b.contentValue() != null
+                        && !b.contentValue().isBlank())
+                .map(CardBlockInput::contentValue)
+                .findFirst()
+                .orElse(null);
     }
 
     /** Full detail of one card (summary fields + rich sides), visible to the deck owner/public. */

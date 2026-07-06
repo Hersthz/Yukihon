@@ -3,6 +3,7 @@ package com.hoang.basis.yukihon.system.library.service;
 import com.hoang.basis.yukihon.system.library.dto.AddCardRequest;
 import com.hoang.basis.yukihon.system.library.dto.FlashcardSideContentDto;
 import com.hoang.basis.yukihon.system.library.dto.FlashcardSideDto;
+import com.hoang.basis.yukihon.system.library.dto.SaveCardSidesRequest.CardBlockInput;
 import com.hoang.basis.yukihon.system.library.entity.FlashcardSide;
 import com.hoang.basis.yukihon.system.library.entity.FlashcardSideContent;
 import com.hoang.basis.yukihon.system.library.repository.FlashcardSideContentRepository;
@@ -117,6 +118,54 @@ public class FlashcardContentService {
                         FlashcardSide::getFlashcardId,
                         Collectors.mapping(
                                 s -> toSideDto(s, bySide.getOrDefault(s.getId(), List.of())), Collectors.toList())));
+    }
+
+    /** Replace all sides/contents from an explicit ordered block list (block editor). */
+    public void replaceSides(Long flashcardId, List<CardBlockInput> blocks) {
+        deleteForFlashcard(flashcardId);
+        if (blocks == null || blocks.isEmpty()) {
+            return;
+        }
+        String[] sideOrder = {"FRONT", "BACK", "HINT"};
+        for (int i = 0; i < sideOrder.length; i++) {
+            String sideName = sideOrder[i];
+            List<CardBlockInput> sideBlocks = blocks.stream()
+                    .filter(b -> sideName.equals(b.side())
+                            && b.contentValue() != null
+                            && !b.contentValue().isBlank())
+                    .toList();
+            if (sideBlocks.isEmpty()) {
+                continue;
+            }
+            FlashcardSide side = new FlashcardSide();
+            side.setFlashcardId(flashcardId);
+            side.setSide(sideName);
+            side.setOrderIndex(i);
+            side = sideRepository.save(side);
+
+            List<FlashcardSideContent> contents = new ArrayList<>();
+            int order = 0;
+            for (CardBlockInput b : sideBlocks) {
+                FlashcardSideContent c = new FlashcardSideContent();
+                c.setSideId(side.getId());
+                c.setLabel(b.label() != null && !b.label().isBlank() ? b.label().trim() : null);
+                c.setContentType(normalizeType(b.contentType()));
+                c.setContentValue(b.contentValue().trim());
+                c.setOrderIndex(order++);
+                contents.add(c);
+            }
+            contentRepository.saveAll(contents);
+        }
+    }
+
+    private String normalizeType(String type) {
+        if (type == null) {
+            return "TEXT";
+        }
+        return switch (type) {
+            case "IMAGE", "AUDIO", "VIDEO", "CLOZE" -> type;
+            default -> "TEXT";
+        };
     }
 
     /** Deep-copy all sides/contents from one flashcard to another (used when cloning a deck). */
