@@ -139,6 +139,7 @@ public class DeckService {
         copy.setTargetLanguage(source.getTargetLanguage());
         copy.setCoverImageUrl(source.getCoverImageUrl());
         copy.setOriginalDeckId(source.getId());
+        copy.setTemplateId(source.getTemplateId());
         copy.setTotalCards(0);
         Deck savedDeck = deckRepository.save(copy);
 
@@ -168,6 +169,7 @@ public class DeckService {
             fc.setImageUrl(src.getImageUrl());
             fc.setAudioUrl(src.getAudioUrl());
             Flashcard savedFc = flashcardRepository.save(fc);
+            flashcardContentService.copySides(src.getId(), savedFc.getId());
 
             DeckItem ni = new DeckItem();
             ni.setDeckId(savedDeck.getId());

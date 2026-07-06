@@ -119,6 +119,40 @@ public class FlashcardContentService {
                                 s -> toSideDto(s, bySide.getOrDefault(s.getId(), List.of())), Collectors.toList())));
     }
 
+    /** Deep-copy all sides/contents from one flashcard to another (used when cloning a deck). */
+    public void copySides(Long sourceFlashcardId, Long targetFlashcardId) {
+        List<FlashcardSide> sides = sideRepository.findByFlashcardIdOrderByOrderIndexAsc(sourceFlashcardId);
+        if (sides.isEmpty()) {
+            return;
+        }
+        Map<Long, List<FlashcardSideContent>> bySide =
+                contentRepository
+                        .findBySideIdInOrderByOrderIndexAsc(
+                                sides.stream().map(FlashcardSide::getId).toList())
+                        .stream()
+                        .collect(Collectors.groupingBy(FlashcardSideContent::getSideId));
+        for (FlashcardSide s : sides) {
+            FlashcardSide ns = new FlashcardSide();
+            ns.setFlashcardId(targetFlashcardId);
+            ns.setSide(s.getSide());
+            ns.setOrderIndex(s.getOrderIndex());
+            ns = sideRepository.save(ns);
+
+            List<FlashcardSideContent> copies = new ArrayList<>();
+            for (FlashcardSideContent c : bySide.getOrDefault(s.getId(), List.of())) {
+                FlashcardSideContent nc = new FlashcardSideContent();
+                nc.setSideId(ns.getId());
+                nc.setLabel(c.getLabel());
+                nc.setContentType(c.getContentType());
+                nc.setContentValue(c.getContentValue());
+                nc.setOrderIndex(c.getOrderIndex());
+                nc.setMetadata(c.getMetadata());
+                copies.add(nc);
+            }
+            contentRepository.saveAll(copies);
+        }
+    }
+
     public void deleteForFlashcard(Long flashcardId) {
         List<FlashcardSide> sides = sideRepository.findByFlashcardIdOrderByOrderIndexAsc(flashcardId);
         if (!sides.isEmpty()) {
