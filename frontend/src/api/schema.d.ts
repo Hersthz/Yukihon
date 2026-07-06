@@ -3312,6 +3312,15 @@ export interface components {
             back: string;
             hint?: string;
             template?: string;
+            reading?: string;
+            romaji?: string;
+            audioUrl?: string;
+            onyomi?: string;
+            kunyomi?: string;
+            example?: string;
+            exampleTranslation?: string;
+            note?: string;
+            imageUrl?: string;
         };
         DeckCardDto: {
             /** Format: int64 */
@@ -3322,6 +3331,28 @@ export interface components {
             template?: string;
             /** Format: int32 */
             orderIndex?: number;
+        };
+        FlashcardSideContentDto: {
+            /** Format: int64 */
+            id?: number;
+            label?: string;
+            contentType?: string;
+            contentValue?: string;
+            /** Format: int32 */
+            orderIndex?: number;
+        };
+        FlashcardSideDto: {
+            side?: string;
+            contents?: components["schemas"]["FlashcardSideContentDto"][];
+        };
+        CardDetailDto: {
+            /** Format: int64 */
+            flashcardId?: number;
+            front?: string;
+            back?: string;
+            hint?: string;
+            template?: string;
+            sides?: components["schemas"]["FlashcardSideDto"][];
         };
         CreatePostRequest: {
             title?: string;

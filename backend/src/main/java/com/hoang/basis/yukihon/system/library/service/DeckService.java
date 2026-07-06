@@ -2,6 +2,7 @@ package com.hoang.basis.yukihon.system.library.service;
 
 import com.hoang.basis.yukihon.exception.ResourceNotFoundException;
 import com.hoang.basis.yukihon.system.library.dto.AddCardRequest;
+import com.hoang.basis.yukihon.system.library.dto.CardDetailDto;
 import com.hoang.basis.yukihon.system.library.dto.CreateDeckRequest;
 import com.hoang.basis.yukihon.system.library.dto.DeckCardDto;
 import com.hoang.basis.yukihon.system.library.dto.DeckDto;
@@ -39,6 +40,7 @@ public class DeckService {
     private final DeckItemRepository deckItemRepository;
     private final FlashcardRepository flashcardRepository;
     private final FavoriteDeckRepository favoriteDeckRepository;
+    private final FlashcardContentService flashcardContentService;
 
     // ===================== DECK LISTING =====================
 
@@ -220,8 +222,14 @@ public class DeckService {
         fc.setFront(request.getFront());
         fc.setBack(request.getBack());
         fc.setHint(request.getHint());
+        fc.setExplanation(request.getExampleTranslation());
+        fc.setImageUrl(request.getImageUrl());
+        fc.setAudioUrl(request.getAudioUrl());
         fc.setTemplate("FORWARD_REVERSE".equals(request.getTemplate()) ? "FORWARD_REVERSE" : "FORWARD");
         Flashcard savedFc = flashcardRepository.save(fc);
+
+        // Rich sides (FRONT/BACK/HINT content blocks) from the named fields.
+        flashcardContentService.buildSides(savedFc.getId(), request);
 
         int nextOrder = (int) deckItemRepository.countByDeckIdAndIsDeletedFalse(deckId);
         DeckItem item = new DeckItem();
@@ -255,9 +263,27 @@ public class DeckService {
             fc.setIsDeleted(true);
             flashcardRepository.save(fc);
         });
+        flashcardContentService.deleteForFlashcard(flashcardId);
 
         deck.setTotalCards((int) deckItemRepository.countByDeckIdAndIsDeletedFalse(deckId));
         deckRepository.save(deck);
+    }
+
+    /** Full detail of one card (summary fields + rich sides), visible to the deck owner/public. */
+    @Transactional(readOnly = true)
+    public CardDetailDto getCardDetail(Long userId, Long deckId, Long flashcardId) {
+        requireVisible(deckId, userId);
+        Flashcard fc = flashcardRepository
+                .findById(flashcardId)
+                .filter(f -> !Boolean.TRUE.equals(f.getIsDeleted()))
+                .orElseThrow(() -> new ResourceNotFoundException("Card not found: " + flashcardId));
+        return new CardDetailDto(
+                fc.getId(),
+                fc.getFront(),
+                fc.getBack(),
+                fc.getHint(),
+                fc.getTemplate(),
+                flashcardContentService.getSides(flashcardId));
     }
 
     // ===================== HELPERS =====================

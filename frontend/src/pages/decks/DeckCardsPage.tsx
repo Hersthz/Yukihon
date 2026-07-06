@@ -30,6 +30,18 @@ const DeckCardsPage = () => {
   const [back, setBack] = useState("");
   const [hint, setHint] = useState("");
   const [reverse, setReverse] = useState(false);
+  const [showMore, setShowMore] = useState(false);
+  const [extra, setExtra] = useState({
+    reading: "",
+    romaji: "",
+    onyomi: "",
+    kunyomi: "",
+    example: "",
+    exampleTranslation: "",
+    note: "",
+  });
+  const setField = (k: keyof typeof extra, v: string) => setExtra((p) => ({ ...p, [k]: v }));
+  const trimmed = (v: string) => v.trim() || undefined;
 
   const deck = useQuery({
     queryKey: ["deck", id],
@@ -55,11 +67,27 @@ const DeckCardsPage = () => {
         back: back.trim(),
         hint: hint.trim() || undefined,
         template: reverse ? "FORWARD_REVERSE" : "FORWARD",
+        reading: trimmed(extra.reading),
+        romaji: trimmed(extra.romaji),
+        onyomi: trimmed(extra.onyomi),
+        kunyomi: trimmed(extra.kunyomi),
+        example: trimmed(extra.example),
+        exampleTranslation: trimmed(extra.exampleTranslation),
+        note: trimmed(extra.note),
       }),
     onSuccess: () => {
       setFront("");
       setBack("");
       setHint("");
+      setExtra({
+        reading: "",
+        romaji: "",
+        onyomi: "",
+        kunyomi: "",
+        example: "",
+        exampleTranslation: "",
+        note: "",
+      });
       invalidate();
     },
     onError: (e: unknown) =>
@@ -141,15 +169,79 @@ const DeckCardsPage = () => {
                 )}
               </Button>
             </div>
-            <label className="mt-3 flex w-fit cursor-pointer items-center gap-2 text-sm text-muted-foreground">
-              <input
-                type="checkbox"
-                checked={reverse}
-                onChange={(e) => setReverse(e.target.checked)}
-                className="h-4 w-4 accent-primary"
-              />
-              Học 2 chiều (tạo thêm thẻ ngược: mặt sau → mặt trước)
-            </label>
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+              <label className="flex w-fit cursor-pointer items-center gap-2 text-sm text-muted-foreground">
+                <input
+                  type="checkbox"
+                  checked={reverse}
+                  onChange={(e) => setReverse(e.target.checked)}
+                  className="h-4 w-4 accent-primary"
+                />
+                Học 2 chiều (tạo thêm thẻ ngược: mặt sau → mặt trước)
+              </label>
+              <button
+                type="button"
+                onClick={() => setShowMore((v) => !v)}
+                className="text-sm font-medium text-primary hover:underline"
+              >
+                {showMore ? "Ẩn chi tiết" : "+ Thêm trường (cách đọc, ví dụ…)"}
+              </button>
+            </div>
+
+            {showMore && (
+              <div className="mt-3 space-y-3 rounded-xl border border-dashed border-border p-3">
+                <div>
+                  <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Mặt trước
+                  </p>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <Input
+                      placeholder="Cách đọc (kana)"
+                      value={extra.reading}
+                      onChange={(e) => setField("reading", e.target.value)}
+                    />
+                    <Input
+                      placeholder="Romaji"
+                      value={extra.romaji}
+                      onChange={(e) => setField("romaji", e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Mặt sau
+                  </p>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <Input
+                      placeholder="Onyomi"
+                      value={extra.onyomi}
+                      onChange={(e) => setField("onyomi", e.target.value)}
+                    />
+                    <Input
+                      placeholder="Kunyomi"
+                      value={extra.kunyomi}
+                      onChange={(e) => setField("kunyomi", e.target.value)}
+                    />
+                    <Input
+                      placeholder="Câu ví dụ"
+                      value={extra.example}
+                      onChange={(e) => setField("example", e.target.value)}
+                    />
+                    <Input
+                      placeholder="Dịch ví dụ"
+                      value={extra.exampleTranslation}
+                      onChange={(e) => setField("exampleTranslation", e.target.value)}
+                    />
+                    <Input
+                      className="sm:col-span-2"
+                      placeholder="Ghi chú"
+                      value={extra.note}
+                      onChange={(e) => setField("note", e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 

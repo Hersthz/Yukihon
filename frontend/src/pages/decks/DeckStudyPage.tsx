@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
@@ -94,6 +94,20 @@ const DeckStudyPage = () => {
 
   const cards = queue?.cards ?? [];
   const current: StudyCard | undefined = cards[index];
+
+  // Rich side fields (reading, onyomi, example…) for the current card — shown on reveal.
+  const detailQuery = useQuery({
+    queryKey: ["deck", id, "card", current?.flashcardId],
+    queryFn: () => deckApi.getCardDetail(id, current!.flashcardId),
+    enabled: !!current,
+  });
+  const extraFields = useMemo(
+    () =>
+      (detailQuery.data?.sides ?? [])
+        .flatMap((s) => s.contents ?? [])
+        .filter((c) => c.label && c.label !== "Nghĩa" && c.contentValue),
+    [detailQuery.data]
+  );
 
   const reviewMutation = useMutation({
     mutationFn: (rating: SrsRating) =>
@@ -243,6 +257,16 @@ const DeckStudyPage = () => {
                     <p className="text-2xl font-semibold text-primary">{current?.back}</p>
                     {current?.explanation && (
                       <p className="text-sm text-muted-foreground">{current.explanation}</p>
+                    )}
+                    {extraFields.length > 0 && (
+                      <div className="mx-auto grid max-w-sm gap-1.5 pt-1 text-left">
+                        {extraFields.map((c) => (
+                          <p key={c.id} className="text-sm">
+                            <span className="text-muted-foreground">{c.label}: </span>
+                            <span className="text-foreground">{c.contentValue}</span>
+                          </p>
+                        ))}
+                      </div>
                     )}
                   </motion.div>
                 )}

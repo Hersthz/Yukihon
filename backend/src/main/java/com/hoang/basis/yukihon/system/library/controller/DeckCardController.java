@@ -2,6 +2,7 @@ package com.hoang.basis.yukihon.system.library.controller;
 
 import com.hoang.basis.yukihon.base.security.CurrentUserId;
 import com.hoang.basis.yukihon.system.library.dto.AddCardRequest;
+import com.hoang.basis.yukihon.system.library.dto.CardDetailDto;
 import com.hoang.basis.yukihon.system.library.dto.DeckCardDto;
 import com.hoang.basis.yukihon.system.library.service.DeckService;
 import jakarta.validation.Valid;
@@ -28,6 +29,12 @@ public class DeckCardController {
     @GetMapping
     public ResponseEntity<List<DeckCardDto>> list(@PathVariable Long deckId, @CurrentUserId Long userId) {
         return ResponseEntity.ok(deckService.listCards(userId, deckId));
+    }
+
+    @GetMapping("/{flashcardId}")
+    public ResponseEntity<CardDetailDto> detail(
+            @PathVariable Long deckId, @PathVariable Long flashcardId, @CurrentUserId Long userId) {
+        return ResponseEntity.ok(deckService.getCardDetail(userId, deckId, flashcardId));
     }
 
     @PostMapping

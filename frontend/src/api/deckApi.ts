@@ -5,6 +5,8 @@ export type Deck = Schema<"DeckDto">;
 export type CreateDeckPayload = Schema<"CreateDeckRequest">;
 export type DeckCard = Schema<"DeckCardDto">;
 export type AddCardPayload = Schema<"AddCardRequest">;
+export type CardDetail = Schema<"CardDetailDto">;
+export type FlashcardSide = Schema<"FlashcardSideDto">;
 export type FavoriteToggle = Schema<"FavoriteToggleResult">;
 
 export const deckApi = {
@@ -22,6 +24,8 @@ export const deckApi = {
   create: (payload: CreateDeckPayload) => apiClient.post<Deck>("/api/decks", payload),
   clone: (id: number) => apiClient.post<Deck>(`/api/decks/${id}/clone`, {}),
   listCards: (deckId: number) => apiClient.get<DeckCard[]>(`/api/decks/${deckId}/cards`),
+  getCardDetail: (deckId: number, flashcardId: number) =>
+    apiClient.get<CardDetail>(`/api/decks/${deckId}/cards/${flashcardId}`),
   addCard: (deckId: number, payload: AddCardPayload) =>
     apiClient.post<DeckCard>(`/api/decks/${deckId}/cards`, payload),
   deleteCard: (deckId: number, flashcardId: number) =>
