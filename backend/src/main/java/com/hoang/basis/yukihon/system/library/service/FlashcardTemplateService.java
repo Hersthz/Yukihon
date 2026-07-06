@@ -164,10 +164,22 @@ public class FlashcardTemplateService {
         Matcher m = PLACEHOLDER.matcher(template);
         StringBuilder sb = new StringBuilder();
         while (m.find()) {
-            m.appendReplacement(sb, Matcher.quoteReplacement(esc(fields.getOrDefault(m.group(1), ""))));
+            m.appendReplacement(sb, Matcher.quoteReplacement(renderField(m.group(1), fields.get(m.group(1)))));
         }
         m.appendTail(sb);
         return sb.toString();
+    }
+
+    /** Text fields are HTML-escaped; image/audio become media tags (URL attribute-escaped). */
+    private String renderField(String key, String value) {
+        if (value == null || value.isBlank()) {
+            return "";
+        }
+        return switch (key) {
+            case "image" -> "<img src=\"" + esc(value) + "\" class=\"yk-media-img\" alt=\"\"/>";
+            case "audio" -> "<audio controls src=\"" + esc(value) + "\"></audio>";
+            default -> esc(value);
+        };
     }
 
     private void putIfText(Map<String, String> m, String key, String value) {

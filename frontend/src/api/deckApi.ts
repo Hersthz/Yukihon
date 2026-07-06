@@ -40,6 +40,16 @@ export const deckApi = {
     apiClient.put<Deck>(`/api/decks/${deckId}/template`, { templateId }),
   saveCardSides: (deckId: number, flashcardId: number, blocks: CardBlockInput[]) =>
     apiClient.put<CardDetail>(`/api/decks/${deckId}/cards/${flashcardId}/sides`, { blocks }),
+  uploadMedia: async (file: File): Promise<{ url: string }> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await apiClient.fetchWithAuth("/api/media/upload", {
+      method: "POST",
+      body: formData,
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
   addCard: (deckId: number, payload: AddCardPayload) =>
     apiClient.post<DeckCard>(`/api/decks/${deckId}/cards`, payload),
   deleteCard: (deckId: number, flashcardId: number) =>

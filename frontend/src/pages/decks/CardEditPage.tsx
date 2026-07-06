@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { ArrowLeft, GripVertical, Loader2, Plus, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, GripVertical, Loader2, Plus, Save, Trash2, Upload } from "lucide-react";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { PageHeader, PageSection } from "@/components/layout/UserPage";
@@ -42,6 +42,7 @@ const CardEditPage = () => {
   const uidRef = useRef(1);
   const dragRef = useRef<{ side: Side; index: number } | null>(null);
   const [bySide, setBySide] = useState<Record<Side, Block[]>>({ FRONT: [], BACK: [], HINT: [] });
+  const [uploadingUid, setUploadingUid] = useState<number | null>(null);
 
   const detailQuery = useQuery({
     queryKey: ["deck", id, "card", fcId],
@@ -81,6 +82,22 @@ const CardEditPage = () => {
       ...p,
       [side]: p[side].map((b) => (b.uid === uid ? { ...b, ...patch } : b)),
     }));
+  const uploadForBlock = async (side: Side, uid: number, file?: File) => {
+    if (!file) return;
+    setUploadingUid(uid);
+    try {
+      const { url } = await deckApi.uploadMedia(file);
+      patchBlock(side, uid, { contentValue: url });
+    } catch (e) {
+      toast({
+        title: "Tải lên thất bại",
+        description: e instanceof Error ? e.message : "Lỗi",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingUid(null);
+    }
+  };
   const reorder = (side: Side, from: number, to: number) =>
     setBySide((p) => {
       if (from === to) return p;
@@ -226,14 +243,34 @@ const CardEditPage = () => {
                               className="w-full rounded-lg border border-border bg-background p-2 text-sm text-foreground outline-none focus:border-primary/40"
                             />
                           ) : (
-                            <Input
-                              className="h-9"
-                              placeholder="URL"
-                              value={b.contentValue}
-                              onChange={(e) =>
-                                patchBlock(key, b.uid, { contentValue: e.target.value })
-                              }
-                            />
+                            <div className="flex items-center gap-2">
+                              <Input
+                                className="h-9 flex-1"
+                                placeholder="URL"
+                                value={b.contentValue}
+                                onChange={(e) =>
+                                  patchBlock(key, b.uid, { contentValue: e.target.value })
+                                }
+                              />
+                              {(b.contentType === "IMAGE" || b.contentType === "AUDIO") && (
+                                <label className="inline-flex cursor-pointer items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs text-foreground hover:bg-muted">
+                                  {uploadingUid === b.uid ? (
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                  ) : (
+                                    <Upload className="h-3.5 w-3.5" />
+                                  )}
+                                  Tải lên
+                                  <input
+                                    type="file"
+                                    accept={b.contentType === "IMAGE" ? "image/*" : "audio/*"}
+                                    className="hidden"
+                                    onChange={(e) =>
+                                      uploadForBlock(key, b.uid, e.target.files?.[0])
+                                    }
+                                  />
+                                </label>
+                              )}
+                            </div>
                           )}
                         </div>
                         <Button

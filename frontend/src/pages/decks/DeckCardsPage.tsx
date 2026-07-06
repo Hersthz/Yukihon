@@ -1,7 +1,17 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Plus, Pencil, Trash2, Play, Loader2, Layers } from "lucide-react";
+import {
+  ArrowLeft,
+  Plus,
+  Pencil,
+  Trash2,
+  Play,
+  Loader2,
+  Layers,
+  Image as ImageIcon,
+  Volume2,
+} from "lucide-react";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,6 +52,24 @@ const DeckCardsPage = () => {
   });
   const setField = (k: keyof typeof extra, v: string) => setExtra((p) => ({ ...p, [k]: v }));
   const trimmed = (v: string) => v.trim() || undefined;
+  const [media, setMedia] = useState({ imageUrl: "", audioUrl: "" });
+  const [uploading, setUploading] = useState<"image" | "audio" | null>(null);
+  const uploadMedia = async (kind: "image" | "audio", file?: File) => {
+    if (!file) return;
+    setUploading(kind);
+    try {
+      const { url } = await deckApi.uploadMedia(file);
+      setMedia((m) => ({ ...m, [`${kind}Url`]: url }));
+    } catch (e) {
+      toast({
+        title: "Tải lên thất bại",
+        description: e instanceof Error ? e.message : "Lỗi",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(null);
+    }
+  };
 
   const deck = useQuery({
     queryKey: ["deck", id],
@@ -74,11 +102,14 @@ const DeckCardsPage = () => {
         example: trimmed(extra.example),
         exampleTranslation: trimmed(extra.exampleTranslation),
         note: trimmed(extra.note),
+        imageUrl: media.imageUrl || undefined,
+        audioUrl: media.audioUrl || undefined,
       }),
     onSuccess: () => {
       setFront("");
       setBack("");
       setHint("");
+      setMedia({ imageUrl: "", audioUrl: "" });
       setExtra({
         reading: "",
         romaji: "",
@@ -238,6 +269,53 @@ const DeckCardsPage = () => {
                       value={extra.note}
                       onChange={(e) => setField("note", e.target.value)}
                     />
+                  </div>
+                </div>
+                <div>
+                  <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Media
+                  </p>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <div className="flex items-center gap-2">
+                      <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm text-foreground hover:bg-muted">
+                        {uploading === "image" ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <ImageIcon className="h-4 w-4" />
+                        )}
+                        Ảnh
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => uploadMedia("image", e.target.files?.[0])}
+                        />
+                      </label>
+                      {media.imageUrl && (
+                        <img
+                          src={media.imageUrl}
+                          alt=""
+                          className="h-10 w-10 rounded object-cover"
+                        />
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm text-foreground hover:bg-muted">
+                        {uploading === "audio" ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Volume2 className="h-4 w-4" />
+                        )}
+                        Âm thanh
+                        <input
+                          type="file"
+                          accept="audio/*"
+                          className="hidden"
+                          onChange={(e) => uploadMedia("audio", e.target.files?.[0])}
+                        />
+                      </label>
+                      {media.audioUrl && <span className="text-xs text-emerald-600">✓ đã gắn</span>}
+                    </div>
                   </div>
                 </div>
               </div>
