@@ -34,6 +34,7 @@ const Grammar = lazy(() => import("@/pages/Grammar"));
 const Index = lazy(() => import("@/pages/Index"));
 const JLPTLessons = lazy(() => import("@/pages/JLPTLessons"));
 const KanaShark = lazy(() => import("@/pages/KanaShark"));
+const CardTemplatesPage = lazy(() => import("@/pages/CardTemplatesPage"));
 const KanjiDetail = lazy(() => import("@/pages/KanjiDetail"));
 const KanjiLibrary = lazy(() => import("@/pages/KanjiLibrary"));
 const LessonDetail = lazy(() => import("@/pages/LessonDetail"));
@@ -79,6 +80,7 @@ export const AppRoutes = () => {
         <Route path="/calendar" element={withProtectedRoute(<StudyCalendar />)} />
         <Route path="/jlpt-lessons" element={withProtectedRoute(<JLPTLessons />)} />
         <Route path="/kana-shark" element={withProtectedRoute(<KanaShark />)} />
+        <Route path="/card-templates" element={withProtectedRoute(<CardTemplatesPage />)} />
         <Route path="/lessons/:lessonId" element={withProtectedRoute(<LessonDetail />)} />
         <Route path="/mistake-dna" element={withProtectedRoute(<MistakeDna />)} />
         <Route path="/courses" element={withProtectedRoute(<Courses />)} />

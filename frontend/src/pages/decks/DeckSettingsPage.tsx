@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { deckApi } from "@/api/deckApi";
 import { srsApi, type AnkiSrsSetting } from "@/api/srsApi";
+import { templateApi } from "@/api/templateApi";
 
 const Field = ({
   label,
@@ -48,6 +49,24 @@ const DeckSettingsPage = () => {
   const algorithmsQuery = useQuery({
     queryKey: ["srs", "algorithms"],
     queryFn: () => srsApi.getAlgorithms(),
+  });
+  const templatesQuery = useQuery({
+    queryKey: ["flashcard-templates"],
+    queryFn: () => templateApi.list(),
+  });
+  const currentTemplateId = deckQuery.data?.templateId ?? null;
+  const setTemplateMutation = useMutation({
+    mutationFn: (templateId: number | null) => deckApi.setTemplate(id, templateId),
+    onSuccess: () => {
+      toast({ title: "Đã đổi mẫu hiển thị" });
+      void queryClient.invalidateQueries({ queryKey: ["deck", id] });
+    },
+    onError: (e: unknown) =>
+      toast({
+        title: "Đổi mẫu thất bại",
+        description: e instanceof Error ? e.message : "Lỗi",
+        variant: "destructive",
+      }),
   });
 
   const [form, setForm] = useState<AnkiSrsSetting>({});
@@ -180,6 +199,57 @@ const DeckSettingsPage = () => {
               <p className="mt-3 text-xs text-muted-foreground">
                 Đổi sang FSRS sẽ chuyển toàn bộ thẻ và ước lượng độ ổn định/độ khó từ lịch sử ôn
                 hiện tại — không mất tiến độ.
+              </p>
+            </PageSection>
+
+            <PageSection className="mb-5">
+              <div className="mb-3 flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <h3 className="text-sm font-semibold text-foreground">Mẫu hiển thị thẻ</h3>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {(templatesQuery.data ?? []).map((tpl) => {
+                  const active = currentTemplateId
+                    ? currentTemplateId === tpl.id
+                    : tpl.isDefault && tpl.isSystem;
+                  return (
+                    <button
+                      key={tpl.id}
+                      type="button"
+                      disabled={setTemplateMutation.isPending}
+                      onClick={() =>
+                        setTemplateMutation.mutate(
+                          tpl.isDefault && tpl.isSystem ? null : (tpl.id ?? null)
+                        )
+                      }
+                      className={`rounded-xl border p-3 text-left transition ${
+                        active
+                          ? "border-primary bg-primary/5 ring-1 ring-primary/30"
+                          : "border-border hover:border-primary/40 hover:bg-muted/40"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-foreground">{tpl.name}</span>
+                        {tpl.isSystem && (
+                          <Badge variant="secondary" className="rounded-full text-[10px]">
+                            Hệ thống
+                          </Badge>
+                        )}
+                      </div>
+                      {tpl.description && (
+                        <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                          {tpl.description}
+                        </p>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="mt-3 text-xs text-muted-foreground">
+                Mẫu quyết định cách render mặt trước/sau khi học.{" "}
+                <Link to="/card-templates" className="text-primary hover:underline">
+                  Quản lý mẫu
+                </Link>
               </p>
             </PageSection>
 

@@ -109,6 +109,14 @@ const DeckStudyPage = () => {
     [detailQuery.data]
   );
 
+  // Template-rendered HTML (forward side only; reverse keeps the swapped plain view).
+  const renderQuery = useQuery({
+    queryKey: ["deck", id, "render", current?.flashcardId],
+    queryFn: () => deckApi.renderCard(id, current!.flashcardId),
+    enabled: !!current && current.side !== "REVERSE",
+  });
+  const rendered = current?.side === "REVERSE" ? null : (renderQuery.data ?? null);
+
   const reviewMutation = useMutation({
     mutationFn: (rating: SrsRating) =>
       srsApi.review({
@@ -234,41 +242,65 @@ const DeckStudyPage = () => {
 
             <Card className="flex flex-1 flex-col border-border/70">
               <CardContent className="flex flex-1 flex-col items-center justify-center gap-6 py-12 text-center">
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={`${current?.flashcardId}-${current?.side}-front`}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-4xl font-bold"
-                  >
-                    {current?.front}
-                  </motion.div>
-                </AnimatePresence>
+                {rendered ? (
+                  <>
+                    {rendered.styling && <style>{rendered.styling}</style>}
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={`${current?.flashcardId}-${current?.side}-front`}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        dangerouslySetInnerHTML={{ __html: rendered.frontHtml ?? "" }}
+                      />
+                    </AnimatePresence>
+                    {showBack && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="w-full border-t pt-6"
+                        dangerouslySetInnerHTML={{ __html: rendered.backHtml ?? "" }}
+                      />
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={`${current?.flashcardId}-${current?.side}-front`}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-4xl font-bold"
+                      >
+                        {current?.front}
+                      </motion.div>
+                    </AnimatePresence>
 
-                {showBack && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="w-full space-y-3 border-t pt-6"
-                  >
-                    {current?.hint && (
-                      <p className="text-lg text-muted-foreground">{current.hint}</p>
+                    {showBack && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="w-full space-y-3 border-t pt-6"
+                      >
+                        {current?.hint && (
+                          <p className="text-lg text-muted-foreground">{current.hint}</p>
+                        )}
+                        <p className="text-2xl font-semibold text-primary">{current?.back}</p>
+                        {current?.explanation && (
+                          <p className="text-sm text-muted-foreground">{current.explanation}</p>
+                        )}
+                        {extraFields.length > 0 && (
+                          <div className="mx-auto grid max-w-sm gap-1.5 pt-1 text-left">
+                            {extraFields.map((c) => (
+                              <p key={c.id} className="text-sm">
+                                <span className="text-muted-foreground">{c.label}: </span>
+                                <span className="text-foreground">{c.contentValue}</span>
+                              </p>
+                            ))}
+                          </div>
+                        )}
+                      </motion.div>
                     )}
-                    <p className="text-2xl font-semibold text-primary">{current?.back}</p>
-                    {current?.explanation && (
-                      <p className="text-sm text-muted-foreground">{current.explanation}</p>
-                    )}
-                    {extraFields.length > 0 && (
-                      <div className="mx-auto grid max-w-sm gap-1.5 pt-1 text-left">
-                        {extraFields.map((c) => (
-                          <p key={c.id} className="text-sm">
-                            <span className="text-muted-foreground">{c.label}: </span>
-                            <span className="text-foreground">{c.contentValue}</span>
-                          </p>
-                        ))}
-                      </div>
-                    )}
-                  </motion.div>
+                  </>
                 )}
               </CardContent>
             </Card>

@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -61,4 +62,14 @@ public class DeckController {
     public ResponseEntity<DeckDto> clone(@PathVariable Long id, @CurrentUserId Long userId) {
         return ResponseEntity.status(HttpStatus.CREATED).body(deckService.clone(userId, id));
     }
+
+    /** Attach a render template to the deck (templateId null clears it). */
+    @PutMapping("/{id}/template")
+    public ResponseEntity<DeckDto> setTemplate(
+            @PathVariable Long id, @RequestBody SetTemplateRequest body, @CurrentUserId Long userId) {
+        return ResponseEntity.ok(deckService.setDeckTemplate(userId, id, body.templateId()));
+    }
+
+    /** Body for attaching/clearing a deck template. */
+    public record SetTemplateRequest(Long templateId) {}
 }

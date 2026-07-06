@@ -7,6 +7,7 @@ import com.hoang.basis.yukihon.system.library.dto.CreateDeckRequest;
 import com.hoang.basis.yukihon.system.library.dto.DeckCardDto;
 import com.hoang.basis.yukihon.system.library.dto.DeckDto;
 import com.hoang.basis.yukihon.system.library.dto.FavoriteToggleResult;
+import com.hoang.basis.yukihon.system.library.dto.RenderedCardDto;
 import com.hoang.basis.yukihon.system.library.entity.Deck;
 import com.hoang.basis.yukihon.system.library.entity.DeckItem;
 import com.hoang.basis.yukihon.system.library.entity.FavoriteDeck;
@@ -41,6 +42,7 @@ public class DeckService {
     private final FlashcardRepository flashcardRepository;
     private final FavoriteDeckRepository favoriteDeckRepository;
     private final FlashcardContentService flashcardContentService;
+    private final FlashcardTemplateService flashcardTemplateService;
 
     // ===================== DECK LISTING =====================
 
@@ -267,6 +269,20 @@ public class DeckService {
 
         deck.setTotalCards((int) deckItemRepository.countByDeckIdAndIsDeletedFalse(deckId));
         deckRepository.save(deck);
+    }
+
+    /** Attach a render template to a deck (null clears it). Owner only. */
+    public DeckDto setDeckTemplate(Long userId, Long deckId, Long templateId) {
+        Deck deck = requireOwner(deckId, userId);
+        deck.setTemplateId(templateId);
+        return DeckDto.fromEntity(deckRepository.save(deck));
+    }
+
+    /** Render a card's HTML through the deck's template (or the system default). */
+    @Transactional(readOnly = true)
+    public RenderedCardDto renderCard(Long userId, Long deckId, Long flashcardId) {
+        requireVisible(deckId, userId);
+        return flashcardTemplateService.renderCard(flashcardId, deckId);
     }
 
     /** Full detail of one card (summary fields + rich sides), visible to the deck owner/public. */

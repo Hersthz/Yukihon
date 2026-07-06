@@ -3299,6 +3299,8 @@ export interface components {
             favoriteCount?: number;
             /** Format: int32 */
             cloneCount?: number;
+            /** Format: int64 */
+            templateId?: number;
             /** Format: date-time */
             updatedAt?: string;
         };
@@ -3353,6 +3355,32 @@ export interface components {
             hint?: string;
             template?: string;
             sides?: components["schemas"]["FlashcardSideDto"][];
+        };
+        FlashcardTemplateDto: {
+            /** Format: int64 */
+            id?: number;
+            cardType?: string;
+            name?: string;
+            description?: string;
+            frontTemplate?: string;
+            backTemplate?: string;
+            styling?: string;
+            isSystem?: boolean;
+            isDefault?: boolean;
+            mine?: boolean;
+        };
+        TemplateUpsertRequest: {
+            name: string;
+            cardType?: string;
+            description?: string;
+            frontTemplate?: string;
+            backTemplate?: string;
+            styling?: string;
+        };
+        RenderedCardDto: {
+            frontHtml?: string;
+            backHtml?: string;
+            styling?: string;
         };
         CreatePostRequest: {
             title?: string;

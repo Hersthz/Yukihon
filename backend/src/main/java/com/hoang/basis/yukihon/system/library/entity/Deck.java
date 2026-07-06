@@ -99,4 +99,8 @@ public class Deck extends BaseEntity {
     @Column(name = "favorite_count", nullable = false)
     @FieldMeta(label = "Favorite Count", type = "number", order = 12, readOnly = true)
     private Integer favoriteCount = 0;
+
+    @Column(name = "template_id")
+    @FieldMeta(label = "Template ID", type = "number", order = 13)
+    private Long templateId;
 }
