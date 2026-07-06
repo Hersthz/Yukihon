@@ -12,7 +12,13 @@ public class ImportConfirmRequest {
     private String deckDescription;
     private String visibility; // PRIVATE | PUBLIC
 
-    /** Target field per column index: FRONT | BACK | HINT | EXAMPLE | IGNORE. */
+    /** How to treat rows whose FRONT already appeared: SKIP (default) | UPDATE | CREATE_NEW. */
+    private String duplicateStrategy;
+
+    /**
+     * Target field per column index: FRONT | BACK | HINT | READING | ROMAJI | ONYOMI | KUNYOMI |
+     * EXAMPLE | EXAMPLE_TRANSLATION | NOTE | IMAGE | AUDIO | IGNORE.
+     */
     @NotEmpty
     private List<String> mapping;
 

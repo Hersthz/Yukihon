@@ -13,5 +13,6 @@ import lombok.NoArgsConstructor;
 public class ImportResultResponse {
     private Long deckId;
     private int created;
+    private int updated;
     private int skipped;
 }

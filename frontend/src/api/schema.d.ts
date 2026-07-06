@@ -3265,6 +3265,7 @@ export interface components {
             deckTitle?: string;
             deckDescription?: string;
             visibility?: string;
+            duplicateStrategy?: string;
             mapping: string[];
             rows: string[][];
         };
@@ -3273,6 +3274,8 @@ export interface components {
             deckId?: number;
             /** Format: int32 */
             created?: number;
+            /** Format: int32 */
+            updated?: number;
             /** Format: int32 */
             skipped?: number;
         };

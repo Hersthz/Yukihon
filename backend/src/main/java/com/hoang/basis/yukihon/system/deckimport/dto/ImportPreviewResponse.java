@@ -16,7 +16,7 @@ public class ImportPreviewResponse {
     private int totalRows; // data rows (header excluded if detected)
     private List<Column> columns;
     private List<List<String>> rows; // data rows (header excluded), capped
-    private List<String> suggestedMapping; // per column: FRONT/BACK/HINT/EXAMPLE/IGNORE
+    private List<String> suggestedMapping; // per column: FRONT/BACK/HINT/READING/ONYOMI/…/IGNORE
 
     @Data
     @NoArgsConstructor

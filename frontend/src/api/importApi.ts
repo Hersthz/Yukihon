@@ -2,7 +2,23 @@ import apiClient from "@/lib/apiClient";
 import type { Schema } from "@/api/types";
 
 /** FE-side union for the column-mapping dropdown (DTO mapping is a plain string[]). */
-export type ImportField = "FRONT" | "BACK" | "HINT" | "EXAMPLE" | "IGNORE";
+export type ImportField =
+  | "FRONT"
+  | "BACK"
+  | "HINT"
+  | "READING"
+  | "ROMAJI"
+  | "ONYOMI"
+  | "KUNYOMI"
+  | "EXAMPLE"
+  | "EXAMPLE_TRANSLATION"
+  | "NOTE"
+  | "IMAGE"
+  | "AUDIO"
+  | "IGNORE";
+
+/** How duplicate FRONT rows are treated on confirm. */
+export type DuplicateStrategy = "SKIP" | "UPDATE" | "CREATE_NEW";
 
 export type ImportColumn = Schema<"Column">;
 

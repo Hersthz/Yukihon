@@ -3,15 +3,19 @@ package com.hoang.basis.yukihon.system.deckimport.service;
 import com.hoang.basis.yukihon.system.deckimport.dto.ImportConfirmRequest;
 import com.hoang.basis.yukihon.system.deckimport.dto.ImportPreviewResponse;
 import com.hoang.basis.yukihon.system.deckimport.dto.ImportResultResponse;
+import com.hoang.basis.yukihon.system.library.dto.AddCardRequest;
 import com.hoang.basis.yukihon.system.library.entity.Deck;
 import com.hoang.basis.yukihon.system.library.entity.DeckItem;
 import com.hoang.basis.yukihon.system.library.entity.Flashcard;
 import com.hoang.basis.yukihon.system.library.repository.DeckItemRepository;
 import com.hoang.basis.yukihon.system.library.repository.DeckRepository;
 import com.hoang.basis.yukihon.system.library.repository.FlashcardRepository;
+import com.hoang.basis.yukihon.system.library.service.FlashcardContentService;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +32,7 @@ public class DeckImportService {
     private final DeckRepository deckRepository;
     private final DeckItemRepository deckItemRepository;
     private final FlashcardRepository flashcardRepository;
+    private final FlashcardContentService flashcardContentService;
 
     // ===================== PREVIEW =====================
 
@@ -75,13 +80,28 @@ public class DeckImportService {
 
     // ===================== CONFIRM =====================
 
+    /** How to treat a row whose FRONT already appeared earlier in the same import. */
+    private enum DuplicateStrategy {
+        SKIP,
+        UPDATE,
+        CREATE_NEW;
+
+        static DuplicateStrategy from(String raw) {
+            if (raw == null) {
+                return SKIP;
+            }
+            return switch (raw.toUpperCase()) {
+                case "UPDATE" -> UPDATE;
+                case "CREATE_NEW" -> CREATE_NEW;
+                default -> SKIP;
+            };
+        }
+    }
+
     @Transactional
     public ImportResultResponse confirm(Long userId, ImportConfirmRequest req) {
         List<String> mapping = req.getMapping();
-        int frontIdx = mapping.indexOf("FRONT");
-        int backIdx = mapping.indexOf("BACK");
-        int hintIdx = mapping.indexOf("HINT");
-        int exampleIdx = mapping.indexOf("EXAMPLE");
+        DuplicateStrategy strategy = DuplicateStrategy.from(req.getDuplicateStrategy());
 
         Deck deck = new Deck();
         deck.setUserId(userId);
@@ -96,28 +116,40 @@ public class DeckImportService {
         deck.setTotalCards(0);
         Deck savedDeck = deckRepository.save(deck);
 
+        Map<String, Flashcard> seenByFront = new HashMap<>();
         int created = 0;
+        int updated = 0;
         int skipped = 0;
         int order = 0;
         for (List<String> row : req.getRows()) {
-            String front = cell(row, frontIdx);
+            String front = cell(row, mapping.indexOf("FRONT"));
             if (front.isBlank()) {
                 skipped++;
                 continue;
             }
-            String back = cell(row, backIdx);
-            if (back.isBlank()) {
-                back = firstNonBlank(cell(row, exampleIdx), cell(row, hintIdx), front);
+            AddCardRequest card = buildRequest(mapping, row, front);
+            String key = front.trim().toLowerCase();
+
+            if (strategy != DuplicateStrategy.CREATE_NEW && seenByFront.containsKey(key)) {
+                if (strategy == DuplicateStrategy.SKIP) {
+                    skipped++;
+                    continue;
+                }
+                Flashcard existing = seenByFront.get(key);
+                applyFlat(existing, card);
+                flashcardRepository.save(existing);
+                flashcardContentService.buildSides(existing.getId(), card);
+                updated++;
+                continue;
             }
 
             Flashcard fc = new Flashcard();
             fc.setCardType("BASIC");
             fc.setItemType("GENERIC");
-            fc.setFront(front.trim());
-            fc.setBack(back.trim());
-            fc.setHint(emptyToNull(cell(row, hintIdx)));
-            fc.setExplanation(emptyToNull(cell(row, exampleIdx)));
+            fc.setTemplate("FORWARD");
+            applyFlat(fc, card);
             Flashcard savedFc = flashcardRepository.save(fc);
+            flashcardContentService.buildSides(savedFc.getId(), card);
 
             DeckItem item = new DeckItem();
             item.setDeckId(savedDeck.getId());
@@ -125,6 +157,7 @@ public class DeckImportService {
             item.setOrderIndex(order++);
             deckItemRepository.save(item);
             created++;
+            seenByFront.put(key, savedFc);
         }
 
         savedDeck.setTotalCards(created);
@@ -133,8 +166,41 @@ public class DeckImportService {
         return ImportResultResponse.builder()
                 .deckId(savedDeck.getId())
                 .created(created)
+                .updated(updated)
                 .skipped(skipped)
                 .build();
+    }
+
+    /** Assemble an AddCardRequest from a data row + column mapping (rich fields → side content). */
+    private AddCardRequest buildRequest(List<String> mapping, List<String> row, String front) {
+        AddCardRequest r = new AddCardRequest();
+        r.setFront(front.trim());
+        String back = cell(row, mapping.indexOf("BACK"));
+        if (back.isBlank()) {
+            back = firstNonBlank(cell(row, mapping.indexOf("EXAMPLE")), cell(row, mapping.indexOf("HINT")), front);
+        }
+        r.setBack(back.trim());
+        r.setHint(emptyToNull(cell(row, mapping.indexOf("HINT"))));
+        r.setReading(emptyToNull(cell(row, mapping.indexOf("READING"))));
+        r.setRomaji(emptyToNull(cell(row, mapping.indexOf("ROMAJI"))));
+        r.setOnyomi(emptyToNull(cell(row, mapping.indexOf("ONYOMI"))));
+        r.setKunyomi(emptyToNull(cell(row, mapping.indexOf("KUNYOMI"))));
+        r.setExample(emptyToNull(cell(row, mapping.indexOf("EXAMPLE"))));
+        r.setExampleTranslation(emptyToNull(cell(row, mapping.indexOf("EXAMPLE_TRANSLATION"))));
+        r.setNote(emptyToNull(cell(row, mapping.indexOf("NOTE"))));
+        r.setImageUrl(emptyToNull(cell(row, mapping.indexOf("IMAGE"))));
+        r.setAudioUrl(emptyToNull(cell(row, mapping.indexOf("AUDIO"))));
+        return r;
+    }
+
+    /** Mirror DeckService.addCard's flat-field mapping so import cards match hand-added ones. */
+    private void applyFlat(Flashcard fc, AddCardRequest r) {
+        fc.setFront(r.getFront());
+        fc.setBack(r.getBack());
+        fc.setHint(r.getHint());
+        fc.setExplanation(r.getExampleTranslation());
+        fc.setImageUrl(r.getImageUrl());
+        fc.setAudioUrl(r.getAudioUrl());
     }
 
     // ===================== PARSING =====================
@@ -263,17 +329,44 @@ public class DeckImportService {
         if (h.isEmpty()) {
             return null;
         }
-        if (matches(h, "front", "term", "word", "kanji", "từ", "mặt trước", "from")) {
+        // Order matters: more specific headers are checked before broader ones
+        // (e.g. "example translation" before "example", "onyomi" before "reading").
+        if (matches(
+                h, "example translation", "example_translation", "dịch ví dụ", "dịch câu", "sentence translation")) {
+            return "EXAMPLE_TRANSLATION";
+        }
+        if (matches(h, "onyomi", "on-yomi", "on yomi", "âm on", "音読み")) {
+            return "ONYOMI";
+        }
+        if (matches(h, "kunyomi", "kun-yomi", "kun yomi", "âm kun", "訓読み")) {
+            return "KUNYOMI";
+        }
+        if (matches(h, "romaji", "romji", "latin")) {
+            return "ROMAJI";
+        }
+        if (matches(h, "reading", "kana", "hiragana", "katakana", "furigana", "cách đọc", "yomikata")) {
+            return "READING";
+        }
+        if (matches(h, "example", "ví dụ", "câu", "例文", "sentence")) {
+            return "EXAMPLE";
+        }
+        if (matches(h, "note", "notes", "ghi chú", "explanation", "giải thích", "comment")) {
+            return "NOTE";
+        }
+        if (matches(h, "image", "ảnh", "hình", "picture", "img", "photo")) {
+            return "IMAGE";
+        }
+        if (matches(h, "audio", "âm thanh", "sound", "pronunciation", "phát âm")) {
+            return "AUDIO";
+        }
+        if (matches(h, "front", "term", "word", "kanji", "từ", "mặt trước", "from", "vocabulary", "expression")) {
             return "FRONT";
         }
-        if (matches(h, "back", "meaning", "nghĩa", "định nghĩa", "mặt sau", "definition")) {
+        if (matches(h, "back", "meaning", "nghĩa", "định nghĩa", "mặt sau", "definition", "translation", "dịch")) {
             return "BACK";
         }
-        if (matches(h, "reading", "kana", "hiragana", "romaji", "cách đọc", "âm", "hint", "gợi ý")) {
+        if (matches(h, "hint", "gợi ý")) {
             return "HINT";
-        }
-        if (matches(h, "example", "ví dụ", "câu", "note", "ghi chú", "explanation")) {
-            return "EXAMPLE";
         }
         return null;
     }

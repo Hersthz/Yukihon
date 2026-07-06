@@ -16,14 +16,33 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { importApi, type ImportField, type ImportPreview } from "@/api/importApi";
+import {
+  importApi,
+  type DuplicateStrategy,
+  type ImportField,
+  type ImportPreview,
+} from "@/api/importApi";
 
 const FIELD_OPTIONS: { value: ImportField; label: string }[] = [
   { value: "FRONT", label: "Mặt trước" },
   { value: "BACK", label: "Mặt sau / nghĩa" },
-  { value: "HINT", label: "Gợi ý / cách đọc" },
-  { value: "EXAMPLE", label: "Ví dụ / ghi chú" },
+  { value: "HINT", label: "Gợi ý" },
+  { value: "READING", label: "Cách đọc (kana)" },
+  { value: "ROMAJI", label: "Romaji" },
+  { value: "ONYOMI", label: "Âm On" },
+  { value: "KUNYOMI", label: "Âm Kun" },
+  { value: "EXAMPLE", label: "Ví dụ" },
+  { value: "EXAMPLE_TRANSLATION", label: "Dịch ví dụ" },
+  { value: "NOTE", label: "Ghi chú" },
+  { value: "IMAGE", label: "Ảnh (URL)" },
+  { value: "AUDIO", label: "Âm thanh (URL)" },
   { value: "IGNORE", label: "Bỏ qua" },
+];
+
+const DUP_OPTIONS: { value: DuplicateStrategy; label: string }[] = [
+  { value: "SKIP", label: "Bỏ qua thẻ trùng" },
+  { value: "UPDATE", label: "Cập nhật thẻ trùng" },
+  { value: "CREATE_NEW", label: "Tạo mới tất cả" },
 ];
 
 const DELIMITERS = [
@@ -54,6 +73,7 @@ const ImportDeckPage = () => {
   const [preview, setPreview] = useState<ImportPreview | null>(null);
   const [mapping, setMapping] = useState<string[]>([]);
   const [deckTitle, setDeckTitle] = useState("");
+  const [dupStrategy, setDupStrategy] = useState<DuplicateStrategy>("SKIP");
 
   const previewMutation = useMutation({
     mutationFn: (f: File) => importApi.preview(f, delimiter),
@@ -74,13 +94,17 @@ const ImportDeckPage = () => {
       importApi.confirm({
         deckTitle: deckTitle.trim() || file?.name?.replace(/\.[^.]+$/, "") || "Bộ thẻ nhập",
         visibility: "PRIVATE",
+        duplicateStrategy: dupStrategy,
         mapping,
         rows: preview?.rows ?? [],
       }),
     onSuccess: (res) => {
+      const parts = [`Đã tạo ${res.created} thẻ`];
+      if (res.updated) parts.push(`cập nhật ${res.updated}`);
+      if (res.skipped) parts.push(`bỏ qua ${res.skipped}`);
       toast({
-        title: `Đã nhập ${res.created} thẻ`,
-        description: `Bỏ qua ${res.skipped} dòng trống.`,
+        title: "Nhập thành công",
+        description: parts.join(", ") + ".",
       });
       navigate(`/decks/${res.deckId}/cards`);
     },
@@ -235,6 +259,24 @@ const ImportDeckPage = () => {
                 <div className="flex-1 space-y-1.5">
                   <Label>Tên bộ thẻ</Label>
                   <Input value={deckTitle} onChange={(e) => setDeckTitle(e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Thẻ trùng (cùng mặt trước)</Label>
+                  <Select
+                    value={dupStrategy}
+                    onValueChange={(v) => setDupStrategy(v as DuplicateStrategy)}
+                  >
+                    <SelectTrigger className="w-52">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DUP_OPTIONS.map((d) => (
+                        <SelectItem key={d.value} value={d.value}>
+                          {d.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <Button
                   onClick={() => confirmMutation.mutate()}
