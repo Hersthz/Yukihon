@@ -26,6 +26,7 @@ import {
   User,
   Users,
   Wand2,
+  Waves,
   X,
 } from "lucide-react";
 
@@ -82,6 +83,7 @@ const NAV_GROUPS: NavGroup[] = [
       { label: "Từ vựng", path: "/vocabulary", icon: BookOpen },
       { label: "Ngữ pháp", path: "/grammar", icon: Brain },
       { label: "Trắc nghiệm", path: "/quiz", icon: Trophy, badge: "Hot" },
+      { label: "Kana Shark", path: "/kana-shark", icon: Waves, badge: "Mới" },
       { label: "Khóa học", path: "/courses", icon: Compass },
       { label: "Sổ từ của tôi", path: "/my-words", icon: BookMarked },
     ],
@@ -111,6 +113,7 @@ const PAGE_META: Record<string, { title: string }> = {
   "/decks": { title: "Học SRS" },
   "/grammar": { title: "Ngữ pháp" },
   "/quiz": { title: "Trắc nghiệm" },
+  "/kana-shark": { title: "Kana Shark" },
   "/courses": { title: "Khóa học" },
   "/kanji-library": { title: "Thư viện Kanji" },
   "/kanji": { title: "Kanji" },
