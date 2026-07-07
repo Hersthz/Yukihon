@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { MessageSquare, UserPlus, Users, Check, X, Search } from "lucide-react";
+import { MessageSquare, UserPlus, Users, Check, X, Search, Loader2, UserX } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -33,7 +33,13 @@ export const FriendAndPmMessenger = () => {
   const [open, setOpen] = useState(false);
   const [selectedFriendId, setSelectedFriendId] = useState<number | null>(null);
   const [selectedFriendName, setSelectedFriendName] = useState("");
-  const [findUserId, setFindUserId] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedTerm, setDebouncedTerm] = useState("");
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedTerm(searchTerm.trim()), 300);
+    return () => clearTimeout(t);
+  }, [searchTerm]);
 
   const enabled = open && !!user;
   const friendsQuery = useQuery({
@@ -49,40 +55,44 @@ export const FriendAndPmMessenger = () => {
   const friends: UserConnection[] = friendsQuery.data ?? [];
   const pending: UserConnection[] = pendingQuery.data ?? [];
 
+  const searchQuery = useQuery({
+    queryKey: ["friends", "search", debouncedTerm],
+    queryFn: () => friendApi.search(debouncedTerm),
+    enabled: enabled && debouncedTerm.length >= 2,
+  });
+  const results = searchQuery.data ?? [];
+
   const invalidateFriends = () => {
     void queryClient.invalidateQueries({ queryKey: ["friends"] });
   };
 
+  const onMutationError = (title: string) => (e: unknown) =>
+    toast({
+      title,
+      description: e instanceof Error ? e.message : "Lỗi",
+      variant: "destructive",
+    });
+
   const sendRequestMutation = useMutation({
     mutationFn: (receiverId: number) => friendApi.sendRequest(receiverId),
     onSuccess: () => {
-      setFindUserId("");
       toast({ title: "Đã gửi lời mời kết bạn" });
       invalidateFriends();
     },
-    onError: (e: unknown) =>
-      toast({
-        title: "Gửi lời mời thất bại",
-        description: e instanceof Error ? e.message : "Lỗi",
-        variant: "destructive",
-      }),
+    onError: onMutationError("Gửi lời mời thất bại"),
   });
 
   const acceptMutation = useMutation({
     mutationFn: (id: number) => friendApi.acceptRequest(id),
     onSuccess: invalidateFriends,
-    onError: (e: unknown) =>
-      toast({
-        title: "Chấp nhận thất bại",
-        description: e instanceof Error ? e.message : "Lỗi",
-        variant: "destructive",
-      }),
+    onError: onMutationError("Chấp nhận thất bại"),
   });
 
-  const handleSendRequest = () => {
-    if (!findUserId) return;
-    sendRequestMutation.mutate(Number(findUserId));
-  };
+  const removeMutation = useMutation({
+    mutationFn: (id: number) => friendApi.removeConnection(id),
+    onSuccess: invalidateFriends,
+    onError: onMutationError("Thao tác thất bại"),
+  });
 
   const handleAccept = (id: number) => acceptMutation.mutate(id);
 
@@ -116,35 +126,137 @@ export const FriendAndPmMessenger = () => {
             <ScrollArea className="flex-1 p-4">
               <div className="space-y-4">
                 <div>
-                  <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">Add Friend</h4>
-                  <div className="flex gap-2">
+                  <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">Tìm bạn bè</h4>
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
-                      placeholder="Enter User ID..."
-                      value={findUserId}
-                      onChange={(e) => setFindUserId(e.target.value)}
-                      type="number"
+                      placeholder="Tìm theo tên hoặc email…"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-8"
                     />
-                    <Button size="icon" onClick={handleSendRequest}>
-                      <UserPlus className="w-4 h-4" />
-                    </Button>
                   </div>
+                  {debouncedTerm.length >= 2 && (
+                    <div className="mt-2 space-y-2">
+                      {searchQuery.isLoading ? (
+                        <div className="flex justify-center py-3">
+                          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                        </div>
+                      ) : results.length === 0 ? (
+                        <p className="text-xs text-muted-foreground">Không tìm thấy người dùng.</p>
+                      ) : (
+                        results.map((r) => {
+                          const ru = r.user;
+                          if (!ru?.id) return null;
+                          const busy =
+                            (sendRequestMutation.isPending &&
+                              sendRequestMutation.variables === ru.id) ||
+                            (acceptMutation.isPending &&
+                              acceptMutation.variables === r.connectionId) ||
+                            (removeMutation.isPending &&
+                              removeMutation.variables === r.connectionId);
+                          return (
+                            <div
+                              key={ru.id}
+                              className="flex items-center justify-between gap-2 p-2 rounded-lg border bg-card"
+                            >
+                              <div className="flex min-w-0 items-center gap-2">
+                                <Avatar className="h-8 w-8">
+                                  {ru.avatarUrl && <AvatarImage src={ru.avatarUrl} alt="" />}
+                                  <AvatarFallback>{(ru.displayName || "?")[0]}</AvatarFallback>
+                                </Avatar>
+                                <div className="min-w-0">
+                                  <p className="truncate text-sm font-medium">{ru.displayName}</p>
+                                  <p className="truncate text-xs text-muted-foreground">
+                                    {ru.email}
+                                  </p>
+                                </div>
+                              </div>
+                              {r.status === "FRIENDS" ? (
+                                <span className="shrink-0 text-xs font-medium text-emerald-600">
+                                  Bạn bè
+                                </span>
+                              ) : r.status === "PENDING" && r.incoming ? (
+                                <Button
+                                  size="sm"
+                                  disabled={busy}
+                                  onClick={() => r.connectionId && handleAccept(r.connectionId)}
+                                >
+                                  Chấp nhận
+                                </Button>
+                              ) : r.status === "PENDING" ? (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  disabled={busy}
+                                  onClick={() =>
+                                    r.connectionId && removeMutation.mutate(r.connectionId)
+                                  }
+                                >
+                                  Huỷ lời mời
+                                </Button>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  disabled={busy}
+                                  onClick={() => sendRequestMutation.mutate(ru.id!)}
+                                >
+                                  {busy ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <>
+                                      <UserPlus className="mr-1 h-4 w-4" /> Kết bạn
+                                    </>
+                                  )}
+                                </Button>
+                              )}
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {pending.length > 0 && (
                   <div>
                     <h4 className="font-semibold text-sm mb-2">
-                      Pending Requests ({pending.length})
+                      Lời mời đang chờ ({pending.length})
                     </h4>
                     <div className="space-y-2">
                       {pending.map((p) => (
                         <div
                           key={p.id}
-                          className="flex items-center justify-between p-2 rounded-lg border bg-card"
+                          className="flex items-center justify-between gap-2 p-2 rounded-lg border bg-card"
                         >
-                          <span className="text-sm font-medium">{p.requester.displayName}</span>
-                          <Button size="sm" onClick={() => handleAccept(p.id)}>
-                            Accept
-                          </Button>
+                          <div className="flex min-w-0 items-center gap-2">
+                            <Avatar className="h-8 w-8">
+                              {p.requester.avatarUrl && (
+                                <AvatarImage src={p.requester.avatarUrl} alt="" />
+                              )}
+                              <AvatarFallback>{p.requester.displayName[0]}</AvatarFallback>
+                            </Avatar>
+                            <span className="truncate text-sm font-medium">
+                              {p.requester.displayName}
+                            </span>
+                          </div>
+                          <div className="flex shrink-0 gap-1.5">
+                            <Button
+                              size="sm"
+                              disabled={acceptMutation.isPending || removeMutation.isPending}
+                              onClick={() => handleAccept(p.id)}
+                            >
+                              <Check className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={acceptMutation.isPending || removeMutation.isPending}
+                              onClick={() => removeMutation.mutate(p.id)}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -152,10 +264,10 @@ export const FriendAndPmMessenger = () => {
                 )}
 
                 <div>
-                  <h4 className="font-semibold text-sm mb-2">My Friends ({friends.length})</h4>
+                  <h4 className="font-semibold text-sm mb-2">Bạn bè ({friends.length})</h4>
                   <div className="space-y-2">
                     {friends.length === 0 && (
-                      <p className="text-xs text-muted-foreground">No friends yet.</p>
+                      <p className="text-xs text-muted-foreground">Chưa có bạn bè nào.</p>
                     )}
                     {friends.map((f) => {
                       const friendUser = f.requester.id === user?.id ? f.receiver : f.requester;
@@ -170,16 +282,33 @@ export const FriendAndPmMessenger = () => {
                             if (el) el.click();
                           }}
                         >
-                          <div className="flex items-center gap-3">
+                          <div className="flex min-w-0 items-center gap-3">
                             <Avatar className="h-8 w-8">
                               {friendUser.avatarUrl && (
                                 <AvatarImage src={friendUser.avatarUrl} alt="" />
                               )}
                               <AvatarFallback>{friendUser.displayName[0]}</AvatarFallback>
                             </Avatar>
-                            <span className="text-sm font-medium">{friendUser.displayName}</span>
+                            <span className="truncate text-sm font-medium">
+                              {friendUser.displayName}
+                            </span>
                           </div>
-                          <MessageSquare className="w-4 h-4 text-muted-foreground" />
+                          <div className="flex shrink-0 items-center gap-1">
+                            <MessageSquare className="w-4 h-4 text-muted-foreground" />
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7 text-muted-foreground hover:text-rose-600"
+                              title="Huỷ kết bạn"
+                              disabled={removeMutation.isPending}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                removeMutation.mutate(f.id);
+                              }}
+                            >
+                              <UserX className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       );
                     })}

@@ -1,6 +1,7 @@
 package com.hoang.basis.yukihon.system.friend.controller;
 
 import com.hoang.basis.yukihon.base.security.CurrentUserId;
+import com.hoang.basis.yukihon.system.friend.dto.FriendSearchResultDto;
 import com.hoang.basis.yukihon.system.friend.dto.UserConnectionDto;
 import com.hoang.basis.yukihon.system.friend.entity.ConnectionStatus;
 import com.hoang.basis.yukihon.system.friend.entity.ConnectionType;
@@ -51,5 +52,12 @@ public class UserConnectionController {
     public ResponseEntity<List<UserConnectionDto>> getPendingRequests(
             @RequestParam(defaultValue = "FRIEND") ConnectionType type, @CurrentUserId Long userId) {
         return ResponseEntity.ok(userConnectionService.getPendingRequests(userId, type));
+    }
+
+    /** Search users by name/email to send friend requests (min 2 chars). */
+    @GetMapping("/search")
+    public ResponseEntity<List<FriendSearchResultDto>> searchUsers(
+            @RequestParam("q") String query, @CurrentUserId Long userId) {
+        return ResponseEntity.ok(userConnectionService.searchUsers(userId, query));
     }
 }

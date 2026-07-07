@@ -22,4 +22,8 @@ public interface UserConnectionRepository extends JpaRepository<UserConnection, 
     List<UserConnection> findByReceiverAndTypeAndStatus(User receiver, ConnectionType type, ConnectionStatus status);
 
     List<UserConnection> findByRequesterAndTypeAndStatus(User requester, ConnectionType type, ConnectionStatus status);
+
+    /** All connections of a type involving the user, any status — used to annotate friend search. */
+    @Query("SELECT c FROM UserConnection c WHERE c.type = :type AND (c.requester = :user OR c.receiver = :user)")
+    List<UserConnection> findAllByUserAndType(User user, ConnectionType type);
 }

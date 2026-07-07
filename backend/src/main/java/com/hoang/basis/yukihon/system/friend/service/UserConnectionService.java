@@ -1,5 +1,6 @@
 package com.hoang.basis.yukihon.system.friend.service;
 
+import com.hoang.basis.yukihon.system.friend.dto.FriendSearchResultDto;
 import com.hoang.basis.yukihon.system.friend.dto.UserConnectionDto;
 import com.hoang.basis.yukihon.system.friend.entity.ConnectionStatus;
 import com.hoang.basis.yukihon.system.friend.entity.ConnectionType;
@@ -8,9 +9,12 @@ import com.hoang.basis.yukihon.system.friend.repository.UserConnectionRepository
 import com.hoang.basis.yukihon.system.user.dto.UserDto;
 import com.hoang.basis.yukihon.system.user.entity.User;
 import com.hoang.basis.yukihon.system.user.repository.UserRepository;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -106,6 +110,49 @@ public class UserConnectionService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
         return userConnectionRepository.findByReceiverAndTypeAndStatus(user, type, ConnectionStatus.PENDING).stream()
                 .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
+    /** Search users by name/email, annotated with the caller's FRIEND relationship to each. */
+    @Transactional(readOnly = true)
+    public List<FriendSearchResultDto> searchUsers(Long currentUserId, String query) {
+        if (query == null || query.trim().length() < 2) {
+            return List.of();
+        }
+        User me = userRepository
+                .findById(currentUserId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        Map<Long, UserConnection> byOther = new HashMap<>();
+        for (UserConnection c : userConnectionRepository.findAllByUserAndType(me, ConnectionType.FRIEND)) {
+            Long otherId = c.getRequester().getId().equals(currentUserId)
+                    ? c.getReceiver().getId()
+                    : c.getRequester().getId();
+            byOther.put(otherId, c);
+        }
+
+        return userRepository.searchForFriends(query.trim(), currentUserId, PageRequest.of(0, 20)).stream()
+                .map(u -> {
+                    UserConnection c = byOther.get(u.getId());
+                    String status = "NONE";
+                    Long connectionId = null;
+                    boolean incoming = false;
+                    if (c != null) {
+                        connectionId = c.getId();
+                        if (c.getStatus() == ConnectionStatus.ACCEPTED) {
+                            status = "FRIENDS";
+                        } else {
+                            status = "PENDING";
+                            incoming = c.getReceiver().getId().equals(currentUserId);
+                        }
+                    }
+                    return FriendSearchResultDto.builder()
+                            .user(mapToUserDto(u))
+                            .status(status)
+                            .connectionId(connectionId)
+                            .incoming(incoming)
+                            .build();
+                })
                 .collect(Collectors.toList());
     }
 

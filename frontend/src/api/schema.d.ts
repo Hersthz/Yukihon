@@ -3136,6 +3136,13 @@ export interface components {
             /** Format: date-time */
             updatedAt?: string;
         };
+        FriendSearchResultDto: {
+            user?: components["schemas"]["UserDto"];
+            status?: string;
+            /** Format: int64 */
+            connectionId?: number;
+            incoming?: boolean;
+        };
         TranslateRequest: {
             sourceLang: string;
             targetLang: string;

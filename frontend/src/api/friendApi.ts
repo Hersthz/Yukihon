@@ -13,8 +13,13 @@ export enum ConnectionStatus {
 
 export type UserConnection = Schema<"UserConnectionDto">;
 
+export type FriendSearchResult = Schema<"FriendSearchResultDto">;
+
 export const friendApi = {
   getFriends: () => apiClient.get<UserConnection[]>("/api/connections/friends"),
+
+  search: (q: string) =>
+    apiClient.get<FriendSearchResult[]>(`/api/connections/search?q=${encodeURIComponent(q)}`),
 
   getFollowing: () => apiClient.get<UserConnection[]>("/api/connections/following"),
 
