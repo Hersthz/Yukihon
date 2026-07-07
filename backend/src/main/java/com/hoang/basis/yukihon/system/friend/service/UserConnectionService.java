@@ -126,6 +126,7 @@ public class UserConnectionService {
                 .id(user.getId())
                 .email(user.getEmail())
                 .displayName(user.getDisplayName())
+                .avatarUrl(user.getAvatarUrl())
                 .build();
     }
 }

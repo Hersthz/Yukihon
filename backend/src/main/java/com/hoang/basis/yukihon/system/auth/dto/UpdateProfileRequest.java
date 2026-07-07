@@ -10,4 +10,10 @@ public class UpdateProfileRequest {
     @NotBlank
     @Size(min = 2, max = 100)
     private String displayName;
+
+    /** Optional avatar media URL (from /api/media/upload). */
+    private String avatarUrl;
+
+    @Size(max = 500)
+    private String bio;
 }

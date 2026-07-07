@@ -17,6 +17,8 @@ public class UserDto {
     private Long id;
     private String email;
     private String displayName;
+    private String avatarUrl;
+    private String bio;
     private Set<String> roles;
     private Set<String> permissions;
 
@@ -25,6 +27,8 @@ public class UserDto {
                 .id(user.getId())
                 .email(user.getEmail())
                 .displayName(user.getDisplayName())
+                .avatarUrl(user.getAvatarUrl())
+                .bio(user.getBio())
                 .roles(user.getRoles().stream().map(Enum::name).collect(Collectors.toSet()))
                 .build();
     }

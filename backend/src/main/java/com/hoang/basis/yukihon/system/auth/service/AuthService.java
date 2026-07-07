@@ -150,6 +150,14 @@ public class AuthService {
         }
 
         user.setDisplayName(displayName);
+        if (request.getAvatarUrl() != null) {
+            String avatar = request.getAvatarUrl().trim();
+            user.setAvatarUrl(avatar.isBlank() ? null : avatar);
+        }
+        if (request.getBio() != null) {
+            String bio = request.getBio().trim();
+            user.setBio(bio.isBlank() ? null : bio);
+        }
         User saved = userRepository.save(user);
         log.info("Updated profile for user: {}", saved.getEmail());
         return UserDto.fromEntity(saved);

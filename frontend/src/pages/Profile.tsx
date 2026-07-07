@@ -2,9 +2,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Bell,
+  Camera,
   CheckCircle2,
   GraduationCap,
   KeyRound,
+  Loader2,
   LogOut,
   Palette,
   RotateCcw,
@@ -21,13 +23,15 @@ import {
   type UpdateUserSettingsPayload,
   type UserSettingsResponse,
 } from "@/api";
+import { mediaApi } from "@/api/mediaApi";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { MetricCard, PageHeader, PageSection } from "@/components/layout/UserPage";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import {
   Select,
@@ -111,6 +115,9 @@ const Profile = () => {
   const { setTheme, resolvedTheme } = useTheme();
   const { toast } = useToast();
   const [displayName, setDisplayName] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [bio, setBio] = useState("");
+  const [avatarUploading, setAvatarUploading] = useState(false);
   const [settings, setSettings] = useState<UserSettingsData>(DEFAULT_SETTINGS);
   const [originalSettings, setOriginalSettings] = useState<UserSettingsData>(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
@@ -138,7 +145,9 @@ const Profile = () => {
 
   useEffect(() => {
     setDisplayName(user?.displayName ?? "");
-  }, [user?.displayName]);
+    setAvatarUrl(user?.avatarUrl ?? "");
+    setBio(user?.bio ?? "");
+  }, [user?.displayName, user?.avatarUrl, user?.bio]);
   useEffect(() => {
     void fetchPageData();
   }, [fetchPageData]);
@@ -157,7 +166,11 @@ const Profile = () => {
       : name.length > 50
         ? "Tên hiển thị nên dưới 50 ký tự."
         : null;
-  const hasProfileChanges = name !== (user?.displayName ?? "").trim();
+  const bioText = bio.trim();
+  const hasProfileChanges =
+    name !== (user?.displayName ?? "").trim() ||
+    avatarUrl !== (user?.avatarUrl ?? "") ||
+    bioText !== (user?.bio ?? "").trim();
   const settingsChanges = diffCount(settings, originalSettings);
   const hasSettingsChanges = settingsChanges > 0;
   const pwd = strength(passwordForm.newPassword);
@@ -193,9 +206,9 @@ const Profile = () => {
     }
     setProfileSaving(true);
     try {
-      await authApi.updateProfile({ displayName: name });
+      await authApi.updateProfile({ displayName: name, avatarUrl, bio: bioText });
       await refreshUser();
-      toast({ title: "Đã cập nhật hồ sơ", description: "Tên hiển thị đã được lưu." });
+      toast({ title: "Đã cập nhật hồ sơ", description: "Thông tin cá nhân đã được lưu." });
     } catch (error) {
       toast({
         title: "Không thể cập nhật hồ sơ",
@@ -257,6 +270,23 @@ const Profile = () => {
       });
     } finally {
       setPasswordSaving(false);
+    }
+  };
+
+  const uploadAvatar = async (file?: File) => {
+    if (!file) return;
+    setAvatarUploading(true);
+    try {
+      const { url } = await mediaApi.upload(file);
+      setAvatarUrl(url);
+    } catch (error) {
+      toast({
+        title: "Tải ảnh thất bại",
+        description: error instanceof Error ? error.message : "Vui lòng thử lại.",
+        variant: "destructive",
+      });
+    } finally {
+      setAvatarUploading(false);
     }
   };
 
@@ -339,17 +369,34 @@ const Profile = () => {
             className="xl:sticky xl:top-[92px] xl:self-start"
           >
             <div className="flex items-center gap-4">
-              <Avatar className="h-20 w-20">
-                <AvatarFallback
-                  className="text-xl font-semibold text-primary-foreground"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.6))",
-                  }}
-                >
-                  {(user?.displayName?.[0] || user?.email?.[0] || "U").toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+              <label className="group relative cursor-pointer" title="Đổi ảnh đại diện">
+                <Avatar className="h-20 w-20">
+                  {avatarUrl && <AvatarImage src={avatarUrl} alt="" />}
+                  <AvatarFallback
+                    className="text-xl font-semibold text-primary-foreground"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.6))",
+                    }}
+                  >
+                    {(displayName?.[0] || user?.email?.[0] || "U").toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/45 opacity-0 transition-opacity group-hover:opacity-100">
+                  {avatarUploading ? (
+                    <Loader2 className="h-5 w-5 animate-spin text-white" />
+                  ) : (
+                    <Camera className="h-5 w-5 text-white" />
+                  )}
+                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  disabled={avatarUploading}
+                  onChange={(event) => uploadAvatar(event.target.files?.[0])}
+                />
+              </label>
               <div className="min-w-0">
                 <p className="truncate text-lg font-semibold text-foreground">
                   {user?.displayName || "Người học"}
@@ -439,6 +486,19 @@ const Profile = () => {
                   <p className="text-xs text-muted-foreground">
                     Email hiện chưa đổi trong màn này để tránh tác động đến đăng nhập.
                   </p>
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="bio">Giới thiệu</Label>
+                  <Textarea
+                    id="bio"
+                    rows={3}
+                    maxLength={500}
+                    className="rounded-2xl border-border bg-card"
+                    value={bio}
+                    onChange={(event) => setBio(event.target.value)}
+                    placeholder="Vài dòng giới thiệu về bạn (tối đa 500 ký tự)"
+                  />
+                  <p className="text-right text-xs text-muted-foreground">{bio.length}/500</p>
                 </div>
               </div>
             </PageSection>

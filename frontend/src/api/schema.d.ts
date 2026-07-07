@@ -2911,12 +2911,16 @@ export interface components {
         JsonNode: unknown;
         UpdateProfileRequest: {
             displayName: string;
+            avatarUrl?: string;
+            bio?: string;
         };
         UserDto: {
             /** Format: int64 */
             id?: number;
             email?: string;
             displayName?: string;
+            avatarUrl?: string;
+            bio?: string;
             roles?: string[];
             permissions?: string[];
         };

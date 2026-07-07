@@ -24,7 +24,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export const FriendAndPmMessenger = () => {
   const { user } = useAuth();
@@ -172,6 +172,9 @@ export const FriendAndPmMessenger = () => {
                         >
                           <div className="flex items-center gap-3">
                             <Avatar className="h-8 w-8">
+                              {friendUser.avatarUrl && (
+                                <AvatarImage src={friendUser.avatarUrl} alt="" />
+                              )}
                               <AvatarFallback>{friendUser.displayName[0]}</AvatarFallback>
                             </Avatar>
                             <span className="text-sm font-medium">{friendUser.displayName}</span>

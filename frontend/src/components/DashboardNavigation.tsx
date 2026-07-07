@@ -201,6 +201,7 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
 
   const userName = user?.displayName || "Learner";
   const userInitial = userName.charAt(0).toUpperCase();
+  const userAvatar = user?.avatarUrl;
   const notificationCount = unreadCount + reminderSummary.totalCount;
 
   const handleLogout = () => {
@@ -320,9 +321,13 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
       <div className={cn("border-t border-border/70 p-2", compact && "px-2")}>
         {!compact && (
           <div className="mb-1 flex items-center gap-2.5 rounded-lg px-2 py-2">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-sm font-bold text-primary">
-              {userInitial}
-            </div>
+            {userAvatar ? (
+              <img src={userAvatar} alt="" className="h-8 w-8 shrink-0 rounded-lg object-cover" />
+            ) : (
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-sm font-bold text-primary">
+                {userInitial}
+              </div>
+            )}
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-foreground">{userName}</p>
               <p className="truncate text-xs text-muted-foreground">Học tiếng Nhật mỗi ngày</p>
@@ -507,9 +512,13 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
             </Popover>
 
             <div className="flex items-center gap-2 rounded-lg border border-border/70 bg-white px-2 py-1.5">
-              <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-xs font-bold text-primary">
-                {userInitial}
-              </div>
+              {userAvatar ? (
+                <img src={userAvatar} alt="" className="h-7 w-7 rounded-md object-cover" />
+              ) : (
+                <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-xs font-bold text-primary">
+                  {userInitial}
+                </div>
+              )}
               <span className="hidden max-w-[120px] truncate text-sm font-semibold text-foreground sm:block">
                 {userName}
               </span>

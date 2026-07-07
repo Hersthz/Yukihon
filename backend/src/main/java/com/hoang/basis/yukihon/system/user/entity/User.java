@@ -28,6 +28,12 @@ public class User {
     @Column(nullable = false, length = 100)
     private String displayName;
 
+    @Column(name = "avatar_url", columnDefinition = "LONGTEXT")
+    private String avatarUrl;
+
+    @Column(length = 500)
+    private String bio;
+
     @Builder.Default
     private boolean enabled = true;
 
