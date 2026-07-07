@@ -1,15 +1,19 @@
 package com.hoang.basis.yukihon.system.privatechat.service;
 
 import com.hoang.basis.yukihon.system.privatechat.dto.PrivateMessageDto;
+import com.hoang.basis.yukihon.system.privatechat.dto.ReadReceiptEvent;
+import com.hoang.basis.yukihon.system.privatechat.dto.UnreadSummaryDto;
 import com.hoang.basis.yukihon.system.privatechat.entity.PrivateMessage;
 import com.hoang.basis.yukihon.system.privatechat.repository.PrivateMessageRepository;
 import com.hoang.basis.yukihon.system.user.dto.UserDto;
 import com.hoang.basis.yukihon.system.user.entity.User;
 import com.hoang.basis.yukihon.system.user.repository.UserRepository;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -20,6 +24,7 @@ public class PrivateMessageService {
 
     private final PrivateMessageRepository privateMessageRepository;
     private final UserRepository userRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Transactional
     public PrivateMessageDto saveMessage(Long senderId, Long receiverId, String content) {
@@ -50,6 +55,36 @@ public class PrivateMessageService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Other user not found"));
 
         return privateMessageRepository.findConversation(user1, user2, pageable).map(this::mapToDto);
+    }
+
+    /** Mark all messages the reader received from `otherUserId` as read; notify the sender ("seen"). */
+    @Transactional
+    public int markConversationRead(Long readerId, Long otherUserId) {
+        User reader = userRepository
+                .findById(readerId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        User other = userRepository
+                .findById(otherUserId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Other user not found"));
+
+        int updated = privateMessageRepository.markConversationRead(reader, other);
+        if (updated > 0) {
+            messagingTemplate.convertAndSendToUser(
+                    other.getEmail(), "/queue/private-read", new ReadReceiptEvent(readerId));
+        }
+        return updated;
+    }
+
+    @Transactional(readOnly = true)
+    public UnreadSummaryDto getUnreadSummary(Long userId) {
+        User user = userRepository
+                .findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        long total = privateMessageRepository.countByReceiverAndReadFalse(user);
+        List<UnreadSummaryDto.UnreadCount> perUser = privateMessageRepository.countUnreadPerSender(user).stream()
+                .map(p -> new UnreadSummaryDto.UnreadCount(p.getSenderId(), p.getCnt()))
+                .toList();
+        return new UnreadSummaryDto(total, perUser);
     }
 
     private PrivateMessageDto mapToDto(PrivateMessage message) {

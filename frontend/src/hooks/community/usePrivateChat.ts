@@ -149,6 +149,20 @@ export function usePrivateChat(options: UsePrivateChatOptions = {}) {
           console.error("Failed to parse typing event", e);
         }
       });
+
+      // read receipts: the other user has seen my messages → flip them to read
+      client.subscribe("/user/queue/private-read", (message: IMessage) => {
+        try {
+          const body = JSON.parse(message.body);
+          if (body.byUserId === otherUserId) {
+            setMessages((prev) =>
+              prev.map((m) => (m.sender.id === currentUserId ? { ...m, read: true } : m))
+            );
+          }
+        } catch (e) {
+          console.error("Failed to parse read receipt", e);
+        }
+      });
     };
 
     client.onStompError = (frame) => {

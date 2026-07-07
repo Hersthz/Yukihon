@@ -3685,6 +3685,17 @@ export interface components {
             /** Format: date-time */
             createdAt?: string;
         };
+        UnreadCount: {
+            /** Format: int64 */
+            userId?: number;
+            /** Format: int64 */
+            count?: number;
+        };
+        UnreadSummaryDto: {
+            /** Format: int64 */
+            total?: number;
+            perUser?: components["schemas"]["UnreadCount"][];
+        };
         SortObject: {
             empty?: boolean;
             sorted?: boolean;

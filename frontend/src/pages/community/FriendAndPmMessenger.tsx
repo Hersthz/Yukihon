@@ -62,6 +62,16 @@ export const FriendAndPmMessenger = () => {
   });
   const results = searchQuery.data ?? [];
 
+  const unreadQuery = useQuery({
+    queryKey: ["private-chat", "unread"],
+    queryFn: () => privateChatApi.getUnread(),
+    enabled: !!user,
+    refetchInterval: 15000,
+  });
+  const unreadTotal = unreadQuery.data?.total ?? 0;
+  const unreadFor = (userId?: number) =>
+    (unreadQuery.data?.perUser ?? []).find((u) => u.userId === userId)?.count ?? 0;
+
   const invalidateFriends = () => {
     void queryClient.invalidateQueries({ queryKey: ["friends"] });
   };
@@ -101,6 +111,11 @@ export const FriendAndPmMessenger = () => {
       <DialogTrigger asChild>
         <Button className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg" size="icon">
           <MessageSquare className="h-6 w-6" />
+          {unreadTotal > 0 && (
+            <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[11px] font-bold text-white">
+              {unreadTotal > 99 ? "99+" : unreadTotal}
+            </span>
+          )}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px] h-[80vh] flex flex-col p-0 gap-0">
@@ -294,6 +309,11 @@ export const FriendAndPmMessenger = () => {
                             </span>
                           </div>
                           <div className="flex shrink-0 items-center gap-1">
+                            {unreadFor(friendUser.id) > 0 && (
+                              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[11px] font-bold text-white">
+                                {unreadFor(friendUser.id)}
+                              </span>
+                            )}
                             <MessageSquare className="w-4 h-4 text-muted-foreground" />
                             <Button
                               size="icon"
@@ -350,11 +370,25 @@ const PrivateChatView = ({
   otherUserName: string;
 }) => {
   const [inputText, setInputText] = useState("");
+  const queryClient = useQueryClient();
   const { messages, sendMessage, otherUserTyping, sendTyping, connectionState } = usePrivateChat({
     currentUserId,
     otherUserId,
     enabled: true,
   });
+
+  // Mark the conversation read whenever the newest message is from the other user.
+  const lastMessage = messages[messages.length - 1];
+  useEffect(() => {
+    if (!lastMessage || lastMessage.sender.id === currentUserId) return;
+    void privateChatApi.markRead(otherUserId).then(() => {
+      void queryClient.invalidateQueries({ queryKey: ["private-chat", "unread"] });
+    });
+  }, [lastMessage, currentUserId, otherUserId, queryClient]);
+
+  // "Seen" = my most recent sent message has been read by the other user.
+  const myLastSent = [...messages].reverse().find((m) => m.sender.id === currentUserId);
+  const seen = !!myLastSent?.read;
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
@@ -392,9 +426,12 @@ const PrivateChatView = ({
               </div>
             );
           })}
+          {seen && !otherUserTyping && (
+            <div className="self-end text-[11px] text-muted-foreground">Đã xem</div>
+          )}
           {otherUserTyping && (
             <div className="text-xs text-muted-foreground animate-pulse">
-              {otherUserName} is typing...
+              {otherUserName} đang nhập…
             </div>
           )}
         </div>
