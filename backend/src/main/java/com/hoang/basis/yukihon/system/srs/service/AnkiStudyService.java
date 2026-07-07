@@ -15,6 +15,7 @@ import com.hoang.basis.yukihon.system.srs.dto.AnkiSrsSettingDto;
 import com.hoang.basis.yukihon.system.srs.dto.AnkiStatsDto;
 import com.hoang.basis.yukihon.system.srs.dto.AnkiStudyCardDto;
 import com.hoang.basis.yukihon.system.srs.dto.AnkiStudyQueueDto;
+import com.hoang.basis.yukihon.system.srs.dto.RescheduleResultDto;
 import com.hoang.basis.yukihon.system.srs.entity.AnkiReviewLog;
 import com.hoang.basis.yukihon.system.srs.entity.AnkiSrsProgress;
 import com.hoang.basis.yukihon.system.srs.entity.AnkiSrsSetting;
@@ -802,6 +803,117 @@ public class AnkiStudyService {
         }
         progressRepository.saveAll(progressList);
         return toSettingDto(s);
+    }
+
+    // ===================== RESCHEDULE (history replay) =====================
+
+    /**
+     * Rebuild every card's scheduling state by replaying its full review-log history through the
+     * deck's currently-configured scheduler (SM-2 or FSRS), preserving the real time gaps between
+     * reviews. Far more accurate than the estimated seed done by {@link #switchAlgorithm}. When
+     * {@code dryRun} is true nothing is persisted — the result only previews the diffs.
+     */
+    public RescheduleResultDto reschedule(Long userId, Long deckId, boolean dryRun) {
+        deckRepository.findById(deckId).orElseThrow(() -> new ResourceNotFoundException("Deck not found: " + deckId));
+
+        AnkiSrsSetting setting =
+                settingRepository.findByUserIdAndDeckId(userId, deckId).orElse(null);
+        SchedulingConfig config = resolveConfig(setting);
+        String algorithmType = resolveAlgorithmType(setting);
+
+        List<AnkiSrsProgress> progressList = progressRepository.findByUserIdAndDeckId(userId, deckId);
+        Map<Long, List<AnkiReviewLog>> logsByProgress =
+                reviewLogRepository.findByUserIdAndDeckIdOrderByReviewedAtAsc(userId, deckId).stream()
+                        .collect(Collectors.groupingBy(AnkiReviewLog::getProgressId));
+
+        int changed = 0;
+        int skippedNoHistory = 0;
+        List<RescheduleResultDto.Change> changes = new ArrayList<>();
+        List<AnkiSrsProgress> toSave = new ArrayList<>();
+
+        for (AnkiSrsProgress p : progressList) {
+            List<AnkiReviewLog> logs = logsByProgress.get(p.getId());
+            if (logs == null || logs.isEmpty()) {
+                skippedNoHistory++;
+                continue;
+            }
+
+            String oldState = p.getState();
+            Integer oldInterval = p.getIntervalDays();
+            LocalDateTime oldNext = p.getNextReviewAt();
+
+            // In dryRun, replay on a detached copy so JPA dirty-checking never flushes changes.
+            AnkiSrsProgress work = dryRun ? cloneIdentity(p) : p;
+            resetForReplay(work, config);
+            for (AnkiReviewLog log : logs) {
+                applySchedule(work, log.getRating(), config, algorithmType, setting, log.getReviewedAt());
+            }
+            work.setAlgorithmType(algorithmType);
+
+            boolean diff = !java.util.Objects.equals(oldState, work.getState())
+                    || !java.util.Objects.equals(oldInterval, work.getIntervalDays())
+                    || !java.util.Objects.equals(oldNext, work.getNextReviewAt());
+            if (diff) {
+                changed++;
+                if (changes.size() < 100) {
+                    changes.add(RescheduleResultDto.Change.builder()
+                            .flashcardId(p.getFlashcardId())
+                            .side(p.getSide())
+                            .oldState(oldState)
+                            .newState(work.getState())
+                            .oldIntervalDays(oldInterval)
+                            .newIntervalDays(work.getIntervalDays())
+                            .oldNextReviewAt(oldNext)
+                            .newNextReviewAt(work.getNextReviewAt())
+                            .build());
+                }
+            }
+            if (!dryRun) {
+                toSave.add(work);
+            }
+        }
+
+        if (!dryRun && !toSave.isEmpty()) {
+            progressRepository.saveAll(toSave);
+        }
+
+        return RescheduleResultDto.builder()
+                .algorithmType(algorithmType)
+                .dryRun(dryRun)
+                .cardsProcessed(progressList.size())
+                .cardsChanged(changed)
+                .cardsSkippedNoHistory(skippedNoHistory)
+                .changes(changes)
+                .build();
+    }
+
+    /** Fresh detached copy carrying only the identity fields; scheduling fields get reset before replay. */
+    private AnkiSrsProgress cloneIdentity(AnkiSrsProgress s) {
+        AnkiSrsProgress c = new AnkiSrsProgress();
+        c.setId(s.getId());
+        c.setUserId(s.getUserId());
+        c.setDeckId(s.getDeckId());
+        c.setFlashcardId(s.getFlashcardId());
+        c.setSide(s.getSide());
+        return c;
+    }
+
+    /** Clear all scheduling state back to a pristine NEW card, ready to replay logs from scratch. */
+    private void resetForReplay(AnkiSrsProgress p, SchedulingConfig config) {
+        p.setState("NEW");
+        p.setEaseFactor(config.startingEase);
+        p.setIntervalDays(0);
+        p.setReviewCount(0);
+        p.setLearningStepIndex(0);
+        p.setLapses(0);
+        p.setMemoryScore(0.0);
+        p.setStability(null);
+        p.setDifficulty(null);
+        p.setRetrievability(null);
+        p.setLastRating(null);
+        p.setFirstLearnedAt(null);
+        p.setLastReviewedAt(null);
+        p.setNextReviewAt(null);
     }
 
     private AnkiSrsSettingDto toSettingDto(AnkiSrsSetting s) {

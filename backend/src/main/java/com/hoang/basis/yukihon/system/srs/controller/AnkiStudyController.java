@@ -7,6 +7,7 @@ import com.hoang.basis.yukihon.system.srs.dto.AnkiSrsSettingDto;
 import com.hoang.basis.yukihon.system.srs.dto.AnkiStatsDto;
 import com.hoang.basis.yukihon.system.srs.dto.AnkiStudyCardDto;
 import com.hoang.basis.yukihon.system.srs.dto.AnkiStudyQueueDto;
+import com.hoang.basis.yukihon.system.srs.dto.RescheduleResultDto;
 import com.hoang.basis.yukihon.system.srs.service.AnkiStudyService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /** Anki-style study endpoints: load the due queue and submit a rating. */
@@ -63,6 +65,14 @@ public class AnkiStudyController {
     public ResponseEntity<AnkiSrsSettingDto> switchAlgorithm(
             @PathVariable Long deckId, @RequestBody SwitchAlgorithmRequest body, @CurrentUserId Long userId) {
         return ResponseEntity.ok(ankiStudyService.switchAlgorithm(userId, deckId, body.algorithmType()));
+    }
+
+    @PostMapping("/{deckId}/reschedule")
+    public ResponseEntity<RescheduleResultDto> reschedule(
+            @PathVariable Long deckId,
+            @RequestParam(value = "dryRun", required = false, defaultValue = "false") boolean dryRun,
+            @CurrentUserId Long userId) {
+        return ResponseEntity.ok(ankiStudyService.reschedule(userId, deckId, dryRun));
     }
 
     @PostMapping("/{deckId}/cards/{flashcardId}/suspend")

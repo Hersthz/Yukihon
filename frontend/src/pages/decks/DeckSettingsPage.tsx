@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Loader2, Settings, Sparkles } from "lucide-react";
+import { ArrowLeft, History, Loader2, Settings, Sparkles } from "lucide-react";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { PageHeader, PageSection } from "@/components/layout/UserPage";
@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { deckApi } from "@/api/deckApi";
-import { srsApi, type AnkiSrsSetting } from "@/api/srsApi";
+import { srsApi, type AnkiSrsSetting, type RescheduleResult } from "@/api/srsApi";
 import { templateApi } from "@/api/templateApi";
 
 const Field = ({
@@ -73,6 +73,29 @@ const DeckSettingsPage = () => {
   useEffect(() => {
     if (settingsQuery.data) setForm(settingsQuery.data);
   }, [settingsQuery.data]);
+
+  const [reschedulePreview, setReschedulePreview] = useState<RescheduleResult | null>(null);
+  const rescheduleMutation = useMutation({
+    mutationFn: (dryRun: boolean) => srsApi.reschedule(id, dryRun),
+    onSuccess: (data) => {
+      if (data.dryRun) {
+        setReschedulePreview(data);
+      } else {
+        setReschedulePreview(null);
+        toast({
+          title: "Đã tính lại lịch",
+          description: `Cập nhật ${data.cardsChanged}/${data.cardsProcessed} thẻ (bỏ qua ${data.cardsSkippedNoHistory} thẻ chưa ôn).`,
+        });
+        void queryClient.invalidateQueries({ queryKey: ["deck", id, "stats"] });
+      }
+    },
+    onError: (e: unknown) =>
+      toast({
+        title: "Tính lại lịch thất bại",
+        description: e instanceof Error ? e.message : "Lỗi",
+        variant: "destructive",
+      }),
+  });
 
   const currentAlgo = (form.algorithmType || "SM2").toUpperCase();
   const availableTypes = new Set(
@@ -200,6 +223,75 @@ const DeckSettingsPage = () => {
                 Đổi sang FSRS sẽ chuyển toàn bộ thẻ và ước lượng độ ổn định/độ khó từ lịch sử ôn
                 hiện tại — không mất tiến độ.
               </p>
+            </PageSection>
+
+            <PageSection className="mb-5">
+              <div className="mb-3 flex items-center gap-2">
+                <History className="h-4 w-4 text-primary" />
+                <h3 className="text-sm font-semibold text-foreground">
+                  Tính lại lịch (replay lịch sử)
+                </h3>
+              </div>
+              <p className="mb-3 text-xs text-muted-foreground">
+                Phát lại toàn bộ lịch sử ôn của từng thẻ qua thuật toán{" "}
+                <span className="font-medium text-foreground">{form.algorithmType || "SM2"}</span>{" "}
+                hiện tại để dựng lại lịch chính xác (thay vì ước lượng). Xem trước trước khi áp
+                dụng.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={rescheduleMutation.isPending}
+                  onClick={() => rescheduleMutation.mutate(true)}
+                >
+                  {rescheduleMutation.isPending && rescheduleMutation.variables === true ? (
+                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                  ) : null}
+                  Xem trước
+                </Button>
+                <Button
+                  size="sm"
+                  disabled={rescheduleMutation.isPending || !reschedulePreview}
+                  onClick={() => rescheduleMutation.mutate(false)}
+                >
+                  {rescheduleMutation.isPending && rescheduleMutation.variables === false ? (
+                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                  ) : null}
+                  Áp dụng
+                </Button>
+              </div>
+
+              {reschedulePreview && (
+                <div className="mt-4 rounded-xl border border-border bg-muted/30 p-3">
+                  <p className="text-sm font-medium text-foreground">
+                    Sẽ cập nhật {reschedulePreview.cardsChanged}/{reschedulePreview.cardsProcessed}{" "}
+                    thẻ
+                    <span className="ml-1 font-normal text-muted-foreground">
+                      (bỏ qua {reschedulePreview.cardsSkippedNoHistory} thẻ chưa có lịch sử)
+                    </span>
+                  </p>
+                  {(reschedulePreview.changes ?? []).length > 0 && (
+                    <div className="mt-2 max-h-56 space-y-1 overflow-y-auto text-xs">
+                      {(reschedulePreview.changes ?? []).slice(0, 30).map((c, i) => (
+                        <div
+                          key={i}
+                          className="flex items-center justify-between gap-2 rounded-lg bg-card px-2.5 py-1.5"
+                        >
+                          <span className="truncate text-muted-foreground">
+                            #{c.flashcardId}
+                            {c.side === "REVERSE" ? " ⇄" : ""}
+                          </span>
+                          <span className="shrink-0 text-foreground">
+                            {c.oldState} · {c.oldIntervalDays}d → {c.newState} · {c.newIntervalDays}
+                            d
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </PageSection>
 
             <PageSection className="mb-5">

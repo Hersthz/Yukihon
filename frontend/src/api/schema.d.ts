@@ -2931,6 +2931,30 @@ export interface components {
             name?: string;
             algorithmType?: string;
         };
+        RescheduleChange: {
+            /** Format: int64 */
+            flashcardId?: number;
+            side?: string;
+            oldState?: string;
+            newState?: string;
+            /** Format: int32 */
+            oldIntervalDays?: number;
+            /** Format: int32 */
+            newIntervalDays?: number;
+            oldNextReviewAt?: string;
+            newNextReviewAt?: string;
+        };
+        RescheduleResultDto: {
+            algorithmType?: string;
+            dryRun?: boolean;
+            /** Format: int32 */
+            cardsProcessed?: number;
+            /** Format: int32 */
+            cardsChanged?: number;
+            /** Format: int32 */
+            cardsSkippedNoHistory?: number;
+            changes?: components["schemas"]["RescheduleChange"][];
+        };
         AnkiSrsSettingDto: {
             /** Format: int64 */
             algorithmConfigId?: number;
