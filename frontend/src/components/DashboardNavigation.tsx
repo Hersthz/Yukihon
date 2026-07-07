@@ -16,6 +16,7 @@ import {
   Layers,
   LayoutDashboard,
   LogOut,
+  MessageSquare,
   Menu,
   Newspaper,
   Search,
@@ -30,9 +31,12 @@ import {
   X,
 } from "lucide-react";
 
+import { useQuery } from "@tanstack/react-query";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { privateChatApi } from "@/api/privateChatApi";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { useAutoMenu } from "@/hooks/useAutoMenu";
@@ -71,6 +75,7 @@ const NAV_GROUPS: NavGroup[] = [
       { label: "Trợ lý AI", path: "/ai-chat", icon: Bot, badge: "Beta" },
       { label: "Dịch thuật", path: "/translation", icon: Globe2 },
       { label: "Cộng đồng", path: "/community", icon: Users },
+      { label: "Tin nhắn", path: "/messages", icon: MessageSquare },
       { label: "Phân tích lỗi", path: "/mistake-dna", icon: Sparkles },
       { label: "Lộ trình JLPT", path: "/jlpt-lessons", icon: GraduationCap },
       { label: "Blog", path: "/blog", icon: Newspaper },
@@ -108,6 +113,7 @@ const PAGE_META: Record<string, { title: string }> = {
   "/ai-chat": { title: "Trợ lý AI" },
   "/translation": { title: "Dịch thuật" },
   "/community": { title: "Cộng đồng" },
+  "/messages": { title: "Tin nhắn" },
   "/mistake-dna": { title: "Phân tích lỗi" },
   "/jlpt-lessons": { title: "Lộ trình JLPT" },
   "/vocabulary": { title: "Từ vựng" },
@@ -199,6 +205,14 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
   const crumbs = useMemo(() => buildCrumbs(location.pathname), [location.pathname]);
   const currentTitle = crumbs[crumbs.length - 1]?.label ?? "Yukihon";
 
+  const { data: pmUnread } = useQuery({
+    queryKey: ["private-chat", "unread"],
+    queryFn: () => privateChatApi.getUnread(),
+    enabled: isAuthenticated,
+    refetchInterval: 20000,
+  });
+  const pmUnreadTotal = pmUnread?.total ?? 0;
+
   const userName = user?.displayName || "Learner";
   const userInitial = userName.charAt(0).toUpperCase();
   const userAvatar = user?.avatarUrl;
@@ -217,7 +231,11 @@ const DashboardNavigation = ({ collapsed, onToggleCollapse }: DashboardNavigatio
         ? unreadCount > 99
           ? "99+"
           : String(unreadCount)
-        : item.badge;
+        : item.path === "/messages" && pmUnreadTotal > 0
+          ? pmUnreadTotal > 99
+            ? "99+"
+            : String(pmUnreadTotal)
+          : item.badge;
 
     return (
       <Link

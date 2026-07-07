@@ -39,6 +39,7 @@ const CardTemplatesPage = lazy(() => import("@/pages/CardTemplatesPage"));
 const KanjiDetail = lazy(() => import("@/pages/KanjiDetail"));
 const KanjiLibrary = lazy(() => import("@/pages/KanjiLibrary"));
 const LessonDetail = lazy(() => import("@/pages/LessonDetail"));
+const Messages = lazy(() => import("@/pages/Messages"));
 const MistakeDna = lazy(() => import("@/pages/MistakeDna"));
 const MyWords = lazy(() => import("@/pages/MyWords"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
@@ -97,6 +98,7 @@ export const AppRoutes = () => {
         <Route path="/story-mode" element={withProtectedRoute(<StoryMode />)} />
         <Route path="/translation" element={withProtectedRoute(<Translation />)} />
         <Route path="/community" element={withProtectedRoute(<Community />)} />
+        <Route path="/messages" element={withProtectedRoute(<Messages />)} />
         <Route path="/my-words" element={withProtectedRoute(<MyWords />)} />
         <Route path="/settings" element={withProtectedRoute(<Settings />)} />
         <Route path="/credits" element={withProtectedRoute(<Credits />)} />

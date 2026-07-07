@@ -360,7 +360,7 @@ export const FriendAndPmMessenger = () => {
   );
 };
 
-const PrivateChatView = ({
+export const PrivateChatView = ({
   currentUserId,
   otherUserId,
   otherUserName,
