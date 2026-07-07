@@ -92,4 +92,9 @@ public class Flashcard extends BaseEntity {
     @Column(name = "audio_url", columnDefinition = "LONGTEXT")
     @FieldMeta(label = "Audio URL", order = 9)
     private String audioUrl;
+
+    /** Comma-separated free-text tags for filtering/organising (e.g. "N5, động từ"). */
+    @Column(name = "tags", columnDefinition = "LONGTEXT")
+    @FieldMeta(label = "Tags", order = 11)
+    private String tags;
 }

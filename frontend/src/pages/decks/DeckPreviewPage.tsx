@@ -1,7 +1,7 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Copy, Globe2, Heart, Layers, Loader2, Play, Sparkles } from "lucide-react";
+import { ArrowLeft, Copy, Eye, Globe2, Heart, Layers, Loader2, Play, Sparkles } from "lucide-react";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { PageHeader, PageSection } from "@/components/layout/UserPage";
@@ -51,6 +51,16 @@ const DeckPreviewPage = () => {
       void queryClient.invalidateQueries({ queryKey: ["deck", id] });
     },
   });
+
+  const viewedRef = useRef(false);
+  useEffect(() => {
+    if (!id || viewedRef.current) return;
+    viewedRef.current = true;
+    deckApi
+      .recordView(id)
+      .then(() => queryClient.invalidateQueries({ queryKey: ["deck", id] }))
+      .catch(() => {});
+  }, [id, queryClient]);
 
   const cloneMutation = useMutation({
     mutationFn: () => deckApi.clone(id),
@@ -124,6 +134,9 @@ const DeckPreviewPage = () => {
           </Badge>
           <Badge variant="secondary" className="gap-1">
             <Copy className="h-3 w-3" /> {deck?.cloneCount} lượt sao chép
+          </Badge>
+          <Badge variant="secondary" className="gap-1">
+            <Eye className="h-3 w-3" /> {deck?.viewCount ?? 0} lượt xem
           </Badge>
         </div>
 

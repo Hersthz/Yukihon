@@ -15,6 +15,7 @@ public record DeckDto(
         Integer totalCards,
         Integer favoriteCount,
         Integer cloneCount,
+        Integer viewCount,
         Long templateId,
         Instant updatedAt) {
     public static DeckDto fromEntity(Deck d) {
@@ -29,6 +30,7 @@ public record DeckDto(
                 d.getTotalCards(),
                 d.getFavoriteCount(),
                 d.getCloneCount(),
+                d.getViewCount(),
                 d.getTemplateId(),
                 d.getUpdatedAt());
     }

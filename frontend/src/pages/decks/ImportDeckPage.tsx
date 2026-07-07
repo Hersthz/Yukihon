@@ -36,6 +36,7 @@ const FIELD_OPTIONS: { value: ImportField; label: string }[] = [
   { value: "NOTE", label: "Ghi chú" },
   { value: "IMAGE", label: "Ảnh (URL)" },
   { value: "AUDIO", label: "Âm thanh (URL)" },
+  { value: "TAGS", label: "Thẻ tag" },
   { value: "IGNORE", label: "Bỏ qua" },
 ];
 

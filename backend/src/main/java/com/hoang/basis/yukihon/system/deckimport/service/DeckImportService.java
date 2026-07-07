@@ -190,6 +190,7 @@ public class DeckImportService {
         r.setNote(emptyToNull(cell(row, mapping.indexOf("NOTE"))));
         r.setImageUrl(emptyToNull(cell(row, mapping.indexOf("IMAGE"))));
         r.setAudioUrl(emptyToNull(cell(row, mapping.indexOf("AUDIO"))));
+        r.setTags(emptyToNull(cell(row, mapping.indexOf("TAGS"))));
         return r;
     }
 
@@ -201,6 +202,7 @@ public class DeckImportService {
         fc.setExplanation(r.getExampleTranslation());
         fc.setImageUrl(r.getImageUrl());
         fc.setAudioUrl(r.getAudioUrl());
+        fc.setTags(r.getTags());
     }
 
     // ===================== PARSING =====================
@@ -358,6 +360,9 @@ public class DeckImportService {
         }
         if (matches(h, "audio", "âm thanh", "sound", "pronunciation", "phát âm")) {
             return "AUDIO";
+        }
+        if (matches(h, "tag", "tags", "nhãn", "thẻ tag", "chủ đề")) {
+            return "TAGS";
         }
         if (matches(h, "front", "term", "word", "kanji", "từ", "mặt trước", "from", "vocabulary", "expression")) {
             return "FRONT";

@@ -15,6 +15,7 @@ export type ImportField =
   | "NOTE"
   | "IMAGE"
   | "AUDIO"
+  | "TAGS"
   | "IGNORE";
 
 /** How duplicate FRONT rows are treated on confirm. */

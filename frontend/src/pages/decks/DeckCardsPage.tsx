@@ -49,6 +49,7 @@ const DeckCardsPage = () => {
     example: "",
     exampleTranslation: "",
     note: "",
+    tags: "",
   });
   const setField = (k: keyof typeof extra, v: string) => setExtra((p) => ({ ...p, [k]: v }));
   const trimmed = (v: string) => v.trim() || undefined;
@@ -102,6 +103,7 @@ const DeckCardsPage = () => {
         example: trimmed(extra.example),
         exampleTranslation: trimmed(extra.exampleTranslation),
         note: trimmed(extra.note),
+        tags: trimmed(extra.tags),
         imageUrl: media.imageUrl || undefined,
         audioUrl: media.audioUrl || undefined,
       }),
@@ -118,6 +120,7 @@ const DeckCardsPage = () => {
         example: "",
         exampleTranslation: "",
         note: "",
+        tags: "",
       });
       invalidate();
     },
@@ -269,6 +272,12 @@ const DeckCardsPage = () => {
                       value={extra.note}
                       onChange={(e) => setField("note", e.target.value)}
                     />
+                    <Input
+                      className="sm:col-span-2"
+                      placeholder="Thẻ tag (cách nhau bởi dấu phẩy, vd: N5, động từ)"
+                      value={extra.tags}
+                      onChange={(e) => setField("tags", e.target.value)}
+                    />
                   </div>
                 </div>
                 <div>
@@ -353,7 +362,26 @@ const DeckCardsPage = () => {
                   list.map((c, i) => (
                     <TableRow key={c.flashcardId}>
                       <TableCell className="text-xs text-muted-foreground">{i + 1}</TableCell>
-                      <TableCell className="font-medium">{c.front}</TableCell>
+                      <TableCell className="font-medium">
+                        {c.front}
+                        {c.tags && (
+                          <div className="mt-1 flex flex-wrap gap-1">
+                            {c.tags
+                              .split(",")
+                              .map((t) => t.trim())
+                              .filter(Boolean)
+                              .map((t) => (
+                                <Badge
+                                  key={t}
+                                  variant="outline"
+                                  className="rounded-full px-2 py-0 text-[10px] font-normal"
+                                >
+                                  {t}
+                                </Badge>
+                              ))}
+                          </div>
+                        )}
+                      </TableCell>
                       <TableCell>{c.back}</TableCell>
                       <TableCell className="text-muted-foreground">{c.hint}</TableCell>
                       <TableCell>

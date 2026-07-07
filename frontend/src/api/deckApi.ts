@@ -31,6 +31,7 @@ export const deckApi = {
   get: (id: number) => apiClient.get<Deck>(`/api/decks/${id}`),
   create: (payload: CreateDeckPayload) => apiClient.post<Deck>("/api/decks", payload),
   clone: (id: number) => apiClient.post<Deck>(`/api/decks/${id}/clone`, {}),
+  recordView: (id: number) => apiClient.post<void>(`/api/decks/${id}/view`, {}),
   listCards: (deckId: number) => apiClient.get<DeckCard[]>(`/api/decks/${deckId}/cards`),
   getCardDetail: (deckId: number, flashcardId: number) =>
     apiClient.get<CardDetail>(`/api/decks/${deckId}/cards/${flashcardId}`),

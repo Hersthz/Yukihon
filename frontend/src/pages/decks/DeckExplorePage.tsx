@@ -92,6 +92,9 @@ const ExploreCard = ({
       <span className="flex items-center gap-1">
         <Copy className="h-3.5 w-3.5" /> {deck.cloneCount}
       </span>
+      <span className="flex items-center gap-1">
+        <Eye className="h-3.5 w-3.5" /> {deck.viewCount ?? 0}
+      </span>
     </div>
 
     <div className="mt-4 flex items-center gap-2 border-t border-border/50 pt-3">

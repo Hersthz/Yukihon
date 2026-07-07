@@ -3357,6 +3357,8 @@ export interface components {
             favoriteCount?: number;
             /** Format: int32 */
             cloneCount?: number;
+            /** Format: int32 */
+            viewCount?: number;
             /** Format: int64 */
             templateId?: number;
             /** Format: date-time */
@@ -3381,6 +3383,7 @@ export interface components {
             exampleTranslation?: string;
             note?: string;
             imageUrl?: string;
+            tags?: string;
         };
         DeckCardDto: {
             /** Format: int64 */
@@ -3389,6 +3392,7 @@ export interface components {
             back?: string;
             hint?: string;
             template?: string;
+            tags?: string;
             /** Format: int32 */
             orderIndex?: number;
         };

@@ -63,6 +63,13 @@ public class DeckController {
         return ResponseEntity.status(HttpStatus.CREATED).body(deckService.clone(userId, id));
     }
 
+    /** Record a view (bumped only when a non-owner opens the deck). */
+    @PostMapping("/{id}/view")
+    public ResponseEntity<Void> recordView(@PathVariable Long id, @CurrentUserId Long userId) {
+        deckService.recordView(userId, id);
+        return ResponseEntity.noContent().build();
+    }
+
     /** Attach a render template to the deck (templateId null clears it). */
     @PutMapping("/{id}/template")
     public ResponseEntity<DeckDto> setTemplate(

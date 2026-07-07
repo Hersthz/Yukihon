@@ -28,4 +28,5 @@ public class AddCardRequest {
     private String exampleTranslation; // BACK
     private String note; // BACK
     private String imageUrl; // BACK (IMAGE)
+    private String tags; // comma-separated, stored flat on the flashcard
 }

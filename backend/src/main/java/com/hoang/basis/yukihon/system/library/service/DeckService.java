@@ -92,6 +92,15 @@ public class DeckService {
         return DeckDto.fromEntity(requireVisible(deckId, userId));
     }
 
+    /** Bump the view counter when a non-owner opens a visible deck (owner views don't count). */
+    public void recordView(Long userId, Long deckId) {
+        Deck deck = requireVisible(deckId, userId);
+        if (!deck.getUserId().equals(userId)) {
+            deck.setViewCount(nvl(deck.getViewCount()) + 1);
+            deckRepository.save(deck);
+        }
+    }
+
     // ===================== DECK MUTATION =====================
 
     public DeckDto create(Long userId, CreateDeckRequest request) {
@@ -169,6 +178,7 @@ public class DeckService {
             fc.setExplanation(src.getExplanation());
             fc.setImageUrl(src.getImageUrl());
             fc.setAudioUrl(src.getAudioUrl());
+            fc.setTags(src.getTags());
             Flashcard savedFc = flashcardRepository.save(fc);
             flashcardContentService.copySides(src.getId(), savedFc.getId());
 
@@ -212,6 +222,7 @@ public class DeckService {
                                     fc.getBack(),
                                     fc.getHint(),
                                     fc.getTemplate(),
+                                    fc.getTags(),
                                     item.getOrderIndex());
                 })
                 .filter(c -> c != null)
@@ -230,6 +241,7 @@ public class DeckService {
         fc.setExplanation(request.getExampleTranslation());
         fc.setImageUrl(request.getImageUrl());
         fc.setAudioUrl(request.getAudioUrl());
+        fc.setTags(normalizeTags(request.getTags()));
         fc.setTemplate("FORWARD_REVERSE".equals(request.getTemplate()) ? "FORWARD_REVERSE" : "FORWARD");
         Flashcard savedFc = flashcardRepository.save(fc);
 
@@ -252,7 +264,21 @@ public class DeckService {
                 savedFc.getBack(),
                 savedFc.getHint(),
                 savedFc.getTemplate(),
+                savedFc.getTags(),
                 nextOrder);
+    }
+
+    /** Trim, drop blanks and de-dupe comma-separated tags into a canonical "a, b, c" string. */
+    private String normalizeTags(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        List<String> tags = java.util.Arrays.stream(raw.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .distinct()
+                .toList();
+        return tags.isEmpty() ? null : String.join(", ", tags);
     }
 
     public void removeCard(Long userId, Long deckId, Long flashcardId) {

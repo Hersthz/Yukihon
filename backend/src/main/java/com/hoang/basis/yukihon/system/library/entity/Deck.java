@@ -103,4 +103,8 @@ public class Deck extends BaseEntity {
     @Column(name = "template_id")
     @FieldMeta(label = "Template ID", type = "number", order = 13)
     private Long templateId;
+
+    @Column(name = "view_count", nullable = false)
+    @FieldMeta(label = "View Count", type = "number", order = 14, readOnly = true)
+    private Integer viewCount = 0;
 }
