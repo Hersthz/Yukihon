@@ -3149,6 +3149,37 @@ export interface components {
             /** Format: int32 */
             wrongCount?: number;
         };
+        StartSessionRequest: {
+            /** Format: int64 */
+            deckId: number;
+            mode?: string;
+        };
+        SessionAnswerRequest: {
+            /** Format: int64 */
+            flashcardId: number;
+            correct: boolean;
+            answer?: string;
+        };
+        QuizletSessionDto: {
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            deckId?: number;
+            mode?: string;
+            status?: string;
+            /** Format: int32 */
+            totalAnswered?: number;
+            /** Format: int32 */
+            correctCount?: number;
+            /** Format: int32 */
+            wrongCount?: number;
+            /** Format: int32 */
+            accuracy?: number;
+            startedAt?: string;
+            completedAt?: string;
+            /** Format: int32 */
+            durationSeconds?: number;
+        };
         QuizSessionRequest: {
             mode: string;
             /** Format: int32 */

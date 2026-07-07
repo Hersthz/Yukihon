@@ -1,11 +1,12 @@
-import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
   ArrowRight,
   Check,
+  History,
   Layers,
   Loader2,
   RotateCcw,
@@ -30,7 +31,60 @@ const MODES: { key: Mode; label: string }[] = [
   { key: "match", label: "Ghép cặp" },
 ];
 
+const MODE_LABEL: Record<string, string> = {
+  FLASHCARD: "Lật thẻ",
+  LEARN: "Điền từ",
+  MATCH: "Ghép cặp",
+};
+
 const norm = (s: string | null | undefined) => (s ?? "").trim().toLowerCase();
+
+/**
+ * Lazily opens a Quizlet session on the first answer, logs each answer, and completes on finish.
+ * Deferring the start avoids creating empty sessions when a mode is opened but not played.
+ */
+const useQuizletSession = (deckId: number, mode: Mode) => {
+  const queryClient = useQueryClient();
+  const sessionIdRef = useRef<number | null>(null);
+  const startingRef = useRef<Promise<number> | null>(null);
+
+  const ensureSession = (): Promise<number> => {
+    if (sessionIdRef.current != null) return Promise.resolve(sessionIdRef.current);
+    if (!startingRef.current) {
+      startingRef.current = quizletApi
+        .startSession({ deckId, mode: mode.toUpperCase() })
+        .then((s) => {
+          sessionIdRef.current = s.id ?? null;
+          return s.id ?? 0;
+        });
+    }
+    return startingRef.current;
+  };
+
+  const logAnswer = async (flashcardId: number, correct: boolean, answer?: string) => {
+    try {
+      const id = await ensureSession();
+      if (id) await quizletApi.sessionAnswer(id, { flashcardId, correct, answer });
+    } catch {
+      /* non-blocking: study should never break on a logging error */
+    }
+  };
+
+  const complete = async () => {
+    const id = sessionIdRef.current;
+    sessionIdRef.current = null;
+    startingRef.current = null;
+    if (id == null) return;
+    try {
+      await quizletApi.completeSession(id);
+      void queryClient.invalidateQueries({ queryKey: ["quizlet-sessions", deckId] });
+    } catch {
+      /* ignore */
+    }
+  };
+
+  return { logAnswer, complete };
+};
 
 /* ----------------------------- Flashcard ----------------------------- */
 const FlashcardMode = ({ cards }: { cards: DeckCard[] }) => {
@@ -83,15 +137,21 @@ const LearnMode = ({ deckId, cards }: { deckId: number; cards: DeckCard[] }) => 
   const [value, setValue] = useState("");
   const [result, setResult] = useState<"idle" | "correct" | "wrong">("idle");
   const [score, setScore] = useState({ correct: 0, total: 0 });
+  const session = useQuizletSession(deckId, "learn");
   const card = cards[index];
   const done = index >= cards.length;
+
+  useEffect(() => {
+    if (done) void session.complete();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [done]);
 
   const submit = () => {
     if (result !== "idle") return;
     const ok = norm(value) === norm(card.back);
     setResult(ok ? "correct" : "wrong");
     setScore((s) => ({ correct: s.correct + (ok ? 1 : 0), total: s.total + 1 }));
-    void quizletApi.answer({ deckId, flashcardId: card.flashcardId, correct: ok }).catch(() => {});
+    void session.logAnswer(card.flashcardId, ok, value);
   };
 
   const next = () => {
@@ -216,9 +276,15 @@ const MatchMode = ({ deckId, cards }: { deckId: number; cards: DeckCard[] }) => 
   const [selected, setSelected] = useState<string | null>(null);
   const [matched, setMatched] = useState<Set<number>>(new Set());
   const [wrong, setWrong] = useState<string | null>(null);
+  const session = useQuizletSession(deckId, "match");
 
   const pairs = tiles.length / 2;
   const completed = matched.size === pairs && pairs > 0;
+
+  useEffect(() => {
+    if (completed) void session.complete();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [completed]);
 
   const reset = () => {
     setTiles(buildTiles(cards));
@@ -241,9 +307,10 @@ const MatchMode = ({ deckId, cards }: { deckId: number; cards: DeckCard[] }) => 
     if (first.cardId === tile.cardId) {
       setMatched((m) => new Set(m).add(tile.cardId));
       setSelected(null);
-      void quizletApi.answer({ deckId, flashcardId: tile.cardId, correct: true }).catch(() => {});
+      void session.logAnswer(tile.cardId, true);
     } else {
       setWrong(tile.id);
+      void session.logAnswer(tile.cardId, false);
       setTimeout(() => {
         setWrong(null);
         setSelected(null);
@@ -301,6 +368,70 @@ const MatchMode = ({ deckId, cards }: { deckId: number; cards: DeckCard[] }) => 
             </button>
           );
         })}
+      </div>
+    </div>
+  );
+};
+
+/* --------------------------- Session history --------------------------- */
+const fmtWhen = (iso?: string) => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  return d.toLocaleString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const SessionHistory = ({ deckId }: { deckId: number }) => {
+  const { data, isLoading } = useQuery({
+    queryKey: ["quizlet-sessions", deckId],
+    queryFn: () => quizletApi.listSessions(deckId),
+    enabled: !!deckId,
+  });
+
+  const sessions = (data ?? []).filter((s) => (s.totalAnswered ?? 0) > 0);
+  if (isLoading || sessions.length === 0) return null;
+
+  return (
+    <div className="mx-auto mt-10 max-w-xl">
+      <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
+        <History className="h-4 w-4 text-muted-foreground" />
+        Lịch sử ôn tập
+      </div>
+      <div className="divide-y divide-border rounded-2xl border border-border bg-card">
+        {sessions.slice(0, 8).map((s) => (
+          <div key={s.id} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
+            <div className="min-w-0">
+              <span className="font-medium text-foreground">
+                {MODE_LABEL[s.mode ?? ""] ?? s.mode}
+              </span>
+              <span className="ml-2 text-xs text-muted-foreground">{fmtWhen(s.startedAt)}</span>
+              {s.status !== "COMPLETED" && (
+                <span className="ml-2 text-xs text-amber-600">đang học</span>
+              )}
+            </div>
+            <div className="flex shrink-0 items-center gap-3">
+              <span className="text-muted-foreground">
+                {s.correctCount}/{s.totalAnswered}
+              </span>
+              <span
+                className={cn(
+                  "rounded-full px-2 py-0.5 text-xs font-semibold",
+                  (s.accuracy ?? 0) >= 80
+                    ? "bg-emerald-50 text-emerald-700"
+                    : (s.accuracy ?? 0) >= 50
+                      ? "bg-amber-50 text-amber-700"
+                      : "bg-red-50 text-red-700"
+                )}
+              >
+                {s.accuracy ?? 0}%
+              </span>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -383,6 +514,8 @@ const DeckQuizletPage = () => {
         ) : (
           <MatchMode deckId={id} cards={cards} />
         )}
+
+        {cards.length > 0 && mode !== "flashcard" && <SessionHistory deckId={id} />}
       </div>
     </DashboardLayout>
   );
